@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building a Desktop App — Nyx Documentation</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <h1>Tutorial: Building a Desktop Application</h1>
+        <p class="lead">Build rich, 120 FPS hardware-accelerated desktop GUI applications with Material Design 3 and native OS integration using <code>std.ui</code>.</p>
+
+        <h2>1. Initializing the Desktop Project</h2>
+        <pre><code>nyx init nyx-studio-app --template desktop
+cd nyx-studio-app</code></pre>
+
+        <h2>2. Building the Material UI Interface</h2>
+        <p>Use Nyx's declarative GUI component trees to construct the application window:</p>
+<pre><code>import std.ui
+import std.io
+
+pub fn main() {
+    // 1. Initialize native window with theme and dimensions
+    let mut app = ui.create_app("Nyx Mission Studio", 1024, 768)
+    app.set_theme(ui.Theme.MaterialDark)
+
+    // 2. Build Sidebar Navigation & Main Content View
+    let mut window = ui.Window.new("Nyx Analytics Dashboard")
+
+    let header = ui.Card::elevated("Real-Time Telemetry Feed")
+        .with_padding(16.0)
+        .with_content(ui.Text::headline("Active Nodes: 128 | Latency: 4.2ms"))
+
+    let start_btn = ui.Button::filled("Launch Inference Engine")
+        .with_icon("rocket_launch")
+        .on_click(|| {
+            std.io.println("Inference engine launched on GPU 0!")
+        })
+
+    let slider = ui.Slider::continuous(0.0, 100.0, 75.0)
+        .on_change(|val| {
+            std.io.println("Threshold updated: " + val.to_string())
+        })
+
+    // 3. Assemble Layout Hierarchy
+    window.add_child(header)
+    window.add_child(start_btn)
+    window.add_child(slider)
+
+    // 4. Start 120 FPS Event Loop
+    app.run(window)
+}</code></pre>
+
+        <h2>3. Native OS Features</h2>
+        <p>Nyx provides direct access to system tray icons, native file dialogues, and GPU rendering surfaces (Vulkan, DirectX 12, Metal):</p>
+<pre><code>import std.ui.dialog
+
+let selected_file = dialog.open_file_picker("Select GeoTIFF Raster", ["*.tif", "*.tiff"])
+match selected_file {
+    Option.Some(path) => std.io.println("Loaded file: " + path),
+    Option.None => std.io.println("File selection cancelled"),
+}</code></pre>
+
+        <h2>4. Packaging Native Executables</h2>
+        <pre><code># Build standalone Windows executable
+nyx build --release --target x86_64-pc-windows-msvc
+
+# Build macOS universal binary (.app bundle)
+nyx package --target universal-apple-darwin
+
+# Build Linux AppImage
+nyx package --target x86_64-unknown-linux-gnu</code></pre>
+
+        <div class="next-prev-links">
+            <a href="building-a-web-app.html">&larr; Building a Web App</a>
+            <a href="building-a-mobile-app.html">Building a Mobile App &rarr;</a>
+        </div>
+    </main>
+    <script src="../navigation.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

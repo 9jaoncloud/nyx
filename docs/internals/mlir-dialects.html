@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MLIR Dialects — Nyx Documentation</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <h1>MLIR Dialects & Code Generation</h1>
+        <p class="lead">How Nyx utilizes Multi-Level Intermediate Representation (MLIR) for high-level domain optimizations, async concurrency lowering, and LLVM machine code generation.</p>
+
+        <h2>1. Why MLIR?</h2>
+        <p>Traditional compilers lower directly from AST to low-level LLVM IR or C, losing high-level language semantics like regions, async tasks, pattern matching, and tensor operations. Nyx leverages MLIR to perform optimizations at multiple levels of abstraction before emitting final machine instructions.</p>
+
+        <pre><code>Nyx Source (.nyx)
+       ↓
+    AST & Semantic Analysis
+       ↓
+   Nyx High-Level Dialect (`nyx.*`)
+       ↓ [Region Lifetime Optimization & Async Lowering]
+   MLIR Standard Dialects (`async`, `memref`, `scf`, `arith`)
+       ↓ [LLVM Lowering Pass]
+   LLVM IR Dialect (`llvm.*`)
+       ↓
+   Target Machine Code (.exe, .so, .dylib, .wasm)</code></pre>
+
+        <h2>2. The Nyx Custom Dialect (`nyx.*`)</h2>
+        <p>The <code>nyx</code> MLIR dialect models Nyx's core language constructs:</p>
+
+        <h3>Core Operations Table:</h3>
+        <table>
+            <tr><th>Operation</th><th>Syntax</th><th>Description</th></tr>
+            <tr><td><code>nyx.func</code></td><td><code>nyx.func @name(%arg: !nyx.type) -> !nyx.ret</code></td><td>Function declaration with region ownership parameters</td></tr>
+            <tr><td><code>nyx.region.alloc</code></td><td><code>%ptr = nyx.region.alloc(%reg, !nyx.struct)</code></td><td>Bump-pointer allocation within a designated memory region</td></tr>
+            <tr><td><code>nyx.async.spawn</code></td><td><code>%task = nyx.async.spawn { ... }</code></td><td>Schedules work onto the work-stealing cooperative thread pool</td></tr>
+            <tr><td><code>nyx.async.await</code></td><td><code>%val = nyx.async.await %task : !nyx.future</code></td><td>Asynchronously suspends current task until future completion</td></tr>
+            <tr><td><code>nyx.match</code></td><td><code>nyx.match %enum [case0: ..., case1: ...]</code></td><td>Exhaustive pattern matching jump table</td></tr>
+            <tr><td><code>nyx.tensor.gemm</code></td><td><code>%res = nyx.tensor.gemm %A, %B : tensor&lt;f32&gt;</code></td><td>SIMD/AVX-512 hardware-accelerated matrix multiplication</td></tr>
+        </table>
+
+        <h2>3. Sample MLIR Output for a Region-Allocated Function</h2>
+<pre><code>module {
+  nyx.func @compute_geospatial_hash(%lat: f64, %lon: f64) -> !nyx.string {
+    %reg = nyx.region.create() : !nyx.region
+    
+    // Allocate temporary vector in local region
+    %pt = nyx.struct.create(%lat, %lon) : !nyx.point
+    %hash = nyx.call @rt_geohash_encode(%pt, %reg) : (!nyx.point, !nyx.region) -> !nyx.string
+    
+    // Transfer hash result ownership to caller, release local region
+    nyx.region.destroy %reg : !nyx.region
+    nyx.return %hash : !nyx.string
+  }
+}</code></pre>
+
+        <h2>4. Lowering Pipeline & Passes</h2>
+        <ol>
+            <li><strong>nyx-region-inference-pass:</strong> Analyzes variable lifetimes and inserts deterministic <code>nyx.region.destroy</code> instructions.</li>
+            <li><strong>nyx-async-lowering-pass:</strong> Lowers <code>nyx.async.spawn</code> into state-machine coroutines conforming to MLIR Async runtime.</li>
+            <li><strong>nyx-to-llvm-pass:</strong> Maps high-level types to native LLVM structures with zero abstraction penalties.</li>
+        </ol>
+
+        <div class="next-prev-links">
+            <a href="region-inference.html">&larr; Region Inference</a>
+            <a href="runtime-engine.html">Runtime Engine &rarr;</a>
+        </div>
+    </main>
+    <script src="../navigation.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

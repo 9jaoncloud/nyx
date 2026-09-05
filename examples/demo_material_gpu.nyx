@@ -1,0 +1,134 @@
+import std.ui
+
+fn main() {
+    println("=== Nyx 120 FPS GPU Material Design 3 Motion Studio ===")
+    println("Initializing hardware-accelerated rasterizer & window...")
+
+    let theme = ui.MaterialTheme.dark()
+    let renderer = ui.MaterialRenderer.new(theme)
+
+    let mut window = ui.Window.new(980, 640, "Nyx GPU Material 3 Motion Studio".to_string())
+    let mut canvas = window.canvas()
+
+    // Motion Controllers
+    let anim1 = ui.AnimationController.new(800)
+    let anim2 = ui.AnimationController.new(1200)
+
+    println("Running high-refresh Material Design 3 interactive loop...")
+
+    let mut frame_count = 0
+    let mut last_tick = ui.Clock.now_ms()
+
+    while window.should_close() == 0 {
+        window.poll_events()
+
+        let now = ui.Clock.now_ms()
+        let dt = now - last_tick
+        last_tick = now
+
+        let mx = window.mouse_x() as f32
+        let my = window.mouse_y() as f32
+        let is_down = window.is_mouse_down()
+
+        // 1. Draw smooth vertical gradient background
+        let bg_top = ui.Color.hex(0xff121316)
+        let bg_bottom = ui.Color.hex(0xff1e1f25)
+        canvas.draw_gradient_rect(0.0, 0.0, 980.0, 640.0, &bg_top, &bg_bottom)
+
+        // 2. Top App Bar with elevation & glow
+        let bar = ui.TopAppBarWidget {
+            title: "Material 3 GPU Motion & Shader Studio (120 FPS)".to_string(),
+            subtitle: "Nyx Native Graphics & Shader Pipeline".to_string(),
+            width: 980.0,
+        }
+        renderer.draw_top_app_bar(&mut canvas, &bar, 0.0, 0.0)
+
+        // 3. Status Chip
+        let fps_badge = ui.BadgeWidget {
+            text: "120 FPS DIRECT RASTERIZER".to_string(),
+            bg_color: ui.Color.hex(0xff00e676),
+            text_color: ui.Color.black(),
+        }
+        renderer.draw_badge(&mut canvas, &fps_badge, 720.0, 18.0)
+
+        // 4. Interactive Animated Cards with Glow & Hover State
+        let card1_hover = ui.point_in_rect(mx, my, 40.0, 90.0, 270.0, 170.0)
+        let card1 = ui.CardWidget {
+            title: "Neural Engine Core".to_string(),
+            subtitle: "GPU shader acceleration with dynamic ambient bloom".to_string(),
+            variant: ui.CardVariant.Elevated,
+            width: 270.0,
+            height: 170.0,
+            elevation: 2.0,
+        }
+        renderer.draw_animated_card(&mut canvas, &card1, 40.0, 90.0, anim1.value(), card1_hover)
+
+        let card2_hover = ui.point_in_rect(mx, my, 340.0, 90.0, 270.0, 170.0)
+        let card2 = ui.CardWidget {
+            title: "Memory Regions (O(1))".to_string(),
+            subtitle: "Zero-GC automatic bump allocation with escape analysis".to_string(),
+            variant: ui.CardVariant.Elevated,
+            width: 270.0,
+            height: 170.0,
+            elevation: 2.0,
+        }
+        renderer.draw_animated_card(&mut canvas, &card2, 340.0, 90.0, anim2.value(), card2_hover)
+
+        let card3_hover = ui.point_in_rect(mx, my, 640.0, 90.0, 270.0, 170.0)
+        let card3 = ui.CardWidget {
+            title: "Native MLIR Pipeline".to_string(),
+            subtitle: "Direct SSA dialect lowering to native machine code".to_string(),
+            variant: ui.CardVariant.Elevated,
+            width: 270.0,
+            height: 170.0,
+            elevation: 2.0,
+        }
+        renderer.draw_animated_card(&mut canvas, &card3, 640.0, 90.0, anim1.value(), card3_hover)
+
+        // 5. Interactive Pulsing Glow Button
+        let btn_w = 200.0
+        let btn_h = 44.0
+        let btn_hover = ui.point_in_rect(mx, my, 40.0, 300.0, btn_w, btn_h)
+        let glow_amount = if btn_hover { 1.0 } else { 0.4 * anim1.value() }
+        renderer.draw_glow_button(&mut canvas, "Launch Pipeline".to_string(), 40.0, 300.0, btn_w, btn_h, glow_amount)
+
+        // 6. Expanding Click Ripple Effect
+        if is_down {
+            let ripple_radius = 25.0 + (anim1.value() * 20.0)
+            canvas.draw_ripple(mx, my, ripple_radius, 0.4, &theme.primary)
+        }
+
+        // 7. Dynamic Animated Progress Bar
+        let pb = ui.ProgressBarWidget {
+            progress: anim1.value(),
+            width: 580.0,
+            height: 10.0,
+        }
+        renderer.draw_progress_bar(&mut canvas, &pb, 40.0, 380.0)
+        canvas.draw_text("Real-Time Emphasized Motion Progress: " + ((anim1.value() * 100.0) as i32).to_string() + "%", 40.0, 405.0, 13.0, &theme.on_surface_variant)
+
+        // 8. Visual Circular Motion Dial
+        let dial_cx = 780.0
+        let dial_cy = 380.0
+        let dial_r = 50.0
+        canvas.draw_circle(dial_cx, dial_cy, dial_r, &theme.surface_container_high)
+        let inner_r = dial_r * anim2.value()
+        if inner_r > 0.0 {
+            canvas.draw_circle(dial_cx, dial_cy, inner_r, &theme.primary_container)
+        }
+        canvas.draw_text("Motion Dial".to_string(), dial_cx - 30.0, dial_cy + dial_r + 15.0, 12.0, &theme.outline)
+
+        // 9. Frame Counter & Latency Telemetry
+        canvas.draw_text("Frame: " + frame_count.to_string() + " | Frame Time: " + dt.to_string() + " ms | Renderer: Skia GPU / GDI Direct", 40.0, 600.0, 12.0, &theme.outline)
+
+        window.swap_buffers()
+        frame_count = frame_count + 1
+
+        if frame_count > 600 {
+            println("Completed 600 high-performance GPU motion frames successfully.")
+            break
+        }
+    }
+
+    println("=== GPU Motion Studio Terminated Cleanly ===")
+}

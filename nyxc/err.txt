@@ -1,0 +1,250 @@
+C:/xampp/htdocs/nyx/nyxc/main.c:763:13: error: incompatible types when initializing type 'void *' using type 'Lexer'
+C:/xampp/htdocs/nyx/nyxc/main.c:764:42: error: implicit declaration of function 'void_next_token'; did you mean 'Lexer_next_token'? [-Wimplicit-function-declaration]
+C:/xampp/htdocs/nyx/nyxc/main.c:788:18: error: invalid use of void expression
+C:/xampp/htdocs/nyx/nyxc/main.c:792:18: error: invalid use of void expression
+C:/xampp/htdocs/nyx/nyxc/main.c:796:18: error: invalid use of void expression
+C:/xampp/htdocs/nyx/nyxc/main.c:802:20: error: incompatible type for argument 2 of 'Parser_error'
+C:/xampp/htdocs/nyx/nyxc/main.c:803:1: error: implicit declaration of function 'TopLevel_advance'; did you mean 'Lexer_advance'? [-Wimplicit-function-declaration]
+C:/xampp/htdocs/nyx/nyxc/main.c:824:33: error: incompatible type for argument 2 of 'Parser_error'
+C:/xampp/htdocs/nyx/nyxc/main.c:848:18: error: incompatible types when initializing type 'int64_t' {aka 'long long int'} using type 'rt_string_t'
+C:/xampp/htdocs/nyx/nyxc/main.c:850:8: error: incompatible types when returning type 'int64_t' {aka 'long long int'} but 'rt_string_t' was expected
+C:/xampp/htdocs/nyx/nyxc/main.c:861:9: error: conflicting types for 'name'; have 'int64_t' {aka 'long long int'}
+C:/xampp/htdocs/nyx/nyxc/main.c:865:2: error: '__match_val_9' undeclared (first use in this function); did you mean '__match_result_9'?
+C:/xampp/htdocs/nyx/nyxc/main.c:893:60: error: incompatible types when initializing type 'Type *' using type 'Type'
+C:/xampp/htdocs/nyx/nyxc/main.c:898:69: error: incompatible types when initializing type 'Type *' using type 'Type'
+C:/xampp/htdocs/nyx/nyxc/main.c:900:63: error: incompatible types when initializing type 'Type *' using type 'Type'
+C:/xampp/htdocs/nyx/nyxc/main.c:946:15: error: incompatible types when assigning to type 'TopLevel' from type 'Type'
+C:/xampp/htdocs/nyx/nyxc/main.c:948:15: error: incompatible types when assigning to type 'TopLevel' from type 'Type'
+C:/xampp/htdocs/nyx/nyxc/main.c:953:89: error: incompatible types when initializing type 'int' using type 'TopLevel'
+C:/xampp/htdocs/nyx/nyxc/main.c:953:99: error: incompatible types when initializing type 'char *' using type 'Expr'
+C:/xampp/htdocs/nyx/nyxc/main.c:1064:1: error: unknown type name 'Let'
+C:/xampp/htdocs/nyx/nyxc/main.c:1074:14: error: 'None' undeclared (first use in this function)
+C:/xampp/htdocs/nyx/nyxc/main.c:1077:1: error: cannot convert to a pointer type
+C:/xampp/htdocs/nyx/nyxc/main.c:1077:7: error: incompatible types when assigning to type 'int64_t' {aka 'long long int'} from type 'NyxOption'
+C:/xampp/htdocs/nyx/nyxc/main.c:1086:70: error: initialization of 'Expr *' from 'int64_t' {aka 'long long int'} makes pointer from integer without a cast [-Wint-conversion]
+C:/xampp/htdocs/nyx/nyxc/main.c:1086:83: error: incompatible types when initializing type 'long long int' using type 'Expr'
+C:/xampp/htdocs/nyx/nyxc/main.c:1091:1: error: cannot convert to a pointer type
+C:/xampp/htdocs/nyx/nyxc/main.c:1091:15: error: incompatible types when assigning to type 'Stmt' from type 'NyxOption'
+C:/xampp/htdocs/nyx/nyxc/main.c:1099:70: error: incompatible types when initializing type 'int' using type 'Stmt'
+C:/xampp/htdocs/nyx/nyxc/main.c:1099:78: error: expected ';' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1100:2: error: expected ')' before 'else'
+C:/xampp/htdocs/nyx/nyxc/main.c:1063:9: error: void value not ignored as it ought to be
+C:/xampp/htdocs/nyx/nyxc/main.c:1107:76: error: expected ';' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1109:1: error: '__match_result_21' undeclared (first use in this function)
+C:/xampp/htdocs/nyx/nyxc/main.c:1110:2: error: expected statement before ')' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1124:96: error: 'BinOp_Add' undeclared (first use in this function)
+C:/xampp/htdocs/nyx/nyxc/main.c:1124:115: error: expected ';' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1127:96: error: 'BinOp_Sub' undeclared (first use in this function)
+C:/xampp/htdocs/nyx/nyxc/main.c:1127:115: error: expected ';' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1130:96: error: 'BinOp_Mul' undeclared (first use in this function)
+C:/xampp/htdocs/nyx/nyxc/main.c:1130:116: error: expected ';' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1133:96: error: 'BinOp_Div' undeclared (first use in this function)
+C:/xampp/htdocs/nyx/nyxc/main.c:1133:116: error: expected ';' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1136:96: error: 'BinOp_Mod' undeclared (first use in this function)
+C:/xampp/htdocs/nyx/nyxc/main.c:1136:116: error: expected ';' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1139:96: error: 'BinOp_Eq' undeclared (first use in this function); did you mean 'BinOp'?
+C:/xampp/htdocs/nyx/nyxc/main.c:1139:114: error: expected ';' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1142:96: error: 'BinOp_NotEq' undeclared (first use in this function); did you mean 'TAG_BinOp_NotEq'?
+C:/xampp/htdocs/nyx/nyxc/main.c:1142:117: error: expected ';' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1145:96: error: 'BinOp_Lt' undeclared (first use in this function); did you mean 'BinOp'?
+C:/xampp/htdocs/nyx/nyxc/main.c:1145:114: error: expected ';' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1148:96: error: 'BinOp_LtEq' undeclared (first use in this function); did you mean 'TAG_BinOp_LtEq'?
+C:/xampp/htdocs/nyx/nyxc/main.c:1148:116: error: expected ';' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1151:96: error: 'BinOp_Gt' undeclared (first use in this function); did you mean 'BinOp'?
+C:/xampp/htdocs/nyx/nyxc/main.c:1151:114: error: expected ';' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1154:96: error: 'BinOp_GtEq' undeclared (first use in this function); did you mean 'TAG_BinOp_GtEq'?
+C:/xampp/htdocs/nyx/nyxc/main.c:1154:116: error: expected ';' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1157:96: error: 'BinOp_And' undeclared (first use in this function)
+C:/xampp/htdocs/nyx/nyxc/main.c:1157:115: error: expected ';' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1160:96: error: 'BinOp_Or' undeclared (first use in this function); did you mean 'BinOp'?
+C:/xampp/htdocs/nyx/nyxc/main.c:1160:114: error: expected ';' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1163:21: error: 'None' undeclared (first use in this function)
+C:/xampp/htdocs/nyx/nyxc/main.c:1120:14: error: incompatible types when initializing type 'int64_t' {aka 'long long int'} using type 'NyxOption'
+C:/xampp/htdocs/nyx/nyxc/main.c:1168:1: error: unknown type name 'Binary'
+C:/xampp/htdocs/nyx/nyxc/main.c:1170:19: error: request for member 'tag' in something not a structure or union
+C:/xampp/htdocs/nyx/nyxc/main.c:1170:27: error: 'TAG_int64_t_Some' undeclared (first use in this function)
+C:/xampp/htdocs/nyx/nyxc/main.c:1172:31: error: 'r_bp' undeclared (first use in this function)
+C:/xampp/htdocs/nyx/nyxc/main.c:1173:86: error: incompatible types when initializing type 'Expr *' using type 'Expr'
+C:/xampp/htdocs/nyx/nyxc/main.c:1181:79: error: incompatible types when initializing type 'Expr *' using type 'Expr'
+C:/xampp/htdocs/nyx/nyxc/main.c:1183:81: error: incompatible types when initializing type 'Expr *' using type 'Expr'
+C:/xampp/htdocs/nyx/nyxc/main.c:1176:21: error: incompatible types when assigning to type 'int' from type 'Expr'
+C:/xampp/htdocs/nyx/nyxc/main.c:1200:22: error: request for member 'tag' in something not a structure or union
+C:/xampp/htdocs/nyx/nyxc/main.c:1201:34: error: request for member 'data' in something not a structure or union
+C:/xampp/htdocs/nyx/nyxc/main.c:1202:9: error: redefinition of 'n'
+C:/xampp/htdocs/nyx/nyxc/main.c:1202:14: error: invalid type argument of unary '*' (have 'int64_t' {aka 'long long int'})
+C:/xampp/htdocs/nyx/nyxc/main.c:1204:99: error: 'union <anonymous>' has no member named 'Int'
+C:/xampp/htdocs/nyx/nyxc/main.c:1204:107: error: initialization of 'char *' from 'int64_t' {aka 'long long int'} makes pointer from integer without a cast [-Wint-conversion]
+C:/xampp/htdocs/nyx/nyxc/main.c:1204:64: error: incompatible types when initializing type 'int' using type 'Type'
+C:/xampp/htdocs/nyx/nyxc/main.c:1204:115: error: expected ';' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1204:118: error: expected ')' before ';' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1197:9: error: void value not ignored as it ought to be
+C:/xampp/htdocs/nyx/nyxc/main.c:1204:119: error: expected ';' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1206:2: error: expected identifier or '(' before 'else'
+C:/xampp/htdocs/nyx/nyxc/main.c:1210:121: error: expected identifier or '(' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1211:1: error: expected identifier or '(' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1212:2: error: expected identifier or '(' before 'else'
+C:/xampp/htdocs/nyx/nyxc/main.c:1216:123: error: expected identifier or '(' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1217:1: error: expected identifier or '(' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1218:2: error: expected identifier or '(' before 'else'
+C:/xampp/htdocs/nyx/nyxc/main.c:1220:119: error: expected identifier or '(' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1221:1: error: expected identifier or '(' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1222:2: error: expected identifier or '(' before 'else'
+C:/xampp/htdocs/nyx/nyxc/main.c:1224:119: error: expected identifier or '(' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1225:1: error: expected identifier or '(' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1226:2: error: expected identifier or '(' before 'else'
+C:/xampp/htdocs/nyx/nyxc/main.c:1228:119: error: expected identifier or '(' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1229:1: error: expected identifier or '(' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1230:2: error: expected identifier or '(' before 'else'
+C:/xampp/htdocs/nyx/nyxc/main.c:1256:3: error: type defaults to 'int' in declaration of '__if_val_29' [-Wimplicit-int]
+C:/xampp/htdocs/nyx/nyxc/main.c:1256:16: error: expected identifier or '(' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1256:17: error: expected identifier or '(' before ')' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1257:1: error: expected identifier or '(' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1258:2: error: expected identifier or '(' before 'else'
+C:/xampp/htdocs/nyx/nyxc/main.c:1264:2: error: expected identifier or '(' before 'else'
+C:/xampp/htdocs/nyx/nyxc/main.c:1268:2: error: expected identifier or '(' before 'else'
+C:/xampp/htdocs/nyx/nyxc/main.c:1272:2: error: expected identifier or '(' before 'else'
+C:/xampp/htdocs/nyx/nyxc/main.c:1275:2: error: expected identifier or '(' before 'else'
+C:/xampp/htdocs/nyx/nyxc/main.c:1278:2: error: expected identifier or '(' before 'else'
+C:/xampp/htdocs/nyx/nyxc/main.c:1281:2: error: expected identifier or '(' before 'else'
+C:/xampp/htdocs/nyx/nyxc/main.c:1284:2: error: expected identifier or '(' before 'else'
+C:/xampp/htdocs/nyx/nyxc/main.c:1287:2: error: expected identifier or '(' before 'else'
+C:/xampp/htdocs/nyx/nyxc/main.c:1290:2: error: expected identifier or '(' before 'else'
+C:/xampp/htdocs/nyx/nyxc/main.c:1293:1: error: expected identifier or '(' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1294:2: error: expected identifier or '(' before 'else'
+C:/xampp/htdocs/nyx/nyxc/main.c:1297:1: error: expected identifier or '(' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1298:2: error: expected identifier or '(' before 'else'
+C:/xampp/htdocs/nyx/nyxc/main.c:1300:119: error: expected identifier or '(' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1301:1: error: expected identifier or '(' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1302:1: error: type defaults to 'int' in declaration of '__match_result_27' [-Wimplicit-int]
+C:/xampp/htdocs/nyx/nyxc/main.c:1303:1: error: expected identifier or '(' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1303:2: error: expected identifier or '(' before ')' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1304:1: error: expected identifier or '(' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1332:22: error: 'None' undeclared (first use in this function)
+C:/xampp/htdocs/nyx/nyxc/main.c:1341:47: error: expected ';' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1341:27: error: incompatible type for argument 2 of 'rt_vec_push'
+C:/xampp/htdocs/nyx/nyxc/main.c:1346:1: error: cannot convert to a pointer type
+C:/xampp/htdocs/nyx/nyxc/main.c:1346:15: error: incompatible types when assigning to type 'int64_t' {aka 'long long int'} from type 'NyxOption'
+C:/xampp/htdocs/nyx/nyxc/main.c:1351:49: error: incompatible types when initializing type 'Expr *' using type 'Expr'
+C:/xampp/htdocs/nyx/nyxc/main.c:1360:55: error: incompatible types when initializing type 'Expr *' using type 'Expr'
+C:/xampp/htdocs/nyx/nyxc/main.c:1371:56: error: incompatible types when initializing type 'Expr *' using type 'Expr'
+C:/xampp/htdocs/nyx/nyxc/main.c:1383:82: error: 'None' undeclared (first use in this function)
+C:/xampp/htdocs/nyx/nyxc/main.c:1391:55: error: incompatible types when initializing type 'Expr *' using type 'Expr'
+C:/xampp/htdocs/nyx/nyxc/main.c:1398:22: error: request for member 'tag' in something not a structure or union
+C:/xampp/htdocs/nyx/nyxc/main.c:1399:41: error: request for member 'data' in something not a structure or union
+C:/xampp/htdocs/nyx/nyxc/main.c:1400:9: error: conflicting types for 'name'; have 'int64_t' {aka 'long long int'}
+C:/xampp/htdocs/nyx/nyxc/main.c:1418:61: error: 'union <anonymous>' has no member named 'Enum'
+C:/xampp/htdocs/nyx/nyxc/main.c:1418:70: error: implicit declaration of function 'new' [-Wimplicit-function-declaration]
+C:/xampp/htdocs/nyx/nyxc/main.c:1418:70: error: initialization of 'char *' from 'int' makes pointer from integer without a cast [-Wint-conversion]
+C:/xampp/htdocs/nyx/nyxc/main.c:1418:83: error: incompatible types when initializing type 'int' using type 'NyxVec'
+C:/xampp/htdocs/nyx/nyxc/main.c:1420:70: error: expected ';' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1421:2: error: expected ')' before '__if_val_36'
+C:/xampp/htdocs/nyx/nyxc/main.c:1402:19: error: invalid use of void expression
+C:/xampp/htdocs/nyx/nyxc/main.c:1421:15: error: expected ';' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1421:17: error: expected statement before ')' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1422:2: error: expected ')' before 'else'
+C:/xampp/htdocs/nyx/nyxc/main.c:1395:9: error: void value not ignored as it ought to be
+C:/xampp/htdocs/nyx/nyxc/main.c:1431:117: error: expected ';' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1432:1: error: expected identifier or '(' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1433:2: error: expected identifier or '(' before 'else'
+C:/xampp/htdocs/nyx/nyxc/main.c:1437:123: error: expected identifier or '(' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1438:1: error: expected identifier or '(' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1439:2: error: expected identifier or '(' before 'else'
+C:/xampp/htdocs/nyx/nyxc/main.c:1441:119: error: expected identifier or '(' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1442:1: error: expected identifier or '(' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1443:2: error: expected identifier or '(' before 'else'
+C:/xampp/htdocs/nyx/nyxc/main.c:1445:119: error: expected identifier or '(' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1446:1: error: expected identifier or '(' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1447:2: error: expected identifier or '(' before 'else'
+C:/xampp/htdocs/nyx/nyxc/main.c:1451:1: error: type defaults to 'int' in declaration of '__match_result_34' [-Wimplicit-int]
+C:/xampp/htdocs/nyx/nyxc/main.c:1452:1: error: expected identifier or '(' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1452:2: error: expected identifier or '(' before ')' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1453:1: error: expected identifier or '(' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1463:15: error: incompatible types when assigning to type 'Expr' from type 'Type'
+C:/xampp/htdocs/nyx/nyxc/main.c:1465:15: error: incompatible types when assigning to type 'Expr' from type 'Type'
+C:/xampp/htdocs/nyx/nyxc/main.c:1467:69: error: incompatible types when initializing type 'int' using type 'Expr'
+C:/xampp/htdocs/nyx/nyxc/main.c:1476:65: error: incompatible types when initializing type 'Expr *' using type 'Expr'
+C:/xampp/htdocs/nyx/nyxc/main.c:1486:15: error: incompatible types when assigning to type 'Expr' from type 'Type'
+C:/xampp/htdocs/nyx/nyxc/main.c:1488:15: error: incompatible types when assigning to type 'Expr' from type 'Type'
+C:/xampp/htdocs/nyx/nyxc/main.c:1490:70: error: incompatible types when initializing type 'int' using type 'Expr'
+C:/xampp/htdocs/nyx/nyxc/main.c:1502:65: error: incompatible types when initializing type 'Expr *' using type 'Expr'
+C:/xampp/htdocs/nyx/nyxc/main.c:1533:35: error: passing argument 2 of 'TypeChecker_check_top_level' makes pointer from integer without a cast [-Wint-conversion]
+C:/xampp/htdocs/nyx/nyxc/main.c:1552:19: error: incompatible type for argument 1 of 'rt_vec_pop'
+C:/xampp/htdocs/nyx/nyxc/main.c:1556:16: error: implicit declaration of function 'int64_t_unwrap' [-Wimplicit-function-declaration]
+C:/xampp/htdocs/nyx/nyxc/main.c:1556:31: error: implicit declaration of function 'rt_vec_last_mut' [-Wimplicit-function-declaration]
+C:/xampp/htdocs/nyx/nyxc/main.c:1556:15: error: lvalue required as unary '&' operand
+C:/xampp/htdocs/nyx/nyxc/main.c:1556:68: error: incompatible type for argument 3 of 'rt_map_insert'
+C:/xampp/htdocs/nyx/nyxc/main.c:1560:35: error: implicit declaration of function '_rev' [-Wimplicit-function-declaration]
+C:/xampp/htdocs/nyx/nyxc/main.c:1560:65: error: request for member 'len' in something not a structure or union
+C:/xampp/htdocs/nyx/nyxc/main.c:1562:4: error: '__iflet_1' undeclared (first use in this function)
+C:/xampp/htdocs/nyx/nyxc/main.c:1562:16: error: implicit declaration of function '_get'; did you mean '_getw'? [-Wimplicit-function-declaration]
+C:/xampp/htdocs/nyx/nyxc/main.c:1563:22: error: 'TAG__Some' undeclared (first use in this function)
+C:/xampp/htdocs/nyx/nyxc/main.c:1565:1: error: aggregate value used where an integer was expected
+C:/xampp/htdocs/nyx/nyxc/main.c:1570:8: error: 'Option' undeclared (first use in this function); did you mean 'NyxOption'?
+C:/xampp/htdocs/nyx/nyxc/main.c:1590:28: error: request for member 'name' in something not a structure or union
+C:/xampp/htdocs/nyx/nyxc/main.c:1590:36: error: request for member 'ty' in something not a structure or union
+C:/xampp/htdocs/nyx/nyxc/main.c:1595:56: error: incompatible type for argument 2 of 'TypeChecker_check_expr'
+C:/xampp/htdocs/nyx/nyxc/main.c:1604:18: error: invalid use of void expression
+C:/xampp/htdocs/nyx/nyxc/main.c:1610:20: error: expected expression before 'for'
+C:/xampp/htdocs/nyx/nyxc/main.c:1638:1: error: cannot convert to a pointer type
+C:/xampp/htdocs/nyx/nyxc/main.c:1641:1: error: cannot convert to a pointer type
+C:/xampp/htdocs/nyx/nyxc/main.c:1644:1: error: cannot convert to a pointer type
+C:/xampp/htdocs/nyx/nyxc/main.c:1647:1: error: cannot convert to a pointer type
+C:/xampp/htdocs/nyx/nyxc/main.c:1650:1: error: cannot convert to a pointer type
+C:/xampp/htdocs/nyx/nyxc/main.c:1657:20: error: implicit declaration of function 'rt_option_ok_or_else' [-Wimplicit-function-declaration]
+C:/xampp/htdocs/nyx/nyxc/main.c:1657:66: error: incompatible type for argument 2 of 'TypeChecker_lookup'
+C:/xampp/htdocs/nyx/nyxc/main.c:1661:17: error: invalid initializer
+C:/xampp/htdocs/nyx/nyxc/main.c:1662:18: error: invalid initializer
+C:/xampp/htdocs/nyx/nyxc/main.c:1663:43: error: incompatible type for argument 2 of 'TypeChecker_check_expr'
+C:/xampp/htdocs/nyx/nyxc/main.c:1664:43: error: incompatible type for argument 2 of 'TypeChecker_check_expr'
+C:/xampp/htdocs/nyx/nyxc/main.c:1669:55: error: invalid operands to binary == (have 'int64_t' {aka 'long long int'} and 'Type')
+C:/xampp/htdocs/nyx/nyxc/main.c:1669:95: error: invalid operands to binary == (have 'int64_t' {aka 'long long int'} and 'Type')
+C:/xampp/htdocs/nyx/nyxc/main.c:1670:1: error: cannot convert to a pointer type
+C:/xampp/htdocs/nyx/nyxc/main.c:1671:17: error: invalid operands to binary == (have 'int64_t' {aka 'long long int'} and 'Type')
+C:/xampp/htdocs/nyx/nyxc/main.c:1671:59: error: invalid operands to binary == (have 'int64_t' {aka 'long long int'} and 'Type')
+C:/xampp/htdocs/nyx/nyxc/main.c:1672:1: error: cannot convert to a pointer type
+C:/xampp/htdocs/nyx/nyxc/main.c:1673:18: error: invalid operands to binary == (have 'int64_t' {aka 'long long int'} and 'Type')
+C:/xampp/htdocs/nyx/nyxc/main.c:1673:61: error: invalid operands to binary == (have 'int64_t' {aka 'long long int'} and 'Type')
+C:/xampp/htdocs/nyx/nyxc/main.c:1674:1: error: cannot convert to a pointer type
+C:/xampp/htdocs/nyx/nyxc/main.c:1676:1: error: cannot convert to a pointer type
+C:/xampp/htdocs/nyx/nyxc/main.c:1680:1: error: cannot convert to a pointer type
+C:/xampp/htdocs/nyx/nyxc/main.c:1683:1: error: cannot convert to a pointer type
+C:/xampp/htdocs/nyx/nyxc/main.c:1690:17: error: invalid initializer
+C:/xampp/htdocs/nyx/nyxc/main.c:1691:42: error: incompatible type for argument 2 of 'TypeChecker_check_expr'
+C:/xampp/htdocs/nyx/nyxc/main.c:1699:1: error: cannot convert to a pointer type
+C:/xampp/htdocs/nyx/nyxc/main.c:1702:137: error: initialization of 'Type *' from 'int64_t' {aka 'long long int'} makes pointer from integer without a cast [-Wint-conversion]
+C:/xampp/htdocs/nyx/nyxc/main.c:1702:1: error: cannot convert to a pointer type
+C:/xampp/htdocs/nyx/nyxc/main.c:1705:21: error: expected expression before '{' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1715:2: error: expected statement before ')' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1716:2: error: expected ')' before 'else'
+C:/xampp/htdocs/nyx/nyxc/main.c:1692:18: error: invalid use of void expression
+C:/xampp/htdocs/nyx/nyxc/main.c:1793:128: error: expected ';' before '}' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1797:17: error: invalid initializer
+C:/xampp/htdocs/nyx/nyxc/main.c:1799:30: error: incompatible type for argument 2 of 'TypeChecker_check_expr'
+C:/xampp/htdocs/nyx/nyxc/main.c:1802:137: error: expected ';' before ')' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1802:137: error: expected statement before ')' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1804:1: error: cannot convert to a pointer type
+C:/xampp/htdocs/nyx/nyxc/main.c:1807:17: error: invalid initializer
+C:/xampp/htdocs/nyx/nyxc/main.c:1809:30: error: incompatible type for argument 2 of 'TypeChecker_check_expr'
+C:/xampp/htdocs/nyx/nyxc/main.c:1816:62: error: request for member 'body' in something not a structure or union
+C:/xampp/htdocs/nyx/nyxc/main.c:1819:31: error: incompatible types when assigning to type 'Type' from type 'void *'
+C:/xampp/htdocs/nyx/nyxc/main.c:1830:1: error: cannot convert to a pointer type
+C:/xampp/htdocs/nyx/nyxc/main.c:1837:38: error: passing argument 2 of 'TypeChecker_check_stmt' makes pointer from integer without a cast [-Wint-conversion]
+C:/xampp/htdocs/nyx/nyxc/main.c:1837:9: error: incompatible types when assigning to type 'Type' from type 'NyxResult'
+C:/xampp/htdocs/nyx/nyxc/main.c:1840:1: error: cannot convert to a pointer type
+C:/xampp/htdocs/nyx/nyxc/main.c:1844:18: error: invalid initializer
+C:/xampp/htdocs/nyx/nyxc/main.c:1846:43: error: incompatible type for argument 2 of 'TypeChecker_check_expr'
+C:/xampp/htdocs/nyx/nyxc/main.c:1848:23: error: 'TAG_NyxOption_Some' undeclared (first use in this function)
+C:/xampp/htdocs/nyx/nyxc/main.c:1849:32: error: 'union <anonymous>' has no member named 'Some'
+C:/xampp/htdocs/nyx/nyxc/main.c:1850:14: error: void value not ignored as it ought to be
+C:/xampp/htdocs/nyx/nyxc/main.c:1850:26: error: void value not ignored as it ought to be
+C:/xampp/htdocs/nyx/nyxc/main.c:1851:1: error: cannot convert to a pointer type
+C:/xampp/htdocs/nyx/nyxc/main.c:1856:84: error: incompatible type for argument 3 of 'TypeChecker_add_var'
+C:/xampp/htdocs/nyx/nyxc/main.c:1859:2: error: expected '}' before 'else'
+C:/xampp/htdocs/nyx/nyxc/main.c:1861:18: error: invalid initializer
+C:/xampp/htdocs/nyx/nyxc/main.c:1862:43: error: incompatible type for argument 2 of 'TypeChecker_check_expr'
+C:/xampp/htdocs/nyx/nyxc/main.c:1863:20: error: expected expression before '{' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1920:2: error: expected statement before ')' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1921:2: error: expected ')' before 'NyxResult'
+C:/xampp/htdocs/nyx/nyxc/main.c:1629:9: error: void value not ignored as it ought to be
+C:/xampp/htdocs/nyx/nyxc/main.c:3605:1: error: expected declaration or statement at end of input
+C:/xampp/htdocs/nyx/nyxc/main.c:3605:1: error: expected declaration or statement at end of input

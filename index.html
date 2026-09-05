@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- Primary Meta Tags -->
+    <title>Nyx Systems Language by 9jaonCloud — Sovereign Zero-GC Systems Programming</title>
+    <meta name="title" content="Nyx Systems Language by 9jaonCloud — Sovereign Zero-GC Systems Programming">
+    <meta name="description" content="Nyx is the sovereign zero-GC systems programming language by Simeon Bala at 9jaonCloud Engineering. Region inference, deterministic concurrency, capability microkernel, NyxOS and Nyx Mobile OS. For OS kernels, embedded, real-time and cloud — not the NyxCode web DSL.">
+    <meta name="keywords" content="Nyx systems language, Nyx programming language 9jaonCloud, NyxOS, Nyx Mobile OS, systems programming language, region inference, zero-gc, capability microkernel, Simeon Bala, 9jaoncloud, LLVM 18, compiler, deterministic replayability, structured concurrency, webassembly">
+    <meta name="author" content="Simeon Bala">
+    <link rel="canonical" href="https://nyx.9jaoncloud.com.ng/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://nyx.9jaoncloud.com.ng/">
+    <meta property="og:title" content="Nyx Systems Language by 9jaonCloud — Sovereign Systems Computing">
+    <meta property="og:description" content="One language, all platforms. Zero-GC region inference, deterministic concurrency, LLVM 18 compiler, and native GPU UI engine. Powers NyxOS and Nyx Mobile OS.">
+    <meta property="og:image" content="https://nyx.9jaoncloud.com.ng/docs/favicon.svg">
+    <meta property="og:site_name" content="Nyx by 9jaonCloud">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://nyx.9jaoncloud.com.ng/">
+    <meta property="twitter:title" content="Nyx Systems Language by 9jaonCloud — Sovereign Systems Computing">
+    <meta property="twitter:description" content="One language, all platforms. Zero-GC region inference, deterministic concurrency, and LLVM 18 compilation. Powers NyxOS and Nyx Mobile OS.">
+    <meta property="twitter:image" content="https://nyx.9jaoncloud.com.ng/docs/favicon.svg">
+    <meta name="twitter:creator" content="@9jaoncloud">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" href="docs/favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/9jaoncloud-waffle.css">
+    <style>
+        :root {
+            --bg: #070913;
+            --surface-glass: rgba(15, 23, 42, 0.65);
+            --border-glass: rgba(255, 255, 255, 0.12);
+            --specular: rgba(255, 255, 255, 0.25);
+            --primary: #8b5cf6;
+            --primary-glow: rgba(139, 92, 246, 0.35);
+            --secondary: #06b6d4;
+            --accent: #ec4899;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --card-radius: 16px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.12) 0px, transparent 50%),
+                radial-gradient(at 50% 50%, rgba(236, 72, 153, 0.08) 0px, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        /* Glassmorphism Classes */
+        .glass-panel {
+            background: var(--surface-glass);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--card-radius);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        /* Top Notification & Navbar */
+        .announcement-bar {
+            background: linear-gradient(90deg, #7c3aed, #0284c7, #db2777);
+            color: #ffffff;
+            text-align: center;
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+        .announcement-bar a { color: #fff; text-decoration: underline; margin-left: 0.5rem; }
+
+        /* Compact, Sleek, Luxury Glassmorphic Navigation */
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.65rem 2rem;
+            background: rgba(7, 9, 19, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            max-width: 100vw;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            text-decoration: none;
+            color: #fff;
+            font-weight: 800;
+            font-size: 1.2rem;
+            letter-spacing: -0.02em;
+            flex-shrink: 0;
+        }
+
+        .brand-logo .logo-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            box-shadow: 0 0 12px var(--primary-glow);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 0.65rem;
+            align-items: center;
+            flex-wrap: nowrap;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            padding: 0.4rem 0.65rem;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .nav-btn {
+            background: linear-gradient(135deg, var(--primary), #6d28d9) !important;
+            color: #fff !important;
+            padding: 0.4rem 1rem !important;
+            border-radius: 9999px !important;
+            font-weight: 600 !important;
+            font-size: 0.84rem !important;
+            box-shadow: 0 2px 10px var(--primary-glow);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .nav-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px var(--primary-glow);
+            background: linear-gradient(135deg, #9333ea, #7c3aed) !important;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            color: #fff;
+            font-size: 1.35rem;
+            line-height: 1;
+            padding: 0.45rem 0.75rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .mobile-menu-btn:hover {
+            background: rgba(139, 92, 246, 0.25);
+            border-color: var(--primary);
+        }
+
+        /* Hero Section */
+        .hero {
+            max-width: 1200px;
+            margin: 3.5rem auto 2rem;
+            padding: 0 2rem;
+            text-align: center;
+        }
+
+        .badge-author {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 1.1rem;
+            border-radius: 9999px;
+            background: rgba(139, 92, 246, 0.12);
+            border: 1px solid rgba(139, 92, 246, 0.35);
+            color: #c4b5fd;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+        .badge-author .dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 8px #10b981; }
+
+        .hero h1 {
+            font-size: 3.8rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1.15;
+            margin-bottom: 1.2rem;
+        }
+        .hero h1 span.gradient {
+            background: linear-gradient(135deg, #c084fc, #38bdf8, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p.lead {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            max-width: 780px;
+            margin: 0 auto 2.5rem;
+            font-weight: 400;
+        }
+
+        .cta-group {
+            display: flex;
+            gap: 1.2rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 3.5rem;
+        }
+
+        .btn-main {
+            padding: 0.85rem 2rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.25s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-gradient {
+            background: linear-gradient(135deg, var(--primary), #7c3aed);
+            color: #fff;
+            box-shadow: 0 6px 24px var(--primary-glow);
+        }
+        .btn-gradient:hover { transform: translateY(-2px); box-shadow: 0 10px 30px var(--primary-glow); }
+        .btn-glass {
+            background: var(--surface-glass);
+            border: 1px solid var(--border-glass);
+            color: #fff;
+            backdrop-filter: blur(12px);
+        }
+        .btn-glass:hover { background: rgba(255, 255, 255, 0.1); transform: translateY(-2px); }
+
+        /* Code Showcase */
+        .code-container {
+            max-width: 820px;
+            margin: 0 auto 5rem;
+            text-align: left;
+            overflow: hidden;
+        }
+        .code-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1.25rem;
+            background: rgba(0, 0, 0, 0.4);
+            border-bottom: 1px solid var(--border-glass);
+        }
+        .traffic-dots { display: flex; gap: 6px; }
+        .dot-red { width: 10px; height: 10px; border-radius: 50%; background: #ef4444; }
+        .dot-yellow { width: 10px; height: 10px; border-radius: 50%; background: #f59e0b; }
+        .dot-green { width: 10px; height: 10px; border-radius: 50%; background: #10b981; }
+        .code-title { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--text-muted); }
+
+        pre {
+            padding: 1.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.92rem;
+            color: #e2e8f0;
+            overflow-x: auto;
+            line-height: 1.6;
+        }
+        pre .kw { color: #c084fc; font-weight: 600; }
+        pre .fn { color: #38bdf8; }
+        pre .str { color: #4ade80; }
+        pre .typ { color: #f472b6; }
+        pre .num { color: #fb923c; }
+
+        /* Section Layouts */
+        section { max-width: 1200px; margin: 0 auto 5rem; padding: 0 2rem; }
+        .section-header { text-align: center; margin-bottom: 3rem; }
+        .section-header h2 { font-size: 2.4rem; font-weight: 700; margin-bottom: 0.75rem; }
+        .section-header p { color: var(--text-muted); font-size: 1.1rem; max-width: 600px; margin: 0 auto; }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.75rem;
+        }
+        .feature-card {
+            padding: 2rem;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(139, 92, 246, 0.4);
+        }
+        .feature-card .icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: rgba(139, 92, 246, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1.25rem;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+        .feature-card h3 { font-size: 1.3rem; margin-bottom: 0.6rem; color: #fff; }
+        .feature-card p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; }
+
+        /* Verification Milestone Card */
+        .milestone-banner {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(6, 182, 212, 0.15));
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            padding: 2rem;
+            border-radius: var(--card-radius);
+            margin-bottom: 4rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+        .milestone-banner h3 { font-size: 1.4rem; color: #34d399; margin-bottom: 0.4rem; }
+        .milestone-banner p { color: var(--text-muted); font-size: 0.95rem; max-width: 700px; }
+
+        /* =========================================================================
+           LUXURY MODERN FOOTER MENU STYLING (NO BULLETS, CLEAN SPACING & HOVERS)
+           ========================================================================= */
+        footer {
+            background: rgba(4, 6, 14, 0.95);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 4.5rem 2rem 2.5rem;
+            margin-top: 6rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr;
+            gap: 2rem;
+            max-width: 1240px;
+            margin: 0 auto 3rem;
+        }
+
+        .footer-brand h4 {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #f8fafc;
+            margin-bottom: 0.75rem;
+        }
+
+        .footer-brand p {
+            color: #94a3b8;
+            font-size: 0.88rem;
+            line-height: 1.6;
+            margin-bottom: 0.75rem;
+        }
+
+        .footer-col h5 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #f8fafc;
+            margin-bottom: 1.1rem;
+            letter-spacing: 0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .footer-col ul {
+            list-style: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        .footer-col ul li {
+            list-style: none !important;
+            margin-bottom: 0.65rem;
+            padding: 0 !important;
+        }
+
+        .footer-col ul li a {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 400;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            transition: all 0.2s ease;
+            line-height: 1.4;
+        }
+
+        .footer-col ul li a:hover {
+            color: #38bdf8 !important;
+            transform: translateX(3px);
+        }
+
+        .footer-bottom {
+            max-width: 1240px;
+            margin: 0 auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 1.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        @media (max-width: 1024px) {
+            .footer-grid { grid-template-columns: 1fr 1fr; gap: 2rem; }
+        }
+
+        @media (max-width: 640px) {
+            .footer-grid { grid-template-columns: 1fr; gap: 2rem; }
+            .footer-bottom { flex-direction: column; text-align: center; }
+        }
+    
+        /* Global Mobile Responsiveness Master Styles */
+        @media (max-width: 960px) {
+            nav {
+                padding: 0.65rem 1.25rem !important;
+                position: sticky;
+                top: 0;
+            }
+            .mobile-menu-btn {
+                display: inline-flex !important;
+                align-items: center;
+                justify-content: center;
+            }
+            .nav-links {
+                display: none !important;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                background: rgba(7, 9, 19, 0.98);
+                backdrop-filter: blur(24px);
+                -webkit-backdrop-filter: blur(24px);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+                flex-direction: column;
+                padding: 1.25rem 1.5rem;
+                gap: 0.5rem;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.9);
+                z-index: 1000;
+            }
+            .nav-links.active {
+                display: flex !important;
+                animation: mobileNavSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            }
+            .nav-links a {
+                width: 100%;
+                font-size: 0.95rem !important;
+                padding: 0.65rem 0.85rem !important;
+                border-radius: 8px;
+            }
+            .nav-links .nav-btn {
+                text-align: center;
+                margin-top: 0.5rem;
+                padding: 0.75rem 1rem !important;
+            }
+            @keyframes mobileNavSlide {
+                from { opacity: 0; transform: translateY(-8px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            .container, main {
+                padding: 1.5rem 1rem !important;
+            }
+            .hero h1 {
+                font-size: 2.1rem !important;
+            }
+            .hero p {
+                font-size: 0.98rem !important;
+            }
+            .grid, .card-grid, .bench-grid, .problems-grid, .pillars-grid, .pkg-grid {
+                grid-template-columns: 1fr !important;
+            }
+            table {
+                display: block !important;
+                overflow-x: auto !important;
+                white-space: nowrap !important;
+            }
+            .btn-cta-group, .btn-group {
+                flex-direction: column !important;
+            }
+            .btn-cta, .btn {
+                width: 100% !important;
+                text-align: center !important;
+                justify-content: center !important;
+            }
+            .footer-grid {
+                grid-template-columns: 1fr !important;
+                gap: 2rem !important;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Top Announcement -->
+    <div class="announcement-bar">
+        ⚡ The Nyx Sovereign Systems Language v0.28.0 Certified. Crafted by <strong><a href="https://9jaoncloud.com.ng/simeon-bala.php" target="_blank" rel="noopener noreferrer" style="color:inherit; text-decoration:underline; font-weight:inherit;" title="View Simeon Bala (Founder &amp; Chief Architect)">Simeon Bala</a></strong> | Hosted on <strong>9jaonCloud</strong>
+        <a href="docs/roadmap.html">View v0.28 Milestone &rarr;</a>
+    </div>
+
+    <!-- Sticky Navigation -->
+    <nav>
+        <a href="index.html" class="brand-logo" style="display: inline-flex; align-items: center; gap: 0.75rem; text-decoration: none;">
+            <div class="logo-icon" style="width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #8b5cf6, #06b6d4); display: flex; align-items: center; justify-content: center; font-size: 1.15rem; box-shadow: 0 0 14px rgba(139, 92, 246, 0.45);">🌙</div>
+            <div style="display: flex; flex-direction: column; line-height: 1.15; text-align: left;">
+                <span style="font-size: 1.25rem; font-weight: 800; color: #fff; letter-spacing: -0.02em;">Nyx</span>
+                <span style="font-size: 0.68rem; color: #38bdf8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;">Programming Language</span>
+            </div>
+        </a>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div class="nav-links" id="mainNavLinks">
+                <a href="about.html">About</a>
+                <a href="nyxos.html" style="color: #c084fc;">🌙 NyxOS</a>
+                <a href="nyxoffice.html" style="color: #38bdf8;">📝 NyxOffice</a>
+                <a href="docs/index.html">Docs</a>
+                <a href="mobile.html">📱 Mobile SDK</a>
+                <a href="comparison.html">Comparison</a>
+                <a href="docs/benchmarks.html">7 Benchmarks</a>
+                <a href="docs/learn/index.html">Learn</a>
+                <a href="packages.html">Packages</a>
+                <a href="downloads/nyx-v0.28.0-windows-x64.zip" style="color:#34d399;">⬇️ Download</a>
+                <a href="https://github.com/9jaoncloud/nyx" target="_blank" rel="noopener">GitHub</a>
+                <a href="docs/setup/installation.html" class="nav-btn">Get Started</a>
+                <!-- 9jaonCloud 9-Dot App Switcher ("Waffle") -->
+                <div id="nineja-app-switcher"></div>
+            </div>
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle Navigation" onclick="toggleMobileNav()">☰</button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero">
+        <div class="badge-author">
+            <span class="dot"></span>
+            <span>By <a href="https://9jaoncloud.com.ng/simeon-bala.php" target="_blank" rel="noopener noreferrer" style="color:inherit; text-decoration:underline; font-weight:inherit;" title="View Simeon Bala (Founder &amp; Chief Architect)">Simeon Bala</a> &bull; Powered by 9jaonCloud (9jaoncloud.com.ng)</span>
+        </div>
+        <h1>The Sovereign Language for <br><span class="gradient">Systems, Cloud & Native UI</span></h1>
+        <p class="lead">
+            Nyx is a unified, high-performance systems programming language. Featuring region-based Zero-GC memory safety, gradual typing, Skia GPU widgets, MLIR/Vulkan codegen, and sovereign autonomous cloud orchestration.
+        </p>
+
+        <div class="cta-group">
+            <a href="docs/learn/index.html" class="btn-main btn-gradient" style="background: linear-gradient(135deg, #a855f7, #38bdf8);">🎓 Learn Nyx (Academy)</a>
+            <a href="athena/dashboard.html" class="btn-main btn-gradient" style="background: linear-gradient(135deg, #10b981, #059669); color:#fff; font-weight:700; box-shadow: 0 4px 15px rgba(16,185,129,0.35);">⚡ Launch Athena Demo App</a>
+            <a href="docs/what-can-i-build.html" class="btn-main btn-glass" style="border-color: rgba(56, 189, 248, 0.4); color: #38bdf8;">🚀 What Can I Build?</a>
+            <a href="docs/index.html" class="btn-main btn-glass">📖 Read the Documentation</a>
+            <a href="comparison.html" class="btn-main btn-glass">🏆 2026 Comparison Matrix</a>
+            <a href="docs/cross_platform_tester.html" class="btn-main btn-glass" style="border-color: rgba(168, 85, 247, 0.4); color: #c084fc;">🌍 Interactive Simulator</a>
+            <a href="downloads/nyx-v0.28.0-windows-x64.zip" class="btn-main btn-glass" style="border-color: rgba(56, 189, 248, 0.4); color: #38bdf8;">⬇️ Download Prebuilt CLI (v0.28 x64)</a>
+        </div>
+
+        <!-- Live Code Showcase -->
+        <div class="code-container glass-panel">
+            <div class="code-header">
+                <div class="traffic-dots">
+                    <div class="dot-red"></div>
+                    <div class="dot-yellow"></div>
+                    <div class="dot-green"></div>
+                </div>
+                <div class="code-title">main.nyx — Sovereign Autonomous Microservice</div>
+                <div style="display:flex; align-items:center; gap:0.75rem;">
+                    <span style="font-size:0.75rem; color:#10b981;">● Zero-GC Fast Path</span>
+                    <a href="athena/dashboard.html" style="background:linear-gradient(135deg, #a855f7, #6366f1); color:#fff; text-decoration:none; padding:0.25rem 0.75rem; border-radius:6px; font-size:0.75rem; font-weight:700; box-shadow:0 0 12px rgba(168,85,247,0.35); transition:transform 0.2s;">⚡ Open Demo App &rarr;</a>
+                </div>
+            </div>
+            <pre><code><span class="kw">import</span> std.http
+<span class="kw">import</span> std.json
+<span class="kw">import</span> std.ui.{GlassTokens, GlassRenderer, GlassCardWidget}
+
+<span class="kw">pub fn</span> <span class="fn">main</span>() {
+    <span class="kw">let</span> tokens = GlassTokens::<span class="fn">cyber_void</span>()
+    <span class="kw">let</span> router = http::<span class="fn">new_router</span>()
+
+    router.<span class="fn">route</span>(http.GET, <span class="str">"/api/status"</span>, |req| {
+        <span class="kw">let</span> payload = json::<span class="typ">Object</span>::<span class="fn">new</span>()
+        payload.<span class="fn">insert</span>(<span class="str">"language"</span>, <span class="str">"Nyx"</span>)
+        payload.<span class="fn">insert</span>(<span class="str">"author"</span>, <span class="str">"Simeon Bala"</span>)
+        payload.<span class="fn">insert</span>(<span class="str">"cloud"</span>, <span class="str">"9jaonCloud"</span>)
+        payload.<span class="fn">insert</span>(<span class="str">"memory_mode"</span>, <span class="str">"Region-based Zero-GC"</span>)
+        payload.<span class="fn">insert</span>(<span class="str">"status"</span>, <span class="str">"Production Certified"</span>)
+        http.<span class="typ">Response</span>{ status: <span class="num">200</span>, body: http.<span class="typ">Body</span>::<span class="fn">Json</span>(payload) }
+    })
+
+    println(<span class="str">"🌙 Nyx Sovereign Engine listening on https://nyx.9jaoncloud.com.ng:8080"</span>)
+    http::<span class="fn">serve</span>(<span class="str">":8080"</span>, router.<span class="fn">handler</span>()).<span class="fn">unwrap</span>()
+}</code></pre>
+        </div>
+    </header>
+
+    <!-- Certified Milestone Banner -->
+    <section>
+        <div class="milestone-banner">
+            <div>
+                <h3>🏆 Milestone Certified: All 15 Engineering Phases Complete</h3>
+                <p>Self-hosted compiler (<code>nyxc</code>), Material Design 3 Skia engine, Glassmorphism suite, LLVM 18 Whole-Program LTO, PGO, DAP time-travel debugger, and sovereign cloud connectors compile with 0 errors.</p>
+            </div>
+            <a href="docs/assessment.html" class="btn-main btn-glass" style="background: rgba(16, 185, 129, 0.2); border-color:#10b981; color:#fff;">Read Assessment &rarr;</a>
+        </div>
+    </section>
+
+    <!-- Core Features Grid -->
+    <section>
+        <div class="section-header">
+            <h2>Engineered Without Compromise</h2>
+            <p>Combining the speed of C/Rust, ergonomics of TypeScript, and sovereign cloud independence.</p>
+        </div>
+
+        <div class="feature-grid">
+            <div class="feature-card glass-panel">
+                <div class="icon">🛡️</div>
+                <h3>Region-Based Zero-GC</h3>
+                <p>Deterministic memory management using compile-time region escape analysis. Zero garbage collection pauses, zero manual free bugs.</p>
+            </div>
+
+            <div class="feature-card glass-panel">
+                <div class="icon">⚡</div>
+                <h3>MLIR & LLVM 18 Toolchain</h3>
+                <p>Native multi-level intermediate representation generating hyper-optimized machine code, Vulkan shaders, and WebAssembly modules.</p>
+            </div>
+
+            <div class="feature-card glass-panel">
+                <div class="icon">🎨</div>
+                <h3>Glassmorphic & MD3 UI</h3>
+                <p>Built-in hardware-accelerated Skia graphics engine. Render 120 FPS glass acrylic cards, holographic equalizers, and tactile controls.</p>
+            </div>
+
+            <div class="feature-card glass-panel">
+                <div class="icon">🌐</div>
+                <h3>Sovereign Cloud & Mesh</h3>
+                <p>Native autonomous microservice framework and decentralized mesh networking tailored for national and institutional autonomy.</p>
+            </div>
+
+            <div class="feature-card glass-panel">
+                <div class="icon">🧠</div>
+                <h3>Embedded AI & Vision</h3>
+                <p>Native matrix tensor algebra, ONNX runtime bridge, Cooley-Tukey FFT audio DSP, and OpenCV computer vision embedded in stdlib.</p>
+            </div>
+
+            <div class="feature-card glass-panel">
+                <div class="icon">🛠️</div>
+                <h3>Complete Dev Ecosystem</h3>
+                <p>Language Server Protocol (LSP), Debug Adapter Protocol (DAP), Time-Travel Memory Profiler, and <code>nypm</code> package manager.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <!-- Balanced 5-Column Ecosystem Footer (Exactly 6 items per column) -->
+    <!-- Balanced 5-Column Ecosystem Footer (Exactly 6 items per column) -->
+    
+    <!-- Featured: NyxOS Sovereign Operating System -->
+    <section style="max-width: 1200px; margin: 4rem auto; padding: 2.5rem; background: linear-gradient(135deg, rgba(139, 92, 246, 0.14), rgba(56, 189, 248, 0.08)); border: 1px solid rgba(139, 92, 246, 0.4); border-radius: 20px; backdrop-filter: blur(16px); position: relative; overflow: hidden;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 2rem;">
+            <div style="flex: 1; min-width: 300px;">
+                <div style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.85rem; background: rgba(139, 92, 246, 0.25); border-radius: 9999px; color: #c084fc; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; margin-bottom: 1rem;">
+                    🌙 Featured Flagship Project
+                </div>
+                <h2 style="font-size: 2.4rem; font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 0.75rem;">
+                    Powered by Nyx: <span style="background: linear-gradient(135deg, #c084fc, #38bdf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">NyxOS Operating System</span>
+                </h2>
+                <p style="color: #cbd5e1; font-size: 1.05rem; line-height: 1.6; margin-bottom: 1.75rem;">
+                    The sovereign, zero-GC, capability-secure operating system engineered from first principles. Features a 120 FPS Vulkan compositor, 6.2ms cloud unikernels, in-kernel Windows/Linux interop, and 1-second instant bootloader rollbacks.
+                </p>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <a href="nyxos.html" style="padding: 0.8rem 1.6rem; background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: #fff; font-weight: 700; border-radius: 10px; text-decoration: none; box-shadow: 0 4px 16px rgba(139, 92, 246, 0.4);">🌙 Explore NyxOS Overview</a>
+                    <a href="os-preview.html" style="padding: 0.8rem 1.6rem; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: #fff; font-weight: 700; border-radius: 10px; text-decoration: none;">🖥️ Test-Drive 120 FPS Desktop</a>
+                    <a href="nyxos-benchmarks.html" style="padding: 0.8rem 1.6rem; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-weight: 700; border-radius: 10px; text-decoration: none;">🔬 Scientific Benchmarks</a>
+                </div>
+            </div>
+            <div style="background: rgba(4, 6, 18, 0.85); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px; padding: 1.5rem; width: 340px; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; color: #38bdf8;">
+                <div style="color: #94a3b8; margin-bottom: 0.5rem;">// In-Kernel Benchmark Metric</div>
+                <div style="margin-bottom: 0.4rem;">• Memory: <span style="color: #34d399; font-weight: bold;">84.2 GB/s</span> (0.00ms GC)</div>
+                <div style="margin-bottom: 0.4rem;">• IPC Latency: <span style="color: #34d399; font-weight: bold;">42 ns</span> (SPSC Ring)</div>
+                <div style="margin-bottom: 0.4rem;">• HTTP/3 RPS: <span style="color: #34d399; font-weight: bold;">2.42M req/s</span> (eBPF)</div>
+                <div style="margin-bottom: 0.4rem;">• Cold Boot: <span style="color: #34d399; font-weight: bold;">6.2 ms</span> (4.8MB VM)</div>
+                <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.08); color: #c084fc; font-weight: bold;">
+                    status: 100% Production Ready
+                </div>
+                <div style="margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px solid rgba(255,255,255,0.08); color: #fbbf24; font-size: 0.72rem; line-height: 1.5; font-weight: 400;">
+                    📏 Internal test-environment measurements. Workload-specific; not yet independently audited.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured: Nyx Mobile OS Sovereign Mobile Platform -->
+    <section style="max-width: 1200px; margin: 4rem auto; padding: 2.5rem; background: linear-gradient(135deg, rgba(236, 72, 153, 0.14), rgba(56, 189, 248, 0.08)); border: 1px solid rgba(236, 72, 153, 0.4); border-radius: 20px; backdrop-filter: blur(16px); position: relative; overflow: hidden;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 2rem;">
+            <div style="flex: 1; min-width: 300px;">
+                <div style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.85rem; background: rgba(236, 72, 153, 0.25); border-radius: 9999px; color: #f9a8d4; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; margin-bottom: 1rem;">
+                    📱 Flagship Mobile Platform
+                </div>
+                <h2 style="font-size: 2.4rem; font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 0.75rem;">
+                    Powered by Nyx: <span style="background: linear-gradient(135deg, #f9a8d4, #38bdf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Nyx Mobile OS</span>
+                </h2>
+                <p style="color: #cbd5e1; font-size: 1.05rem; line-height: 1.6; margin-bottom: 1.75rem;">
+                    The world's first sovereign, zero-GC mobile operating system. Delivers +45% real-world battery life, sub-6ms touch-to-pixel response at 120Hz/144Hz, encrypted HyperConnect P2P cross-device mesh with zero telemetry, and dual-persona Android app compatibility.
+                </p>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <a href="mobile.html" style="padding: 0.8rem 1.6rem; background: linear-gradient(135deg, #ec4899, #be185d); color: #fff; font-weight: 700; border-radius: 10px; text-decoration: none; box-shadow: 0 4px 16px rgba(236, 72, 153, 0.4);">📱 Explore Nyx Mobile OS</a>
+                    <a href="mobile-preview.html" style="padding: 0.8rem 1.6rem; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: #fff; font-weight: 700; border-radius: 10px; text-decoration: none;">📲 Test-Drive Smartphone Simulator</a>
+                    <a href="hardware.html" style="padding: 0.8rem 1.6rem; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-weight: 700; border-radius: 10px; text-decoration: none;">🔧 Supported Mobile Silicon</a>
+                </div>
+            </div>
+            <div style="background: rgba(4, 6, 18, 0.85); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px; padding: 1.5rem; width: 340px; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; color: #38bdf8;">
+                <div style="color: #94a3b8; margin-bottom: 0.5rem;">// Mobile Runtime Benchmark Metric</div>
+                <div style="margin-bottom: 0.4rem;">• Battery Gain: <span style="color: #34d399; font-weight: bold;">+45%</span> (0.00ms GC)</div>
+                <div style="margin-bottom: 0.4rem;">• Touch→Pixel: <span style="color: #34d399; font-weight: bold;">&lt;6 ms</span> (144 Hz)</div>
+                <div style="margin-bottom: 0.4rem;">• App Launch: <span style="color: #34d399; font-weight: bold;">8 ms</span> (native app)</div>
+                <div style="margin-bottom: 0.4rem;">• HyperConnect: <span style="color: #34d399; font-weight: bold;">P2P</span> (0 cloud hops)</div>
+                <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.08); color: #f9a8d4; font-weight: bold;">
+                    status: 100% Production Ready
+                </div>
+                <div style="margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px solid rgba(255,255,255,0.08); color: #fbbf24; font-size: 0.72rem; line-height: 1.5; font-weight: 400;">
+                    📏 Internal test-environment measurements. Workload-specific; not yet independently audited.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <h4 style="font-size: 1.15rem; font-weight: 800; color: #f8fafc; margin-bottom: 0.75rem;">🌙 The Nyx Programming Language</h4>
+                <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 0.75rem;">
+                    Designed and architected by <strong><a href="https://9jaoncloud.com.ng/simeon-bala.php" target="_blank" rel="noopener noreferrer" style="color: #38bdf8; text-decoration: underline;" title="View Simeon Bala (Founder &amp; Chief Architect)">Simeon Bala</a></strong>.<br>
+                    Powered by <strong>9jaonCloud Sovereign Infrastructure</strong>.
+                </p>
+                <div style="font-size: 0.85rem; color: #64748b; line-height: 1.7;">
+                    <div>Portal: <a href="https://nyx.9jaoncloud.com.ng" style="color: #a78bfa; text-decoration: none;">nyx.9jaoncloud.com.ng</a></div>
+                    <div>Support: <a href="mailto:nyx@9jaoncloud.com.ng" style="color: #a78bfa; text-decoration: none;">nyx@9jaoncloud.com.ng</a></div>
+                </div>
+            </div>
+
+            <div class="footer-col">
+                <h5>📖 Core Language</h5>
+                <ul>
+                    <li><a href="docs/language/introduction.html">Language Overview</a></li>
+                    <li><a href="docs/language/types.html">Type System &amp; Contracts</a></li>
+                    <li><a href="docs/language/memory.html">Zero-GC Memory Regions</a></li>
+                    <li><a href="docs/language/concurrency.html">Structured Concurrency</a></li>
+                    <li><a href="docs/stdlib/index.html">Standard Library (stdlib)</a></li>
+                    <li><a href="comparison.html">Head-to-Head Matrix</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h5>🚀 Platform &amp; SDK</h5>
+                <ul>
+                    <li><a href="athena/dashboard.html" style="color: #c084fc; font-weight: 700;">⚡ Athena Web Demo</a></li>
+                    <li><a href="docs/learn/index.html">🎓 Learn Nyx Academy</a></li>
+                    <li><a href="docs/benchmarks.html">📊 Empirical Benchmarks</a></li>
+                    <li><a href="docs/ecosystem.html">🌐 Ecosystem Directory</a></li>
+                    <li><a href="downloads/nyx-v0.28.0-windows-x64.zip">📦 Windows SDK &amp; Prebuilt CLI (v0.28)</a></li>
+                    <li><a href="https://github.com/9jaoncloud/nyx" target="_blank" rel="noopener">⭐ Official GitHub Repo</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h5>⚖️ Legal &amp; Governance</h5>
+                <ul>
+                    <li><a href="docs/legal/terms-and-disclaimer.html" style="color: #fca5a5; font-weight: 600;">⚖️ Terms &amp; Disclaimer</a></li>
+                    <li><a href="https://9jaoncloud.com.ng/privacy.php" target="_blank" rel="noopener">🛡️ Privacy &amp; Telemetry</a></li>
+                    <li><a href="docs/assessment.html">🔍 Technical Assessment</a></li>
+                    <li><a href="docs/response-to-assessment.html">💬 Designers' Response</a></li>
+                    <li><a href="docs/roadmap.html">🗺️ Engineering Roadmap</a></li>
+                    <li><a href="rss.xml" target="_blank">📰 RSS Technical Feed</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h5>🛠️ SpecForge &amp; Feedback</h5>
+                <ul>
+                    <li><a href="https://specforge.9jaoncloud.com.ng/bug_report.php?token=85ef1ac50900f8bff142c95c85287db4" target="_blank" rel="noopener" style="color: #38bdf8; font-weight: 700;">🐞 Submit Bug Report</a></li>
+                    <li><a href="https://specforge.9jaoncloud.com.ng/intake.php?token=ab8dec3fccff42a37e2f0e0dced9941d" target="_blank" rel="noopener" style="color: #38bdf8;">💡 Submit RFC / Feature</a></li>
+                    <li><a href="https://specforge.9jaoncloud.com.ng/bug_report.php?token=a51f7380c1e80492eb38ef5dbc85d681" target="_blank" rel="noopener">🩺 DxEnterprise Portal</a></li>
+                    <li><a href="https://specforge.9jaoncloud.com.ng/" target="_blank" rel="noopener">📐 SpecForge Platform</a></li>
+                    <li><a href="https://9jaoncloud.com.ng" target="_blank" rel="noopener">☁️ 9jaonCloud Home</a></li>
+                    <li><a href="mailto:nyx@9jaoncloud.com.ng">✉️ Enterprise Contact</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <div>&copy; 2026 <a href="https://9jaoncloud.com.ng/simeon-bala.php" target="_blank" rel="noopener noreferrer" style="color:inherit; text-decoration:underline; font-weight:inherit;" title="View Simeon Bala (Founder &amp; Chief Architect)">Simeon Bala</a> &bull; 9jaonCloud (<a href="https://9jaoncloud.com.ng" target="_blank" rel="noopener">9jaoncloud.com.ng</a>). All rights reserved.</div>
+            <div>Sovereign Autonomous Systems Platform &bull; Compliant with NDPA 2023</div>
+        </div>
+    </footer>
+
+    <script src="assets/js/9jaoncloud-waffle.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+    <script>
+        function toggleMobileNav() {
+            var nav = document.getElementById('mainNavLinks');
+            var btn = document.getElementById('mobileMenuBtn');
+            if (nav) {
+                nav.classList.toggle('active');
+                if (btn) {
+                    btn.innerHTML = nav.classList.contains('active') ? '✕' : '☰';
+                }
+            }
+        }
+        document.addEventListener('click', function(e) {
+            var nav = document.getElementById('mainNavLinks');
+            var btn = document.getElementById('mobileMenuBtn');
+            if (nav && nav.classList.contains('active') && !nav.contains(e.target) && e.target !== btn) {
+                nav.classList.remove('active');
+                if (btn) btn.innerHTML = '☰';
+            }
+        });
+    </script>
+</body>
+</html>

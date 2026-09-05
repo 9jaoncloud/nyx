@@ -1,0 +1,44 @@
+﻿nyxc\main.c:597:20: error: incompatible types when assigning to type 'Token' from type 'rt_string_t'
+nyxc\main.c:600:20: error: incompatible types when assigning to type 'Token' from type 'rt_string_t'
+nyxc\main.c:603:20: error: incompatible types when assigning to type 'Token' from type 'rt_string_t'
+nyxc\main.c:606:20: error: incompatible types when assigning to type 'Token' from type 'rt_string_t'
+nyxc\main.c:609:20: error: incompatible types when assigning to type 'Token' from type 'rt_string_t'
+nyxc\main.c:612:20: error: incompatible types when assigning to type 'Token' from type 'rt_string_t'
+nyxc\main.c:615:20: error: incompatible types when assigning to type 'Token' from type 'rt_string_t'
+nyxc\main.c:895:60: error: incompatible types when initializing type 'Type *' using type 'Type'
+nyxc\main.c:900:69: error: incompatible types when initializing type 'Type *' using type 'Type'
+nyxc\main.c:902:63: error: incompatible types when initializing type 'Type *' using type 'Type'
+nyxc\main.c:1130:21: error: incompatible types when assigning to type 'Expr' from type 'NyxOption'
+nyxc\main.c:1133:21: error: incompatible types when assigning to type 'Expr' from type 'NyxOption'
+nyxc\main.c:1136:21: error: incompatible types when assigning to type 'Expr' from type 'NyxOption'
+nyxc\main.c:1139:21: error: incompatible types when assigning to type 'Expr' from type 'NyxOption'
+nyxc\main.c:1142:21: error: incompatible types when assigning to type 'Expr' from type 'NyxOption'
+nyxc\main.c:1145:21: error: incompatible types when assigning to type 'Expr' from type 'NyxOption'
+nyxc\main.c:1148:21: error: incompatible types when assigning to type 'Expr' from type 'NyxOption'
+nyxc\main.c:1151:21: error: incompatible types when assigning to type 'Expr' from type 'NyxOption'
+nyxc\main.c:1154:21: error: incompatible types when assigning to type 'Expr' from type 'NyxOption'
+nyxc\main.c:1157:21: error: incompatible types when assigning to type 'Expr' from type 'NyxOption'
+nyxc\main.c:1160:21: error: incompatible types when assigning to type 'Expr' from type 'NyxOption'
+nyxc\main.c:1163:21: error: incompatible types when assigning to type 'Expr' from type 'NyxOption'
+nyxc\main.c:1166:21: error: incompatible types when assigning to type 'Expr' from type 'NyxOption'
+nyxc\main.c:1169:21: error: incompatible types when assigning to type 'Expr' from type 'NyxOption'
+nyxc\main.c:1126:21: error: invalid initializer
+nyxc\main.c:1551:15: error: passing argument 1 of 'rt_map_insert' from incompatible pointer type 
+nyxc\main.c:1563:38: error: passing argument 1 of 'rt_map_get' from incompatible pointer type 
+nyxc\main.c:1708:154: error: incompatible types when initializing type 'Type *' using type 'Type'
+nyxc\main.c:1732:23: error: invalid initializer
+nyxc\main.c:1735:21: error: incompatible types when assigning to type 'NyxResult' from type 'rt_string_t'
+nyxc\main.c:1730:23: error: invalid initializer
+nyxc\main.c:1776:21: error: incompatible types when assigning to type 'NyxResult' from type 'Type'
+nyxc\main.c:1826:21: error: incompatible types when assigning to type 'NyxResult' from type 'Type'
+nyxc\main.c:1885:88: error: request for member 'f1' in something not a structure or union
+nyxc\main.c:1913:174: error: incompatible types when initializing type 'Type *' using type 'Type'
+nyxc\main.c:2012:257: error: request for member 'f0' in something not a structure or union
+nyxc\main.c:2012:360: error: request for member 'f1' in something not a structure or union
+nyxc\main.c:2437:49: error: request for member 'f0' in something not a structure or union
+nyxc\main.c:2439:53: error: request for member 'f1' in something not a structure or union
+nyxc\main.c:2639:259: error: request for member 'f0' in something not a structure or union
+nyxc\main.c:2639:362: error: request for member 'f1' in something not a structure or union
+nyxc\main.c:2951:18: error: incompatible types when initializing type 'int64_t' {aka 'long long int'} using type 
+nyxc\main.c:2975:23: error: incompatible type for argument 1 of 'new_lexer'
+nyxc\main.c:2992:27: error: incompatible type for argument 1 of 'new_parser'

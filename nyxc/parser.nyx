@@ -1,0 +1,487 @@
+module parser
+
+import token.*
+import lexer.*
+import ast.*
+import std.vec
+import std.string
+
+pub struct Parser {
+    lexer: Lexer,
+    current: Token,
+    pub had_error: Bool,
+    pub errors: Vec<String>,
+}
+
+pub fn new_parser(source: String) -> Parser {
+    let mut lex = lexer.new_lexer(source)
+    Parser { lexer: lex, current: lex.next_token(), had_error: false, errors: Vec.new() }
+}
+
+impl Parser {
+    pub fn parse_program(self: &mut Parser) -> Vec<TopLevel> {
+        let mut items = Vec.new()
+        loop {
+            match &self.current.kind {
+                TokenKind.Fn => items.push(self.parse_fn_decl(false)),
+                TokenKind.Async => { self.advance(); items.push(self.parse_fn_decl(true)); }
+                TokenKind.Struct => items.push(self.parse_struct_def()),
+                TokenKind.Enum => items.push(self.parse_enum_def()),
+                TokenKind.Import => { self.advance(); self.skip_to_semicolon() }
+                TokenKind.Module => { self.advance(); self.skip_to_semicolon() }
+                TokenKind.Extern => { self.advance(); self.skip_to_semicolon() }
+                TokenKind.EOF => break,
+                _ => { self.error("Unexpected token"); self.advance() }
+            }
+        }
+        items
+    }
+
+    fn advance(self: &mut Parser) { self.current = self.lexer.next_token() }
+
+    fn check(self: &Parser, kind: TokenKind) -> Bool {
+        std::mem::discriminant(&self.current.kind) == std::mem::discriminant(&kind)
+    }
+
+    fn expect(self: &mut Parser, kind: TokenKind) {
+        if std::mem::discriminant(&self.current.kind) == std::mem::discriminant(&kind) {
+            self.advance()
+        } else {
+            self.error("Unexpected token")
+        }
+    }
+
+    fn error(self: &mut Parser, msg: &str) {
+        self.had_error = true
+        self.errors.push(msg.to_string())
+    }
+
+    fn skip_to_semicolon(self: &mut Parser) {
+        while !matches!(self.current.kind, TokenKind.Semicolon | TokenKind.EOF) {
+            self.advance()
+        }
+        if matches!(self.current.kind, TokenKind.Semicolon) { self.advance() }
+    }
+
+    fn parse_ident(self: &mut Parser) -> String {
+        if let TokenKind.Ident(name) = &self.current.kind {
+            let result = name.clone()
+            self.advance()
+            return result
+        }
+        self.had_error = true
+        "unknown".to_string()
+    }
+
+    fn parse_type(self: &mut Parser) -> Type {
+        if let TokenKind.Ident(name) = &self.current.kind {
+            self.advance()
+            match name.as_str() {
+                "Int" => Type.Int,
+                "Float" => Type.Float,
+                "Bool" => Type.Bool,
+                "String" => Type.String,
+                "Char" => Type.Char,
+                "Void" => Type.Void,
+                _ => Type.Custom(name),
+            }
+        } else if matches!(self.current.kind, TokenKind.LBracket) {
+            self.advance()
+            let inner = self.parse_type()
+            self.expect(TokenKind.RBracket)
+            Type.Array(inner)
+        } else if matches!(self.current.kind, TokenKind.Ampersand) {
+            self.advance()
+            if matches!(self.current.kind, TokenKind.Mut) {
+                self.advance()
+                Type.MutRef(self.parse_type())
+            } else {
+                Type.Ref(self.parse_type())
+            }
+        } else {
+            self.had_error = true; Type.Void
+        }
+    }
+
+    fn parse_fn_decl(self: &mut Parser, is_async: Bool) -> TopLevel {
+        self.advance() // skip fn
+        let name = self.parse_ident()
+        let mut generics = Vec.new()
+        if matches!(self.current.kind, TokenKind.Lt) {
+            self.advance()
+            loop {
+                generics.push(self.parse_ident())
+                if !matches!(self.current.kind, TokenKind.Comma) { break }
+                self.advance()
+            }
+            self.expect(TokenKind.Gt)
+        }
+        self.expect(TokenKind.LParen)
+        let mut params = Vec.new()
+        if !matches!(self.current.kind, TokenKind.RParen) {
+            loop {
+                let pname = self.parse_ident()
+                self.expect(TokenKind.Colon)
+                let ptype = self.parse_type()
+                params.push(Param{ name: pname, ty: ptype })
+                if !matches!(self.current.kind, TokenKind.Comma) { break }
+                self.advance()
+            }
+        }
+        self.expect(TokenKind.RParen)
+        let ret_type = if matches!(self.current.kind, TokenKind.Arrow) {
+            self.advance(); self.parse_type()
+        } else {
+            Type.Void
+        }
+        self.expect(TokenKind.LBrace)
+        let body = self.parse_block_expr()
+        self.expect(TokenKind.RBrace)
+        TopLevel.FnDecl{ name, generics, params, ret_type, body, is_async }
+    }
+
+    fn parse_struct_def(self: &mut Parser) -> TopLevel {
+        self.advance() // skip struct
+        let name = self.parse_ident()
+        let mut generics = Vec.new()
+        if matches!(self.current.kind, TokenKind.Lt) {
+            self.advance()
+            loop {
+                generics.push(self.parse_ident())
+                if !matches!(self.current.kind, TokenKind.Comma) { break }
+                self.advance()
+            }
+            self.expect(TokenKind.Gt)
+        }
+        self.expect(TokenKind.LBrace)
+        let mut fields = Vec.new()
+        while !matches!(self.current.kind, TokenKind.RBrace) {
+            let fname = self.parse_ident()
+            self.expect(TokenKind.Colon)
+            let ftype = self.parse_type()
+            fields.push((fname, ftype))
+            if !matches!(self.current.kind, TokenKind.Comma) { break }
+            self.advance()
+        }
+        self.expect(TokenKind.RBrace)
+        TopLevel.StructDef{ name, generics, fields }
+    }
+
+    fn parse_enum_def(self: &mut Parser) -> TopLevel {
+        self.advance() // skip enum
+        let name = self.parse_ident()
+        let mut generics = Vec.new()
+        if matches!(self.current.kind, TokenKind.Lt) {
+            self.advance()
+            loop {
+                generics.push(self.parse_ident())
+                if !matches!(self.current.kind, TokenKind.Comma) { break }
+                self.advance()
+            }
+            self.expect(TokenKind.Gt)
+        }
+        self.expect(TokenKind.LBrace)
+        let mut variants = Vec.new()
+        while !matches!(self.current.kind, TokenKind.RBrace) {
+            let vname = self.parse_ident()
+            let mut args = Vec.new()
+            if matches!(self.current.kind, TokenKind.LParen) {
+                self.advance()
+                if !matches!(self.current.kind, TokenKind.RParen) {
+                    loop {
+                        args.push(self.parse_type())
+                        if !matches!(self.current.kind, TokenKind.Comma) { break }
+                        self.advance()
+                    }
+                }
+                self.expect(TokenKind.RParen)
+            }
+            variants.push((vname, args))
+            if !matches!(self.current.kind, TokenKind.Comma) { break }
+            self.advance()
+        }
+        self.expect(TokenKind.RBrace)
+        TopLevel.EnumDef{ name, generics, variants }
+    }
+
+    fn parse_block_expr(self: &mut Parser) -> Expr {
+        let mut stmts = Vec.new()
+        while !matches!(self.current.kind, TokenKind.RBrace | TokenKind.EOF) {
+            stmts.push(self.parse_stmt())
+        }
+        Expr.Block(stmts)
+    }
+
+    fn parse_block(self: &mut Parser) -> Vec<Stmt> {
+        let mut stmts = Vec.new()
+        while !matches!(self.current.kind, TokenKind.RBrace | TokenKind.EOF) {
+            stmts.push(self.parse_stmt())
+        }
+        stmts
+    }
+
+    fn parse_stmt(self: &mut Parser) -> Stmt {
+        match &self.current.kind {
+            TokenKind.Let => {
+                self.advance()
+                let mutable = matches!(self.current.kind, TokenKind.Mut)
+                if mutable { self.advance() }
+                let name = self.parse_ident()
+                let mut ty = None
+                if matches!(self.current.kind, TokenKind.Colon) {
+                    self.advance()
+                    ty = Some(self.parse_type())
+                }
+                self.expect(TokenKind.Equals)
+                let value = self.parse_expr()
+                if matches!(self.current.kind, TokenKind.Semicolon) { self.advance() }
+                Stmt::Let { name, mutable, ty, value }
+            }
+            TokenKind.Return => {
+                self.advance()
+                let expr = if !matches!(self.current.kind, TokenKind.Semicolon | TokenKind.RBrace) {
+                    Some(self.parse_expr())
+                } else { None }
+                if matches!(self.current.kind, TokenKind.Semicolon) { self.advance() }
+                Stmt::Return(expr)
+            }
+            _ => {
+                let expr = self.parse_expr()
+                if matches!(self.current.kind, TokenKind.Semicolon) { self.advance() }
+                Stmt::Expr(expr)
+            }
+        }
+    }
+
+    fn parse_expr(self: &mut Parser) -> Expr {
+        self.pratt(0)
+    }
+
+    fn pratt(self: &mut Parser, min_bp: u8) -> Expr {
+        let mut lhs = self.parse_prefix()
+        loop {
+            let (bin_op, l_bp, r_bp) = match &self.current.kind {
+                TokenKind.Plus => (BinOp.Add, 7, 8),
+                TokenKind.Minus => (BinOp.Sub, 7, 8),
+                TokenKind.Star => (BinOp.Mul, 9, 10),
+                TokenKind.Slash => (BinOp.Div, 9, 10),
+                TokenKind.Percent => (BinOp.Mod, 9, 10),
+                TokenKind.EqEq => (BinOp.Eq, 5, 6),
+                TokenKind.NotEq => (BinOp.NotEq, 5, 6),
+                TokenKind.Lt => (BinOp.Lt, 5, 6),
+                TokenKind.LtEq => (BinOp.LtEq, 5, 6),
+                TokenKind.Gt => (BinOp.Gt, 5, 6),
+                TokenKind.GtEq => (BinOp.GtEq, 5, 6),
+                TokenKind.And => (BinOp.And, 3, 4),
+                TokenKind.Or => (BinOp.Or, 1, 2),
+                _ => break,
+            };
+            if l_bp < min_bp {
+                break
+            }
+            self.advance()
+            let rhs = self.pratt(r_bp)
+            lhs = Expr.Binary { op: bin_op, lhs, rhs }
+            while matches!(self.current.kind, TokenKind.Dot) {
+                self.advance()
+                let field = self.parse_ident()
+                if matches!(self.current.kind, TokenKind.LParen) {
+                    let args = self.parse_call_args()
+                    lhs = Expr.MethodCall { receiver: lhs, method: field, generic_args: Vec.new(), args }
+                } else {
+                    lhs = Expr.FieldAccess { obj: lhs, field }
+                }
+            }
+        }
+        lhs
+    }
+
+    fn parse_prefix(self: &mut Parser) -> Expr {
+        match &self.current.kind.clone() {
+            TokenKind.IntLit(n) => { self.advance(); Expr::Lit(Literal::Int(*n)) }
+            TokenKind.FloatLit(f) => { self.advance(); Expr::Lit(Literal::Float(*f)) }
+            TokenKind.StringLit(s) => { self.advance(); Expr::Lit(Literal::String(s.clone())) }
+            TokenKind.True => { self.advance(); Expr::Lit(Literal::Bool(true)) }
+            TokenKind.False => { self.advance(); Expr::Lit(Literal::Bool(false)) }
+            TokenKind.Null => { self.advance(); Expr::Lit(Literal::Int(0)) }
+            TokenKind.Ident(name) => {
+                self.advance()
+                if matches!(self.current.kind, TokenKind.LParen) {
+                    let args = self.parse_call_args()
+                    Expr::Call { func: Expr::Ident(name.clone()), generic_args: Vec.new(), args }
+                } else if matches!(self.current.kind, TokenKind.LBrace) {
+                    self.advance()
+                    let mut fields = Vec.new()
+                    while !matches!(self.current.kind, TokenKind.RBrace) {
+                        let fname = self.parse_ident()
+                        self.expect(TokenKind.Colon)
+                        let val = self.parse_expr()
+                        fields.push((fname, val))
+                        if !matches!(self.current.kind, TokenKind.Comma) { break }
+                        self.advance()
+                    }
+                    self.expect(TokenKind.RBrace)
+                    Expr::StructLiteral { name, generics: Vec.new(), fields }
+                } else {
+                    Expr::Ident(name)
+                }
+            }
+            TokenKind.LParen => {
+                self.advance()
+                let expr = self.parse_expr()
+                self.expect(TokenKind.RParen)
+                expr
+            }
+            TokenKind.Not => { self.advance(); Expr::Unary { op: UnaryOp::Not, expr: self.parse_prefix() } }
+            TokenKind.Minus => { self.advance(); Expr::Unary { op: UnaryOp::Neg, expr: self.parse_prefix() } }
+            TokenKind.If => self.parse_if(),
+            TokenKind.While => self.parse_while(),
+            TokenKind.For => self.parse_for(),
+            TokenKind.Match => self.parse_match(),
+            TokenKind.Fn => self.parse_lambda(),
+            TokenKind.Pipe => self.parse_lambda(),
+            TokenKind.Return => { self.advance(); Expr::Return(Some(self.parse_expr())) }
+            TokenKind.Await => { self.advance(); Expr::Await(self.parse_expr()) }
+            _ => { self.error("Unexpected token in expression"); Expr::Lit(Literal::Int(0)) }
+        }
+    }
+
+    fn parse_call_args(self: &mut Parser) -> Vec<Expr> {
+        self.expect(TokenKind.LParen)
+        let mut args = Vec.new()
+        if !matches!(self.current.kind, TokenKind.RParen) {
+            loop {
+                args.push(self.parse_expr())
+                if !matches!(self.current.kind, TokenKind.Comma) { break }
+                self.advance()
+            }
+        }
+        self.expect(TokenKind.RParen)
+        args
+    }
+
+    fn parse_if(self: &mut Parser) -> Expr {
+        self.expect(TokenKind.If)
+        let cond = self.parse_expr()
+        self.expect(TokenKind.LBrace)
+        let then = self.parse_block()
+        self.expect(TokenKind.RBrace)
+        let mut else_ifs = Vec.new()
+        let mut else_block = None
+        while matches!(self.current.kind, TokenKind.Else) {
+            self.advance()
+            if matches!(self.current.kind, TokenKind.If) {
+                self.advance()
+                let elif_cond = self.parse_expr()
+                self.expect(TokenKind.LBrace)
+                let elif_body = self.parse_block()
+                self.expect(TokenKind.RBrace)
+                else_ifs.push((elif_cond, elif_body))
+            } else {
+                self.expect(TokenKind.LBrace)
+                let body = self.parse_block()
+                self.expect(TokenKind.RBrace)
+                else_block = Some(body)
+                break
+            }
+        }
+        Expr::If { cond, then, else_ifs, else_block }
+    }
+
+    fn parse_while(self: &mut Parser) -> Expr {
+        self.expect(TokenKind.While)
+        let cond = self.parse_expr()
+        self.expect(TokenKind.LBrace)
+        let body = self.parse_block()
+        self.expect(TokenKind.RBrace)
+        Expr::While { cond, body }
+    }
+
+    fn parse_for(self: &mut Parser) -> Expr {
+        self.expect(TokenKind.For)
+        let var = self.parse_ident()
+        self.expect(TokenKind.In)
+        let iter = self.parse_expr()
+        self.expect(TokenKind.LBrace)
+        let body = self.parse_block()
+        self.expect(TokenKind.RBrace)
+        Expr::For { var, iter, body }
+    }
+
+    fn parse_match(self: &mut Parser) -> Expr {
+        self.expect(TokenKind.Match)
+        let expr = self.parse_expr()
+        self.expect(TokenKind.LBrace)
+        let mut arms = Vec.new()
+        while !matches!(self.current.kind, TokenKind.RBrace) {
+            let pattern = self.parse_pattern()
+            self.expect(TokenKind.FatArrow)
+            let body = self.parse_expr()
+            arms.push(MatchArm { pattern, guard: None, body })
+            if matches!(self.current.kind, TokenKind.Comma) { self.advance() }
+        }
+        self.expect(TokenKind.RBrace)
+        Expr::Match { expr, arms }
+    }
+
+    fn parse_pattern(self: &mut Parser) -> Pattern {
+        match &self.current.kind.clone() {
+            TokenKind.Ident(name) => {
+                self.advance()
+                if matches!(self.current.kind, TokenKind.LParen) {
+                    self.advance()
+                    let mut args = Vec.new()
+                    if !matches!(self.current.kind, TokenKind.RParen) {
+                        loop {
+                            args.push(self.parse_pattern())
+                            if !matches!(self.current.kind, TokenKind.Comma) { break }
+                            self.advance()
+                        }
+                    }
+                    self.expect(TokenKind.RParen)
+                    Pattern::Enum { name: String::new(), variant: name.clone(), args }
+                } else {
+                    Pattern::Ident(name.clone())
+                }
+            }
+            TokenKind.Underscore => { self.advance(); Pattern::Wildcard }
+            TokenKind.IntLit(n) => { self.advance(); Pattern::Lit(Literal::Int(*n)) }
+            TokenKind.StringLit(s) => { self.advance(); Pattern::Lit(Literal::String(s.clone())) }
+            TokenKind.True => { self.advance(); Pattern::Lit(Literal::Bool(true)) }
+            TokenKind.False => { self.advance(); Pattern::Lit(Literal::Bool(false)) }
+            _ => { self.error("Expected pattern"); Pattern::Wildcard }
+        }
+    }
+
+    fn parse_lambda(self: &mut Parser) -> Expr {
+        if matches!(self.current.kind, TokenKind.Pipe) {
+            self.advance()
+            let mut params = Vec.new()
+            while !matches!(self.current.kind, TokenKind.Pipe) {
+                let name = self.parse_ident()
+                let ty = if matches!(self.current.kind, TokenKind.Colon) { self.advance(); self.parse_type() } else { Type.Unknown }
+                params.push(Param { name, ty })
+                if matches!(self.current.kind, TokenKind.Comma) { self.advance() }
+            }
+            self.expect(TokenKind.Pipe)
+            let body = self.parse_expr()
+            Expr::Lambda { params, body }
+        } else {
+            self.expect(TokenKind.Fn)
+            self.expect(TokenKind.LParen)
+            let mut params = Vec.new()
+            if !matches!(self.current.kind, TokenKind.RParen) {
+                loop {
+                    let pname = self.parse_ident()
+                    let ty = if matches!(self.current.kind, TokenKind.Colon) { self.advance(); self.parse_type() } else { Type.Unknown }
+                    params.push(Param { name: pname, ty })
+                    if !matches!(self.current.kind, TokenKind.Comma) { break }
+                    self.advance()
+                }
+            }
+            self.expect(TokenKind.RParen)
+            let body = self.parse_expr()
+            Expr::Lambda { params, body }
+        }
+    }
+}

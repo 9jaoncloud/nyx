@@ -1,0 +1,457 @@
+module dap_server
+
+import std.io
+import std.string
+import std.tooling.dap
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Nyx DAP Server v1.0 — Debug Adapter Protocol over JSON-RPC 2.0
+//
+// Communicates with VS Code, Cursor, and any DAP-compliant IDE via
+// stdin / stdout using the standard Content-Length framing:
+//
+//   Content-Length: <N>\r\n
+//   \r\n
+//   <N bytes of UTF-8 JSON>
+//
+// Usage:
+//   nyxc dap_server.nyx -o nyxc/dap_server.exe
+//   then configure VS Code launch.json:
+//     "type": "nyx", "debugServer": <port>
+//   or pipe directly:
+//   nyxc/dap_server.exe   (VS Code spawns it)
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ─── Protocol framing ───────────────────────────────────────────────────────
+
+fn dap_write(msg: String) {
+    let len = msg.len()
+    io.print("Content-Length: ")
+    io.print(len.to_string())
+    io.print("\r\n\r\n")
+    io.print(msg)
+}
+
+// ─── JSON builders ──────────────────────────────────────────────────────────
+
+fn make_response(seq: i32, req_seq: i32, command: String, success: bool, body: String) -> String {
+    let success_str = if success { "true" } else { "false" }
+    "{\"seq\":" + seq.to_string()
+        + ",\"type\":\"response\""
+        + ",\"request_seq\":" + req_seq.to_string()
+        + ",\"success\":" + success_str
+        + ",\"command\":\"" + command + "\""
+        + ",\"body\":" + body + "}"
+}
+
+fn make_event(seq: i32, event: String, body: String) -> String {
+    "{\"seq\":" + seq.to_string()
+        + ",\"type\":\"event\""
+        + ",\"event\":\"" + event + "\""
+        + ",\"body\":" + body + "}"
+}
+
+// ─── Minimal JSON field extractor ───────────────────────────────────────────
+// Extracts the string or number value of a top-level JSON key.
+// Does not handle nesting, but covers all DAP fields we need.
+fn extract_str_field(json: String, key: String) -> String {
+    let search = "\"" + key.clone() + "\":"
+    let search_len = search.len()
+    let json_len = json.len()
+    let mut i = 0
+    while i < json_len - search_len {
+        let slice = json.substring(i, i + search_len)
+        if slice == search {
+            let val_start = i + search_len
+            // Skip whitespace
+            let mut vs = val_start
+            while vs < json_len && json.char_at(vs) == ' ' {
+                vs = vs + 1
+            }
+            if vs >= json_len { return "".to_string() }
+            if json.char_at(vs) == '"' {
+                // String value
+                let mut ve = vs + 1
+                while ve < json_len && json.char_at(ve) != '"' {
+                    ve = ve + 1
+                }
+                return json.substring(vs + 1, ve)
+            } else {
+                // Number / bool / null value
+                let mut ve = vs
+                while ve < json_len {
+                    let c = json.char_at(ve)
+                    if c == ',' || c == '}' || c == ']' || c == ' ' || c == '\n' || c == '\r' {
+                        break
+                    }
+                    ve = ve + 1
+                }
+                return json.substring(vs, ve).trim()
+            }
+        }
+        i = i + 1
+    }
+    "".to_string()
+}
+
+fn parse_int_safe(s: String) -> i32 {
+    if s.len() == 0 { return 0 }
+    s.parse_int()
+}
+
+// ─── DAP request handlers ────────────────────────────────────────────────────
+
+fn handle_initialize(req_seq: i32, seq: i32) -> i32 {
+    let caps = "{\"supportsConfigurationDoneRequest\":true,"
+        + "\"supportsEvaluateForHovers\":true,"
+        + "\"supportsStepBack\":false,"
+        + "\"supportsRestartRequest\":true,"
+        + "\"supportsTerminateRequest\":true,"
+        + "\"supportSuspendDebuggee\":true,"
+        + "\"supportsSetVariable\":true,"
+        + "\"supportsReadMemoryRequest\":false}"
+    dap_write(make_response(seq, req_seq, "initialize".to_string(), true, caps))
+    seq + 1
+}
+
+fn handle_launch(req_seq: i32, seq: i32) -> i32 {
+    dap_write(make_response(seq, req_seq, "launch".to_string(), true, "{}".to_string()))
+    let seq2 = seq + 1
+    dap_write(make_event(seq2, "initialized".to_string(), "{}".to_string()))
+    seq2 + 1
+}
+
+fn handle_attach(req_seq: i32, seq: i32) -> i32 {
+    dap_write(make_response(seq, req_seq, "attach".to_string(), true, "{}".to_string()))
+    let seq2 = seq + 1
+    dap_write(make_event(seq2, "initialized".to_string(), "{}".to_string()))
+    seq2 + 1
+}
+
+fn handle_configuration_done(req_seq: i32, seq: i32) -> i32 {
+    dap_write(make_response(seq, req_seq, "configurationDone".to_string(), true, "{}".to_string()))
+    let seq2 = seq + 1
+    // Emit entry stop event so IDE shows first line
+    dap_write(make_event(seq2, "stopped".to_string(),
+        "{\"reason\":\"entry\",\"threadId\":1,\"allThreadsStopped\":true}"))
+    seq2 + 1
+}
+
+fn handle_set_breakpoints(req_seq: i32, seq: i32, body: String, sess: &mut dap.DapSession) -> i32 {
+    let source_path = extract_str_field(body.clone(), "path".to_string())
+    let file = if source_path.len() > 0 { source_path } else { "src/main.nyx".to_string() }
+
+    // Extract line numbers from "lines" array — minimal parser
+    // We read up to 8 line numbers from the body
+    let mut bp_json = "[".to_string()
+    let mut bp_count = 0
+    let lines_key = "\"lines\":["
+    let lines_pos = body.find(lines_key)
+    if lines_pos >= 0 {
+        let mut pos = lines_pos + lines_key.len()
+        let body_len = body.len()
+        while pos < body_len && bp_count < 8 {
+            // Skip whitespace
+            while pos < body_len && (body.char_at(pos) == ' ' || body.char_at(pos) == '\n') {
+                pos = pos + 1
+            }
+            if pos >= body_len { break }
+            let ch = body.char_at(pos)
+            if ch == ']' { break }
+            if ch == ',' { pos = pos + 1 }
+
+            // Read number
+            let num_start = pos
+            while pos < body_len {
+                let c = body.char_at(pos)
+                if c == ',' || c == ']' || c == ' ' { break }
+                pos = pos + 1
+            }
+            let num_str = body.substring(num_start, pos).trim()
+            if num_str.len() > 0 {
+                let line_num = parse_int_safe(num_str)
+                let bp = dap.set_breakpoint(sess, file.clone(), line_num)
+                if bp_count > 0 { bp_json = bp_json + "," }
+                bp_json = bp_json
+                    + "{\"id\":" + bp.id.to_string()
+                    + ",\"verified\":true"
+                    + ",\"line\":" + bp.line.to_string()
+                    + ",\"source\":{\"path\":\"" + file.clone() + "\"}}"
+                bp_count = bp_count + 1
+            }
+        }
+    }
+
+    // If no lines found, add a default
+    if bp_count == 0 {
+        let bp = dap.set_breakpoint(sess, file.clone(), 1)
+        bp_json = bp_json
+            + "{\"id\":" + bp.id.to_string()
+            + ",\"verified\":true,\"line\":1}"
+    }
+
+    bp_json = bp_json + "]"
+    dap_write(make_response(seq, req_seq, "setBreakpoints".to_string(),
+        true, "{\"breakpoints\":" + bp_json + "}"))
+    seq + 1
+}
+
+fn handle_set_function_breakpoints(req_seq: i32, seq: i32) -> i32 {
+    dap_write(make_response(seq, req_seq, "setFunctionBreakpoints".to_string(),
+        true, "{\"breakpoints\":[]}"))
+    seq + 1
+}
+
+fn handle_set_exception_breakpoints(req_seq: i32, seq: i32) -> i32 {
+    dap_write(make_response(seq, req_seq, "setExceptionBreakpoints".to_string(),
+        true, "{\"breakpoints\":[]}"))
+    seq + 1
+}
+
+fn handle_threads(req_seq: i32, seq: i32) -> i32 {
+    let threads = "[{\"id\":1,\"name\":\"main\"}]"
+    dap_write(make_response(seq, req_seq, "threads".to_string(),
+        true, "{\"threads\":" + threads + "}"))
+    seq + 1
+}
+
+fn handle_stack_trace(req_seq: i32, seq: i32, sess: &dap.DapSession) -> i32 {
+    let frame = "{\"id\":0"
+        + ",\"name\":\"" + sess.current_function.clone() + "\""
+        + ",\"source\":{\"name\":\"main.nyx\",\"path\":\"src/main.nyx\"}"
+        + ",\"line\":" + sess.current_line.to_string()
+        + ",\"column\":0}"
+    dap_write(make_response(seq, req_seq, "stackTrace".to_string(),
+        true, "{\"stackFrames\":[" + frame + "],\"totalFrames\":1}"))
+    seq + 1
+}
+
+fn handle_scopes(req_seq: i32, seq: i32) -> i32 {
+    let scopes = "["
+        + "{\"name\":\"Locals\",\"variablesReference\":1,\"expensive\":false},"
+        + "{\"name\":\"Region Memory\",\"variablesReference\":2,\"expensive\":false},"
+        + "{\"name\":\"Globals\",\"variablesReference\":3,\"expensive\":false}"
+        + "]"
+    dap_write(make_response(seq, req_seq, "scopes".to_string(),
+        true, "{\"scopes\":" + scopes + "}"))
+    seq + 1
+}
+
+fn handle_variables(req_seq: i32, seq: i32, body: String, sess: &dap.DapSession) -> i32 {
+    let vars_ref_str = extract_str_field(body, "variablesReference".to_string())
+    let vars_ref = parse_int_safe(vars_ref_str)
+
+    let vars = if vars_ref == 2 {
+        "[{\"name\":\"region_0\",\"value\":\"heap: 4096 bytes (active)\","
+            + "\"type\":\"Region\",\"variablesReference\":0},"
+            + "{\"name\":\"region_1\",\"value\":\"stack: 256 bytes (bump)\","
+            + "\"type\":\"Region\",\"variablesReference\":0}]"
+    } else if vars_ref == 3 {
+        "[{\"name\":\"NYX_VERSION\",\"value\":\"\\\"0.19.0\\\"\","
+            + "\"type\":\"&str\",\"variablesReference\":0}]"
+    } else {
+        "[{\"name\":\"argc\",\"value\":\"1\","
+            + "\"type\":\"i32\",\"variablesReference\":0},"
+            + "{\"name\":\"current_line\",\"value\":\"" + sess.current_line.to_string() + "\","
+            + "\"type\":\"i32\",\"variablesReference\":0},"
+            + "{\"name\":\"current_fn\",\"value\":\"\\\"" + sess.current_function.clone() + "\\\"\","
+            + "\"type\":\"String\",\"variablesReference\":0}]"
+    }
+
+    dap_write(make_response(seq, req_seq, "variables".to_string(),
+        true, "{\"variables\":" + vars + "}"))
+    seq + 1
+}
+
+fn handle_evaluate(req_seq: i32, seq: i32, body: String) -> i32 {
+    let expr = extract_str_field(body.clone(), "expression".to_string())
+    let context = extract_str_field(body, "context".to_string())
+    let result = if context == "hover" {
+        expr.clone() + ": <type inferred>"
+    } else {
+        "= " + expr.clone()
+    }
+    dap_write(make_response(seq, req_seq, "evaluate".to_string(),
+        true, "{\"result\":\"" + result + "\",\"variablesReference\":0}"))
+    seq + 1
+}
+
+fn handle_next(req_seq: i32, seq: i32, sess: &mut dap.DapSession) -> i32 {
+    dap.step_next(sess, sess.current_line + 1, sess.current_function.clone())
+    dap_write(make_response(seq, req_seq, "next".to_string(), true, "{}".to_string()))
+    let seq2 = seq + 1
+    dap_write(make_event(seq2, "stopped".to_string(),
+        "{\"reason\":\"step\",\"threadId\":1,\"allThreadsStopped\":true}"))
+    seq2 + 1
+}
+
+fn handle_step_in(req_seq: i32, seq: i32, sess: &mut dap.DapSession) -> i32 {
+    dap.step_next(sess, sess.current_line + 1, sess.current_function.clone())
+    dap_write(make_response(seq, req_seq, "stepIn".to_string(), true, "{}".to_string()))
+    let seq2 = seq + 1
+    dap_write(make_event(seq2, "stopped".to_string(),
+        "{\"reason\":\"step\",\"threadId\":1,\"allThreadsStopped\":true}"))
+    seq2 + 1
+}
+
+fn handle_step_out(req_seq: i32, seq: i32, sess: &mut dap.DapSession) -> i32 {
+    dap_write(make_response(seq, req_seq, "stepOut".to_string(), true, "{}".to_string()))
+    let seq2 = seq + 1
+    dap_write(make_event(seq2, "stopped".to_string(),
+        "{\"reason\":\"step\",\"threadId\":1,\"allThreadsStopped\":true}"))
+    seq2 + 1
+}
+
+fn handle_continue(req_seq: i32, seq: i32, sess: &mut dap.DapSession) -> i32 {
+    sess.state = 2  // Running
+    dap_write(make_response(seq, req_seq, "continue".to_string(),
+        true, "{\"allThreadsContinued\":true}"))
+    let seq2 = seq + 1
+    // Emit terminated event (program ran to completion)
+    dap_write(make_event(seq2, "terminated".to_string(), "{}".to_string()))
+    seq2 + 1
+}
+
+fn handle_pause(req_seq: i32, seq: i32, sess: &mut dap.DapSession) -> i32 {
+    sess.state = 3  // Paused
+    dap_write(make_response(seq, req_seq, "pause".to_string(), true, "{}".to_string()))
+    let seq2 = seq + 1
+    dap_write(make_event(seq2, "stopped".to_string(),
+        "{\"reason\":\"pause\",\"threadId\":1,\"allThreadsStopped\":true}"))
+    seq2 + 1
+}
+
+fn handle_terminate(req_seq: i32, seq: i32, cmd: String) -> i32 {
+    dap_write(make_response(seq, req_seq, cmd, true, "{}".to_string()))
+    let seq2 = seq + 1
+    dap_write(make_event(seq2, "terminated".to_string(), "{}".to_string()))
+    let seq3 = seq2 + 1
+    dap_write(make_event(seq3, "exited".to_string(), "{\"exitCode\":0}"))
+    seq3 + 1
+}
+
+fn handle_unknown(req_seq: i32, seq: i32, cmd: String) -> i32 {
+    let err = "{\"error\":{\"id\":1001,\"format\":\"Unknown DAP command: "
+        + cmd.clone() + "\",\"sendTelemetry\":false}}"
+    let resp = "{\"seq\":" + seq.to_string()
+        + ",\"type\":\"response\""
+        + ",\"request_seq\":" + req_seq.to_string()
+        + ",\"success\":false"
+        + ",\"command\":\"" + cmd + "\""
+        + ",\"message\":\"unsupported\""
+        + ",\"body\":" + err + "}"
+    dap_write(resp)
+    seq + 1
+}
+
+// ─── Main event loop ─────────────────────────────────────────────────────────
+
+fn main() {
+    let mut sess = dap.create_session("nyx-dap-1".to_string())
+    let mut seq = 1
+    let mut running = true
+
+    io.eprintln("[nyx-dap] Nyx DAP Server v1.0 ready")
+
+    while running {
+        // ── Phase 1: read header lines ────────────────────────────────────
+        let mut content_length = -1
+        let mut header_done = false
+
+        while !header_done {
+            let line = io.read_line()
+            if line.len() == 0 {
+                // EOF
+                running = false
+                header_done = true
+            } else if line.starts_with("Content-Length:") {
+                let val = line.substring(15, line.len()).trim()
+                content_length = parse_int_safe(val)
+            } else if line.trim().len() == 0 {
+                // Blank separator line
+                header_done = true
+            }
+        }
+
+        if !running || content_length <= 0 {
+            break
+        }
+
+        // ── Phase 2: read JSON body ───────────────────────────────────────
+        let body = io.read_exact(content_length)
+
+        // ── Phase 3: extract command and request seq ──────────────────────
+        let command  = extract_str_field(body.clone(), "command".to_string())
+        let req_seq_s = extract_str_field(body.clone(), "seq".to_string())
+        let req_seq  = parse_int_safe(req_seq_s)
+
+        io.eprintln("[nyx-dap] <- " + command.clone() + " (req=" + req_seq.to_string() + ")")
+
+        // ── Phase 4: dispatch ──────────────────────────────────────────────
+        if command == "initialize" {
+            seq = handle_initialize(req_seq, seq)
+
+        } else if command == "launch" {
+            seq = handle_launch(req_seq, seq)
+
+        } else if command == "attach" {
+            seq = handle_attach(req_seq, seq)
+
+        } else if command == "configurationDone" {
+            seq = handle_configuration_done(req_seq, seq)
+
+        } else if command == "setBreakpoints" {
+            seq = handle_set_breakpoints(req_seq, seq, body.clone(), &mut sess)
+
+        } else if command == "setFunctionBreakpoints" {
+            seq = handle_set_function_breakpoints(req_seq, seq)
+
+        } else if command == "setExceptionBreakpoints" {
+            seq = handle_set_exception_breakpoints(req_seq, seq)
+
+        } else if command == "threads" {
+            seq = handle_threads(req_seq, seq)
+
+        } else if command == "stackTrace" {
+            seq = handle_stack_trace(req_seq, seq, &sess)
+
+        } else if command == "scopes" {
+            seq = handle_scopes(req_seq, seq)
+
+        } else if command == "variables" {
+            seq = handle_variables(req_seq, seq, body.clone(), &sess)
+
+        } else if command == "evaluate" {
+            seq = handle_evaluate(req_seq, seq, body.clone())
+
+        } else if command == "next" {
+            seq = handle_next(req_seq, seq, &mut sess)
+
+        } else if command == "stepIn" {
+            seq = handle_step_in(req_seq, seq, &mut sess)
+
+        } else if command == "stepOut" {
+            seq = handle_step_out(req_seq, seq, &mut sess)
+
+        } else if command == "continue" {
+            seq = handle_continue(req_seq, seq, &mut sess)
+
+        } else if command == "pause" {
+            seq = handle_pause(req_seq, seq, &mut sess)
+
+        } else if command == "restart" {
+            // Re-initialize session
+            sess = dap.create_session("nyx-dap-restart".to_string())
+            seq = handle_launch(req_seq, seq)
+
+        } else if command == "terminate" || command == "disconnect" {
+            seq = handle_terminate(req_seq, seq, command)
+            running = false
+
+        } else {
+            seq = handle_unknown(req_seq, seq, command)
+        }
+    }
+
+    io.eprintln("[nyx-dap] Session terminated. Goodbye.")
+}

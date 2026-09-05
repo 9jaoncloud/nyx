@@ -1,0 +1,94 @@
+module mobile_packager
+
+import std.string
+import std.fs
+import std.io
+import std.vec
+
+pub struct MobilePackageConfig {
+    pub app_id: String,           // e.g. "com.nyx.athena"
+    pub app_name: String,         // e.g. "Athena OS"
+    pub version_name: String,     // e.g. "1.0.0"
+    pub version_code: i32,        // e.g. 1
+    pub min_sdk_version: i32,     // Android API 26 (Android 8.0+)
+    pub target_sdk_version: i32,  // Android API 34 (Android 14)
+    pub ios_deployment_target: String, // "16.0"
+    pub icon_path: String,
+    pub permissions: Vec<String>,
+}
+
+pub fn generate_android_manifest(config: &MobilePackageConfig) -> String {
+    let mut xml = String.from("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
+    xml.push_str("<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n")
+    xml.push_str("    package=\"")
+    xml.push_str(&config.app_id)
+    xml.push_str("\">\n\n")
+
+    xml.push_str("    <uses-feature android:name=\"android.hardware.vulkan.version\" android:version=\"0x403000\" android:required=\"true\" />\n")
+    xml.push_str("    <uses-permission android:name=\"android.permission.VIBRATE\" />\n")
+    xml.push_str("    <uses-permission android:name=\"android.permission.INTERNET\" />\n")
+    xml.push_str("    <uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\" />\n\n")
+
+    xml.push_str("    <application\n")
+    xml.push_str("        android:allowBackup=\"true\"\n")
+    xml.push_str("        android:icon=\"@mipmap/ic_launcher\"\n")
+    xml.push_str("        android:label=\"")
+    xml.push_str(&config.app_name)
+    xml.push_str("\"\n")
+    xml.push_str("        android:theme=\"@style/Theme.NyxApp.Fullscreen\"\n")
+    xml.push_str("        android:hasCode=\"true\">\n\n")
+
+    xml.push_str("        <activity\n")
+    xml.push_str("            android:name=\".NyxNativeActivity\"\n")
+    xml.push_str("            android:exported=\"true\"\n")
+    xml.push_str("            android:configChanges=\"orientation|keyboardHidden|screenSize|screenLayout|density\">\n")
+    xml.push_str("            <meta-data android:name=\"android.app.lib_name\" android:value=\"nyx_app_native\" />\n")
+    xml.push_str("            <intent-filter>\n")
+    xml.push_str("                <action android:name=\"android.intent.action.MAIN\" />\n")
+    xml.push_str("                <category android:name=\"android.intent.category.LAUNCHER\" />\n")
+    xml.push_str("            </intent-filter>\n")
+    xml.push_str("        </activity>\n")
+    xml.push_str("    </application>\n")
+    xml.push_str("</manifest>\n")
+    xml
+}
+
+pub fn generate_ios_info_plist(config: &MobilePackageConfig) -> String {
+    let mut plist = String.from("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+    plist.push_str("<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n")
+    plist.push_str("<plist version=\"1.0\">\n<dict>\n")
+    plist.push_str("    <key>CFBundleIdentifier</key>\n    <string>")
+    plist.push_str(&config.app_id)
+    plist.push_str("</string>\n")
+    plist.push_str("    <key>CFBundleName</key>\n    <string>")
+    plist.push_str(&config.app_name)
+    plist.push_str("</string>\n")
+    plist.push_str("    <key>CFBundleVersion</key>\n    <string>1</string>\n")
+    plist.push_str("    <key>CFBundleShortVersionString</key>\n    <string>")
+    plist.push_str(&config.version_name)
+    plist.push_str("</string>\n")
+    plist.push_str("    <key>UIRequiredDeviceCapabilities</key>\n    <array>\n        <string>metal</string>\n        <string>arm64</string>\n    </array>\n")
+    plist.push_str("    <key>UIViewControllerBasedStatusBarAppearance</key>\n    <false/>\n")
+    plist.push_str("</dict>\n</plist>\n")
+    plist
+}
+
+pub fn generate_cmake_native_build(app_name: &str) -> String {
+    let mut cmake = String.from("cmake_minimum_required(VERSION 3.22.1)\n")
+    cmake.push_str("project(nyx_app_native LANGUAGES C CXX)\n\n")
+    cmake.push_str("add_library(nyx_app_native SHARED\n")
+    cmake.push_str("    src/main.c\n")
+    cmake.push_str("    runtime/rt_ui.c\n")
+    cmake.push_str("    runtime/rt_android.c\n")
+    cmake.push_str("    runtime/rt_stdlib.c\n")
+    cmake.push_str(")\n\n")
+    cmake.push_str("find_library(log-lib log)\n")
+    cmake.push_str("find_library(android-lib android)\n")
+    cmake.push_str("find_library(vulkan-lib vulkan)\n\n")
+    cmake.push_str("target_link_libraries(nyx_app_native\n")
+    cmake.push_str("    ${log-lib}\n")
+    cmake.push_str("    ${android-lib}\n")
+    cmake.push_str("    ${vulkan-lib}\n")
+    cmake.push_str(")\n")
+    cmake
+}

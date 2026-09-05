@@ -1,0 +1,41 @@
+module lexer_tests
+
+import std.test
+import lexer.*
+import token.*
+
+@test
+fn test_lexer_keywords() {
+    let mut lex = lexer.new_lexer("fn let mut if else while return struct")
+    let kinds = [
+        TokenKind.Fn, TokenKind.Let, TokenKind.Mut, TokenKind.If,
+        TokenKind.Else, TokenKind.While, TokenKind.Return, TokenKind.Struct
+    ]
+    for expected in kinds {
+        let tok = lex.next_token()
+        std.test.assert_eq(tok.kind, expected)
+    }
+}
+
+@test
+fn test_lexer_literals() {
+    let mut lex = lexer.new_lexer("42 true false")
+    std.test.assert_eq(lex.next_token().kind, TokenKind.IntLit(42))
+    std.test.assert_eq(lex.next_token().kind, TokenKind.True)
+    std.test.assert_eq(lex.next_token().kind, TokenKind.False)
+}
+
+@test
+fn test_lexer_operators() {
+    let mut lex = lexer.new_lexer("+ - * / == != < <= > >= && || ! = ->")
+    std.test.assert_eq(lex.next_token().kind, TokenKind.Plus)
+    std.test.assert_eq(lex.next_token().kind, TokenKind.Minus)
+    std.test.assert_eq(lex.next_token().kind, TokenKind.Star)
+    std.test.assert_eq(lex.next_token().kind, TokenKind.Slash)
+    std.test.assert_eq(lex.next_token().kind, TokenKind.EqEq)
+    std.test.assert_eq(lex.next_token().kind, TokenKind.NotEq)
+    std.test.assert_eq(lex.next_token().kind, TokenKind.Lt)
+    std.test.assert_eq(lex.next_token().kind, TokenKind.LtEq)
+    std.test.assert_eq(lex.next_token().kind, TokenKind.Gt)
+    std.test.assert_eq(lex.next_token().kind, TokenKind.GtEq)
+}

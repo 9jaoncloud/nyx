@@ -1,0 +1,408 @@
+module prelude
+
+/* ── Core Option / Result ─────────────────────────────────────── */
+
+pub enum Option<T> {
+    Some(T),
+    None,
+}
+
+impl<T> Option<T> {
+    pub fn is_some(self: &Option<T>) -> Bool {
+        match self {
+            Option.Some(_) => true,
+            Option.None => false,
+        }
+    }
+
+    pub fn is_none(self: &Option<T>) -> Bool {
+        !self.is_some()
+    }
+
+    pub fn unwrap(self: &Option<T>) -> T {
+        match self {
+            Option.Some(v) => v,
+            Option.None => panic!("unwrap called on None"),
+        }
+    }
+
+    pub fn unwrap_or(self: &Option<T>, default: T) -> T {
+        match self {
+            Option.Some(v) => v,
+            Option.None => default,
+        }
+    }
+
+    pub fn map<U>(self: &Option<T>, f: fn(T) -> U) -> Option<U> {
+        match self {
+            Option.Some(v) => Option.Some(f(v)),
+            Option.None => Option.None,
+        }
+    }
+
+    pub fn and_then<U>(self: &Option<T>, f: fn(T) -> Option<U>) -> Option<U> {
+        match self {
+            Option.Some(v) => f(v),
+            Option.None => Option.None,
+        }
+    }
+
+    pub fn filter(self: &Option<T>, pred: fn(&T) -> Bool) -> Option<T> {
+        match self {
+            Option.Some(v) if pred(v) => Option.Some(v),
+            _ => Option.None,
+        }
+    }
+}
+
+pub enum Result<T, E> {
+    Ok(T),
+    Err(E),
+}
+
+impl<T, E> Result<T, E> {
+    pub fn is_ok(self: &Result<T, E>) -> Bool {
+        match self {
+            Result.Ok(_) => true,
+            Result.Err(_) => false,
+        }
+    }
+
+    pub fn is_err(self: &Result<T, E>) -> Bool {
+        !self.is_ok()
+    }
+
+    pub fn unwrap(self: &Result<T, E>) -> T {
+        match self {
+            Result.Ok(v) => v,
+            Result.Err(_) => panic!("unwrap called on Err"),
+        }
+    }
+
+    pub fn unwrap_or(self: &Result<T, E>, default: T) -> T {
+        match self {
+            Result.Ok(v) => v,
+            Result.Err(_) => default,
+        }
+    }
+
+    pub fn map<U>(self: &Result<T, E>, f: fn(T) -> U) -> Result<U, E> {
+        match self {
+            Result.Ok(v) => Result.Ok(f(v)),
+            Result.Err(e) => Result.Err(e),
+        }
+    }
+
+    pub fn map_err<F>(self: &Result<T, E>, f: fn(E) -> F) -> Result<T, F> {
+        match self {
+            Result.Ok(v) => Result.Ok(v),
+            Result.Err(e) => Result.Err(f(e)),
+        }
+    }
+
+    pub fn and_then<U>(self: &Result<T, E>, f: fn(T) -> Result<U, E>) -> Result<U, E> {
+        match self {
+            Result.Ok(v) => f(v),
+            Result.Err(e) => Result.Err(e),
+        }
+    }
+
+    pub fn expect(self: &Result<T, E>, msg: String) -> T {
+        match self {
+            Result.Ok(v) => v,
+            Result.Err(_) => panic!(msg),
+        }
+    }
+}
+
+/* ── Print helpers ────────────────────────────────────────────── */
+
+pub fn print(s: String) {
+    std.io.print(s)
+}
+
+pub fn println(s: String) {
+    std.io.println(s)
+}
+
+pub fn eprint(s: String) {
+    std.io.eprint(s)
+}
+
+pub fn eprintln(s: String) {
+    std.io.eprintln(s)
+}
+
+/* ── Numeric conversion ───────────────────────────────────────── */
+
+pub fn to_string<T>(v: T) -> String {
+    v.to_string()
+}
+
+pub fn to_int(s: String) -> Result<i64, String> {
+    Result.Ok(s.parse_int())
+}
+
+pub fn to_float(s: String) -> Result<f64, String> {
+    Result.Ok(s.parse_float())
+}
+
+/* ── Vec trait extensions ─────────────────────────────────────── */
+
+impl<T> Vec<T> {
+    pub fn get(self: &Vec<T>, index: usize) -> Option<T> {
+        if index < self.len() {
+            Option.Some(self[index])
+        } else {
+            Option.None
+        }
+    }
+
+    pub fn first(self: &Vec<T>) -> Option<T> {
+        if self.len() > 0 { Option.Some(self[0]) } else { Option.None }
+    }
+
+    pub fn last(self: &Vec<T>) -> Option<T> {
+        let l = self.len()
+        if l > 0 { Option.Some(self[l - 1]) } else { Option.None }
+    }
+
+    pub fn contains(self: &Vec<T>, value: T) -> Bool {
+        for v in self {
+            if v == value { return true }
+        }
+        false
+    }
+
+    pub fn index_of(self: &Vec<T>, value: T) -> Option<usize> {
+        for i in 0..self.len() {
+            if self[i] == value { return Option.Some(i) }
+        }
+        Option.None
+    }
+
+    pub fn is_empty(self: &Vec<T>) -> Bool {
+        self.len() == 0
+    }
+
+    pub fn repeat(self: &Vec<T>, n: usize) -> Vec<T> {
+        let mut result = Vec.new()
+        for _ in 0..n {
+            for v in self { result.push(v) }
+        }
+        result
+    }
+
+    pub fn reverse(self: &Vec<T>) -> Vec<T> {
+        let mut result = Vec.new()
+        let len = self.len()
+        let mut i = len
+        while i > 0 {
+            i = i - 1
+            result.push(self[i])
+        }
+        result
+    }
+}
+
+/* ── String trait extensions ──────────────────────────────────── */
+
+impl String {
+    pub fn is_empty(self: &String) -> Bool {
+        self.len() == 0
+    }
+
+    pub fn starts_with(self: &String, prefix: String) -> Bool {
+        self.len() >= prefix.len() && self.substr(0, prefix.len()) == prefix
+    }
+
+    pub fn ends_with(self: &String, suffix: String) -> Bool {
+        let l = self.len()
+        let sl = suffix.len()
+        l >= sl && self.substr(l - sl, l) == suffix
+    }
+
+    pub fn contains(self: &String, needle: String) -> Bool {
+        if needle.len() == 0 { return true }
+        if needle.len() > self.len() { return false }
+        let mut i = 0
+        while i <= self.len() - needle.len() {
+            let mut found = true
+            let mut j = 0
+            while j < needle.len() {
+                if self[i + j] != needle[j] { found = false; break }
+                j = j + 1
+            }
+            if found { return true }
+            i = i + 1
+        }
+        false
+    }
+
+    pub fn trim(self: &String) -> String {
+        let start = 0
+        let mut end = self.len()
+        while end > 0 && self[end - 1] == ' ' as u8 { end = end - 1 }
+        self.substr(start, end)
+    }
+
+    pub fn to_upper(self: &String) -> String {
+        let mut result = String.new()
+        let mut i = 0
+        while i < self.len() {
+            let b = self[i]
+            if b >= 'a' as u8 && b <= 'z' as u8 {
+                result.push(b - 32)
+            } else {
+                result.push(b)
+            }
+            i = i + 1
+        }
+        result
+    }
+
+    pub fn to_lower(self: &String) -> String {
+        let mut result = String.new()
+        let mut i = 0
+        while i < self.len() {
+            let b = self[i]
+            if b >= 'A' as u8 && b <= 'Z' as u8 {
+                result.push(b + 32)
+            } else {
+                result.push(b)
+            }
+            i = i + 1
+        }
+        result
+    }
+
+    pub fn replace(self: &String, from: String, to: String) -> String {
+        let mut result = String.new()
+        let mut i = 0
+        while i < self.len() {
+            if i + from.len() <= self.len() && self.substr(i, i + from.len()) == from {
+                result = result + to.clone()
+                i = i + from.len()
+            } else {
+                result.push(self[i])
+                i = i + 1
+            }
+        }
+        result
+    }
+
+    pub fn split(self: &String, delimiter: String) -> Vec<String> {
+        let mut result = Vec.new()
+        let mut current = String.new()
+        let mut i = 0
+        while i < self.len() {
+            if delimiter.len() > 0 && i + delimiter.len() <= self.len() &&
+               self.substr(i, i + delimiter.len()) == delimiter {
+                result.push(current.clone())
+                current = String.new()
+                i = i + delimiter.len()
+            } else {
+                current.push(self[i])
+                i = i + 1
+            }
+        }
+        result.push(current)
+        result
+    }
+
+    pub fn join(self: &String, items: Vec<String>) -> String {
+        let mut result = String.new()
+        let mut first = true
+        for item in items {
+            if !first { result = result + self.clone() }
+            result = result + item
+            first = false
+        }
+        result
+    }
+
+    pub fn substr(self: &String, start: usize, end: usize) -> String {
+        let mut result = String.new()
+        let mut i = start
+        while i < end && i < self.len() {
+            result.push(self[i])
+            i = i + 1
+        }
+        result
+    }
+
+    pub fn chars(self: &String) -> Vec<u8> {
+        let mut result = Vec.new()
+        let mut i = 0
+        while i < self.len() {
+            result.push(self[i])
+            i = i + 1
+        }
+        result
+    }
+}
+
+/* ── Iterator pattern ─────────────────────────────────────────── */
+
+pub trait Iterator {
+    type Item;
+    fn next(self: &mut Self) -> Option<Self.Item>;
+    fn map<U>(self: Self, f: fn(Self.Item) -> U) -> Map<Self> where Self: Sized { Map { iter: self, f } }
+    fn filter<P>(self: Self, pred: P) -> Filter<Self, P> where Self: Sized { Filter { iter: self, pred } }
+    fn collect(self: Self) -> Vec<Self.Item> where Self: Sized {
+        let mut result = Vec.new()
+        let mut iter = self
+        loop {
+            match iter.next() {
+                Option.Some(v) => result.push(v),
+                Option.None => break,
+            }
+        }
+        result
+    }
+}
+
+pub struct Map<I> {
+    iter: I,
+    f: fn(I.Item) -> I,
+}
+
+pub struct Filter<I, P> {
+    iter: I,
+    pred: P,
+}
+
+/* ── Clone / Copy / Debug traits ──────────────────────────────── */
+
+pub trait Clone {
+    fn clone(self: &Self) -> Self;
+}
+
+pub trait Debug {
+    fn debug(self: &Self) -> String;
+}
+
+/* ── Into trait ───────────────────────────────────────────────── */
+
+pub trait Into<T> {
+    fn into(self: Self) -> T;
+}
+
+/* ── Default trait ────────────────────────────────────────────── */
+
+pub trait Default {
+    fn default() -> Self;
+}
+
+impl Default for i64 { fn default() -> i64 { 0 } }
+impl Default for f64 { fn default() -> f64 { 0.0 } }
+impl Default for bool { fn default() -> Bool { false } }
+impl Default for String { fn default() -> String { String.new() } }
+
+/* ── Global functions ─────────────────────────────────────────── */
+
+pub fn min(a: i64, b: i64) -> i64 { if a < b { a } else { b } }
+pub fn max(a: i64, b: i64) -> i64 { if a > b { a } else { b } }
+pub fn clamp(v: i64, lo: i64, hi: i64) -> i64 { if v < lo { lo } else if v > hi { hi } else { v } }
+pub fn abs_val(v: i64) -> i64 { if v < 0 { -v } else { v } }
+pub fn pow(base: i64, exp: i64) -> i64 { let mut r = 1_i64; let mut i = 0; while i < exp { r = r * base; i = i + 1 }; r }

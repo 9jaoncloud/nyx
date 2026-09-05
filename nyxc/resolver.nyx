@@ -1,0 +1,35 @@
+module resolver
+
+import ast.*
+
+pub struct Resolver {
+    types: Map<String, StructDef>,
+    functions: Map<String, FnSig>,
+}
+
+pub fn new() -> Resolver {
+    Resolver { types: Map.new(), functions: Map.new() }
+}
+
+impl Resolver {
+    pub fn resolve_program(self: &mut Resolver, program: &Vec<TopLevel>) {
+        for item in program {
+            match item {
+                TopLevel.StructDef{ name, generics, fields } => {
+                    self.types.insert(name.clone(), StructDef{ name: name.clone(), generics: generics.clone(), fields: fields.clone() })
+                }
+                TopLevel.FnDecl{ name, generics, params, ret_type, .. } => {
+                    self.functions.insert(name.clone(), FnSig{ name: name.clone(), generics: generics.clone(), params: params.clone(), ret: ret_type.clone() })
+                }
+                _ => {}
+            }
+        }
+    }
+}
+
+pub struct FnSig {
+    pub name: String,
+    pub generics: Vec<String>,
+    pub params: Vec<Param>,
+    pub ret: Type,
+}

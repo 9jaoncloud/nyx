@@ -1,0 +1,110 @@
+module ast
+
+pub enum Literal {
+    Int(i64),
+    Float(f64),
+    Bool(Bool),
+    String(String),
+    Char(Char),
+}
+
+pub enum UnaryOp {
+    Not,
+    Neg,
+    Ref,
+    Deref,
+}
+
+pub enum Type {
+    Int,
+    Float,
+    Bool,
+    String,
+    Char,
+    Void,
+    Custom(String),
+    Generic(String),
+    Ref(Type),
+    MutRef(Type),
+    Array(Type),
+    Option(Type),
+    Result(Type, Type),
+    Tuple(Vec<Type>),
+    Func(Vec<Type>, Type),
+    Region(String),
+    Recursive(String),
+    Unknown,
+}
+
+pub enum Expr {
+    Lit(Literal),
+    Ident(String),
+    Binary { op: BinOp, left: Expr, right: Expr },
+    Call { func: Expr, generic_args: Vec<Type>, args: Vec<Expr> },
+    MethodCall { receiver: Expr, method: String, generic_args: Vec<Type>, args: Vec<Expr> },
+    FieldAccess { obj: Expr, field: String },
+    StructLiteral { name: String, generics: Vec<Type>, fields: Vec<(String, Expr)> },
+    Unary { op: UnaryOp, expr: Expr },
+    If { cond: Expr, then: Vec<Stmt>, else_ifs: Vec<(Expr, Vec<Stmt>)>, else_block: Option<Vec<Stmt>> },
+    While { cond: Expr, body: Vec<Stmt> },
+    For { var: String, iter: Expr, body: Vec<Stmt> },
+    Match { expr: Expr, arms: Vec<MatchArm> },
+    Lambda { params: Vec<Param>, body: Expr },
+    Return(Option<Expr>),
+    Await(Expr),
+    Block(Vec<Stmt>),
+    Let { name: String, value: Expr, ty: Option<Type>, mutable: Bool },
+    Assign { name: String, value: Expr },
+    Question(Expr),
+}
+
+pub enum BinOp {
+    Add, Sub, Mul, Div, Mod,
+    Eq, NotEq, Lt, LtEq, Gt, GtEq,
+    And, Or,
+}
+
+pub enum Pattern {
+    Ident(String),
+    Wildcard,
+    Lit(Literal),
+    Enum { name: String, variant: String, args: Vec<Pattern> },
+}
+
+pub struct MatchArm {
+    pub pattern: Pattern,
+    pub guard: Option<Expr>,
+    pub body: Expr,
+}
+
+pub enum Stmt {
+    Let { name: String, mutable: Bool, ty: Option<Type>, value: Expr },
+    Expr(Expr),
+    Return(Option<Expr>),
+}
+
+pub struct Param {
+    pub name: String,
+    pub ty: Type,
+}
+
+pub struct StructDef {
+    pub name: String,
+    pub generics: Vec<String>,
+    pub fields: Vec<(String, Type)>,
+}
+
+pub enum TopLevel {
+    FnDecl { name: String, generics: Vec<String>, params: Vec<Param>, ret_type: Type, body: Expr, is_async: Bool },
+    StructDef { name: String, generics: Vec<String>, fields: Vec<(String, Type)> },
+    EnumDef { name: String, generics: Vec<String>, variants: Vec<(String, Vec<Type>)> },
+    ImplBlock { type_name: String, generics: Vec<String>, methods: Vec<TopLevel> },
+    TraitDef { name: String, generics: Vec<String>, methods: Vec<TopLevel> },
+    TypeAlias { name: String, target: Type },
+    ConstDecl { name: String, ty: Type, value: Expr },
+    ModuleDecl { name: String },
+    UseDecl { path: Vec<String> },
+    ExternBlock { lib: String, items: Vec<TopLevel> },
+    Module(String),
+    Import(Vec<String>),
+}

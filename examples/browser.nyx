@@ -1,0 +1,57 @@
+module std.apps.browser
+
+import std.string
+import std.net
+import std.os.microkernel
+
+pub struct BrowserSecurityPolicy {
+    pub allowed_domain: String,
+    pub enforce_https: Bool,
+    pub block_unauthorized_external: Bool,
+}
+
+pub struct SovereignBrowser {
+    pub current_url: String,
+    pub title: String,
+    pub policy: BrowserSecurityPolicy,
+    pub is_locked: Bool,
+    pub navigation_history: Vec[String],
+}
+
+impl SovereignBrowser {
+    pub fn new() -> SovereignBrowser {
+        let policy = BrowserSecurityPolicy {
+            allowed_domain: "9jaoncloud.com.ng".to_string(),
+            enforce_https: true,
+            block_unauthorized_external: true,
+        };
+
+        SovereignBrowser {
+            current_url: "https://9jaoncloud.com.ng".to_string(),
+            title: "9jaonCloud Sovereign Portal".to_string(),
+            policy: policy,
+            is_locked: true,
+            navigation_history: Vec.new(),
+        }
+    }
+
+    pub fn navigate(self: &mut Self, target_url: String, token: &microkernel.CapToken) -> Result[String, String] {
+        // Enforce CBAC permission
+        if !token.has_permission(microkernel.CapRights.Execute) {
+            return Result.Err("CBAC Error: Process lacks network execution capabilities.".to_string());
+        }
+
+        // Domain Whitelist Enforcement: ONLY 9jaoncloud.com.ng allowed
+        if !target_url.contains("9jaoncloud.com.ng") {
+            return Result.Err("Security Firewall: Navigation outside sovereign domain (9jaoncloud.com.ng) is blocked.".to_string());
+        }
+
+        self.current_url = target_url;
+        self.navigation_history.push(target_url);
+        Result.Ok("Navigation successful to " + target_url)
+    }
+
+    pub fn is_domain_allowed(self: &Self, domain: String) -> Bool {
+        domain == self.policy.allowed_domain || domain.ends_with(".9jaoncloud.com.ng")
+    }
+}

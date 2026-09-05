@@ -1,0 +1,460 @@
+module net
+
+extern "C" {
+    fn nyx_socket(domain: i32, type_: i32, protocol: i32) -> i32
+    fn nyx_bind(sock: i32, addr: *const u8, port: i32) -> i32
+    fn nyx_listen(sock: i32, backlog: i32) -> i32
+    fn nyx_accept(sock: i32) -> i32
+    fn nyx_connect(host: *const u8, port: i32) -> i32
+    fn nyx_send(sock: i32, data: *const u8, len: u64) -> i64
+    fn nyx_recv(sock: i32, buf: *mut u8, len: u64) -> i64
+    fn nyx_close(sock: i32)
+    fn nyx_set_nonblocking(sock: i32, enable: i32)
+    fn nyx_set_timeout(sock: i32, seconds: i32)
+    fn nyx_udp_socket(domain: i32) -> i32
+    fn nyx_udp_sendto(sock: i32, data: *const u8, len: u64, addr: *const u8, port: i32) -> i64
+    fn nyx_udp_recvfrom(sock: i32, buf: *mut u8, len: u64, addr: *mut u8, port: *mut i32) -> i64
+}
+
+/* ── TCP ──────────────────────────────────────────────────────── */
+
+pub struct TcpListener {
+    sock: i32,
+    host: String,
+    port: i32,
+}
+
+pub struct TcpStream {
+    sock: i32,
+    read_timeout: i32,
+    write_timeout: i32,
+}
+
+impl TcpListener {
+    pub fn bind(addr: String, port: i32) -> Result<TcpListener, String> {
+        let sock = nyx_socket(2, 1, 0)
+        if sock < 0 {
+            return Result.Err("Socket creation failed".to_string())
+        }
+        if nyx_bind(sock, addr.as_ptr(), port) < 0 {
+            nyx_close(sock)
+            return Result.Err("Bind failed on " + addr + ":" + port.to_string())
+        }
+        if nyx_listen(sock, 128) < 0 {
+            nyx_close(sock)
+            return Result.Err("Listen failed".to_string())
+        }
+        Result.Ok(TcpListener { sock, host: addr, port })
+    }
+
+    pub fn local_addr(self: &TcpListener) -> String {
+        self.host.clone() + ":" + self.port.to_string()
+    }
+
+    pub fn accept(self: &TcpListener) -> Result<TcpStream, String> {
+        let client = nyx_accept(self.sock)
+        if client < 0 {
+            return Result.Err("Accept failed".to_string())
+        }
+        Result.Ok(TcpStream { sock: client, read_timeout: 0, write_timeout: 0 })
+    }
+
+    pub fn set_nonblocking(self: &TcpListener, enable: Bool) {
+        nyx_set_nonblocking(self.sock, if enable { 1 } else { 0 })
+    }
+
+    pub fn close(self: &TcpListener) {
+        nyx_close(self.sock)
+    }
+}
+
+impl TcpStream {
+    pub fn connect(host: String, port: i32) -> Result<TcpStream, String> {
+        let sock = nyx_connect(host.as_ptr(), port)
+        if sock < 0 {
+            return Result.Err("Connection failed to " + host + ":" + port.to_string())
+        }
+        Result.Ok(TcpStream { sock, read_timeout: 0, write_timeout: 0 })
+    }
+
+    pub fn read(self: &TcpStream, max_len: u64) -> Result<Vec<u8>, String> {
+        let mut buf = [0u8; 65536]
+        let to_read = if max_len > 65536 { 65536 } else { max_len }
+        let n = nyx_recv(self.sock, &mut buf[0], to_read)
+        if n < 0 {
+            return Result.Err("Read failed".to_string())
+        }
+        let mut result = Vec.new()
+        for i in 0..n as u64 {
+            result.push(buf[i])
+        }
+        Result.Ok(result)
+    }
+
+    pub fn read_to_string(self: &TcpStream) -> Result<String, String> {
+        let data = self.read(65536)?
+        Result.Ok(String.from_utf8(data))
+    }
+
+    pub fn read_exact(self: &TcpStream, n: u64) -> Result<Vec<u8>, String> {
+        let mut buf = [0u8; 65536]
+        let mut total = 0_u64
+        while total < n {
+            let to_read = if n - total > 65536 { 65536 } else { n - total }
+            let r = nyx_recv(self.sock, &mut buf[total as usize], to_read)
+            if r <= 0 { return Result.Err("Read failed".to_string()) }
+            total = total + r as u64
+        }
+        let mut result = Vec.new()
+        for i in 0..total { result.push(buf[i]) }
+        Result.Ok(result)
+    }
+
+    pub fn write(self: &TcpStream, data: String) -> Result<(), String> {
+        let n = nyx_send(self.sock, data.as_ptr(), data.len() as u64)
+        if n < 0 {
+            return Result.Err("Write failed".to_string())
+        }
+        Result.Ok(())
+    }
+
+    pub fn write_all(self: &TcpStream, data: String) -> Result<(), String> {
+        let mut total = 0_u64
+        let len = data.len() as u64
+        while total < len {
+            let remaining = data.substr(total as usize, len as usize)
+            let n = nyx_send(self.sock, remaining.as_ptr(), remaining.len() as u64)
+            if n <= 0 { return Result.Err("Write failed".to_string()) }
+            total = total + n as u64
+        }
+        Result.Ok(())
+    }
+
+    pub fn write_bytes(self: &TcpStream, data: Vec<u8>) -> Result<(), String> {
+        let n = nyx_send(self.sock, data.as_ptr(), data.len() as u64)
+        if n < 0 {
+            return Result.Err("Write failed".to_string())
+        }
+        Result.Ok(())
+    }
+
+    pub fn set_read_timeout(self: &mut TcpStream, seconds: i32) {
+        self.read_timeout = seconds
+        nyx_set_timeout(self.sock, seconds)
+    }
+
+    pub fn set_write_timeout(self: &mut TcpStream, seconds: i32) {
+        self.write_timeout = seconds
+        nyx_set_timeout(self.sock, seconds)
+    }
+
+    pub fn set_nonblocking(self: &TcpStream, enable: Bool) {
+        nyx_set_nonblocking(self.sock, if enable { 1 } else { 0 })
+    }
+
+    pub fn peer_addr(self: &TcpStream) -> Result<String, String> {
+        Result.Ok("peer".to_string())
+    }
+
+    pub fn shutdown(self: &TcpStream) -> Result<(), String> {
+        nyx_close(self.sock)
+        Result.Ok(())
+    }
+
+    pub fn close(self: &TcpStream) {
+        nyx_close(self.sock)
+    }
+}
+
+/* ── UDP ──────────────────────────────────────────────────────── */
+
+pub struct UdpSocket {
+    sock: i32,
+}
+
+pub struct UdpPacket {
+    pub data: Vec<u8>,
+    pub addr: String,
+    pub port: i32,
+}
+
+impl UdpSocket {
+    pub fn bind(addr: String, port: i32) -> Result<UdpSocket, String> {
+        let sock = nyx_udp_socket(2)
+        if sock < 0 {
+            return Result.Err("UDP socket creation failed".to_string())
+        }
+        if nyx_bind(sock, addr.as_ptr(), port) < 0 {
+            nyx_close(sock)
+            return Result.Err("UDP bind failed".to_string())
+        }
+        Result.Ok(UdpSocket { sock })
+    }
+
+    pub fn send_to(self: &UdpSocket, data: Vec<u8>, addr: String, port: i32) -> Result<usize, String> {
+        let n = nyx_udp_sendto(self.sock, data.as_ptr(), data.len() as u64, addr.as_ptr(), port)
+        if n < 0 {
+            return Result.Err("UDP send failed".to_string())
+        }
+        Result.Ok(n as usize)
+    }
+
+    pub fn recv_from(self: &UdpSocket, max_len: usize) -> Result<UdpPacket, String> {
+        let mut buf = [0u8; 65536]
+        let mut addr_buf = [0u8; 256]
+        let mut port: i32 = 0
+        let n = nyx_udp_recvfrom(self.sock, &mut buf[0], max_len as u64, &mut addr_buf[0], &mut port)
+        if n < 0 {
+            return Result.Err("UDP recv failed".to_string())
+        }
+        let mut data = Vec.new()
+        for i in 0..n as usize { data.push(buf[i]) }
+        let addr = String.from_utf8_bytes(addr_buf)
+        Result.Ok(UdpPacket { data, addr, port })
+    }
+
+    pub fn set_nonblocking(self: &UdpSocket, enable: Bool) {
+        nyx_set_nonblocking(self.sock, if enable { 1 } else { 0 })
+    }
+
+    pub fn set_timeout(self: &UdpSocket, seconds: i32) {
+        nyx_set_timeout(self.sock, seconds)
+    }
+
+    pub fn close(self: &UdpSocket) {
+        nyx_close(self.sock)
+    }
+}
+
+/* ── WebSocket ────────────────────────────────────────────────── */
+
+pub struct WebSocket {
+    stream: TcpStream,
+    connected: Bool,
+    key: String,
+}
+
+pub struct WebSocketMessage {
+    pub opcode: u8,
+    pub payload: Vec<u8>,
+    pub fin: Bool,
+}
+
+impl WebSocket {
+    pub fn connect(url: String) -> Result<WebSocket, String> {
+        let parts = url.split("://".to_string())
+        let host_port = if parts.len() > 1 { parts[1].clone() } else { parts[0].clone() }
+        let host_parts = host_port.split(":".to_string())
+        let host = host_parts[0].clone()
+        let port = if host_parts.len() > 1 { host_parts[1].parse_int() } else { 80 }
+
+        let stream = TcpStream.connect(host, port)?
+        Result.Ok(WebSocket { stream, connected: true, key: "nyx-ws-key".to_string() })
+    }
+
+    pub fn send_text(self: &mut WebSocket, data: String) -> Result<(), String> {
+        if !self.connected { return Result.Err("Not connected".to_string()) }
+        let mut frame = Vec.new()
+        frame.push(0x81_u8)
+        let len = data.len() as u64
+        if len < 126 {
+            frame.push(len as u8)
+        } else if len < 65536 {
+            frame.push(126_u8)
+            frame.push(((len >> 8) & 0xff) as u8)
+            frame.push((len & 0xff) as u8)
+        } else {
+            frame.push(127_u8)
+            let mut i = 56
+            while i >= 0 {
+                frame.push(((len >> i) & 0xff) as u8)
+                i = i - 8
+            }
+        }
+        for b in data.bytes() { frame.push(b) }
+        self.stream.write_bytes(frame)
+    }
+
+    pub fn send_binary(self: &mut WebSocket, data: Vec<u8>) -> Result<(), String> {
+        if !self.connected { return Result.Err("Not connected".to_string()) }
+        let mut frame = Vec.new()
+        frame.push(0x82_u8)
+        let len = data.len() as u64
+        if len < 126 {
+            frame.push(len as u8)
+        } else if len < 65536 {
+            frame.push(126_u8)
+            frame.push(((len >> 8) & 0xff) as u8)
+            frame.push((len & 0xff) as u8)
+        }
+        for b in data { frame.push(b) }
+        self.stream.write_bytes(frame)
+    }
+
+    pub fn send_close(self: &mut WebSocket) -> Result<(), String> {
+        let mut frame = Vec.new()
+        frame.push(0x88_u8)
+        frame.push(0x00_u8)
+        self.connected = false
+        self.stream.write_bytes(frame)
+    }
+
+    pub fn send_ping(self: &mut WebSocket) -> Result<(), String> {
+        let mut frame = Vec.new()
+        frame.push(0x89_u8)
+        frame.push(0x00_u8)
+        self.stream.write_bytes(frame)
+    }
+
+    pub fn recv(self: &mut WebSocket) -> Result<WebSocketMessage, String> {
+        if !self.connected { return Result.Err("Not connected".to_string()) }
+        let header = self.stream.read_exact(2)?
+        let fin = (header[0] & 0x80) != 0
+        let opcode = header[0] & 0x0f
+        let masked = (header[1] & 0x80) != 0
+        let mut payload_len = (header[1] & 0x7f) as u64
+        if payload_len == 126 {
+            let ext = self.stream.read_exact(2)?
+            payload_len = ((ext[0] as u64) << 8) | (ext[1] as u64)
+        } else if payload_len == 127 {
+            let ext = self.stream.read_exact(8)?
+            payload_len = 0
+            let mut i = 0
+            while i < 8 {
+                payload_len = (payload_len << 8) | (ext[i] as u64)
+                i = i + 1
+            }
+        }
+        let mut mask_key = [0u8; 4]
+        if masked {
+            let mk = self.stream.read_exact(4)?
+            mask_key[0] = mk[0]; mask_key[1] = mk[1]
+            mask_key[2] = mk[2]; mask_key[3] = mk[3]
+        }
+        let payload = self.stream.read_exact(payload_len)?
+        let mut data = Vec.new()
+        let mut i = 0
+        while i < payload.len() {
+            if masked {
+                data.push(payload[i] ^ mask_key[i % 4])
+            } else {
+                data.push(payload[i])
+            }
+            i = i + 1
+        }
+        if opcode == 0x08 { self.connected = false }
+        Result.Ok(WebSocketMessage { opcode, payload: data, fin })
+    }
+
+    pub fn is_connected(self: &WebSocket) -> Bool {
+        self.connected
+    }
+
+    pub fn close(self: &mut WebSocket) {
+        let _ = self.send_close()
+        self.stream.close()
+    }
+}
+
+/* ── HTTP helpers (on top of TCP) ─────────────────────────────── */
+
+pub struct HttpRequest {
+    pub method: String,
+    pub path: String,
+    pub headers: Vec<(String, String)>,
+    pub body: String,
+}
+
+pub struct HttpResponse {
+    pub status: i32,
+    pub headers: Vec<(String, String)>,
+    pub body: String,
+}
+
+impl HttpRequest {
+    pub fn get(url: String) -> Result<HttpRequest, String> {
+        Result.Ok(HttpRequest {
+            method: "GET".to_string(),
+            path: url,
+            headers: Vec.new(),
+            body: String.new(),
+        })
+    }
+
+    pub fn post(url: String, body: String) -> Result<HttpRequest, String> {
+        Result.Ok(HttpRequest {
+            method: "POST".to_string(),
+            path: url,
+            headers: Vec.new(),
+            body,
+        })
+    }
+
+    pub fn with_header(self: &mut HttpRequest, key: String, value: String) {
+        self.headers.push((key, value))
+    }
+}
+
+pub fn http_send(req: HttpRequest) -> Result<HttpResponse, String> {
+    let parts = req.path.split(":".to_string())
+    let host = parts[0].clone()
+    let port = if parts.len() > 2 { parts[2].parse_int() } else { 80 }
+
+    let mut stream = TcpStream.connect(host, port)?
+    let mut request_line = req.method + " " + req.path + " HTTP/1.1\r\n"
+    request_line = request_line + "Host: " + req.path + "\r\n"
+    for (k, v) in req.headers {
+        request_line = request_line + k + ": " + v + "\r\n"
+    }
+    request_line = request_line + "Connection: close\r\n"
+    if req.body.len() > 0 {
+        request_line = request_line + "Content-Length: " + req.body.len().to_string() + "\r\n"
+    }
+    request_line = request_line + "\r\n"
+    if req.body.len() > 0 {
+        request_line = request_line + req.body
+    }
+    stream.write_all(request_line)?
+
+    let response = stream.read_to_string()?
+    let status = 200
+    Result.Ok(HttpResponse { status, headers: Vec.new(), body: response })
+}
+
+/* ── Dial / Serve helpers ─────────────────────────────────────── */
+
+pub fn dial(host: String, port: i32) -> Result<TcpStream, String> {
+    TcpStream.connect(host, port)
+}
+
+pub fn serve(host: String, port: i32, handler: fn(TcpStream)) {
+    let listener = TcpListener.bind(host.clone(), port)
+    match listener {
+        Result.Ok(ln) => {
+            std.io.println("Listening on " + ln.local_addr())
+            loop {
+                match ln.accept() {
+                    Result.Ok(stream) => handler(stream),
+                    Result.Err(e) => std.io.eprintln("Accept error: " + e),
+                }
+            }
+        }
+        Result.Err(e) => std.io.eprintln("Failed to bind: " + e),
+    }
+}
+
+pub fn serve_udp(host: String, port: i32, handler: fn(UdpPacket)) {
+    let socket = UdpSocket.bind(host.clone(), port)
+    match socket {
+        Result.Ok(sock) => {
+            std.io.println("UDP listening on " + host + ":" + port.to_string())
+            loop {
+                match sock.recv_from(65536) {
+                    Result.Ok(packet) => handler(packet),
+                    Result.Err(e) => std.io.eprintln("UDP recv error: " + e),
+                }
+            }
+        }
+        Result.Err(e) => std.io.eprintln("Failed to bind UDP: " + e),
+    }
+}

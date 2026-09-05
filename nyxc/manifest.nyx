@@ -1,0 +1,142 @@
+module manifest
+
+import std.io
+import std.fs
+import std.string
+
+pub struct Manifest {
+    pub name: String,
+    pub version: String,
+    pub edition: String,
+    pub description: String,
+    pub author: String,
+    pub dependencies: Map<String, String>,
+    pub dev_dependencies: Map<String, String>,
+    pub build_command: String,
+    pub capabilities: Vec<String>,
+}
+
+pub fn new_manifest() -> Manifest {
+    Manifest {
+        name: "".to_string(),
+        version: "0.1.0".to_string(),
+        edition: "2024".to_string(),
+        description: "".to_string(),
+        author: "".to_string(),
+        dependencies: Map.new(),
+        dev_dependencies: Map.new(),
+        build_command: "".to_string(),
+        capabilities: Vec.new(),
+    }
+}
+
+pub fn load_manifest(path: String) -> Result<Manifest, String> {
+    let content = match fs.read_to_string(path) {
+        Result.Ok(c) => c,
+        Result.Err(e) => return Result.Err("Failed to read " + path + ": " + e),
+    }
+    parse(content)
+}
+
+pub fn parse(content: String) -> Result<Manifest, String> {
+    let mut manifest = new_manifest()
+    let mut current_section = ""
+    let lines = content.split("\n")
+
+    for line in lines {
+        let trimmed = line.trim()
+        if trimmed == "" || trimmed.starts_with("#") {
+            continue
+        }
+        if trimmed.starts_with("[") && trimmed.ends_with("]") {
+            current_section = trimmed.substring(1, trimmed.len() - 1)
+            continue
+        }
+        if trimmed.contains("=") {
+            let eq_pos = trimmed.index_of("=")
+            let key = trimmed.substring(0, eq_pos).trim()
+            let value_raw = trimmed.substring(eq_pos + 1).trim()
+            let value = strip_quotes(value_raw)
+
+            match current_section {
+                "package" => {
+                    match key {
+                        "name" => manifest.name = value,
+                        "version" => manifest.version = value,
+                        "edition" => manifest.edition = value,
+                        "description" => manifest.description = value,
+                        "author" => manifest.author = value,
+                        "build" => manifest.build_command = value,
+                        _ => {}
+                    }
+                }
+                "dependencies" => {
+                    manifest.dependencies.insert(key.to_string(), value.to_string())
+                }
+                "dev-dependencies" => {
+                    manifest.dev_dependencies.insert(key.to_string(), value.to_string())
+                }
+                "capabilities" => {
+                    manifest.capabilities.push(value.to_string())
+                }
+                _ => {}
+            }
+        }
+    }
+
+    if manifest.name == "" {
+        return Result.Err("Manifest missing [package] name")
+    }
+
+    Result.Ok(manifest)
+}
+
+pub fn save_manifest(manifest: &Manifest, path: String) -> Result<(), String> {
+    let mut content = "# Nyx package manifest - auto-generated\n\n"
+    content = content + "[package]\n"
+    content = content + "name = \"" + manifest.name + "\"\n"
+    content = content + "version = \"" + manifest.version + "\"\n"
+    content = content + "edition = \"" + manifest.edition + "\"\n"
+    if manifest.description != "" {
+        content = content + "description = \"" + manifest.description + "\"\n"
+    }
+    if manifest.author != "" {
+        content = content + "author = \"" + manifest.author + "\"\n"
+    }
+    if manifest.build_command != "" {
+        content = content + "build = \"" + manifest.build_command + "\"\n"
+    }
+
+    if manifest.dependencies.len() > 0 {
+        content = content + "\n[dependencies]\n"
+        for (name, version) in manifest.dependencies.iter() {
+            content = content + name + " = \"" + version + "\"\n"
+        }
+    }
+
+    if manifest.dev_dependencies.len() > 0 {
+        content = content + "\n[dev-dependencies]\n"
+        for (name, version) in manifest.dev_dependencies.iter() {
+            content = content + name + " = \"" + version + "\"\n"
+        }
+    }
+
+    if manifest.capabilities.len() > 0 {
+        content = content + "\n[capabilities]\n"
+        for cap in manifest.capabilities.iter() {
+            content = content + "\"" + cap + "\"\n"
+        }
+    }
+
+    fs.write(path, content)
+}
+
+fn strip_quotes(s: String) -> String {
+    if s.starts_with("\"") && s.ends_with("\"") {
+        return s.substring(1, s.len() - 1)
+    }
+    if s.starts_with("'") && s.ends_with("'") {
+        return s.substring(1, s.len() - 1)
+    }
+    s
+}

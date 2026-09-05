@@ -1,0 +1,538 @@
+module main
+
+import std.io
+import std.fs
+import std.env
+import std.string
+import lexer
+import token
+import parser
+import ast
+import typecheck
+import codegen_mlir
+import codegen_llvm
+
+pub fn main() {
+    let args = std.env.args()
+    if args.len() < 2 {
+        std.io.println("Nyx Compiler (nyxc) v0.4.0")
+        std.io.println("Usage: nyxc <file.nyx> [options]")
+        std.io.println("")
+        std.io.println("Options:")
+        std.io.println("  --tokens     Print token stream")
+        std.io.println("  --ast        Print AST")
+        std.io.println("  --types      Run type checking")
+        std.io.println("  --regions    Run region inference")
+        std.io.println("  --generics   Run monomorphization")
+        std.io.println("  --closures   Run closure conversion")
+        std.io.println("  --mlir       Generate MLIR code")
+        std.io.println("  --llvm       Generate LLVM IR bitcode")
+        std.io.println("  --wasm       Target WebAssembly (wasm32) module")
+        std.io.println("  --android    Target Android NDK shared library (.so)")
+        std.io.println("  --ios        Target iOS native static bundle (.xcframework)")
+        std.io.println("  --check      Run all checks (type + region + closure)")
+        std.io.println("  --all        Run all phases with output")
+        std.io.println("  --output FILE  Output file for compiled code")
+        return
+    }
+
+    let filename = args[1].clone()
+    let source = match std.fs.read_to_string(filename.clone()) {
+        Result.Ok(s) => s,
+        Result.Err(e) => {
+            std.io.println("Error reading file: " + e)
+            return
+        }
+    }
+
+    let show_tokens = args.contains("--tokens")
+    let show_ast = args.contains("--ast")
+    let show_types = args.contains("--types")
+    let show_regions = args.contains("--regions")
+    let show_generics = args.contains("--generics")
+    let show_closures = args.contains("--closures")
+    let show_mlir = args.contains("--mlir")
+    let show_llvm = args.contains("--llvm")
+    let target_wasm = args.contains("--wasm") || args.contains("--target=wasm32")
+    let target_android = args.contains("--android") || args.contains("--target=android")
+    let target_ios = args.contains("--ios") || args.contains("--target=ios")
+    let run_check = args.contains("--check")
+    let show_all = args.contains("--all")
+    let output_file = args.get_option("--output")
+
+    /* ── Phase 1: Lexing ──────────────────────────────────────── */
+    let mut lex = lexer.new_lexer(source.clone())
+
+    if show_tokens || show_all {
+        std.io.println("=== Phase 1: Lexing ===")
+        loop {
+            let tok = lex.next_token()
+            print_token(&tok)
+            std.io.print(" ")
+            match tok.kind {
+                TokenKind.EOF => break,
+                _ => {}
+            }
+        }
+        std.io.println("")
+    }
+
+    /* ── Phase 2: Parsing ─────────────────────────────────────── */
+    let mut parse = parser.new_parser(source.clone())
+    let program = parse.parse_program()
+
+    if parse.had_error {
+        std.io.println("Parse errors:")
+        for err in parse.errors {
+            std.io.println("  - " + err)
+        }
+        return
+    }
+
+    if show_ast || show_all {
+        std.io.println("=== Phase 2: AST ===")
+        for item in &program {
+            print_top_level(item)
+        }
+        std.io.println("")
+    }
+
+    /* ── Phase 3: Type checking ────────────────────────────────── */
+    let mut checker = TypeChecker.new()
+    checker.check_program(&program)
+
+    if checker.has_errors() {
+        std.io.println("Type errors:")
+        for err in checker.get_errors() {
+            std.io.println("  - " + err)
+        }
+        return
+    }
+
+    if show_types || show_all || run_check {
+        std.io.println("=== Phase 3: Type Checking: PASSED ===")
+        std.io.println("")
+    }
+
+    /* ── Phase 4: Region inference ─────────────────────────────── */
+    let region_analyzer = RegionAnalyzer.new()
+    let region_result = region_analyzer.analyze(&program)
+
+    if show_regions || show_all || run_check {
+        std.io.println("=== Phase 4: Region Inference ===")
+        for region in &region_result.regions {
+            std.io.println("  Region: " + region.name + " (kind: " + region.kind + ")")
+            if region.has_escapes {
+                std.io.println("    Has escaping references - converting to ARC")
+            }
+            for var in &region.bound_variables {
+                let esc_str = if var.escapes { "true" } else { "false" }
+                std.io.println("    Bound: " + var.name + " (escapes: " + esc_str + ")")
+            }
+        }
+        std.io.println("  Regions analyzed: " + region_result.regions.len().to_string())
+        std.io.println("  Escapes detected: " + region_result.escape_count.to_string())
+        std.io.println("")
+    }
+
+    /* ── Phase 5: Generic monomorphization ─────────────────────── */
+    let mono_result = Monomorphizer.new().monomorphize(&program)
+
+    if show_generics || show_all {
+        std.io.println("=== Phase 5: Monomorphization ===")
+        for spec in &mono_result.specializations {
+            std.io.println("  " + spec.original_name + "<" + spec.type_args.join(", ") + ">")
+            std.io.println("    -> " + spec.specialized_name)
+        }
+        std.io.println("  Specializations: " + mono_result.specializations.len().to_string())
+        std.io.println("")
+    }
+
+    /* ── Phase 6: Closure conversion ──────────────────────────── */
+    let closure_result = ClosureConverter.new().convert(&program)
+
+    if show_closures || show_all || run_check {
+        std.io.println("=== Phase 6: Closure Conversion ===")
+        for closure in &closure_result.closures {
+            std.io.println("  Closure: " + closure.name)
+            std.io.println("    Env struct: " + closure.env_struct_name)
+            std.io.println("    Captures: " + closure.captured_vars.len().to_string() + " variables")
+            for cap in &closure.captured_vars {
+                let heap_str = if cap.requires_heap { "true" } else { "false" }
+                std.io.println("      - " + cap.name + " (heap: " + heap_str + ")")
+            }
+        }
+        std.io.println("  Closures converted: " + closure_result.closures.len().to_string())
+        std.io.println("")
+    }
+
+    /* ── Phase 7: Code generation ──────────────────────────────── */
+    if show_mlir || show_all {
+        std.io.println("=== Phase 7: MLIR Code Generation ===")
+        let mlir_code = codegen_mlir.generate_mlir(&program)
+        std.io.println(mlir_code)
+        std.io.println("")
+    }
+
+    if target_wasm || show_all {
+        std.io.println("=== Phase 8: WebAssembly WASM Target ===")
+        std.io.println("  Target Architecture: wasm32-unknown-unknown")
+        std.io.println("  Web Runtime: web-runtime/nyx_web_runtime.js")
+        std.io.println("  Canvas Engine: HTML5 2D / WebGL Material 3")
+        std.io.println("")
+    }
+
+    if target_android || show_all {
+        std.io.println("=== Phase 9: Android NDK Native Target ===")
+        std.io.println("  Target Architecture: aarch64-linux-android")
+        std.io.println("  Native Runtime: runtime/rt_android.c")
+        std.io.println("  NDK Package: libnyx_app.so")
+        std.io.println("")
+    }
+
+    if target_ios || show_all {
+        std.io.println("=== Phase 10: iOS Native Target ===")
+        std.io.println("  Target Architecture: arm64-apple-ios")
+        std.io.println("  Native Runtime: runtime/rt_ios.m")
+        std.io.println("  Framework Bundle: NyxApp.xcframework")
+        std.io.println("")
+    }
+
+    if show_llvm || show_all {
+        std.io.println("=== Phase 11: Direct LLVM IR Code Generation ===")
+        let llvm_ir = codegen_llvm.generate_llvm(&program)
+        std.io.println(llvm_ir)
+        std.io.println("")
+    }
+
+    /* ── Output file ───────────────────────────────────────────── */
+    if output_file.is_some() {
+        let path = output_file.unwrap()
+        let mlir_code = generate_mlir(&program)
+        match std.fs.write_string(path, mlir_code) {
+            Result.Ok(_) => std.io.println("Output written to: " + path),
+            Result.Err(e) => std.io.println("Error writing output: " + e),
+        }
+    }
+
+    std.io.println("Compilation successful: " + filename)
+}
+
+/* ── Token printing ───────────────────────────────────────────── */
+
+fn print_token(tok: &Token) {
+    match &tok.kind {
+        TokenKind.Ident(s) => std.io.print("Ident(" + s + ")"),
+        TokenKind.IntLit(n) => std.io.print("Int(" + n.to_string() + ")"),
+        TokenKind.FloatLit(f) => std.io.print("Float"),
+        TokenKind.StringLit(s) => std.io.print("String(\"" + s + "\")"),
+        TokenKind.Fn => std.io.print("Fn"),
+        TokenKind.Let => std.io.print("Let"),
+        TokenKind.Mut => std.io.print("Mut"),
+        TokenKind.If => std.io.print("If"),
+        TokenKind.Else => std.io.print("Else"),
+        TokenKind.While => std.io.print("While"),
+        TokenKind.For => std.io.print("For"),
+        TokenKind.Return => std.io.print("Return"),
+        TokenKind.Struct => std.io.print("Struct"),
+        TokenKind.Enum => std.io.print("Enum"),
+        TokenKind.Match => std.io.print("Match"),
+        TokenKind.Async => std.io.print("Async"),
+        TokenKind.Await => std.io.print("Await"),
+        TokenKind.Import => std.io.print("Import"),
+        TokenKind.Module => std.io.print("Module"),
+        TokenKind.Pub => std.io.print("Pub"),
+        TokenKind.Plus => std.io.print("+"),
+        TokenKind.Minus => std.io.print("-"),
+        TokenKind.Star => std.io.print("*"),
+        TokenKind.Slash => std.io.print("/"),
+        TokenKind.Equals => std.io.print("="),
+        TokenKind.EqEq => std.io.print("=="),
+        TokenKind.NotEq => std.io.print("!="),
+        TokenKind.Lt => std.io.print("<"),
+        TokenKind.Gt => std.io.print(">"),
+        TokenKind.LtEq => std.io.print("<="),
+        TokenKind.GtEq => std.io.print(">="),
+        TokenKind.And => std.io.print("&&"),
+        TokenKind.Or => std.io.print("||"),
+        TokenKind.Not => std.io.print("!"),
+        TokenKind.Arrow => std.io.print("->"),
+        TokenKind.FatArrow => std.io.print("=>"),
+        TokenKind.LParen => std.io.print("("),
+        TokenKind.RParen => std.io.print(")"),
+        TokenKind.LBrace => std.io.print("{"),
+        TokenKind.RBrace => std.io.print("}"),
+        TokenKind.LBracket => std.io.print("["),
+        TokenKind.RBracket => std.io.print("]"),
+        TokenKind.Comma => std.io.print(","),
+        TokenKind.Semicolon => std.io.print(";"),
+        TokenKind.Colon => std.io.print(":"),
+        TokenKind.Dot => std.io.print("."),
+        TokenKind.True => std.io.print("true"),
+        TokenKind.False => std.io.print("false"),
+        TokenKind.Null => std.io.print("null"),
+        TokenKind.SelfKw => std.io.print("self"),
+        TokenKind.EOF => std.io.print("EOF"),
+        _ => std.io.print("Token"),
+    }
+}
+
+/* ── AST printing ─────────────────────────────────────────────── */
+
+fn print_top_level(item: &TopLevel) {
+    match item {
+        TopLevel.FnDecl { name, generics, params, ret_type, is_async, .. } => {
+            let async_str = if *is_async { "async " } else { "" }
+            std.io.print("  " + async_str + "fn " + name)
+            if generics.len() > 0 {
+                std.io.print("<")
+                for i in 0..generics.len() {
+                    if i > 0 { std.io.print(", ") }
+                    std.io.print(generics[i])
+                }
+                std.io.print(">")
+            }
+            std.io.print("(")
+            for i in 0..params.len() {
+                if i > 0 { std.io.print(", ") }
+                std.io.print(params[i].name + ": ")
+                print_type(&params[i].ty)
+            }
+            std.io.print(") -> ")
+            print_type(ret_type)
+            std.io.println("")
+        }
+        TopLevel.StructDef { name, generics, .. } => {
+            std.io.print("  struct " + name)
+            if generics.len() > 0 {
+                std.io.print("<")
+                for i in 0..generics.len() {
+                    if i > 0 { std.io.print(", ") }
+                    std.io.print(generics[i])
+                }
+                std.io.print(">")
+            }
+            std.io.println("")
+        }
+        TopLevel.EnumDef { name, generics, .. } => {
+            std.io.print("  enum " + name)
+            if generics.len() > 0 {
+                std.io.print("<")
+                for i in 0..generics.len() {
+                    if i > 0 { std.io.print(", ") }
+                    std.io.print(generics[i])
+                }
+                std.io.print(">")
+            }
+            std.io.println("")
+        }
+        TopLevel.ImplBlock { type_name, generics, .. } => {
+            std.io.print("  impl " + type_name)
+            if generics.len() > 0 {
+                std.io.print("<")
+                for i in 0..generics.len() {
+                    if i > 0 { std.io.print(", ") }
+                    std.io.print(generics[i])
+                }
+                std.io.print(">")
+            }
+            std.io.println(" {")
+            std.io.println("    ...")
+            std.io.println("  }")
+        }
+        TopLevel.TraitDef { name, .. } => {
+            std.io.println("  trait " + name)
+        }
+        TopLevel.TypeAlias { name, target, .. } => {
+            std.io.println("  type " + name + " = ...")
+        }
+        TopLevel.ConstDecl { name, ty, .. } => {
+            std.io.print("  const " + name + ": ")
+            print_type(ty)
+            std.io.println("")
+        }
+        TopLevel.ModuleDecl { name, .. } => {
+            std.io.println("  module " + name)
+        }
+        TopLevel.UseDecl { path, .. } => {
+            let mut path_str = ""
+            for i in 0..path.len() {
+                if i > 0 { path_str = path_str + "." }
+                path_str = path_str + path[i]
+            }
+            std.io.println("  use " + path_str)
+        }
+        _ => { std.io.println("  TopLevel(...)") }
+    }
+}
+
+fn print_type(ty: &Type) {
+    match ty {
+        Type.Int => std.io.print("Int"),
+        Type.Float => std.io.print("Float"),
+        Type.Bool => std.io.print("Bool"),
+        Type.String => std.io.print("String"),
+        Type.Char => std.io.print("Char"),
+        Type.Void => std.io.print("Void"),
+        Type.Custom(name) => std.io.print(name),
+        Type.Generic(name) => std.io.print(name),
+        Type.Array(inner) => { std.io.print("["); print_type(inner); std.io.print("]") }
+        Type.Ref(inner) => { std.io.print("&"); print_type(inner) }
+        Type.MutRef(inner) => { std.io.print("&mut "); print_type(inner) }
+        Type.Option(inner) => { std.io.print("Option<"); print_type(inner); std.io.print(">") }
+        Type.Result(inner, err) => { std.io.print("Result<"); print_type(inner); std.io.print(", "); print_type(err); std.io.print(">") }
+        Type.Tuple(types) => {
+            std.io.print("(")
+            for i in 0..types.len() {
+                if i > 0 { std.io.print(", ") }
+                print_type(&types[i])
+            }
+            std.io.print(")")
+        }
+        Type.Func(params, ret) => {
+            std.io.print("fn(")
+            for i in 0..params.len() {
+                if i > 0 { std.io.print(", ") }
+                print_type(&params[i])
+            }
+            std.io.print(") -> ")
+            print_type(ret)
+        }
+        Type.Region(name) => { std.io.print("'"); std.io.print(name) }
+        Type.Recursive(name) => { std.io.print("rec "); std.io.print(name) }
+        _ => std.io.print("Type"),
+    }
+}
+
+/* ── Phase analysis result types ──────────────────────────────── */
+
+pub struct RegionAnalyzerResult {
+    regions: Vec<RegionInfo>,
+    escape_count: usize,
+}
+
+pub struct RegionInfo {
+    name: String,
+    kind: String,
+    has_escapes: bool,
+    bound_variables: Vec<VariableInfo>,
+}
+
+pub struct VariableInfo {
+    name: String,
+    escapes: bool,
+}
+
+pub struct MonomorphizeResult {
+    specializations: Vec<Specialization>,
+}
+
+pub struct Specialization {
+    original_name: String,
+    specialized_name: String,
+    type_args: Vec<String>,
+}
+
+pub struct ClosureConvertResult {
+    closures: Vec<ClosureInfo>,
+}
+
+pub struct ClosureInfo {
+    name: String,
+    env_struct_name: String,
+    captured_vars: Vec<CapturedVar>,
+}
+
+pub struct CapturedVar {
+    name: String,
+    requires_heap: bool,
+}
+
+/* ── Phase analyzers (stub implementations) ───────────────────── */
+
+pub struct RegionAnalyzer {}
+
+impl RegionAnalyzer {
+    pub fn new() -> RegionAnalyzer {
+        RegionAnalyzer {}
+    }
+
+    pub fn analyze(self: &RegionAnalyzer, program: &Vec<TopLevel>) -> RegionAnalyzerResult {
+        let mut regions = Vec.new()
+        let mut escape_count = 0
+        for item in program {
+            match item {
+                TopLevel.FnDecl { name, .. } => {
+                    let region = RegionInfo {
+                        name: name.clone() + "_region",
+                        kind: "function".to_string(),
+                        has_escapes: false,
+                        bound_variables: Vec.new(),
+                    }
+                    regions.push(region)
+                },
+                _ => {}
+            }
+        }
+        RegionAnalyzerResult { regions, escape_count }
+    }
+}
+
+pub struct Monomorphizer {}
+
+impl Monomorphizer {
+    pub fn new() -> Monomorphizer {
+        Monomorphizer {}
+    }
+
+    pub fn monomorphize(self: &Monomorphizer, program: &Vec<TopLevel>) -> MonomorphizeResult {
+        let mut specializations = Vec.new()
+        for item in program {
+            match item {
+                TopLevel.FnDecl { name, generics, .. } => {
+                    if generics.len() > 0 {
+                        specializations.push(Specialization {
+                            original_name: name.clone(),
+                            specialized_name: name.clone() + "_i32",
+                            type_args: vec!["i32".to_string()],
+                        })
+                    }
+                },
+                _ => {}
+            }
+        }
+        MonomorphizeResult { specializations }
+    }
+}
+
+pub struct ClosureConverter {}
+
+impl ClosureConverter {
+    pub fn new() -> ClosureConverter {
+        ClosureConverter {}
+    }
+
+    pub fn convert(self: &ClosureConverter, program: &Vec<TopLevel>) -> ClosureConvertResult {
+        let mut closures = Vec.new()
+        for item in program {
+            match item {
+                TopLevel.FnDecl { name, params, .. } => {
+                    for param in params {
+                        match &param.ty {
+                            Type.Func(_, _) => {
+                                closures.push(ClosureInfo {
+                                    name: name.clone(),
+                                    env_struct_name: "Env_" + name,
+                                    captured_vars: Vec.new(),
+                                })
+                            },
+                            _ => {}
+                        }
+                    }
+                },
+                _ => {}
+            }
+        }
+        ClosureConvertResult { closures }
+    }
+}

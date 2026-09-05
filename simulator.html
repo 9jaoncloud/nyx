@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nyx Interactive Web Simulator &amp; Zero-GC Memory Visualizer</title>
+    <meta name="description" content="Test and visualize Nyx's Zero-GC Region Bump Memory, Structured Concurrency, and Deterministic Time-Travel Replay directly in your web browser.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <style>
+        :root {
+            --bg: #070913;
+            --surface: rgba(15, 23, 42, 0.75);
+            --border: rgba(255, 255, 255, 0.12);
+            --primary: #8b5cf6;
+            --primary-glow: rgba(139, 92, 246, 0.4);
+            --cyan: #38bdf8;
+            --emerald: #10b981;
+            --rose: #f43f5e;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.12) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(56, 189, 248, 0.1) 0px, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 2rem;
+            background: rgba(7, 9, 19, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: #fff;
+        }
+
+        .nav-links { display: flex; gap: 1rem; align-items: center; }
+        .nav-links a { color: var(--text-muted); text-decoration: none; font-size: 0.88rem; font-weight: 500; transition: color 0.2s; }
+        .nav-links a:hover, .nav-links a.active { color: #fff; }
+
+        .container {
+            max-width: 1300px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+            width: 100%;
+            flex: 1;
+        }
+
+        .hero-banner {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+        .hero-banner h1 { font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem; }
+        .hero-banner h1 span {
+            background: linear-gradient(135deg, #c084fc, #38bdf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero-banner p { color: var(--text-muted); font-size: 1.1rem; max-width: 700px; margin: 0 auto; }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .grid-layout { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.5rem;
+            backdrop-filter: blur(12px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .card-title { font-size: 1.1rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 0.5rem; }
+
+        .btn-group { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+        .btn-preset {
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-preset:hover, .btn-preset.active {
+            background: rgba(139, 92, 246, 0.2);
+            border-color: var(--primary);
+            color: #fff;
+        }
+
+        .code-box {
+            background: #020617;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 1.25rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88rem;
+            color: #e2e8f0;
+            line-height: 1.6;
+            min-height: 240px;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.92rem;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            margin-top: 1rem;
+        }
+        .btn-run { background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: #fff; box-shadow: 0 4px 14px var(--primary-glow); }
+        .btn-run:hover { transform: translateY(-1px); box-shadow: 0 6px 20px var(--primary-glow); }
+
+        /* Memory Visualizer */
+        .memory-track {
+            background: #020617;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            height: 48px;
+            position: relative;
+            margin: 1.5rem 0 1rem;
+            overflow: hidden;
+            display: flex;
+        }
+        .memory-fill {
+            background: linear-gradient(90deg, #8b5cf6, #38bdf8);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        .memory-fill::after {
+            content: "arena_top";
+            position: absolute;
+            right: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: #020617;
+            background: #fff;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+        .memory-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.78rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-badge {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #34d399;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .terminal-output {
+            background: #020617;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            color: #38bdf8;
+            line-height: 1.6;
+            margin-top: 1rem;
+            min-height: 120px;
+            white-space: pre-wrap;
+        }
+    
+        /* Mobile Responsiveness for Simulator */
+        @media (max-width: 850px) {
+            header {
+                padding: 0.75rem 1rem !important;
+            }
+            .nav-links {
+                display: none !important;
+            }
+            .main-layout {
+                grid-template-columns: 1fr !important;
+                height: auto !important;
+            }
+            .left-col, .right-col {
+                min-height: auto !important;
+            }
+            .editor-box {
+                min-height: 280px !important;
+            }
+            .controls-bar {
+                flex-wrap: wrap !important;
+            }
+            .btn-action {
+                flex: 1 !important;
+                min-width: 140px !important;
+            }
+        }
+
+    
+        /* Global Mobile Responsiveness Master Styles */
+        @media (max-width: 850px) {
+            header {
+                padding: 0.6rem 1rem !important;
+                flex-wrap: wrap !important;
+            }
+            .nav-links {
+                gap: 0.6rem !important;
+                overflow-x: auto !important;
+                max-width: 100% !important;
+                padding-bottom: 0.25rem !important;
+            }
+            .nav-links a {
+                font-size: 0.8rem !important;
+                white-space: nowrap !important;
+            }
+            .container, main {
+                padding: 1.5rem 1rem !important;
+            }
+            .hero h1 {
+                font-size: 2.1rem !important;
+            }
+            .hero p {
+                font-size: 0.98rem !important;
+            }
+            .grid, .card-grid, .bench-grid, .problems-grid, .pillars-grid, .pkg-grid {
+                grid-template-columns: 1fr !important;
+            }
+            table {
+                display: block !important;
+                overflow-x: auto !important;
+                white-space: nowrap !important;
+            }
+            .btn-cta-group, .btn-group {
+                flex-direction: column !important;
+            }
+            .btn-cta, .btn {
+                width: 100% !important;
+                text-align: center !important;
+                justify-content: center !important;
+            }
+            .footer-grid {
+                grid-template-columns: 1fr !important;
+                gap: 2rem !important;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <header>
+        <a href="index.html" class="brand">
+            <div style="width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, #8b5cf6, #38bdf8); display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">🌙</div>
+            <div style="display: flex; flex-direction: column; line-height: 1.15;">
+                <span style="font-size: 1.2rem; font-weight: 800; color: #fff;">Nyx</span>
+                <span style="font-size: 0.68rem; color: #38bdf8; font-weight: 700; text-transform: uppercase;">Programming Language</span>
+            </div>
+        </a>
+        <nav class="nav-links">
+            <a href="index.html">Overview</a>
+            <a href="docs/language/introduction.html">Docs</a>
+            <a href="comparison.html">Matrix</a>
+            <a href="faq.html">FAQ</a>
+            <a href="simulator.html" class="active">⚡ Live Simulator</a>
+            <a href="about.html">About</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="hero-banner">
+            <h1>Interactive Web Simulator &amp; <span>Zero-GC Engine</span></h1>
+            <p>Test and visualize how Nyx achieves bare-metal C performance, instant $O(1)$ stack bump allocation, and deterministic time-travel execution right in your browser.</p>
+        </div>
+
+        <div class="grid-layout">
+            <!-- Left Panel: Interactive Code Playground -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">📝 Interactive Code Playground</div>
+                    <span style="font-size: 0.78rem; color: #38bdf8; font-weight: 600;">WASM Engine Ready</span>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn-preset active" onclick="loadPreset(1)">1. Region Bump Allocator</button>
+                    <button class="btn-preset" onclick="loadPreset(2)">2. Structured Nursery</button>
+                    <button class="btn-preset" onclick="loadPreset(3)">3. Deterministic Replay</button>
+                    <button class="btn-preset" onclick="loadPreset(4)">4. @pure Mathematical State</button>
+                </div>
+
+                <div id="editor" class="code-box"></div>
+
+                <button class="btn-action btn-run" onclick="executeSimulation()">
+                    ⚡ Execute &amp; Animate Memory
+                </button>
+            </div>
+
+            <!-- Right Panel: Memory Visualizer & Output -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">📊 Live Zero-GC Memory Bump Visualizer</div>
+                    <div class="stat-badge">⚡ GC Pause: 0.00 ms</div>
+                </div>
+
+                <div style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+                    Active Thread-Local Memory Arena (<span id="bytes-label">0</span> / 65,536 Bytes Allocated)
+                </div>
+
+                <div class="memory-track">
+                    <div id="memory-bar" class="memory-fill"></div>
+                </div>
+
+                <div class="memory-labels">
+                    <span>arena_base [0x7000]</span>
+                    <span id="mark-label">mark: None</span>
+                    <span>arena_capacity [64 KB]</span>
+                </div>
+
+                <div style="display: flex; gap: 0.75rem;">
+                    <button class="btn-preset" onclick="simulateAllocation(16384)">➕ Allocate 16 KB</button>
+                    <button class="btn-preset" onclick="simulateRollback()">🔄 Single-Cycle Rollback O(1)</button>
+                    <button class="btn-preset" onclick="resetMemory()">🧹 Clear Arena</button>
+                </div>
+
+                <div style="margin-top: 1.5rem; font-weight: 700; font-size: 0.92rem; color: #fff;">🖥️ Simulated Runtime Output:</div>
+                <div id="console-output" class="terminal-output">[Runtime Ready] Click 'Execute &amp; Animate Memory' or choose a preset above.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const presets = {
+            1: `// Preset 1: Thread-Local O(1) Region Bump Allocation
+fn process_packet_batch() {
+    // Allocates 16,384 bytes in contiguous thread-local arena
+    let buffer = List::with_capacity(4096)
+    
+    for i in 0..4096 {
+        buffer.push(i * 2)
+    }
+    // Scope concludes: arena_top rolls back to arena_base in 1 CPU cycle!
+    // GC Pause: 0.00 ms (Zero Stop-The-World Latency)
+}`,
+            2: `// Preset 2: Structured Concurrency Nurseries
+import std::concurrency::nursery
+
+fn parallel_analytics(dataset: List<float>) {
+    nursery { |scope|
+        for chunk in dataset.chunks(8) {
+            scope.spawn(fn() {
+                // Runs in thread-isolated memory region
+                return calculate_sum(chunk)
+            })
+        }
+    } // All threads join deterministically with zero data races!
+}`,
+            3: `// Preset 3: Deterministic Input Trace & Time-Travel Replay
+import std::debug::TraceRecorder
+
+fn main() {
+    let recorder = TraceRecorder::start("session.nyxtrace")
+    var ledger_state = 1000.0
+
+    for event in recorder.stream_inputs() {
+        ledger_state += event.amount
+    }
+    recorder.stop()
+    // Replay 100% identically: nyx run app.nyx --replay session.nyxtrace
+}`,
+            4: `// Preset 4: Mathematical @pure State Transitions
+@pure
+fn calculate_tax(subtotal: float, rate: float) -> float {
+    // Pure function: Guaranteed zero global side-effects
+    return subtotal * rate
+}`
+        };
+
+        let currentAllocated = 0;
+        const maxCapacity = 65536;
+
+        function loadPreset(id) {
+            document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('editor').textContent = presets[id];
+            
+            if (id === 1) {
+                simulateAllocation(16384);
+                document.getElementById('console-output').textContent = 
+                    "[Region Allocator] Allocated 16,384 bytes (4096 ints) on thread bump frame.\n[Scope Exit] arena_top = arena_base in 1 single CPU instruction (0.00ms pause).";
+            } else if (id === 2) {
+                simulateAllocation(32768);
+                document.getElementById('console-output').textContent = 
+                    "[Nursery Active] Spawned 8 worker tasks across 8 CPU cores.\n[Actor Channels] Zero shared mutable state. All tasks joined deterministically.";
+            } else if (id === 3) {
+                simulateAllocation(8192);
+                document.getElementById('console-output').textContent = 
+                    "[Trace Recorder] Recorded 5 external events to 'session.nyxtrace' (2.4 KB).\n[Time-Travel] Execution trace 100% verified for exact bug replay.";
+            } else {
+                simulateAllocation(4096);
+                document.getElementById('console-output').textContent = 
+                    "[@pure Verification] Proven pure mathematical function. Zero side-effects detected.";
+            }
+        }
+
+        function simulateAllocation(bytes) {
+            currentAllocated = Math.min(maxCapacity, currentAllocated + bytes);
+            updateMemoryUI();
+        }
+
+        function simulateRollback() {
+            currentAllocated = Math.floor(currentAllocated / 2);
+            updateMemoryUI();
+            document.getElementById('console-output').textContent += "\n[Rollback] arena_top rolled back in 1 CPU cycle. 0.00ms GC pause.";
+        }
+
+        function resetMemory() {
+            currentAllocated = 0;
+            updateMemoryUI();
+            document.getElementById('console-output').textContent = "[Memory Cleared] Arena top reset to arena base.";
+        }
+
+        function updateMemoryUI() {
+            const pct = (currentAllocated / maxCapacity) * 100;
+            document.getElementById('memory-bar').style.width = pct + '%';
+            document.getElementById('bytes-label').textContent = currentAllocated.toLocaleString();
+            document.getElementById('mark-label').textContent = 'arena_top: 0x' + (0x7000 + currentAllocated).toString(16).toUpperCase();
+        }
+
+        function executeSimulation() {
+            simulateAllocation(24576);
+            document.getElementById('console-output').textContent = 
+                "[Compiling AST] Zero-GC Region Inference Verified\n" +
+                "[Execution] Memory allocated on thread bump frame (24,576 bytes)\n" +
+                "[Result] Output calculated with 0.00 ms GC Pause Latency (120 FPS Paced).";
+            setTimeout(() => {
+                simulateRollback();
+            }, 1200);
+        }
+
+        // Initialize with Preset 1
+        document.getElementById('editor').textContent = presets[1];
+        simulateAllocation(16384);
+    </script>
+</body>
+</html>

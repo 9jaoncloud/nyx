@@ -1,0 +1,265 @@
+C:\xampp\htdocs\nyx\nyxc\main.c:571:1: error: 'ch' undeclared (first use in this function)
+C:\xampp\htdocs\nyx\nyxc\main.c:593:21: error: incompatible types when assigning to type 'Lexer *' from type 'rt_string_t'
+C:\xampp\htdocs\nyx\nyxc\main.c:596:21: error: incompatible types when assigning to type 'Lexer *' from type 'rt_string_t'
+C:\xampp\htdocs\nyx\nyxc\main.c:599:21: error: incompatible types when assigning to type 'Lexer *' from type 'rt_string_t'
+C:\xampp\htdocs\nyx\nyxc\main.c:602:21: error: incompatible types when assigning to type 'Lexer *' from type 'rt_string_t'
+C:\xampp\htdocs\nyx\nyxc\main.c:605:21: error: incompatible types when assigning to type 'Lexer *' from type 'rt_string_t'
+C:\xampp\htdocs\nyx\nyxc\main.c:608:21: error: incompatible types when assigning to type 'Lexer *' from type 'rt_string_t'
+C:\xampp\htdocs\nyx\nyxc\main.c:611:21: error: incompatible types when assigning to type 'Lexer *' from type 'rt_string_t'
+C:\xampp\htdocs\nyx\nyxc\main.c:620:1: error: implicit declaration of function 'rt_string_advance' [-Wimplicit-function-declaration]
+C:\xampp\htdocs\nyx\nyxc\main.c:796:1: error: implicit declaration of function 'TopLevel_skip_to_semicolon'; did you mean 'Parser_skip_to_semicolon'? [-Wimplicit-function-declaration]
+C:\xampp\htdocs\nyx\nyxc\main.c:824:12: error: invalid use of void expression
+C:\xampp\htdocs\nyx\nyxc\main.c:865:25: error: initialization of 'int64_t' {aka 'long long int'} from 'char *' makes integer from pointer without a cast [-Wint-conversion]
+C:\xampp\htdocs\nyx\nyxc\main.c:866:19: error: invalid operands to binary == (have 'int64_t' {aka 'long long int'} and 'rt_string_t')
+C:\xampp\htdocs\nyx\nyxc\main.c:869:25: error: invalid operands to binary == (have 'int64_t' {aka 'long long int'} and 'rt_string_t')
+C:\xampp\htdocs\nyx\nyxc\main.c:872:25: error: invalid operands to binary == (have 'int64_t' {aka 'long long int'} and 'rt_string_t')
+C:\xampp\htdocs\nyx\nyxc\main.c:875:25: error: invalid operands to binary == (have 'int64_t' {aka 'long long int'} and 'rt_string_t')
+C:\xampp\htdocs\nyx\nyxc\main.c:878:25: error: invalid operands to binary == (have 'int64_t' {aka 'long long int'} and 'rt_string_t')
+C:\xampp\htdocs\nyx\nyxc\main.c:881:25: error: invalid operands to binary == (have 'int64_t' {aka 'long long int'} and 'rt_string_t')
+C:\xampp\htdocs\nyx\nyxc\main.c:893:60: error: incompatible types when initializing type 'Type *' using type 'Type'
+C:\xampp\htdocs\nyx\nyxc\main.c:898:69: error: incompatible types when initializing type 'Type *' using type 'Type'
+C:\xampp\htdocs\nyx\nyxc\main.c:900:63: error: incompatible types when initializing type 'Type *' using type 'Type'
+C:\xampp\htdocs\nyx\nyxc\main.c:946:15: error: incompatible types when assigning to type 'TopLevel' from type 'Type'
+C:\xampp\htdocs\nyx\nyxc\main.c:948:15: error: incompatible types when assigning to type 'TopLevel' from type 'Type'
+C:\xampp\htdocs\nyx\nyxc\main.c:953:89: error: incompatible types when initializing type 'int' using type 'TopLevel'
+C:\xampp\htdocs\nyx\nyxc\main.c:953:99: error: incompatible types when initializing type 'char *' using type 'Expr'
+./runtime/rt_option.h:24:21: error: invalid initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1077:1: error: cannot convert to a pointer type
+C:\xampp\htdocs\nyx\nyxc\main.c:1091:1: error: cannot convert to a pointer type
+C:\xampp\htdocs\nyx\nyxc\main.c:1091:15: error: incompatible types when assigning to type 'Stmt' from type 'NyxOption'
+./runtime/rt_option.h:24:21: error: incompatible types when assigning to type 'Stmt' from type 'int'
+C:\xampp\htdocs\nyx\nyxc\main.c:1099:70: error: incompatible types when initializing type 'int' using type 'Stmt'
+C:\xampp\htdocs\nyx\nyxc\main.c:1099:78: error: expected ';' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1100:2: error: expected ')' before 'else'
+C:\xampp\htdocs\nyx\nyxc\main.c:1063:9: error: void value not ignored as it ought to be
+C:\xampp\htdocs\nyx\nyxc\main.c:1107:76: error: expected ';' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1109:1: error: '__match_result_21' undeclared (first use in this function)
+C:\xampp\htdocs\nyx\nyxc\main.c:1110:2: error: expected statement before ')' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1124:96: error: unknown type name 'NyxTuple3'
+C:\xampp\htdocs\nyx\nyxc\main.c:1124:119: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1124:149: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1124:169: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1127:96: error: unknown type name 'NyxTuple3'
+C:\xampp\htdocs\nyx\nyxc\main.c:1127:119: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1127:149: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1127:169: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1130:96: error: unknown type name 'NyxTuple3'
+C:\xampp\htdocs\nyx\nyxc\main.c:1130:119: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1130:149: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1130:169: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1133:96: error: unknown type name 'NyxTuple3'
+C:\xampp\htdocs\nyx\nyxc\main.c:1133:119: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1133:149: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1133:169: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1136:96: error: unknown type name 'NyxTuple3'
+C:\xampp\htdocs\nyx\nyxc\main.c:1136:119: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1136:149: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1136:169: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1139:96: error: unknown type name 'NyxTuple3'
+C:\xampp\htdocs\nyx\nyxc\main.c:1139:119: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1139:148: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1139:168: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1142:96: error: unknown type name 'NyxTuple3'
+C:\xampp\htdocs\nyx\nyxc\main.c:1142:119: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1142:151: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1142:171: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1145:96: error: unknown type name 'NyxTuple3'
+C:\xampp\htdocs\nyx\nyxc\main.c:1145:119: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1145:148: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1145:168: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1148:96: error: unknown type name 'NyxTuple3'
+C:\xampp\htdocs\nyx\nyxc\main.c:1148:119: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1148:150: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1148:170: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1151:96: error: unknown type name 'NyxTuple3'
+C:\xampp\htdocs\nyx\nyxc\main.c:1151:119: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1151:148: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1151:168: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1154:96: error: unknown type name 'NyxTuple3'
+C:\xampp\htdocs\nyx\nyxc\main.c:1154:119: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1154:150: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1154:170: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1157:96: error: unknown type name 'NyxTuple3'
+C:\xampp\htdocs\nyx\nyxc\main.c:1157:119: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1157:149: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1157:169: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1160:96: error: unknown type name 'NyxTuple3'
+C:\xampp\htdocs\nyx\nyxc\main.c:1160:119: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1160:148: error: field name not in record or union initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1160:168: error: field name not in record or union initializer
+./runtime/rt_option.h:24:21: error: incompatible types when assigning to type 'NyxOption' from type 'int'
+C:\xampp\htdocs\nyx\nyxc\main.c:1120:11: error: invalid initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1172:31: error: 'r_bp' undeclared (first use in this function)
+C:\xampp\htdocs\nyx\nyxc\main.c:1173:77: error: incompatible types when initializing type 'int' using type 'Expr'
+C:\xampp\htdocs\nyx\nyxc\main.c:1202:6: error: invalid type argument of unary '*' (have 'int64_t' {aka 'long long int'})
+C:\xampp\htdocs\nyx\nyxc\main.c:1204:121: error: expected ';' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1204:124: error: expected ')' before ';' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1197:9: error: void value not ignored as it ought to be
+C:\xampp\htdocs\nyx\nyxc\main.c:1204:125: error: expected ';' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1206:2: error: expected identifier or '(' before 'else'
+C:\xampp\htdocs\nyx\nyxc\main.c:1210:127: error: expected identifier or '(' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1211:1: error: expected identifier or '(' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1212:2: error: expected identifier or '(' before 'else'
+C:\xampp\htdocs\nyx\nyxc\main.c:1216:129: error: expected identifier or '(' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1217:1: error: expected identifier or '(' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1218:2: error: expected identifier or '(' before 'else'
+C:\xampp\htdocs\nyx\nyxc\main.c:1220:125: error: expected identifier or '(' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1221:1: error: expected identifier or '(' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1222:2: error: expected identifier or '(' before 'else'
+C:\xampp\htdocs\nyx\nyxc\main.c:1224:125: error: expected identifier or '(' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1225:1: error: expected identifier or '(' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1226:2: error: expected identifier or '(' before 'else'
+C:\xampp\htdocs\nyx\nyxc\main.c:1228:125: error: expected identifier or '(' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1229:1: error: expected identifier or '(' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1230:2: error: expected identifier or '(' before 'else'
+C:\xampp\htdocs\nyx\nyxc\main.c:1256:3: error: type defaults to 'int' in declaration of '__if_val_42' [-Wimplicit-int]
+C:\xampp\htdocs\nyx\nyxc\main.c:1256:16: error: expected identifier or '(' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1256:17: error: expected identifier or '(' before ')' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1257:1: error: expected identifier or '(' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1258:2: error: expected identifier or '(' before 'else'
+C:\xampp\htdocs\nyx\nyxc\main.c:1264:2: error: expected identifier or '(' before 'else'
+C:\xampp\htdocs\nyx\nyxc\main.c:1268:2: error: expected identifier or '(' before 'else'
+C:\xampp\htdocs\nyx\nyxc\main.c:1272:2: error: expected identifier or '(' before 'else'
+C:\xampp\htdocs\nyx\nyxc\main.c:1275:2: error: expected identifier or '(' before 'else'
+C:\xampp\htdocs\nyx\nyxc\main.c:1278:2: error: expected identifier or '(' before 'else'
+C:\xampp\htdocs\nyx\nyxc\main.c:1281:2: error: expected identifier or '(' before 'else'
+C:\xampp\htdocs\nyx\nyxc\main.c:1284:2: error: expected identifier or '(' before 'else'
+C:\xampp\htdocs\nyx\nyxc\main.c:1287:2: error: expected identifier or '(' before 'else'
+C:\xampp\htdocs\nyx\nyxc\main.c:1290:2: error: expected identifier or '(' before 'else'
+C:\xampp\htdocs\nyx\nyxc\main.c:1293:1: error: expected identifier or '(' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1294:2: error: expected identifier or '(' before 'else'
+C:\xampp\htdocs\nyx\nyxc\main.c:1297:1: error: expected identifier or '(' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1298:2: error: expected identifier or '(' before 'else'
+C:\xampp\htdocs\nyx\nyxc\main.c:1300:125: error: expected identifier or '(' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1301:1: error: expected identifier or '(' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1302:1: error: type defaults to 'int' in declaration of '__match_result_40' [-Wimplicit-int]
+C:\xampp\htdocs\nyx\nyxc\main.c:1303:1: error: expected identifier or '(' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1303:2: error: expected identifier or '(' before ')' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1304:1: error: expected identifier or '(' before '}' token
+./runtime/rt_option.h:24:21: error: invalid initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1346:1: error: cannot convert to a pointer type
+C:\xampp\htdocs\nyx\nyxc\main.c:1418:66: error: implicit declaration of function 'new' [-Wimplicit-function-declaration]
+C:\xampp\htdocs\nyx\nyxc\main.c:1418:66: error: initialization of 'char *' from 'int' makes pointer from integer without a cast [-Wint-conversion]
+C:\xampp\htdocs\nyx\nyxc\main.c:1418:73: error: incompatible types when initializing type 'long long unsigned int' using type 'rt_string_t'
+C:\xampp\htdocs\nyx\nyxc\main.c:1418:79: error: incompatible types when initializing type 'int' using type 'NyxVec'
+C:\xampp\htdocs\nyx\nyxc\main.c:1420:76: error: expected ';' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1421:2: error: expected ')' before '__if_val_49'
+C:\xampp\htdocs\nyx\nyxc\main.c:1402:19: error: invalid use of void expression
+C:\xampp\htdocs\nyx\nyxc\main.c:1421:15: error: expected ';' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1421:17: error: expected statement before ')' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1422:2: error: expected ')' before 'else'
+C:\xampp\htdocs\nyx\nyxc\main.c:1395:9: error: void value not ignored as it ought to be
+C:\xampp\htdocs\nyx\nyxc\main.c:1431:129: error: expected ';' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1432:1: error: expected identifier or '(' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1433:2: error: expected identifier or '(' before 'else'
+C:\xampp\htdocs\nyx\nyxc\main.c:1437:135: error: expected identifier or '(' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1438:1: error: expected identifier or '(' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1439:2: error: expected identifier or '(' before 'else'
+C:\xampp\htdocs\nyx\nyxc\main.c:1441:131: error: expected identifier or '(' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1442:1: error: expected identifier or '(' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1443:2: error: expected identifier or '(' before 'else'
+C:\xampp\htdocs\nyx\nyxc\main.c:1445:131: error: expected identifier or '(' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1446:1: error: expected identifier or '(' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1447:2: error: expected identifier or '(' before 'else'
+C:\xampp\htdocs\nyx\nyxc\main.c:1451:1: error: type defaults to 'int' in declaration of '__match_result_47' [-Wimplicit-int]
+C:\xampp\htdocs\nyx\nyxc\main.c:1452:1: error: expected identifier or '(' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1452:2: error: expected identifier or '(' before ')' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1453:1: error: expected identifier or '(' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1463:15: error: incompatible types when assigning to type 'Expr' from type 'Type'
+C:\xampp\htdocs\nyx\nyxc\main.c:1465:15: error: incompatible types when assigning to type 'Expr' from type 'Type'
+C:\xampp\htdocs\nyx\nyxc\main.c:1467:69: error: incompatible types when initializing type 'int' using type 'Expr'
+C:\xampp\htdocs\nyx\nyxc\main.c:1480:1: error: 'params' undeclared (first use in this function); did you mean 'Param'?
+C:\xampp\htdocs\nyx\nyxc\main.c:1484:1: error: 'ty' undeclared (first use in this function)
+C:\xampp\htdocs\nyx\nyxc\main.c:1486:15: error: incompatible types when assigning to type 'Expr' from type 'Type'
+C:\xampp\htdocs\nyx\nyxc\main.c:1488:15: error: incompatible types when assigning to type 'Expr' from type 'Type'
+C:\xampp\htdocs\nyx\nyxc\main.c:1501:1: error: 'body' undeclared (first use in this function)
+C:\xampp\htdocs\nyx\nyxc\main.c:1533:35: error: passing argument 2 of 'TypeChecker_check_top_level' makes pointer from integer without a cast [-Wint-conversion]
+C:\xampp\htdocs\nyx\nyxc\main.c:1552:1: error: implicit declaration of function 'rt_vec_pop'; did you mean 'rt_vec_get'? [-Wimplicit-function-declaration]
+C:\xampp\htdocs\nyx\nyxc\main.c:1556:16: error: implicit declaration of function 'int64_t_unwrap' [-Wimplicit-function-declaration]
+C:\xampp\htdocs\nyx\nyxc\main.c:1556:31: error: implicit declaration of function 'rt_vec_last_mut' [-Wimplicit-function-declaration]
+C:\xampp\htdocs\nyx\nyxc\main.c:1556:15: error: lvalue required as unary '&' operand
+C:\xampp\htdocs\nyx\nyxc\main.c:1556:68: error: incompatible type for argument 3 of 'rt_map_insert'
+C:\xampp\htdocs\nyx\nyxc\main.c:1560:35: error: implicit declaration of function '_rev' [-Wimplicit-function-declaration]
+C:\xampp\htdocs\nyx\nyxc\main.c:1560:40: error: implicit declaration of function 'rt_vec_iter'; did you mean 'rt_vec_filter'? [-Wimplicit-function-declaration]
+C:\xampp\htdocs\nyx\nyxc\main.c:1560:65: error: request for member 'len' in something not a structure or union
+C:\xampp\htdocs\nyx\nyxc\main.c:1562:4: error: '__iflet_1' undeclared (first use in this function)
+C:\xampp\htdocs\nyx\nyxc\main.c:1562:16: error: implicit declaration of function '_get'; did you mean '_getw'? [-Wimplicit-function-declaration]
+C:\xampp\htdocs\nyx\nyxc\main.c:1563:22: error: 'TAG__Some' undeclared (first use in this function)
+C:\xampp\htdocs\nyx\nyxc\main.c:1565:1: error: cannot convert to a pointer type
+C:\xampp\htdocs\nyx\nyxc\main.c:1570:8: error: 'Option' undeclared (first use in this function); did you mean 'NyxOption'?
+C:\xampp\htdocs\nyx\nyxc\main.c:1590:28: error: request for member 'name' in something not a structure or union
+C:\xampp\htdocs\nyx\nyxc\main.c:1590:36: error: request for member 'ty' in something not a structure or union
+C:\xampp\htdocs\nyx\nyxc\main.c:1595:56: error: incompatible type for argument 2 of 'TypeChecker_check_expr'
+C:\xampp\htdocs\nyx\nyxc\main.c:1610:20: error: expected expression before 'for'
+C:\xampp\htdocs\nyx\nyxc\main.c:1638:1: error: cannot convert to a pointer type
+C:\xampp\htdocs\nyx\nyxc\main.c:1638:20: error: incompatible types when assigning to type 'int64_t' {aka 'long long int'} from type 'NyxResult'
+C:\xampp\htdocs\nyx\nyxc\main.c:1641:1: error: cannot convert to a pointer type
+C:\xampp\htdocs\nyx\nyxc\main.c:1641:20: error: incompatible types when assigning to type 'int64_t' {aka 'long long int'} from type 'NyxResult'
+C:\xampp\htdocs\nyx\nyxc\main.c:1644:1: error: cannot convert to a pointer type
+C:\xampp\htdocs\nyx\nyxc\main.c:1644:20: error: incompatible types when assigning to type 'int64_t' {aka 'long long int'} from type 'NyxResult'
+C:\xampp\htdocs\nyx\nyxc\main.c:1647:1: error: cannot convert to a pointer type
+C:\xampp\htdocs\nyx\nyxc\main.c:1647:20: error: incompatible types when assigning to type 'int64_t' {aka 'long long int'} from type 'NyxResult'
+C:\xampp\htdocs\nyx\nyxc\main.c:1650:1: error: cannot convert to a pointer type
+C:\xampp\htdocs\nyx\nyxc\main.c:1650:20: error: incompatible types when assigning to type 'int64_t' {aka 'long long int'} from type 'NyxResult'
+C:\xampp\htdocs\nyx\nyxc\main.c:1634:20: error: incompatible types when assigning to type 'NyxResult' from type 'int64_t' {aka 'long long int'}
+C:\xampp\htdocs\nyx\nyxc\main.c:1657:20: error: implicit declaration of function 'rt_option_ok_or_else' [-Wimplicit-function-declaration]
+C:\xampp\htdocs\nyx\nyxc\main.c:1657:20: error: incompatible types when assigning to type 'NyxResult' from type 'int'
+C:\xampp\htdocs\nyx\nyxc\main.c:1661:17: error: invalid initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1662:18: error: invalid initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1663:43: error: incompatible type for argument 2 of 'TypeChecker_check_expr'
+C:\xampp\htdocs\nyx\nyxc\main.c:1664:43: error: incompatible type for argument 2 of 'TypeChecker_check_expr'
+C:\xampp\htdocs\nyx\nyxc\main.c:1669:55: error: invalid operands to binary == (have 'int64_t' {aka 'long long int'} and 'Type')
+C:\xampp\htdocs\nyx\nyxc\main.c:1669:95: error: invalid operands to binary == (have 'int64_t' {aka 'long long int'} and 'Type')
+C:\xampp\htdocs\nyx\nyxc\main.c:1670:1: error: cannot convert to a pointer type
+C:\xampp\htdocs\nyx\nyxc\main.c:1671:17: error: invalid operands to binary == (have 'int64_t' {aka 'long long int'} and 'Type')
+C:\xampp\htdocs\nyx\nyxc\main.c:1671:59: error: invalid operands to binary == (have 'int64_t' {aka 'long long int'} and 'Type')
+C:\xampp\htdocs\nyx\nyxc\main.c:1672:1: error: cannot convert to a pointer type
+C:\xampp\htdocs\nyx\nyxc\main.c:1673:18: error: invalid operands to binary == (have 'int64_t' {aka 'long long int'} and 'Type')
+C:\xampp\htdocs\nyx\nyxc\main.c:1673:61: error: invalid operands to binary == (have 'int64_t' {aka 'long long int'} and 'Type')
+C:\xampp\htdocs\nyx\nyxc\main.c:1674:1: error: cannot convert to a pointer type
+C:\xampp\htdocs\nyx\nyxc\main.c:1676:1: error: cannot convert to a pointer type
+C:\xampp\htdocs\nyx\nyxc\main.c:1680:1: error: cannot convert to a pointer type
+C:\xampp\htdocs\nyx\nyxc\main.c:1683:1: error: cannot convert to a pointer type
+C:\xampp\htdocs\nyx\nyxc\main.c:1690:17: error: invalid initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1691:42: error: incompatible type for argument 2 of 'TypeChecker_check_expr'
+C:\xampp\htdocs\nyx\nyxc\main.c:1696:21: error: incompatible types when assigning to type 'int64_t' {aka 'long long int'} from type 'NyxResult'
+C:\xampp\htdocs\nyx\nyxc\main.c:1699:1: error: cannot convert to a pointer type
+C:\xampp\htdocs\nyx\nyxc\main.c:1699:21: error: incompatible types when assigning to type 'int64_t' {aka 'long long int'} from type 'NyxResult'
+C:\xampp\htdocs\nyx\nyxc\main.c:1702:137: error: initialization of 'Type *' from 'int64_t' {aka 'long long int'} makes pointer from integer without a cast [-Wint-conversion]
+C:\xampp\htdocs\nyx\nyxc\main.c:1702:1: error: cannot convert to a pointer type
+C:\xampp\htdocs\nyx\nyxc\main.c:1702:21: error: incompatible types when assigning to type 'int64_t' {aka 'long long int'} from type 'NyxResult'
+C:\xampp\htdocs\nyx\nyxc\main.c:1705:21: error: expected expression before '{' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1715:2: error: expected statement before ')' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1716:2: error: expected ')' before 'else'
+C:\xampp\htdocs\nyx\nyxc\main.c:1692:18: error: invalid use of void expression
+C:\xampp\htdocs\nyx\nyxc\main.c:1793:128: error: expected ';' before '}' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1797:17: error: invalid initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1799:30: error: incompatible type for argument 2 of 'TypeChecker_check_expr'
+C:\xampp\htdocs\nyx\nyxc\main.c:1802:137: error: expected ';' before ')' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1802:137: error: expected statement before ')' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1804:1: error: cannot convert to a pointer type
+C:\xampp\htdocs\nyx\nyxc\main.c:1807:17: error: invalid initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1809:30: error: incompatible type for argument 2 of 'TypeChecker_check_expr'
+C:\xampp\htdocs\nyx\nyxc\main.c:1810:1: error: 'result' undeclared (first use in this function); did you mean 'NyxResult'?
+C:\xampp\htdocs\nyx\nyxc\main.c:1816:62: error: request for member 'body' in something not a structure or union
+C:\xampp\htdocs\nyx\nyxc\main.c:1837:38: error: passing argument 2 of 'TypeChecker_check_stmt' makes pointer from integer without a cast [-Wint-conversion]
+C:\xampp\htdocs\nyx\nyxc\main.c:1837:9: error: incompatible types when assigning to type 'Type' from type 'NyxResult'
+C:\xampp\htdocs\nyx\nyxc\main.c:1840:1: error: cannot convert to a pointer type
+C:\xampp\htdocs\nyx\nyxc\main.c:1844:18: error: invalid initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1846:43: error: incompatible type for argument 2 of 'TypeChecker_check_expr'
+C:\xampp\htdocs\nyx\nyxc\main.c:1849:32: error: 'union <anonymous>' has no member named 'Some'
+C:\xampp\htdocs\nyx\nyxc\main.c:1850:14: error: void value not ignored as it ought to be
+C:\xampp\htdocs\nyx\nyxc\main.c:1850:26: error: void value not ignored as it ought to be
+C:\xampp\htdocs\nyx\nyxc\main.c:1851:1: error: cannot convert to a pointer type
+C:\xampp\htdocs\nyx\nyxc\main.c:1856:84: error: incompatible type for argument 3 of 'TypeChecker_add_var'
+C:\xampp\htdocs\nyx\nyxc\main.c:1859:2: error: expected '}' before 'else'
+C:\xampp\htdocs\nyx\nyxc\main.c:1861:18: error: invalid initializer
+C:\xampp\htdocs\nyx\nyxc\main.c:1862:1: error: 'vt' undeclared (first use in this function)
+C:\xampp\htdocs\nyx\nyxc\main.c:1862:35: error: incompatible type for argument 2 of 'TypeChecker_check_expr'
+C:\xampp\htdocs\nyx\nyxc\main.c:1863:20: error: expected expression before '{' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1920:2: error: expected statement before ')' token
+C:\xampp\htdocs\nyx\nyxc\main.c:1921:2: error: expected ')' before 'NyxResult'
+C:\xampp\htdocs\nyx\nyxc\main.c:1629:9: error: void value not ignored as it ought to be
+C:\xampp\htdocs\nyx\nyxc\main.c:3605:1: error: expected declaration or statement at end of input
+C:\xampp\htdocs\nyx\nyxc\main.c:3605:1: error: expected declaration or statement at end of input
+error: process didn't exit successfully: `target\debug\nyx-bootstrap.exe 'C:\xampp\htdocs\nyx\nyxc\main.nyx' -o 'C:\xampp\htdocs\nyx\nyxc\main.c'` (exit code: 1)

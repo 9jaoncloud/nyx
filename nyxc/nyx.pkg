@@ -1,0 +1,7 @@
+[package]
+name = "nyxc"
+version = "0.2.0"
+edition = "2024"
+
+[dependencies]
+std = ">=0.1.0"

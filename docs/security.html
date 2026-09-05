@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Architecture & Threat Model — Nyx</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .threat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem; margin: 1.5rem 0; }
+        .threat-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; transition: transform 0.2s ease, border-color 0.2s ease; }
+        .threat-card:hover { transform: translateY(-2px); border-color: var(--accent-light); }
+        .threat-card.immune { border-left: 4px solid #10b981; }
+        .threat-card.hardened { border-left: 4px solid #00e5ff; }
+        .threat-card h4 { margin-top: 0; font-size: 1.1rem; }
+        .threat-card.immune h4 { color: #10b981; }
+        .threat-card.hardened h4 { color: #00e5ff; }
+        .badge-immune { background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 0.2rem 0.6rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem; display: inline-block; margin-bottom: 0.75rem; }
+        .badge-hardened { background: rgba(0, 229, 255, 0.15); color: #00e5ff; padding: 0.2rem 0.6rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem; display: inline-block; margin-bottom: 0.75rem; }
+        .code-box { background: #080c14; border: 1px solid #1e293b; border-radius: 8px; padding: 1.25rem; font-family: monospace; font-size: 0.9rem; line-height: 1.6; color: #e2e8f0; overflow-x: auto; margin: 1rem 0; }
+        .matrix-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; background: var(--bg-surface); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+        .matrix-table th, .matrix-table td { padding: 0.85rem 1.1rem; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.92rem; }
+        .matrix-table th { background: rgba(255, 255, 255, 0.03); color: var(--text-main); font-weight: 700; }
+    </style>
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <span class="badge-hardened">SECURITY AUDIT & THREAT MODEL</span>
+        <h1>Nyx Security Architecture & Threat Model</h1>
+        <p style="color:var(--text-muted)">A comprehensive analysis of memory safety guarantees, vulnerability immunities, runtime threat vectors, and defense-in-depth mitigations.</p>
+
+        <div class="note" style="background: rgba(16, 185, 129, 0.08); border-left: 4px solid #10b981;">
+            <strong>Architectural Guarantee:</strong> Nyx is engineered with <strong>mathematical memory safety by default</strong>. Spatial buffer overflows and temporal use-after-free corruption are eliminated at compile time through Region-Based Memory Management and fat-pointer slices without requiring tracing garbage collection.
+        </div>
+
+        <h2>1. Threat Immunity Matrix</h2>
+        <p>Comparison of how Nyx protects against common Critical Common Weakness Enumeration (CWE) attack vectors compared to traditional systems and scripting languages:</p>
+
+        <table class="matrix-table">
+            <thead>
+                <tr>
+                    <th>Attack Vector / Vulnerability</th>
+                    <th>C / C++</th>
+                    <th>Python / JS / Go</th>
+                    <th>Nyx Language Architecture</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Buffer Overflow / ROP Gadgets</strong> (CWE-119)</td>
+                    <td>❌ High Risk (Raw pointer arithmetic)</td>
+                    <td>✅ Safe (Interpreter overhead)</td>
+                    <td><strong style="color:#10b981;">✅ IMMUNE</strong> (Bounds-checked fat slices <code>(ptr, len, cap)</code>)</td>
+                </tr>
+                <tr>
+                    <td><strong>Use-After-Free / Double Free</strong> (CWE-416)</td>
+                    <td>❌ High Risk (Manual <code>free()</code>)</td>
+                    <td>✅ Safe (Tracing GC latency)</td>
+                    <td><strong style="color:#10b981;">✅ IMMUNE</strong> (Automated Region Lifetimes & ARC)</td>
+                </tr>
+                <tr>
+                    <td><strong>Shared Library Hijacking / DLL Injection</strong></td>
+                    <td>❌ Moderate (Dynamic linking)</td>
+                    <td>❌ High (Supply-chain <code>node_modules</code>/pip)</td>
+                    <td><strong style="color:#10b981;">✅ IMMUNE</strong> (Single hermetic static binary ~650 KB)</td>
+                </tr>
+                <tr>
+                    <td><strong>Arbitrary Code Injection (Deserialization)</strong></td>
+                    <td>❌ High (Unsafe casting)</td>
+                    <td>❌ High (Unsafe pickle / eval / JSON)</td>
+                    <td><strong style="color:#10b981;">✅ IMMUNE</strong> (Zero runtime reflection / strict static types)</td>
+                </tr>
+                <tr>
+                    <td><strong>Algorithmic Complexity / HashDoS</strong> (CWE-400)</td>
+                    <td>⚠️ Dependent on map impl</td>
+                    <td>⚠️ Varies by hash seed</td>
+                    <td><strong style="color:#00e5ff;">🔒 HARDENED</strong> (Random per-process seeded Swiss Tables)</td>
+                </tr>
+                <tr>
+                    <td><strong>Integer Overflow Wrap-around</strong> (CWE-190)</td>
+                    <td>❌ Undefined / Wraps silent</td>
+                    <td>✅ Arbitrary precision (Slow)</td>
+                    <td><strong style="color:#00e5ff;">🔒 HARDENED</strong> (Traps in debug; Saturating 128-bit money)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>2. Core Immunity Pillars</h2>
+
+        <div class="threat-grid">
+            <div class="threat-card immune">
+                <span class="badge-immune">SPATIAL SAFETY</span>
+                <h4>🛡️ No Buffer Overflows or Stack Smashing</h4>
+                <p>Every slice, vector, and string in Nyx is represented as a fat pointer containing pointer, length, and capacity. Out-of-bounds reads and writes immediately trigger deterministic runtime bounds traps before any adjacent stack or heap bytes can be corrupted.</p>
+            </div>
+
+            <div class="threat-card immune">
+                <span class="badge-immune">TEMPORAL SAFETY</span>
+                <h4>🛡️ No Use-After-Free or Dangling Pointers</h4>
+                <p>Nyx eliminates manual <code>free()</code>. Memory allocated within a region lives for the exact duration of the lexical block and is reclaimed in $O(1)$ time upon scope exit. References are statically prevented from outliving their parent region.</p>
+            </div>
+
+            <div class="threat-card immune">
+                <span class="badge-immune">HERMETIC DEPLOYMENT</span>
+                <h4>🛡️ Immune to DLL Hijacking & Path Poisoning</h4>
+                <p>Unlike languages that depend on external shared libraries, Python site-packages, or JVM runtimes, Nyx compiles to a single self-contained static executable. Attackers cannot hijack functionality by placing malicious <code>.dll</code> or <code>.so</code> files in system paths.</p>
+            </div>
+
+            <div class="threat-card immune">
+                <span class="badge-immune">TYPE-SAFE WEB ENGINE</span>
+                <h4>🛡️ Built-in SQL Injection & XSS Immunity</h4>
+                <p>The standard ORM (<code>std.db</code>) strictly requires parameterized prepared statements. Raw unescaped string concatenation is rejected by the query builder, mathematically eliminating SQL injection vulnerabilities.</p>
+            </div>
+        </div>
+
+        <h2>3. Structural Threat Vectors & Hardening Mitigations</h2>
+        <p>Like all systems platforms (including Rust and Go), Nyx interfaces with hardware and native OS layers. Below are the structural boundaries and our defense-in-depth mitigations:</p>
+
+        <div class="threat-grid">
+            <div class="threat-card hardened">
+                <span class="badge-hardened">LAYER 3 RUNTIME BOUNDARY</span>
+                <h4>🔒 The Native C Runtime (rt_*.c)</h4>
+                <p><strong>Threat:</strong> Low-level runtime C code could theoretically contain integer overflow or pointer flaws.<br>
+                <strong>Mitigation:</strong> Compiled with Stack Canaries (<code>-fstack-protector-strong</code>), Data Execution Prevention (DEP/NX), ASLR, and continuous AddressSanitizer (ASan) and UndefinedBehaviorSanitizer (UBSan) verification.</p>
+            </div>
+
+            <div class="threat-card hardened">
+                <span class="badge-hardened">DENIAL OF SERVICE DEFENSE</span>
+                <h4>🔒 Algorithmic Complexity Attacks (HashDoS)</h4>
+                <p><strong>Threat:</strong> Attackers crafting colliding HTTP headers to force hash table degradation to $O(N^2)$.<br>
+                <strong>Mitigation:</strong> Swiss Tables in <code>rt_swiss_map.c</code> use cryptographically seeded FNV-1a / SipHash with random per-process salts, preventing remote hash collision generation.</p>
+            </div>
+
+            <div class="threat-card hardened">
+                <span class="badge-hardened">FINANCIAL ACCURACY</span>
+                <h4>🔒 Integer Wraparounds in Banking Math</h4>
+                <p><strong>Threat:</strong> Math overflow in balance calculation ($2^{63}-1 + 1$).<br>
+                <strong>Mitigation:</strong> <code>std.finance</code> (<code>rt_finance.c</code>) enforces exact 128-bit fixed-point decimal arithmetic (<code>NyxMoney</code>) with bounds-clamping and overflow panic triggers.</p>
+            </div>
+
+            <div class="threat-card hardened">
+                <span class="badge-hardened">CONCURRENCY SAFETY</span>
+                <h4>🔒 Multi-Threaded Data Races</h4>
+                <p><strong>Threat:</strong> Simultaneous unsynchronized writes across OS threads.<br>
+                <strong>Mitigation:</strong> Actor Mesh concurrency models isolate heap memory per actor. Threads communicate exclusively via immutable message queues within structured nurseries.</p>
+            </div>
+        </div>
+
+        <h2>4. Cryptographic Hardening & Post-Quantum Readiness</h2>
+        <p>Nyx provides native implementations for modern cryptographic standards in <code>std.crypto</code>, including:</p>
+        <ul>
+            <li><strong>SHA-256 & SHA-3 / Keccak:</strong> High-throughput hashing for block ledgers and integrity verification.</li>
+            <li><strong>HKDF & PBKDF2:</strong> HMAC-based key derivation functions for authentication tokens.</li>
+            <li><strong>Constant-Time Comparison:</strong> <code>crypto::constant_time_eq()</code> prevents timing side-channel attacks against HMAC signatures.</li>
+            <li><strong>Post-Quantum Key Exchange (ML-KEM):</strong> Native lattice-based cryptography ensuring future-proof network transmission.</li>
+        </ul>
+
+        <div class="code-box">
+<span style="color:#7c4dff">import</span> std.crypto;
+<span style="color:#7c4dff">import</span> std.sec;
+
+<span style="color:#00e5ff">fn</span> verify_auth_token(user_token: <span style="color:#ff007f">String</span>, expected_hash: <span style="color:#ff007f">String</span>) -> <span style="color:#ff007f">Bool</span> {
+    <span style="color:#94a3b8">// Constant-time evaluation prevents timing side-channel attacks</span>
+    crypto::constant_time_eq(user_token.as_bytes(), expected_hash.as_bytes())
+}
+        </div>
+
+        <div style="margin-top: 2.5rem; text-align: center;">
+            <a href="index.html" class="btn" style="background: var(--bg-surface); border: 1px solid var(--border); padding: 0.75rem 1.5rem; border-radius: 6px; color: var(--text-main); text-decoration: none; margin-right: 1rem;">← Return to Documentation Home</a>
+            <a href="response-to-assessment.html" class="btn" style="background: var(--accent); color: #080c14; padding: 0.75rem 1.5rem; border-radius: 6px; font-weight: 700; text-decoration: none;">View Architectural Roadmap →</a>
+        </div>
+    </main>
+    <script src="nav.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

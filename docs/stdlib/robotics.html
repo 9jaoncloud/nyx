@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>std.robotics — Kinematics & Motion Control — Nyx Docs</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <h1>std.robotics — Kinematics & Autonomous Motion Control</h1>
+        <p class="lead">Enterprise robotics engineering: Denavit-Hartenberg (DH) parameter forward kinematics, minimum-jerk quintic trajectory splines, and anti-windup PID joint controllers.</p>
+
+        <h2>1. 6-DOF Robot Arm Forward Kinematics</h2>
+        <p>Model serial manipulators and compute end-effector Cartesian poses $(X, Y, Z)$ using standard DH parameters:</p>
+<pre><code>import std.robotics.kinematics
+import std.io
+
+pub fn main() {
+    let mut arm = kinematics.create_robot_arm("UR10e-Enterprise")
+    
+    // Add 6 standard rotational joints (theta, d, a, alpha)
+    kinematics.add_joint(&mut arm, 0.1625, 0.0, 1.5708, 0.0)
+    kinematics.add_joint(&mut arm, 0.0, -0.425, 0.0, -1.5708)
+    kinematics.add_joint(&mut arm, 0.0, -0.3922, 0.0, 0.0)
+    kinematics.add_joint(&mut arm, 0.1333, 0.0, 1.5708, 0.0)
+    kinematics.add_joint(&mut arm, 0.0997, 0.0, -1.5708, 0.0)
+    kinematics.add_joint(&mut arm, 0.0996, 0.0, 0.0, 0.0)
+
+    let pose = kinematics.compute_forward_kinematics(&arm)
+    std.io.println("End-Effector Pose: X=" + pose.x.to_string() + 
+                   " Y=" + pose.y.to_string() + 
+                   " Z=" + pose.z.to_string())
+}</code></pre>
+
+        <h2>2. Minimum-Jerk Quintic Trajectory Planning</h2>
+        <p>Generate smooth $C^2$-continuous trajectory splines with zero starting and ending jerk:</p>
+<pre><code>import std.robotics.kinematics
+import std.io
+
+pub fn main() {
+    let start_pos = 0.0
+    let target_pos = 1.5707963 // 90 degrees
+    let duration = 5.0 // seconds
+
+    // Evaluate waypoint at t = 2.5s (midpoint)
+    let pos_mid = kinematics.evaluate_quintic_trajectory(start_pos, target_pos, duration, 2.5)
+    std.io.println("Midpoint Joint Angle: " + pos_mid.to_string() + " rad") // 0.785398 rad
+}</code></pre>
+
+        <h2>3. Cascaded PID Controller with Anti-Windup</h2>
+<pre><code>import std.robotics.kinematics
+import std.io
+
+pub fn main() {
+    let mut pid = kinematics.create_pid(45.0, 0.5, 2.1, 100.0)
+    let target_pos = 1.5708
+    let current_pos = 0.0
+    let dt = 0.01
+
+    let torque = kinematics.compute_pid_torque(&mut pid, target_pos, current_pos, dt)
+    std.io.println("Calculated Motor Torque: " + torque.to_string() + " Nm")
+}</code></pre>
+
+        <div class="next-prev-links">
+            <a href="ml.html">&larr; std.ml</a>
+            <a href="blockchain.html">std.blockchain &rarr;</a>
+        </div>
+    </main>
+    <script src="../navigation.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

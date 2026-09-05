@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLI Installation &amp; Setup Guide — Nyx Documentation</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="../../assets/css/9jaoncloud-waffle.css">
+    <style>
+        .guide-header-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .step-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.75rem;
+            margin-bottom: 1.75rem;
+            position: relative;
+        }
+        .step-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(168, 85, 247, 0.2);
+            color: #c084fc;
+            border: 1px solid rgba(168, 85, 247, 0.4);
+            font-weight: 800;
+            font-size: 0.9rem;
+            margin-right: 0.6rem;
+        }
+        .code-box {
+            background: #090d16;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 1.1rem 1.25rem;
+            font-family: 'JetBrains Mono', monospace, Consolas;
+            font-size: 0.9rem;
+            color: #38bdf8;
+            margin: 1rem 0;
+            overflow-x: auto;
+            line-height: 1.6;
+        }
+        .tab-os-btn {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 0.6rem 1.4rem;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s ease;
+        }
+        .tab-os-btn:hover { color: #fff; border-color: var(--accent-light); }
+        .tab-os-btn.active {
+            background: linear-gradient(135deg, #7c3aed, #38bdf8);
+            color: #040814;
+            border-color: transparent;
+            font-weight: 700;
+        }
+        .btn-download-hero {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, #7c3aed, #38bdf8);
+            color: #040814;
+            font-weight: 700;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+        .btn-download-hero:hover { filter: brightness(1.15); transform: translateY(-1px); }
+    </style>
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+
+    <main>
+        <!-- Header Utility Bar -->
+        <div class="guide-header-bar">
+            <div>
+                <span style="font-size:0.75rem; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.05em;">
+                    OFFICIAL MANUAL &bull; GETTING STARTED
+                </span>
+            </div>
+            <div style="display:flex; align-items:center; gap:1rem;">
+                <a href="../learn/index.html" style="color:#c084fc; text-decoration:none; font-size:0.9rem; font-weight:600;">🎓 Interactive Academy</a>
+                <div id="nineja-app-switcher"></div>
+            </div>
+        </div>
+
+        <h1>Nyx CLI Installation &amp; Setup Guide</h1>
+
+        <p>The Nyx Command-Line Interface (<code>nyx</code>) is the official cross-platform compiler, runner, formal verification engine, and package manager for the sovereign systems programming ecosystem.</p>
+
+        <!-- OS Selector Tabs -->
+        <div style="margin: 2rem 0 1.5rem;">
+            <button class="tab-os-btn active" onclick="switchOs('windows')">🪟 Windows (x64)</button>
+            <button class="tab-os-btn" onclick="switchOs('linux')">🐧 Linux &amp; WSL</button>
+            <button class="tab-os-btn" onclick="switchOs('macos')">🍎 macOS (Apple Silicon / Intel)</button>
+        </div>
+
+        <!-- ── Windows Guide ── -->
+        <div id="os-windows">
+            <div class="step-card">
+                <h3><span class="step-num">1</span> Download the Official Nyx SDK Package</h3>
+                <p style="margin-top:0.5rem; color:var(--text-secondary);">
+                    Download the pre-compiled binary distribution archive:
+                </p>
+                <div style="margin-top:1rem;">
+                    <a href="../../downloads/nyx-v0.22.0-windows-x64.zip" class="btn-download-hero">
+                        ⬇️ Download nyx-v0.22.0-windows-x64.zip (67 KB)
+                    </a>
+                </div>
+            </div>
+
+            <div class="step-card">
+                <h3><span class="step-num">2</span> Option A: 1-Click Automatic Install (Recommended)</h3>
+                <p style="margin-top:0.5rem; color:var(--text-secondary);">
+                    1. Right-click the downloaded <code>.zip</code> file and choose <strong>"Extract All..."</strong>.<br>
+                    2. Open the extracted folder and double-click <strong><code>install.bat</code></strong>.<br>
+                    3. The script automatically installs Nyx to <code>C:\nyx</code> and registers the <code>bin\</code> directory in your User PATH environment variable.
+                </p>
+            </div>
+
+            <div class="step-card">
+                <h3><span class="step-num">2</span> Option B: Manual Setup</h3>
+                <p style="margin-top:0.5rem; color:var(--text-secondary);">
+                    If you prefer manual extraction:
+                </p>
+                <div class="code-box">
+1. Extract contents to: C:\nyx<br>
+2. Press Windows Key -> type "Environment Variables" -> click "Edit the system environment variables"<br>
+3. Click "Environment Variables..." -> Under "User variables", select "Path" -> Click "Edit"<br>
+4. Click "New" -> Add: C:\nyx\bin -> Click OK
+                </div>
+            </div>
+
+            <div class="step-card">
+                <h3><span class="step-num">3</span> Verify Installation</h3>
+                <p style="margin-top:0.5rem; color:var(--text-secondary);">
+                    Open a new Command Prompt or PowerShell window and run:
+                </p>
+                <div class="code-box">
+C:\> nyx --version<br>
+Nyx Sovereign Systems Compiler v0.22.0 (x86_64-pc-windows-msvc)<br>
+Zero-GC Region Memory &bull; Powered by 9jaonCloud<br><br>
+C:\> nyx run C:\nyx\examples\hello.nyx<br>
+Hello from the Nyx Sovereign Systems CLI!
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Linux Guide ── -->
+        <div id="os-linux" style="display:none;">
+            <div class="step-card">
+                <h3><span class="step-num">1</span> Download &amp; Extract via Terminal</h3>
+                <div class="code-box">
+mkdir -p ~/.nyx<br>
+wget https://nyx.9jaoncloud.com.ng/downloads/nyx-v0.22.0-windows-x64.zip -O nyx-sdk.zip<br>
+unzip nyx-sdk.zip -d ~/.nyx
+                </div>
+            </div>
+
+            <div class="step-card">
+                <h3><span class="step-num">2</span> Run the 1-Click Installer</h3>
+                <div class="code-box">
+cd ~/.nyx<br>
+chmod +x install.sh<br>
+./install.sh<br>
+source ~/.bashrc
+                </div>
+            </div>
+
+            <div class="step-card">
+                <h3><span class="step-num">3</span> Verify Linux Execution</h3>
+                <div class="code-box">
+$ nyx --version<br>
+$ nyx run ~/.nyx/examples/concurrency.nyx
+                </div>
+            </div>
+        </div>
+
+        <!-- ── macOS Guide ── -->
+        <div id="os-macos" style="display:none;">
+            <div class="step-card">
+                <h3><span class="step-num">1</span> Extract to Home Directory</h3>
+                <div class="code-box">
+mkdir -p ~/.nyx<br>
+curl -L https://nyx.9jaoncloud.com.ng/downloads/nyx-v0.22.0-windows-x64.zip -o nyx-sdk.zip<br>
+unzip nyx-sdk.zip -d ~/.nyx
+                </div>
+            </div>
+
+            <div class="step-card">
+                <h3><span class="step-num">2</span> Add to ZSH Profile</h3>
+                <div class="code-box">
+echo 'export PATH="$HOME/.nyx/bin:$PATH"' >> ~/.zshrc<br>
+source ~/.zshrc
+                </div>
+            </div>
+
+            <div class="step-card">
+                <h3><span class="step-num">3</span> Verify</h3>
+                <div class="code-box">
+% nyx --version<br>
+% nyx run ~/.nyx/examples/formal.nyx
+                </div>
+            </div>
+        </div>
+
+        <h2>CLI Command Reference</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Command</th>
+                    <th>Description</th>
+                    <th>Example Usage</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>nyx run &lt;file.nyx&gt;</code></td>
+                    <td>Compiles to memory and executes instantly with zero disk residue.</td>
+                    <td><code>nyx run app.nyx</code></td>
+                </tr>
+                <tr>
+                    <td><code>nyx build &lt;file.nyx&gt;</code></td>
+                    <td>Generates a release-optimized standalone native binary (<code>.exe</code> or ELF).</td>
+                    <td><code>nyx build server.nyx -o server.exe</code></td>
+                </tr>
+                <tr>
+                    <td><code>nyx check &lt;file.nyx&gt;</code></td>
+                    <td>Runs fast static region inference and SMT formal verification without compiling.</td>
+                    <td><code>nyx check main.nyx</code></td>
+                </tr>
+                <tr>
+                    <td><code>nyx repl</code></td>
+                    <td>Launches the interactive Read-Eval-Print Loop.</td>
+                    <td><code>nyx repl</code></td>
+                </tr>
+                <tr>
+                    <td><code>nypm install &lt;pkg&gt;</code></td>
+                    <td>Installs verified cryptographic packages from the decentralized registry.</td>
+                    <td><code>nypm install @std/crypto</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border); display: flex; justify-content: space-between;">
+            <a href="installation.html" style="color: var(--accent-light); text-decoration: none;">&larr; Installation Overview</a>
+            <a href="quickstart.html" style="color: var(--accent-light); text-decoration: none;">Quick Start Tutorial &rarr;</a>
+        </div>
+    </main>
+
+    <script>
+        function switchOs(os) {
+            document.querySelectorAll('.tab-os-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('os-windows').style.display = os === 'windows' ? 'block' : 'none';
+            document.getElementById('os-linux').style.display = os === 'linux' ? 'block' : 'none';
+            document.getElementById('os-macos').style.display = os === 'macos' ? 'block' : 'none';
+        }
+    </script>
+    <script src="../navigation.js"></script>
+    <script src="../../assets/js/9jaoncloud-waffle.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

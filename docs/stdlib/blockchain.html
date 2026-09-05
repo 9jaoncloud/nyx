@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>std.blockchain — Distributed Ledger & PBFT — Nyx Docs</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <h1>std.blockchain — Cryptographic Distributed Ledger & PBFT Consensus</h1>
+        <p class="lead">Enterprise blockchain primitives: cryptographic Merkle trees, SHA-256 block mining, UTXO ledgers, and Practical Byzantine Fault Tolerance (PBFT) consensus.</p>
+
+        <h2>1. Creating a Ledger & Mining Blocks</h2>
+        <p>Manage distributed chain tips and execute SHA-256 proof-of-work mining with Merkle root computation:</p>
+<pre><code>import std.blockchain.ledger
+import std.io
+
+pub fn main() {
+    // 1. Initialize ledger with genesis block
+    let mut chain = ledger.create_ledger("nyx-enterprise-l1")
+    std.io.println("Genesis Block Hash: " + chain.latest_block_hash)
+
+    // 2. Ingest transactions to mempool
+    ledger.add_transaction(&mut chain, "tx_001".to_string(), "Alice".to_string(), "Bob".to_string(), 12.5)
+    ledger.add_transaction(&mut chain, "tx_002".to_string(), "Bob".to_string(), "Charlie".to_string(), 4.2)
+
+    // 3. Mine block #2
+    let block = ledger.mine_block(&mut chain, 208421)
+    std.io.println("Mined Block #" + block.height.to_string() + 
+                   " with Merkle Root: " + block.merkle_root)
+    std.io.println("New Chain Tip: " + chain.latest_block_hash)
+}</code></pre>
+
+        <h2>2. PBFT 3-Phase Consensus State Machine</h2>
+        <p>Coordinate multi-validator BFT networks with $2f+1$ quorum verification:</p>
+<pre><code>import std.blockchain.ledger
+import std.io
+
+pub fn main() {
+    // Create PBFT cluster with 4 nodes (fault tolerance f = 1)
+    let mut pbft = ledger.create_pbft(4)
+
+    // Phase 1: Prepare votes
+    ledger.pbft_vote_prepare(&mut pbft)
+    ledger.pbft_vote_prepare(&mut pbft)
+    std.io.println("PBFT Phase after Prepare Quorum: Phase=" + pbft.phase.to_string())
+
+    // Phase 2: Commit votes
+    ledger.pbft_vote_commit(&mut pbft)
+    ledger.pbft_vote_commit(&mut pbft)
+    ledger.pbft_vote_commit(&mut pbft)
+    std.io.println("PBFT Finalized: Phase=" + pbft.phase.to_string()) // Phase=3 (Committed)
+}</code></pre>
+
+        <div class="next-prev-links">
+            <a href="robotics.html">&larr; std.robotics</a>
+            <a href="audio.html">std.audio &rarr;</a>
+        </div>
+    </main>
+    <script src="../navigation.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

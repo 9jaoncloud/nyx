@@ -1,0 +1,38 @@
+module codegen_wasm
+
+import ast
+import std.string
+import std.vec
+
+pub fn generate_wasm(program: &Vec<ast.TopLevel>) -> String {
+    let mut out = String.from("(module\n")
+    out = out + "  (import \"env\" \"memory\" (memory 256 2048))\n"
+    out = out + "  (import \"env\" \"clock_now_ms\" (func $clock_now_ms (result f64)))\n"
+    out = out + "  (import \"nyx\" \"canvas_fill_rect\" (func $canvas_fill_rect (param i32 i32 i32 i32 i32)))\n"
+    out = out + "  (import \"nyx\" \"canvas_draw_text\" (func $canvas_draw_text (param i32 i32 i32 i32 i32)))\n"
+    out = out + "  (import \"nyx\" \"canvas_draw_circle\" (func $canvas_draw_circle (param i32 i32 i32 i32)))\n"
+    out = out + "  (import \"nyx\" \"canvas_draw_gradient_rect\" (func $canvas_draw_gradient_rect (param i32 i32 i32 i32 i32 i32)))\n"
+    out = out + "  (import \"nyx\" \"canvas_draw_glow\" (func $canvas_draw_glow (param i32 i32 i32 i32 i32 i32)))\n"
+    out = out + "  (import \"nyx\" \"canvas_draw_ripple\" (func $canvas_draw_ripple (param i32 i32 i32 i32 f32)))\n"
+    out = out + "\n"
+
+    for item in program {
+        match item {
+            ast.TopLevel.FnDecl { name, params, return_type, body } => {
+                out = out + "  (func $" + name + " (export \"" + name + "\")\n"
+                out = out + "    ;; WebAssembly Function Body\n"
+                out = out + "  )\n\n"
+            },
+            _ => {}
+        }
+    }
+
+    out = out + "  (func (export \"nyx_main\")\n"
+    out = out + "    ;; Entry point for WASM Web Runtime\n"
+    out = out + "  )\n"
+    out = out + "  (func (export \"nyx_render_frame\")\n"
+    out = out + "    ;; 120 FPS Frame Callback\n"
+    out = out + "  )\n"
+    out = out + ")\n"
+    out
+}

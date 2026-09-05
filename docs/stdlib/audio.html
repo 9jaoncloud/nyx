@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>std.audio — DSP & Speech AI (Whisper) — Nyx Docs</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <h1>std.audio — PortAudio DSP & Mel Spectrogram Engine</h1>
+        <p class="lead">Low-latency real-time audio capture, Cooley-Tukey Radix-2 FFT, Mel-scale filterbanks for Whisper speech AI integration, and Biquad IIR filtering.</p>
+
+        <h2>1. Whisper AI Native Audio Pipeline (16 kHz Mono)</h2>
+        <p>Configure low-latency PCM audio capture matched to the 16,000 Hz sample rate required by Whisper and speech models:</p>
+<pre><code>import std.audio.portaudio
+import std.io
+
+pub fn main() {
+    // Initialize 16 kHz Mono audio engine
+    let engine = portaudio.create_audio_engine(16000, 1, 512)
+    std.io.println("Low-Latency Audio Engine Started: SampleRate=" + engine.sample_rate.to_string())
+
+    // Convert acoustic frequencies to Mel scale for neural spectrograms
+    let hz = 1000.0
+    let mel = portaudio.hz_to_mel(hz)
+    let roundtrip_hz = portaudio.mel_to_hz(mel)
+    
+    std.io.println("Frequency: " + hz.to_string() + " Hz -> " + mel.to_string() + " Mel")
+    std.io.println("Roundtrip: " + roundtrip_hz.to_string() + " Hz")
+}</code></pre>
+
+        <h2>2. Biquad Lowpass Audio Filtering</h2>
+        <p>Remove high-frequency noise and alias artifacts prior to FFT computation:</p>
+<pre><code>import std.audio.portaudio
+import std.io
+
+pub fn main() {
+    let mut filter = portaudio.create_lowpass_filter(16000.0, 4000.0, 0.707)
+    let raw_sample = 0.82
+    let filtered_sample = portaudio.filter_sample(&mut filter, raw_sample)
+    
+    std.io.println("Filtered Audio Sample: " + filtered_sample.to_string())
+}</code></pre>
+
+        <div class="next-prev-links">
+            <a href="blockchain.html">&larr; std.blockchain</a>
+            <a href="../assessment.html">Honest Assessment &rarr;</a>
+        </div>
+    </main>
+    <script src="../navigation.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+module parser_tests
+
+import std.test
+import parser.*
+import ast.*
+
+@test
+fn test_parse_function() {
+    let mut p = parser.new_parser("fn add(a: Int, b: Int) -> Int { return 42 }")
+    let prog = p.parse_program()
+    std.test.assert_eq(p.had_error, false)
+    if let TopLevel.FnDecl{ name, params, ret_type, .. } = prog[0] {
+        std.test.assert_eq(name, "add")
+        std.test.assert_eq(params.len(), 2)
+        std.test.assert_eq(params[0].name, "a")
+        std.test.assert_eq(params[1].name, "b")
+        std.test.assert_eq(ret_type, Type.Int)
+    }
+}
+
+@test
+fn test_parse_struct() {
+    let mut p = parser.new_parser("struct Point { x: Int, y: Int }")
+    let prog = p.parse_program()
+    if let TopLevel.StructDef{ name, fields, .. } = &prog[0] {
+        std.test.assert_eq(name.clone(), "Point")
+        std.test.assert_eq(fields.len(), 2)
+    }
+}

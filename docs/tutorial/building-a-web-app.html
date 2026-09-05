@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building a Web App — Nyx Documentation</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <h1>Tutorial: Building a Modern Web App</h1>
+        <p class="lead">In this tutorial, you will build a high-performance REST API and real-time backend with JSON serialization, route guards, and async I/O in Nyx.</p>
+
+        <h2>1. Initializing the Web Project</h2>
+        <pre><code>nyx init nyx-web-api
+cd nyx-web-api</code></pre>
+
+        <h2>2. Defining Data Models & JSON Serialization</h2>
+        <p>Create your domain models using Nyx structs:</p>
+<pre><code>module models
+
+pub struct Task {
+    pub id: i64,
+    pub title: String,
+    pub completed: bool,
+    pub priority: String,
+}
+
+pub fn create_task(id: i64, title: String, priority: String) -> Task {
+    Task {
+        id: id,
+        title: title,
+        completed: false,
+        priority: priority,
+    }
+}</code></pre>
+
+        <h2>3. Creating the Async HTTP Server</h2>
+        <p>Set up an async HTTP server with route handlers using <code>std.http</code> and <code>std.json</code>:</p>
+<pre><code>import std.http
+import std.json
+import std.io
+import std.vec
+import models
+
+pub fn main() {
+    let mut router = http.create_router()
+
+    // Health check route
+    router.get("/health", |req| {
+        http.Response.json("{\"status\":\"healthy\",\"uptime\":3600}")
+    })
+
+    // REST Task Endpoint
+    router.get("/api/tasks", |req| {
+        let t1 = models.create_task(1, "Configure W3C Tracing".to_string(), "HIGH".to_string())
+        let t2 = models.create_task(2, "Train SIMD Embedding Model".to_string(), "MEDIUM".to_string())
+
+        let payload = "{\"tasks\":[{\"id\":1,\"title\":\"" + t1.title + "\",\"priority\":\"" + t1.priority + "\"}," +
+                      "{\"id\":2,\"title\":\"" + t2.title + "\",\"priority\":\"" + t2.priority + "\"}]}"
+        
+        http.Response.json(payload)
+    })
+
+    // Server-Sent Events (SSE) stream
+    router.get("/api/stream", |req| {
+        let mut res = http.Response.sse()
+        res.send_event("message", "Live cluster metrics connected.")
+        res
+    })
+
+    std.io.println("🚀 Nyx Web Server listening on http://127.0.0.1:8080")
+    http.listen_and_serve("127.0.0.1:8080", router)
+}</code></pre>
+
+        <h2>4. Running and Testing</h2>
+        <p>Compile and launch the server:</p>
+<pre><code>nyx run src/main.nyx</code></pre>
+
+        <p>Test your endpoint via <code>curl</code>:</p>
+<pre><code>curl -i http://127.0.0.1:8080/api/tasks</code></pre>
+
+        <h2>5. Compiling to WebAssembly (WASM)</h2>
+        <p>Nyx compiles directly to standalone WebAssembly modules with zero runtime overhead:</p>
+<pre><code>nyx build --target wasm32 -o dist/app.wasm</code></pre>
+
+        <div class="next-prev-links">
+            <a href="getting-started.html">&larr; Getting Started</a>
+            <a href="building-a-desktop-app.html">Building a Desktop App &rarr;</a>
+        </div>
+    </main>
+    <script src="../navigation.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

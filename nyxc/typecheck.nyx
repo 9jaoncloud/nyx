@@ -1,0 +1,263 @@
+module typecheck
+
+import ast.*
+import std.vec
+
+pub struct TypeChecker {
+    env: Vec<Map<String, Type>>,
+    errors: Vec<String>,
+}
+
+impl TypeChecker {
+    pub fn new() -> TypeChecker {
+        TypeChecker { env: Vec.new(), errors: Vec.new() }
+    }
+
+    pub fn check_program(self: &mut TypeChecker, program: &Vec<TopLevel>) {
+        self.push_scope()
+        for item in program {
+            self.check_top_level(item)
+        }
+        self.pop_scope()
+    }
+
+    pub fn has_errors(self: &TypeChecker) -> Bool {
+        self.errors.len() > 0
+    }
+
+    pub fn get_errors(self: &TypeChecker) -> &Vec<String> {
+        &self.errors
+    }
+
+    fn push_scope(self: &mut TypeChecker) {
+        self.env.push(Map.new())
+    }
+
+    fn pop_scope(self: &mut TypeChecker) {
+        self.env.pop()
+    }
+
+    fn add_var(self: &mut TypeChecker, name: String, ty: Type) {
+        if self.env.len() > 0 {
+            let last_idx = self.env.len() - 1
+            let mut scope = self.env[last_idx]
+            scope.insert(name, ty)
+        }
+    }
+
+    fn lookup(self: &TypeChecker, name: &str) -> Option<Type> {
+        let mut i = self.env.len()
+        while i > 0 {
+            i = i - 1
+            let scope = self.env[i]
+            match scope.get(name) {
+                Option.Some(t) => return Option.Some(t.clone()),
+                _ => {}
+            }
+        }
+        Option.None
+    }
+
+    fn check_top_level(self: &mut TypeChecker, item: &TopLevel) {
+        match item {
+            TopLevel.FnDecl { name, generics, params, ret_type, body, .. } => {
+                if generics.len() > 0 { return }
+                self.push_scope()
+                for p in params {
+                    self.add_var(p.name.clone(), p.ty.clone())
+                }
+                match self.check_expr(body) {
+                    Result.Ok(_) => {}
+                    Result.Err(e) => self.errors.push(e),
+                }
+                self.pop_scope()
+            }
+            TopLevel.StructDef { name, fields, .. } => {
+                let mut field_types = Vec.new()
+                for (_, ftype) in fields {
+                    field_types.push(ftype.clone())
+                }
+            }
+            TopLevel.EnumDef { .. } => {}
+            TopLevel.ImplBlock { .. } => {}
+            TopLevel.TraitDef { .. } => {}
+            _ => {}
+        }
+    }
+
+    fn check_expr(self: &mut TypeChecker, expr: &Expr) -> Result<Type, String> {
+        match expr {
+            Expr.Lit(lit) => match lit {
+                Literal.Int(_) => Result.Ok(Type.Int),
+                Literal.Float(_) => Result.Ok(Type.Float),
+                Literal.Bool(_) => Result.Ok(Type.Bool),
+                Literal.String(_) => Result.Ok(Type.String),
+                Literal.Char(_) => Result.Ok(Type.Char),
+            },
+            Expr.Ident(name) => {
+                self.lookup(name).ok_or_else(|| "Undefined variable: ".to_string() + name)
+            }
+            Expr.Binary { op, left, right } => {
+                let lt = self.check_expr(left)?
+                let rt = self.check_expr(right)?
+                match op {
+                    BinOp.Add | BinOp.Sub | BinOp.Mul | BinOp.Div | BinOp.Mod => {
+                        if lt == Type.Int && rt == Type.Int { Result.Ok(Type.Int) }
+                        else if lt == Type.Float && rt == Type.Float { Result.Ok(Type.Float) }
+                        else if lt == Type.String && rt == Type.String && matches!(op, BinOp::Add) { Result.Ok(Type.String) }
+                        else { Result.Err("Incompatible types for arithmetic".to_string()) }
+                    }
+                    BinOp.Eq | BinOp.NotEq | BinOp.Lt | BinOp.LtEq | BinOp.Gt | BinOp.GtEq => {
+                        Result.Ok(Type.Bool)
+                    }
+                    BinOp.And | BinOp.Or => {
+                        Result.Ok(Type.Bool)
+                    }
+                }
+            }
+            Expr.Unary { op, expr } => {
+                let t = self.check_expr(expr)?
+                match op {
+                    UnaryOp::Neg => Result.Ok(t),
+                    UnaryOp::Not => Result.Ok(Type.Bool),
+                    UnaryOp::Ref => Result.Ok(Type.Ref(t)),
+                    UnaryOp::Deref => {
+                        match t {
+                            Type.Ref(inner) => Result.Ok(inner),
+                            _ => Result.Err("Deref requires reference type".to_string()),
+                        }
+                    }
+                }
+            }
+            Expr.Call { func, args, .. } => {
+                self.check_expr(func)?
+                for arg in args {
+                    self.check_expr(arg)?
+                }
+                Result.Ok(Type.Void)
+            }
+            Expr.MethodCall { receiver, args, .. } => {
+                self.check_expr(receiver)?
+                for arg in args {
+                    self.check_expr(arg)?
+                }
+                Result.Ok(Type.Void)
+            }
+            Expr.If { cond, then, else_ifs, else_block } => {
+                let ct = self.check_expr(cond)?
+                if ct != Type.Bool {
+                    self.errors.push("If condition must be bool".to_string())
+                }
+                let mut result = Type.Void
+                match self.check_expr(&Expr.Block(then.clone())) {
+                    Result.Ok(t) => result = t,
+                    Result.Err(e) => self.errors.push(e),
+                }
+                for (elif_cond, elif_body) in else_ifs {
+                    self.check_expr(elif_cond)?
+                    self.check_expr(&Expr.Block(elif_body.clone()))?
+                }
+                if let Some(else_b) = else_block {
+                    result = self.check_expr(&Expr.Block(else_b.clone()))?
+                }
+                Result.Ok(result)
+            }
+            Expr.While { cond, body } => {
+                self.check_expr(cond)?
+                self.check_expr(&Expr.Block(body.clone()))?
+                Result.Ok(Type.Void)
+            }
+            Expr.For { var, iter, body } => {
+                self.check_expr(iter)?
+                self.push_scope()
+                self.add_var(var.clone(), Type.Int)
+                self.check_expr(&Expr.Block(body.clone()))?
+                self.pop_scope()
+                Result.Ok(Type.Void)
+            }
+            Expr.Match { expr, arms } => {
+                self.check_expr(expr)?
+                let mut result = Type.Void
+                for arm in arms {
+                    self.push_scope()
+                    match self.check_expr(&arm.body) {
+                        Result.Ok(t) => result = t,
+                        Result.Err(e) => self.errors.push(e),
+                    }
+                    self.pop_scope()
+                }
+                Result.Ok(result)
+            }
+            Expr.Block(stmts) => {
+                let mut last = Type.Void
+                for s in stmts {
+                    last = self.check_stmt(s)?
+                }
+                Result.Ok(last)
+            }
+            Expr.Let { name, value, ty, .. } => {
+                let vt = self.check_expr(value)?
+                if let Some(ann) = ty {
+                    if vt != *ann && *ann != Type.Unknown {
+                        return Result.Err("Type mismatch".to_string())
+                    }
+                }
+                self.add_var(name.clone(), vt.clone())
+                Result.Ok(vt)
+            }
+            Expr.Assign { name, value } => {
+                let vt = self.check_expr(value)?
+                match self.lookup(name) {
+                    Option.Some(_) => Result.Ok(vt),
+                    _ => Result.Err("Undefined variable: ".to_string() + name),
+                }
+            }
+            Expr.Return(Some(e)) => self.check_expr(e),
+            Expr.Return(None) => Result.Ok(Type.Void),
+            Expr.StructLiteral { name, fields, .. } => {
+                for (_, val) in fields {
+                    self.check_expr(val)?
+                }
+                Result.Ok(Type.Custom(name.clone()))
+            }
+            Expr.FieldAccess { obj, field } => {
+                self.check_expr(obj)?
+                Result.Ok(Type.Void)
+            }
+            Expr.Lambda { params, body } => {
+                self.push_scope()
+                for p in params {
+                    self.add_var(p.name.clone(), p.ty.clone())
+                }
+                let bt = self.check_expr(body)?
+                self.pop_scope()
+                let mut param_types: Vec<Type> = Vec.new()
+                for p in params {
+                    param_types.push(p.ty.clone())
+                }
+                Result.Ok(Type.Func(param_types, bt))
+            }
+            Expr.Await(e) => self.check_expr(e),
+            Expr.Question(e) => self.check_expr(e),
+            _ => Result.Ok(Type.Void),
+        }
+    }
+
+    fn check_stmt(self: &mut TypeChecker, stmt: &Stmt) -> Result<Type, String> {
+        match stmt {
+            Stmt.Let { name, ty, value, .. } => {
+                let vt = self.check_expr(value)?
+                if let Some(ann) = ty {
+                    if vt != *ann && *ann != Type.Unknown {
+                        return Result.Err("Type mismatch".to_string())
+                    }
+                }
+                self.add_var(name.clone(), vt.clone())
+                Result.Ok(vt)
+            }
+            Stmt.Expr(e) => self.check_expr(e),
+            Stmt.Return(Some(e)) => self.check_expr(e),
+            Stmt.Return(None) => Result.Ok(Type.Void),
+        }
+    }
+}

@@ -1,0 +1,24 @@
+﻿nyxc\main.c:895:60: error: incompatible types when initializing type 'Type *' using type 'Type'
+nyxc\main.c:900:69: error: incompatible types when initializing type 'Type *' using type 'Type'
+nyxc\main.c:902:63: error: incompatible types when initializing type 'Type *' using type 'Type'
+nyxc\main.c:1551:15: error: passing argument 1 of 'rt_map_insert' from incompatible pointer type 
+nyxc\main.c:1563:1: error: unknown type name 'Option'; did you mean 'NyxOption'?
+nyxc\main.c:1563:24: error: implicit declaration of function 'int64_t_get'; did you mean 'int64_t_rev'? 
+nyxc\main.c:1564:18: error: request for member 'tag' in something not a structure or union
+nyxc\main.c:1565:28: error: request for member 'data' in something not a structure or union
+nyxc\main.c:1708:154: error: incompatible types when initializing type 'Type *' using type 'Type'
+nyxc\main.c:1732:23: error: invalid initializer
+nyxc\main.c:1776:31: error: incompatible types when assigning to type 'Type' from type 'void *'
+nyxc\main.c:1826:31: error: incompatible types when assigning to type 'Type' from type 'void *'
+nyxc\main.c:1862:32: error: incompatible types when assigning to type 'NyxResult' from type 'int'
+nyxc\main.c:1878:51: error: passing argument 2 of 'TypeChecker_check_expr' from incompatible pointer type 
+nyxc\main.c:1906:174: error: incompatible types when initializing type 'Type *' using type 'Type'
+nyxc\main.c:2005:257: error: request for member 'f0' in something not a structure or union
+nyxc\main.c:2005:360: error: request for member 'f1' in something not a structure or union
+nyxc\main.c:2430:49: error: request for member 'f0' in something not a structure or union
+nyxc\main.c:2432:53: error: request for member 'f1' in something not a structure or union
+nyxc\main.c:2632:259: error: request for member 'f0' in something not a structure or union
+nyxc\main.c:2632:362: error: request for member 'f1' in something not a structure or union
+nyxc\main.c:2949:18: error: assignment to 'int64_t' {aka 'long long int'} from 'void *' makes integer from pointer 
+nyxc\main.c:2968:23: error: incompatible type for argument 1 of 'new_lexer'
+nyxc\main.c:2985:27: error: incompatible type for argument 1 of 'new_parser'

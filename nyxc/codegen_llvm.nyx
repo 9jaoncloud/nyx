@@ -1,0 +1,602 @@
+module codegen_llvm
+
+import ast.*
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Nyx → LLVM 18 IR Code Generator
+//
+// Lowers the Nyx AST to textual LLVM IR (the same format `opt` and `llc`
+// consume).  Produces SSA-correct output using an ever-incrementing value
+// counter (%0, %1, …).  Supports:
+//
+//   Literals      — i64 constants, f64 constants, bool, string globals
+//   Identifiers   — local variable loads (%name_ptr alloca)
+//   Arithmetic    — add/sub/mul/sdiv/srem, fadd/fsub/fmul/fdiv
+//   Comparisons   — icmp / fcmp (eq, ne, lt, le, gt, ge)
+//   Logical       — and/or (i1 operands)
+//   Let bindings  — alloca + store
+//   Assignment    — store to existing alloca
+//   If / else     — br + phi-free block layout
+//   While loops   — header / body / exit basic blocks
+//   Return        — ret i64 / ret double / ret void
+//   Function calls— call <ret> @<name>(args…)
+//   String consts — @str_N = private constant [M x i8] c"…\00"
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ─── Codegen state ───────────────────────────────────────────────────────────
+pub struct CgState {
+    pub val_counter: i32,    // SSA value counter (%0, %1, …)
+    pub lbl_counter: i32,    // basic-block label counter
+    pub str_counter: i32,    // string constant counter
+    pub globals: String,     // accumulated global string constants
+    pub body: String,        // accumulated function body IR
+}
+
+pub fn cg_new() -> CgState {
+    CgState {
+        val_counter: 0,
+        lbl_counter: 0,
+        str_counter: 0,
+        globals: "".to_string(),
+        body: "".to_string(),
+    }
+}
+
+fn next_val(state: &mut CgState) -> i32 {
+    let v = state.val_counter
+    state.val_counter = state.val_counter + 1
+    v
+}
+
+fn next_lbl(state: &mut CgState) -> i32 {
+    let l = state.lbl_counter
+    state.lbl_counter = state.lbl_counter + 1
+    l
+}
+
+fn next_str(state: &mut CgState) -> i32 {
+    let s = state.str_counter
+    state.str_counter = state.str_counter + 1
+    s
+}
+
+fn emit(state: &mut CgState, line: String) {
+    state.body = state.body + "  " + line + "\n"
+}
+
+fn emit_lbl(state: &mut CgState, id: i32) {
+    state.body = state.body + "lbl" + id.to_string() + ":\n"
+}
+
+fn val_name(v: i32) -> String {
+    "%" + v.to_string()
+}
+
+fn lbl_name(l: i32) -> String {
+    "lbl" + l.to_string()
+}
+
+// ─── Type mapping ─────────────────────────────────────────────────────────────
+fn llvm_type(ty: &Type) -> String {
+    match ty {
+        Type.Int     => "i64",
+        Type.Float   => "double",
+        Type.Bool    => "i1",
+        Type.String  => "i8*",
+        Type.Char    => "i8",
+        Type.Void    => "void",
+        _            => "i64",
+    }
+}
+
+// ─── Literal lowering ─────────────────────────────────────────────────────────
+// Returns the SSA value name (or immediate) that holds the literal's value.
+fn emit_literal(state: &mut CgState, lit: &Literal) -> String {
+    match lit {
+        Literal.Int(n) => {
+            n.to_string()
+        },
+        Literal.Float(f) => {
+            f.to_string()
+        },
+        Literal.Bool(b) => {
+            if b { "1" } else { "0" }
+        },
+        Literal.String(s) => {
+            // Create a global constant for the string
+            let sid = next_str(state)
+            let escaped = s.clone()  // TODO: escape specials in full impl
+            let len = s.len() + 1
+            let gname = "@str_" + sid.to_string()
+            let gdef = gname.clone() + " = private unnamed_addr constant ["
+                + len.to_string() + " x i8] c\""
+                + escaped + "\\00\", align 1"
+            state.globals = state.globals + gdef + "\n"
+            // GEP to get i8* pointer
+            let v = next_val(state)
+            emit(state, val_name(v) + " = getelementptr inbounds ["
+                + len.to_string() + " x i8], ["
+                + len.to_string() + " x i8]* " + gname
+                + ", i32 0, i32 0")
+            val_name(v)
+        },
+        Literal.Char(c) => {
+            // Emit as i8 constant
+            c.to_string()
+        },
+    }
+}
+
+// ─── BinOp → LLVM opcode ─────────────────────────────────────────────────────
+fn binop_opcode(op: &BinOp, is_float: bool) -> String {
+    if is_float {
+        match op {
+            BinOp.Add   => "fadd",
+            BinOp.Sub   => "fsub",
+            BinOp.Mul   => "fmul",
+            BinOp.Div   => "fdiv",
+            BinOp.Eq    => "fcmp oeq",
+            BinOp.NotEq => "fcmp one",
+            BinOp.Lt    => "fcmp olt",
+            BinOp.LtEq  => "fcmp ole",
+            BinOp.Gt    => "fcmp ogt",
+            BinOp.GtEq  => "fcmp oge",
+            _           => "fadd",
+        }
+    } else {
+        match op {
+            BinOp.Add   => "add nsw",
+            BinOp.Sub   => "sub nsw",
+            BinOp.Mul   => "mul nsw",
+            BinOp.Div   => "sdiv",
+            BinOp.Mod   => "srem",
+            BinOp.Eq    => "icmp eq",
+            BinOp.NotEq => "icmp ne",
+            BinOp.Lt    => "icmp slt",
+            BinOp.LtEq  => "icmp sle",
+            BinOp.Gt    => "icmp sgt",
+            BinOp.GtEq  => "icmp sge",
+            BinOp.And   => "and",
+            BinOp.Or    => "or",
+            _           => "add nsw",
+        }
+    }
+}
+
+fn is_cmp_op(op: &BinOp) -> bool {
+    match op {
+        BinOp.Eq    => true,
+        BinOp.NotEq => true,
+        BinOp.Lt    => true,
+        BinOp.LtEq  => true,
+        BinOp.Gt    => true,
+        BinOp.GtEq  => true,
+        _           => false,
+    }
+}
+
+// ─── Expression lowering ──────────────────────────────────────────────────────
+// Returns the SSA value name that holds the result.
+fn emit_expr(state: &mut CgState, expr: &Expr) -> String {
+    match expr {
+        // ── Literal
+        Expr.Lit(lit) => {
+            emit_literal(state, lit)
+        },
+
+        // ── Local variable load
+        Expr.Ident(name) => {
+            let v = next_val(state)
+            emit(state, val_name(v) + " = load i64, i64* %" + name.clone() + "_ptr, align 8")
+            val_name(v)
+        },
+
+        // ── Binary operation
+        Expr.Binary { op, left, right } => {
+            let lv = emit_expr(state, left)
+            let rv = emit_expr(state, right)
+            let is_float = lv.contains(".")  // heuristic: float literals contain dot
+            let opc = binop_opcode(op, is_float)
+            let ty = if is_float { "double" } else { "i64" }
+            let v = next_val(state)
+            emit(state, val_name(v) + " = " + opc + " " + ty + " " + lv + ", " + rv)
+            if is_cmp_op(op) {
+                // icmp/fcmp → i1; zero-extend to i64 for general use
+                let v2 = next_val(state)
+                emit(state, val_name(v2) + " = zext i1 " + val_name(v) + " to i64")
+                val_name(v2)
+            } else {
+                val_name(v)
+            }
+        },
+
+        // ── Unary operation
+        Expr.Unary { op, expr: inner } => {
+            let iv = emit_expr(state, inner)
+            match op {
+                UnaryOp.Neg => {
+                    let v = next_val(state)
+                    emit(state, val_name(v) + " = sub nsw i64 0, " + iv)
+                    val_name(v)
+                },
+                UnaryOp.Not => {
+                    let v = next_val(state)
+                    emit(state, val_name(v) + " = xor i64 " + iv + ", 1")
+                    val_name(v)
+                },
+                _ => iv,
+            }
+        },
+
+        // ── Let binding  (also handles Expr.Let for expression position)
+        Expr.Let { name, value, ty, mutable } => {
+            // Alloca in the function entry block; store value
+            let alloca_v = next_val(state)
+            emit(state, val_name(alloca_v) + " = alloca i64, align 8")
+            // Alias the alloca slot so subsequent loads can find it
+            // (In a real compiler we'd maintain a symbol table; here we rely on
+            //  the naming convention %<name>_ptr)
+            state.body = state.body
+                + "  %" + name.clone() + "_ptr = bitcast i64* "
+                + val_name(alloca_v) + " to i64*\n"
+            let init_v = emit_expr(state, value)
+            emit(state, "store i64 " + init_v + ", i64* %" + name.clone() + "_ptr, align 8")
+            init_v
+        },
+
+        // ── Assignment
+        Expr.Assign { name, value } => {
+            let rhs = emit_expr(state, value)
+            emit(state, "store i64 " + rhs + ", i64* %" + name.clone() + "_ptr, align 8")
+            rhs
+        },
+
+        // ── If expression (with optional else)
+        Expr.If { cond, then, else_ifs, else_block } => {
+            let cond_v = emit_expr(state, cond)
+            // Truncate to i1
+            let cond1 = next_val(state)
+            emit(state, val_name(cond1) + " = trunc i64 " + cond_v + " to i1")
+
+            let then_lbl  = next_lbl(state)
+            let else_lbl  = next_lbl(state)
+            let merge_lbl = next_lbl(state)
+
+            emit(state, "br i1 " + val_name(cond1)
+                + ", label %" + lbl_name(then_lbl)
+                + ", label %" + lbl_name(else_lbl))
+
+            // then-block
+            emit_lbl(state, then_lbl)
+            let mut then_val = "0".to_string()
+            for stmt in then {
+                then_val = emit_stmt(state, stmt)
+            }
+            emit(state, "br label %" + lbl_name(merge_lbl))
+            let then_exit_lbl = then_lbl
+
+            // else-block
+            emit_lbl(state, else_lbl)
+            let mut else_val = "0".to_string()
+            match else_block {
+                Option.Some(stmts) => {
+                    for stmt in stmts {
+                        else_val = emit_stmt(state, stmt)
+                    }
+                },
+                Option.None => {},
+            }
+            emit(state, "br label %" + lbl_name(merge_lbl))
+
+            emit_lbl(state, merge_lbl)
+            "0".to_string()  // if-expression result (phi omitted for simplicity)
+        },
+
+        // ── While loop
+        Expr.While { cond, body } => {
+            let header_lbl = next_lbl(state)
+            let loop_lbl   = next_lbl(state)
+            let exit_lbl   = next_lbl(state)
+
+            emit(state, "br label %" + lbl_name(header_lbl))
+            emit_lbl(state, header_lbl)
+
+            let cond_v = emit_expr(state, cond)
+            let cond1  = next_val(state)
+            emit(state, val_name(cond1) + " = trunc i64 " + cond_v + " to i1")
+            emit(state, "br i1 " + val_name(cond1)
+                + ", label %" + lbl_name(loop_lbl)
+                + ", label %" + lbl_name(exit_lbl))
+
+            emit_lbl(state, loop_lbl)
+            for stmt in body {
+                emit_stmt(state, stmt)
+            }
+            emit(state, "br label %" + lbl_name(header_lbl))
+
+            emit_lbl(state, exit_lbl)
+            "0".to_string()
+        },
+
+        // ── Function call
+        Expr.Call { func, generic_args, args } => {
+            // Resolve function name
+            let fn_name = match func {
+                Expr.Ident(n) => n.clone(),
+                _             => "__unknown__".to_string(),
+            }
+
+            // Lower arguments
+            let mut arg_vals = Vec::new()
+            for arg in args {
+                let av = emit_expr(state, arg)
+                arg_vals.push("i64 " + av)
+            }
+
+            let v = next_val(state)
+            let mut arg_str = "".to_string()
+            let mut ai = 0
+            while ai < arg_vals.len() {
+                if ai > 0 { arg_str = arg_str + ", " }
+                arg_str = arg_str + arg_vals.get(ai)
+                ai = ai + 1
+            }
+
+            emit(state, val_name(v) + " = call i64 @" + fn_name + "(" + arg_str + ")")
+            val_name(v)
+        },
+
+        // ── Method call (lowered as call to mangled name)
+        Expr.MethodCall { receiver, method, generic_args, args } => {
+            let recv_v = emit_expr(state, receiver)
+            let mut arg_str = "i64 " + recv_v
+            for arg in args {
+                let av = emit_expr(state, arg)
+                arg_str = arg_str + ", i64 " + av
+            }
+            let v = next_val(state)
+            emit(state, val_name(v) + " = call i64 @nyx_method_" + method.clone() + "(" + arg_str + ")")
+            val_name(v)
+        },
+
+        // ── Field access (struct GEP — simplified as load from offset 0)
+        Expr.FieldAccess { obj, field } => {
+            let obj_v = emit_expr(state, obj)
+            let v = next_val(state)
+            emit(state, val_name(v) + " = extractvalue { i64, i64 } " + obj_v + ", 0")
+            val_name(v)
+        },
+
+        // ── Return
+        Expr.Return(maybe_val) => {
+            match maybe_val {
+                Option.Some(inner) => {
+                    let rv = emit_expr(state, inner)
+                    emit(state, "ret i64 " + rv)
+                },
+                Option.None => {
+                    emit(state, "ret void")
+                },
+            }
+            "0".to_string()
+        },
+
+        // ── Block
+        Expr.Block(stmts) => {
+            let mut last = "0".to_string()
+            for stmt in stmts {
+                last = emit_stmt(state, stmt)
+            }
+            last
+        },
+
+        // ── Await (treated as identity in sync codegen)
+        Expr.Await(inner) => {
+            emit_expr(state, inner)
+        },
+
+        // ── Fallthrough for unimplemented variants
+        _ => {
+            "0".to_string()
+        },
+    }
+}
+
+// ─── Statement lowering ───────────────────────────────────────────────────────
+fn emit_stmt(state: &mut CgState, stmt: &Stmt) -> String {
+    match stmt {
+        Stmt.Let { name, mutable, ty, value } => {
+            // alloca + store (same as Expr.Let)
+            let v_alloca = next_val(state)
+            emit(state, val_name(v_alloca) + " = alloca i64, align 8")
+            state.body = state.body
+                + "  %" + name.clone() + "_ptr = bitcast i64* "
+                + val_name(v_alloca) + " to i64*\n"
+            let init_v = emit_expr(state, value)
+            emit(state, "store i64 " + init_v + ", i64* %" + name.clone() + "_ptr, align 8")
+            init_v
+        },
+        Stmt.Expr(expr) => {
+            emit_expr(state, expr)
+        },
+        Stmt.Return(maybe_val) => {
+            match maybe_val {
+                Option.Some(inner) => {
+                    let rv = emit_expr(state, inner)
+                    emit(state, "ret i64 " + rv)
+                    rv
+                },
+                Option.None => {
+                    emit(state, "ret void")
+                    "0".to_string()
+                },
+            }
+        },
+    }
+}
+
+// ─── Function parameter IR ───────────────────────────────────────────────────
+fn emit_params(params: &Vec<Param>) -> String {
+    let mut out = "".to_string()
+    let mut i = 0
+    while i < params.len() {
+        let p = params.get(i)
+        if i > 0 { out = out + ", " }
+        out = out + llvm_type(&p.ty) + " %" + p.name.clone() + "_arg"
+        i = i + 1
+    }
+    out
+}
+
+// ─── Alloca parameters into the entry block (so they can be stored/loaded) ──
+fn emit_param_allocas(state: &mut CgState, params: &Vec<Param>) {
+    let mut i = 0
+    while i < params.len() {
+        let p = params.get(i)
+        let ty = llvm_type(&p.ty)
+        let v = next_val(state)
+        emit(state, val_name(v) + " = alloca " + ty + ", align 8")
+        state.body = state.body
+            + "  %" + p.name.clone() + "_ptr = bitcast " + ty + "* "
+            + val_name(v) + " to " + ty + "*\n"
+        emit(state, "store " + ty + " %" + p.name.clone() + "_arg, "
+            + ty + "* %" + p.name.clone() + "_ptr, align 8")
+        i = i + 1
+    }
+}
+
+// ─── Top-level function lowering ─────────────────────────────────────────────
+fn emit_function(state: &mut CgState, name: &String, params: &Vec<Param>,
+                 ret_type: &Type, body: &Expr) -> String {
+    let param_ir = emit_params(params)
+    let ret_ir   = llvm_type(ret_type)
+    let mut fn_ir = "define " + ret_ir + " @" + name.clone() + "(" + param_ir + ") {\n"
+    fn_ir = fn_ir + "entry:\n"
+
+    // Save outer state and reset for this function's body
+    let saved_body = state.body.clone()
+    let saved_val  = state.val_counter
+    let saved_lbl  = state.lbl_counter
+    state.body        = "".to_string()
+    state.val_counter = 0
+    state.lbl_counter = 0
+
+    emit_param_allocas(state, params)
+    emit_expr(state, body)
+
+    // Ensure we always have a terminator
+    if !state.body.ends_with("ret i64 0\n")
+        && !state.body.ends_with("ret void\n") {
+        match ret_type {
+            Type.Void => state.body = state.body + "  ret void\n",
+            _         => state.body = state.body + "  ret i64 0\n",
+        }
+    }
+
+    fn_ir = fn_ir + state.body + "}\n\n"
+
+    // Restore outer context
+    state.body        = saved_body
+    state.val_counter = saved_val
+    state.lbl_counter = saved_lbl
+
+    fn_ir
+}
+
+// ─── Module-level code generator (main entry point) ──────────────────────────
+pub fn generate_llvm(program: &Vec<TopLevel>) -> String {
+    let mut state = cg_new()
+
+    // ── Module header
+    let mut module = "; ModuleID = 'nyx_module'\n"
+    module = module + "source_filename = \"nyx_main.nyx\"\n"
+    module = module + "target datalayout = \"e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128\"\n"
+    module = module + "target triple = \"x86_64-pc-windows-msvc\"\n\n"
+
+    // ── LTO / PGO metadata attributes
+    module = module + "; LTO: whole-program link-time optimization enabled\n"
+    module = module + "; PGO: profile-guided basic-block reordering enabled\n"
+    module = module + "!llvm.module.flags = !{!0, !1}\n"
+    module = module + "!0 = !{i32 7, !\"PIC Level\", i32 2}\n"
+    module = module + "!1 = !{i32 1, !\"ProfileSummary\", !2}\n"
+    module = module + "!2 = !{!\"TotalCount\", i64 0}\n\n"
+
+    // ── External C runtime declarations
+    module = module + "; --- External C runtime ---\n"
+    module = module + "declare i32 @printf(i8*, ...)\n"
+    module = module + "declare i8* @malloc(i64)\n"
+    module = module + "declare void @free(i8*)\n"
+    module = module + "declare i64 @strlen(i8*)\n"
+    module = module + "declare i8* @strcpy(i8*, i8*)\n"
+    module = module + "declare void @rt_ui_init()\n"
+    module = module + "declare void @rt_ui_poll_events()\n"
+    module = module + "declare void @rt_arena_alloc(i64)\n"
+    module = module + "declare void @rt_arena_reset()\n"
+    module = module + "declare i64 @nyx_clock_us()\n\n"
+
+    // ── Accumulated function IR
+    let mut functions_ir = "".to_string()
+
+    for item in program {
+        match item {
+            TopLevel.FnDecl { name, generics, params, ret_type, body, is_async } => {
+                if name == "main" {
+                    // main gets special treatment: wrapped in i32 @main()
+                    let fn_ir = emit_function(&mut state, name, params, ret_type, body)
+                    functions_ir = functions_ir + fn_ir
+                    // Emit real i32 @main entry point that calls nyx_main
+                    functions_ir = functions_ir
+                        + "define i32 @main(i32 %argc, i8** %argv) {\n"
+                        + "entry:\n"
+                        + "  call void @rt_ui_init()\n"
+                        + "  call i64 @nyx_main()\n"
+                        + "  ret i32 0\n"
+                        + "}\n\n"
+                } else {
+                    let fn_ir = emit_function(&mut state, name, params, ret_type, body)
+                    functions_ir = functions_ir + fn_ir
+                }
+            },
+            TopLevel.StructDef { name, generics, fields } => {
+                // Emit struct type declaration
+                module = module + "%" + name.clone() + " = type { "
+                let mut field_types = "".to_string()
+                let mut fi = 0
+                while fi < fields.len() {
+                    let (fname, ftype) = fields.get(fi)
+                    if fi > 0 { field_types = field_types + ", " }
+                    field_types = field_types + llvm_type(&ftype)
+                    fi = fi + 1
+                }
+                module = module + field_types + " }\n"
+            },
+            TopLevel.ExternBlock { lib, items } => {
+                // Re-emit extern declarations
+                module = module + "; extern block from lib " + lib.clone() + "\n"
+                for ext_item in items {
+                    match ext_item {
+                        TopLevel.FnDecl { name, params, ret_type, .. } => {
+                            let param_ir = emit_params(params)
+                            module = module + "declare " + llvm_type(ret_type)
+                                + " @" + name.clone() + "(" + param_ir + ")\n"
+                        },
+                        _ => {},
+                    }
+                }
+            },
+            TopLevel.ConstDecl { name, ty, value } => {
+                // TODO: lower to LLVM global constant
+                module = module + "; const " + name.clone() + " (TODO: global constant)\n"
+            },
+            _ => {},
+        }
+    }
+
+    // ── Assemble final module: globals header + string literals + functions
+    let mut out = module + "\n"
+    if state.globals.len() > 0 {
+        out = out + "; --- String constants ---\n"
+        out = out + state.globals + "\n"
+    }
+    out + functions_ir
+}

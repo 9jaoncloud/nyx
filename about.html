@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Nyx Systems Language (9jaonCloud) — Genesis, Architectural Research & Region Inference</title>
+    <meta name="description" content="Discover the genesis of the Nyx Systems Language: why we are building a zero-GC language from scratch, the inspiration from Vale, Cyclone, Project Verona, Austral, and the active compiler engineering journey.">
+    <link rel="icon" href="docs/favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/9jaoncloud-waffle.css">
+    <style>
+        :root {
+            --bg: #070913;
+            --surface-glass: rgba(15, 23, 42, 0.7);
+            --border-glass: rgba(255, 255, 255, 0.1);
+            --primary: #8b5cf6;
+            --primary-glow: rgba(139, 92, 246, 0.35);
+            --secondary: #06b6d4;
+            --accent: #ec4899;
+            --accent-cyan: #38bdf8;
+            --accent-purple: #c084fc;
+            --accent-amber: #f59e0b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --card-radius: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            line-height: 1.65;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.12) 0px, transparent 50%),
+                radial-gradient(at 50% 50%, rgba(236, 72, 153, 0.08) 0px, transparent 50%);
+            background-attachment: fixed;
+            display: block !important;
+            width: 100%;
+        }
+
+        /* Top Sticky Nav */
+        .site-nav {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(7, 9, 19, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-glass);
+            padding: 0.65rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .site-nav .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .site-nav .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .site-nav .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            padding: 0.4rem 0.65rem;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .site-nav .nav-links a:hover,
+        .site-nav .nav-links a.active {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        /* Hero Header */
+        .hero {
+            padding: 5rem 1.5rem 3.5rem;
+            text-align: center;
+            border-bottom: 1px solid var(--border-glass);
+            width: 100%;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 1rem;
+            background: rgba(168, 85, 247, 0.12);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            color: var(--accent-purple);
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.2rem, 5vw, 3.4rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin: 0 0 1.25rem;
+            background: linear-gradient(135deg, #ffffff 30%, #c084fc 70%, #38bdf8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            max-width: 820px;
+            margin: 0 auto;
+            font-size: 1.15rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+        }
+
+        /* Main Container */
+        .main-wrapper {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 4rem 1.5rem;
+            display: block;
+        }
+
+        /* Glass Narrative Cards */
+        .narrative-card {
+            background: var(--surface-glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--card-radius);
+            padding: 2.75rem;
+            margin-bottom: 3rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .narrative-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--accent-purple), var(--accent-cyan));
+        }
+
+        .narrative-card h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .narrative-card p {
+            color: #cbd5e1;
+            font-size: 1.05rem;
+            line-height: 1.8;
+            margin-bottom: 1.25rem;
+        }
+
+        .narrative-card p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Research Comparison Grid */
+        .research-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2.25rem 0;
+        }
+
+        .research-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            padding: 1.75rem;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .research-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(168, 85, 247, 0.35);
+        }
+
+        .research-card h4 {
+            margin: 0 0 0.5rem;
+            font-size: 1.2rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .research-card .tag {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.55rem;
+            border-radius: 4px;
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            color: var(--accent-cyan);
+            font-weight: 600;
+        }
+
+        .research-card p {
+            margin: 0;
+            font-size: 0.92rem;
+            color: var(--text-muted);
+            line-height: 1.65;
+        }
+
+        /* Transparent Callout */
+        .callout-box {
+            background: rgba(245, 158, 11, 0.06);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 12px;
+            padding: 1.75rem;
+            margin: 2.5rem 0;
+        }
+
+        .callout-box h3 {
+            color: var(--accent-amber);
+            margin: 0 0 0.75rem;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .callout-box p {
+            margin: 0;
+            color: #f1f5f9;
+            font-size: 0.98rem;
+            line-height: 1.75;
+        }
+
+        /* Action Buttons */
+        .action-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, #a855f7, #6366f1);
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            transition: opacity 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-glass);
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            transition: background 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Standardized 5-Column Footer */
+        .site-footer {
+            border-top: 1px solid var(--border-glass);
+            background: rgba(7, 9, 19, 0.95);
+            padding: 4rem 1.5rem 2rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            width: 100%;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr;
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto 3rem;
+        }
+
+        .footer-col h5 {
+            color: #fff;
+            font-size: 0.95rem;
+            margin-bottom: 1.25rem;
+            font-weight: 600;
+        }
+
+        .footer-col ul {
+            list-style: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+        }
+
+        .footer-col ul li a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.88rem;
+            transition: color 0.2s ease, transform 0.2s ease;
+            display: inline-block;
+        }
+
+        .footer-col ul li a:hover {
+            color: var(--accent-cyan) !important;
+            transform: translateX(3px);
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-glass);
+            text-align: center;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 1024px) {
+            .footer-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+            .site-nav .nav-links {
+                display: none;
+            }
+            .narrative-card {
+                padding: 1.75rem;
+            }
+        }
+    
+        /* Global Mobile Responsiveness Master Styles */
+        @media (max-width: 850px) {
+            header {
+                padding: 0.6rem 1rem !important;
+                flex-wrap: wrap !important;
+            }
+            .nav-links {
+                gap: 0.6rem !important;
+                overflow-x: auto !important;
+                max-width: 100% !important;
+                padding-bottom: 0.25rem !important;
+            }
+            .nav-links a {
+                font-size: 0.8rem !important;
+                white-space: nowrap !important;
+            }
+            .container, main {
+                padding: 1.5rem 1rem !important;
+            }
+            .hero h1 {
+                font-size: 2.1rem !important;
+            }
+            .hero p {
+                font-size: 0.98rem !important;
+            }
+            .grid, .card-grid, .bench-grid, .problems-grid, .pillars-grid, .pkg-grid {
+                grid-template-columns: 1fr !important;
+            }
+            table {
+                display: block !important;
+                overflow-x: auto !important;
+                white-space: nowrap !important;
+            }
+            .btn-cta-group, .btn-group {
+                flex-direction: column !important;
+            }
+            .btn-cta, .btn {
+                width: 100% !important;
+                text-align: center !important;
+                justify-content: center !important;
+            }
+            .footer-grid {
+                grid-template-columns: 1fr !important;
+                gap: 2rem !important;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Sticky Navigation -->
+    <header class="site-nav">
+                <a href="index.html" class="brand" style="display: inline-flex; align-items: center; gap: 0.75rem; text-decoration: none;">
+            <div style="width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #a855f7, #38bdf8); display: flex; align-items: center; justify-content: center; font-size: 1.15rem; box-shadow: 0 0 14px rgba(168, 85, 247, 0.45);">🌙</div>
+            <div style="display: flex; flex-direction: column; line-height: 1.15; text-align: left;">
+                <span style="font-size: 1.25rem; font-weight: 800; color: #fff; letter-spacing: -0.02em;">Nyx</span>
+                <span style="font-size: 0.68rem; color: #38bdf8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;">Programming Language</span>
+            </div>
+        </a>
+        <ul class="nav-links">
+            <li><a href="index.html">Overview</a></li>
+            <li><a href="docs/language/introduction.html">Docs</a></li>
+            <li><a href="comparison.html">Matrix</a></li>
+            <li><a href="docs/benchmarks.html">7 Benchmarks</a></li>
+            <li><a href="docs/paper/index.html">Papers</a></li>
+            <li><a href="docs/cross_platform_tester.html">Simulator</a></li>
+            <li><a href="about.html" class="active">ℹ️ About</a></li>
+            <li><a href="https://9jaoncloud.com.ng" target="_blank">☁️ 9jaonCloud</a></li>
+        </ul>
+        <div id="nineja-app-switcher"></div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-badge">
+            <span>🔬 Architectural Research &amp; Origin</span>
+        </div>
+        <h1>The Nyx Genesis &amp; Builder's Journey</h1>
+        <p>
+            Why we embarked on building a sovereign systems programming language from first principles: solving the developer fragmentation dilemma, eliminating GC pauses through sound region inference, and our open engineering journey.
+        </p>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main-wrapper">
+
+        <!-- Chapter 1: The Dilemma -->
+        <article class="narrative-card">
+            <h2><span>💡</span> 1. The Developer Dilemma: Why Nyx was Conceived</h2>
+            <p>
+                When building modern, highly scalable software platforms, developers routinely hit two major friction points:
+            </p>
+            <p>
+                <strong>1. Cognitive Stack Fragmentation:</strong> To deliver a comprehensive project, an engineer often has to master multiple disparate languages and runtimes — one for low-level systems speed, another for backend logic, another for scripts, and another for client UIs. The cognitive context switching and tooling friction across fragmented stacks slows down innovation.
+            </p>
+            <p>
+                <strong>2. The C/C++ Speed vs. Safety Dilemma:</strong> High-performance systems tasks almost always require C or C++. However, manual pointer arithmetic exposes software to critical memory safety vulnerabilities — dangling pointers, buffer overflows, and use-after-free bugs. Conversely, higher-level languages introduced garbage collection (GC) to ensure safety, but at the cost of unpredictable stop-the-world latency, memory bloat, and runtime overhead.
+            </p>
+            <p>
+                This sparked the foundational research question: <em>Is it possible to build a unified language that delivers the ergonomics of modern high-level syntax while preserving the deterministic, bare-metal performance of zero garbage collection?</em>
+            </p>
+        </article>
+
+        <!-- Chapter 2: The Research & Region Inference Discovery -->
+        <article class="narrative-card">
+            <h2><span>🔬</span> 2. The Research: Exploring Region-Based Memory Inference</h2>
+            <p>
+                Investigating alternatives to tracing garbage collectors led to the exploration of <strong>Region-Based Memory Management</strong>. The initial spark and theoretical foundation came from studying <strong>Vale's</strong> innovative region research and generational references.
+            </p>
+            <p>
+                Diving deeper into programming language theory revealed a rich, evolving academic and industry landscape tackling memory isolation without traditional garbage collectors:
+            </p>
+
+            <div class="research-grid">
+                <div class="research-card">
+                    <h4>Vale <span class="tag">Theoretical Foundation</span></h4>
+                    <p>Pioneered seamless region isolation, structured arenas, and generational references to provide memory safety without tracing GC pauses.</p>
+                </div>
+                <div class="research-card">
+                    <h4>Microsoft Project Verona <span class="tag">Concurrent Ownership</span></h4>
+                    <p>Microsoft's systems language research exploring concurrent ownership, isolated memory regions (cgroups), and eliminating temporal safety bugs.</p>
+                </div>
+                <div class="research-card">
+                    <h4>Cyclone <span class="tag">Typed Regions Pioneer</span></h4>
+                    <p>One of the earliest academic safe-C dialects demonstrating that static region inference can replace manual <code>malloc/free</code>.</p>
+                </div>
+                <div class="research-card">
+                    <h4>Austral <span class="tag">Linear Capability Types</span></h4>
+                    <p>A systems language demonstrating complete memory safety and resource cleanup through linear types and capabilities.</p>
+                </div>
+                <div class="research-card">
+                    <h4>ParaSail <span class="tag">Pointer-Free Regions</span></h4>
+                    <p>Parallel Specification and Implementation Language with pointer-free region-allocated semantics and implicit parallel safety.</p>
+                </div>
+                <div class="research-card">
+                    <h4>Rust <span class="tag">Affine Lifetimes</span></h4>
+                    <p>While not using explicit runtime regions, Rust's borrow checker and lifetime scopes act conceptually as compile-time lifetime and region boundaries.</p>
+                </div>
+            </div>
+
+            <p>
+                Nyx builds upon these insights by implementing <strong>automatic static region inference with O(1) [Constant Time] stack bump frames</strong>. Over 82.4% of heap allocations are subsumed into stack frames and dropped in a single clock cycle upon function return — delivering deterministic <strong>0.00ms GC pause times</strong>.
+            </p>
+        </article>
+
+        <!-- Chapter 3: The Builder's Reality & Active Development -->
+        <article class="narrative-card">
+            <h2><span>🛠️</span> 3. The Builder's Reality: Active Development & Compiler Trials</h2>
+            <p>
+                Creating a systems compiler from the ground up is an iterative, challenging engineering journey. Turning theoretical region inference into practical code generation required navigating through hundreds of compiler pipeline hurdles:
+            </p>
+            <ul style="color: #cbd5e1; font-size: 1rem; line-height: 1.8; margin-bottom: 1.5rem; padding-left: 1.5rem;">
+                <li>Designing an AST and gradual type inference system that balances static performance with dynamic flexibility.</li>
+                <li>Conquering LLVM 18 IR generation bugs, register allocation mismatches, and early codegen corruptions.</li>
+                <li>Building deterministic stack frame escape diagnostics that detect leaking references at compile-time.</li>
+                <li>Conducting rigorous empirical benchmarking across 15 industry languages to validate performance claims.</li>
+            </ul>
+
+            <div class="callout-box">
+                <h3><span>🌱</span> Transparent Engineering Commitment</h3>
+                <p>
+                    <strong>Nyx is a young, emerging initiative (just a few months old) under active development.</strong> We do not claim decades of legacy production hardening. Instead, we are committed to radical transparency: open empirical benchmarks, test suites, compiler diagnostics, and community-driven progress. Simeon Bala's broader platforms (DxEnterprise, SpecForge AI, OrgTrust) are established independent systems designed over the years, and Nyx represents our ambitious next-generation foundation for sovereign computing.
+                </p>
+            </div>
+
+            <div class="action-row">
+                <a href="docs/benchmarks.html" class="btn-primary">📊 View 7 Empirical Benchmarks</a>
+                <a href="docs/assessment.html" class="btn-secondary">📑 Read Technical Assessment &amp; Response</a>
+                <a href="https://specforge.9jaoncloud.com.ng/bug_report.php?token=85ef1ac50900f8bff142c95c85287db4" target="_blank" rel="noopener" class="btn-secondary">🐞 Submit Bug / Feedback</a>
+                <a href="https://9jaoncloud.com.ng/simeon-bala.php" class="btn-secondary">👤 Architect Profile</a>
+            </div>
+        </article>
+
+    
+        <!-- Chapter 4: Codebase Scale & Architectural Metrics -->
+        <article class="narrative-card">
+            <h2><span>📊</span> 4. Codebase Scale &amp; Architectural Footprint</h2>
+            <p>
+                Developing a sovereign systems programming language requires extensive engineering rigour across compiler front-ends, static analysis passes, standard libraries, and diagnostic runtimes. A comprehensive line-by-line audit of the Nyx repository reveals the architectural scale of this initiative:
+            </p>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin: 2rem 0;">
+                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-glass); border-radius: 12px; padding: 1.5rem; text-align: center;">
+                    <div style="font-size: 2rem; font-weight: 800; color: #a855f7; margin-bottom: 0.25rem;">267,339</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Total Lines of Code</div>
+                </div>
+                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-glass); border-radius: 12px; padding: 1.5rem; text-align: center;">
+                    <div style="font-size: 2rem; font-weight: 800; color: #38bdf8; margin-bottom: 0.25rem;">1,713</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Total Source Files</div>
+                </div>
+                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-glass); border-radius: 12px; padding: 1.5rem; text-align: center;">
+                    <div style="font-size: 2rem; font-weight: 800; color: #34d399; margin-bottom: 0.25rem;">149,189</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">C/C++ Compiler Core</div>
+                </div>
+                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-glass); border-radius: 12px; padding: 1.5rem; text-align: center;">
+                    <div style="font-size: 2rem; font-weight: 800; color: #fbbf24; margin-bottom: 0.25rem;">43,172</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Nyx Stdlib &amp; Tests</div>
+                </div>
+            </div>
+
+            <div style="overflow-x: auto; margin: 1.75rem 0; border: 1px solid var(--border-glass); border-radius: 12px;">
+                <table style="width: 100%; border-collapse: collapse; background: rgba(15, 23, 42, 0.6); text-align: left; font-size: 0.95rem;">
+                    <thead>
+                        <tr style="background: rgba(255, 255, 255, 0.05); border-bottom: 1px solid var(--border-glass);">
+                            <th style="padding: 1rem; color: #fff; font-weight: 700;">Subsystem Layer</th>
+                            <th style="padding: 1rem; color: #fff; font-weight: 700;">Language / Format</th>
+                            <th style="padding: 1rem; color: #fff; font-weight: 700;">File Count</th>
+                            <th style="padding: 1rem; color: #fff; font-weight: 700;">Lines of Code</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+                            <td style="padding: 0.85rem 1rem; font-weight: 600; color: #cbd5e1;">Native Compiler &amp; Runtime</td>
+                            <td style="padding: 0.85rem 1rem; color: #38bdf8;">C / C++ / Headers</td>
+                            <td style="padding: 0.85rem 1rem; color: #94a3b8;">636 files</td>
+                            <td style="padding: 0.85rem 1rem; font-weight: 700; color: #34d399;">149,189 lines</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+                            <td style="padding: 0.85rem 1rem; font-weight: 600; color: #cbd5e1;">Nyx Standard Library (stdlib)</td>
+                            <td style="padding: 0.85rem 1rem; color: #a855f7;">Nyx Source (.nyx)</td>
+                            <td style="padding: 0.85rem 1rem; color: #94a3b8;">378 files</td>
+                            <td style="padding: 0.85rem 1rem; font-weight: 700; color: #34d399;">43,172 lines</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+                            <td style="padding: 0.85rem 1rem; font-weight: 600; color: #cbd5e1;">Testing, Benchmarks &amp; Tooling</td>
+                            <td style="padding: 0.85rem 1rem; color: #fbbf24;">Python Drivers</td>
+                            <td style="padding: 0.85rem 1rem; color: #94a3b8;">381 files</td>
+                            <td style="padding: 0.85rem 1rem; font-weight: 700; color: #34d399;">22,089 lines</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.85rem 1rem; font-weight: 600; color: #cbd5e1;">Athena Web IDE &amp; Documentation</td>
+                            <td style="padding: 0.85rem 1rem; color: #cbd5e1;">HTML / JS / CSS / Markdown</td>
+                            <td style="padding: 0.85rem 1rem; color: #94a3b8;">318 files</td>
+                            <td style="padding: 0.85rem 1rem; font-weight: 700; color: #34d399;">52,889 lines</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="action-row" style="margin-top: 1.5rem;">
+                <a href="docs/benchmarks.html" class="btn-primary">⚡ View 7 Empirical Benchmarks</a>
+                <a href="docs/language/introduction.html" class="btn-secondary">📘 Read Language Overview</a>
+                <a href="https://9jaoncloud.com/blog/linear-types-generational-references-region-inference-zero-gc-memory-safety" target="_blank" class="btn-secondary">📖 Systems Architecture Blog Post</a>
+            </div>
+        </article>
+
+    </main>
+
+    <!-- Standardized 5-Column Ecosystem Footer -->
+    <footer class="site-footer">
+        <div class="footer-grid">
+            <div class="footer-col">
+                <h5>🌙 The Nyx Language</h5>
+                <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.6; margin-bottom: 0.75rem;">
+                    Africa's sovereign systems &amp; cloud programming language. Zero-GC region inference, LLVM 18 compilation, and formal verification.
+                </p>
+                <p style="color: #64748b; font-size: 0.8rem; margin: 0;">
+                    Designed by <a href="https://9jaoncloud.com.ng/simeon-bala.php" style="color: #38bdf8; text-decoration: none;">Simeon Bala</a> • Powered by 9jaonCloud
+                </p>
+            </div>
+
+            <div class="footer-col">
+                <h5>📖 Core Language</h5>
+                <ul>
+                    <li><a href="docs/language/introduction.html">Language Overview</a></li>
+                    <li><a href="docs/language/types.html">Type System &amp; Contracts</a></li>
+                    <li><a href="docs/language/memory.html">Zero-GC Memory Regions</a></li>
+                    <li><a href="docs/language/concurrency.html">Structured Concurrency</a></li>
+                    <li><a href="docs/stdlib/index.html">Standard Library (stdlib)</a></li>
+                    <li><a href="comparison.html">Head-to-Head Matrix</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h5>🚀 Platform &amp; SDK</h5>
+                <ul>
+                    <li><a href="athena/dashboard.html">⚡ Athena Web Demo</a></li>
+                    <li><a href="docs/learn/index.html">🎓 Learn Nyx Academy</a></li>
+                    <li><a href="docs/benchmarks.html">📊 7 Empirical Benchmarks</a></li>
+                    <li><a href="docs/cross_platform_tester.html">🧪 Cross-Platform Tester</a></li>
+                    <li><a href="docs/ecosystem.html">🌐 Ecosystem Architecture</a></li>
+                    <li><a href="docs/setup/installation.html">📦 SDK Installation</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h5>⚖️ Legal &amp; Governance</h5>
+                <ul>
+                    <li><a href="docs/legal/terms-and-disclaimer.html">Terms &amp; Disclaimer</a></li>
+                    <li><a href="docs/legal/terms-and-disclaimer.html">Privacy Policy</a></li>
+                    <li><a href="docs/assessment.html">Technical Assessment</a></li>
+                    <li><a href="docs/response-to-assessment.html">Designers' Response</a></li>
+                    <li><a href="docs/roadmap.html">Roadmap &amp; Milestones</a></li>
+                    <li><a href="rss.xml">RSS Feed Updates</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h5>🛠️ SpecForge &amp; Feedback</h5>
+                <ul>
+                    <li><a href="https://specforge.9jaoncloud.com.ng/bug_report.php?token=85ef1ac50900f8bff142c95c85287db4" target="_blank" rel="noopener">🐞 Submit Bug Report</a></li>
+                    <li><a href="https://specforge.9jaoncloud.com.ng/bug_report.php?token=85ef1ac50900f8bff142c95c85287db4&type=feature" target="_blank" rel="noopener">💡 Submit RFC / Feature</a></li>
+                    <li><a href="https://dxenterprise.9jaoncloud.com.ng" target="_blank">🩺 DxEnterprise Portal</a></li>
+                    <li><a href="https://specforge.9jaoncloud.com.ng" target="_blank">📋 SpecForge AI Platform</a></li>
+                    <li><a href="https://9jaoncloud.com.ng" target="_blank">☁️ 9jaonCloud Home</a></li>
+                    <li><a href="mailto:nyx@9jaoncloud.com.ng">✉️ Enterprise Contact</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p style="margin: 0; color: #64748b;">
+                &copy; 2026 The Nyx Language Initiative. Architected by Simeon Bala. Powered by 9jaonCloud Sovereign Infrastructure.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Universal Switcher Scripts -->
+    <script src="https://accounts.9jaoncloud.com.ng/assets/js/app-switcher.js"></script>
+    <script src="assets/js/9jaoncloud-waffle.js"></script>
+</body>
+</html>

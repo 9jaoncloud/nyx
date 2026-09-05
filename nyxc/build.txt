@@ -1,0 +1,2265 @@
+warning: value assigned to `depth` is never read
+   --> src\parser.rs:611:25
+    |
+611 |                         depth -= 1;
+    |                         ^^^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `target`
+   --> src\resolver.rs:179:45
+    |
+179 |                 TopLevel::TypeAlias { name, target } => {
+    |                                             ^^^^^^ help: try ignoring the field: `target: _`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `name`
+    --> src\typecheck.rs:1202:17
+     |
+1202 |                 name,
+     |                 ^^^^ help: try ignoring the field: `name: _`
+
+warning: unused variable: `is_fn_param`
+    --> src\codegen_c.rs:1590:25
+     |
+1590 |                     let is_fn_param = VAR_TYPES.with(|vt| {
+     |                         ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_is_fn_param`
+
+warning: unused variable: `uid`
+    --> src\codegen_c.rs:1791:33
+     |
+1791 | ...                   let uid = MATCH_DEPTH.with(|d| *d.borrow());
+     |                           ^^^ help: if this is intentional, prefix it with an underscore: `_uid`
+
+warning: unused variable: `ai`
+    --> src\codegen_c.rs:1985:30
+     |
+1985 |                         for (ai, a) in args.iter().enumerate() {
+     |                              ^^ help: if this is intentional, prefix it with an underscore: `_ai`
+
+warning: unused variable: `tmp`
+    --> src\codegen_c.rs:2163:17
+     |
+2163 |             let tmp = format!("__whilelet_tmp_{}", MATCH_DEPTH.with(|d| *d.borrow()));
+     |                 ^^^ help: if this is intentional, prefix it with an underscore: `_tmp`
+
+warning: unused variable: `elem_type`
+    --> src\codegen_c.rs:2314:21
+     |
+2314 |                 let elem_type = if obj_type == "NyxVec*" {
+     |                     ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_elem_type`
+
+warning: unused variable: `user_defined`
+    --> src\codegen_c.rs:2769:33
+     |
+2769 | ...                   let user_defined =
+     |                           ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_user_defined`
+
+warning: unused variable: `sd`
+    --> src\codegen_c.rs:2952:36
+     |
+2952 |                 } else if let Some(sd) = STRUCT_DEFS.with(|sd| sd.borrow().get(name).cloned()) {
+     |                                    ^^ help: if this is intentional, prefix it with an underscore: `_sd`
+
+warning: unused variable: `fields`
+    --> src\codegen_c.rs:3853:37
+     |
+3853 |         Expr::StructLiteral { name, fields, .. } => {
+     |                                     ^^^^^^ help: try ignoring the field: `fields: _`
+
+warning: using `.clone()` on a double reference, which returns `&String` instead of cloning the inner type
+   --> src\driver.rs:611:45
+    |
+611 |     sorted_deps.sort_by_key(|(name, _)| name.clone());
+    |                                             ^^^^^^^^
+    |
+    = note: `#[warn(suspicious_double_ref_op)]` on by default
+
+warning: `nyx-bootstrap` (lib) generated 12 warnings (run `cargo fix --lib -p nyx-bootstrap` to apply 10 suggestions)
+warning: unused variable: `is_fn_param`
+    --> src\codegen_c.rs:1590:25
+     |
+1590 |                     let is_fn_param = VAR_TYPES.with(|vt| {
+     |                         ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_is_fn_param`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `target`
+   --> src\resolver.rs:179:45
+    |
+179 |                 TopLevel::TypeAlias { name, target } => {
+    |                                             ^^^^^^ help: try ignoring the field: `target: _`
+
+warning: using `.clone()` on a double reference, which returns `&std::string::String` instead of cloning the inner type
+   --> src\driver.rs:611:45
+    |
+611 |     sorted_deps.sort_by_key(|(name, _)| name.clone());
+    |                                             ^^^^^^^^
+    |
+    = note: `#[warn(suspicious_double_ref_op)]` on by default
+
+warning: `nyx-bootstrap` (bin "nyx-bootstrap") generated 12 warnings (9 duplicates) (run `cargo fix --bin "nyx-bootstrap" -p nyx-bootstrap` to apply 2 suggestions)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.23s
+     Running `target\debug\nyx-bootstrap.exe C:/xampp/htdocs/nyx/nyxc/main.nyx`
+C compilation failed:
+C:/xampp/htdocs/nyx/nyxc/main.c: In function 'Parser_parse_program':
+C:/xampp/htdocs/nyx/nyxc/main.c:768:21: error: invalid initializer
+  768 | rt_string_t items = rt_vec_new(sizeof(TopLevel));
+      |                     ^~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:774:13: error: passing argument 1 of 'rt_vec_push' from incompatible pointer type [-Wincompatible-pointer-types]
+  774 | rt_vec_push(&items, ({ TopLevel _tmp_1 = Parser_parse_fn_decl(self, 0); &_tmp_1; }));
+      |             ^~~~~~
+      |             |
+      |             rt_string_t *
+In file included from C:/xampp/htdocs/nyx/nyxc/main.c:9:
+./runtime/rt_vec.h:23:40: note: expected 'NyxVec *' but argument is of type 'rt_string_t *'
+   23 | static inline void rt_vec_push(NyxVec* v, void* elem) {
+      |                                ~~~~~~~~^
+C:/xampp/htdocs/nyx/nyxc/main.c:778:1: error: cannot convert to a pointer type
+  778 | rt_vec_push(&items, (Parser*)Parser_parse_fn_decl(self, 1)));
+      | ^~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:778:13: error: passing argument 1 of 'rt_vec_push' from incompatible pointer type [-Wincompatible-pointer-types]
+  778 | rt_vec_push(&items, (Parser*)Parser_parse_fn_decl(self, 1)));
+      |             ^~~~~~
+      |             |
+      |             rt_string_t *
+./runtime/rt_vec.h:23:40: note: expected 'NyxVec *' but argument is of type 'rt_string_t *'
+   23 | static inline void rt_vec_push(NyxVec* v, void* elem) {
+      |                                ~~~~~~~~^
+C:/xampp/htdocs/nyx/nyxc/main.c:778:60: error: expected ';' before ')' token
+  778 | rt_vec_push(&items, (Parser*)Parser_parse_fn_decl(self, 1)));
+      |                                                            ^
+      |                                                            ;
+C:/xampp/htdocs/nyx/nyxc/main.c:778:60: error: expected statement before ')' token
+C:/xampp/htdocs/nyx/nyxc/main.c:781:13: error: passing argument 1 of 'rt_vec_push' from incompatible pointer type [-Wincompatible-pointer-types]
+  781 | rt_vec_push(&items, ({ TopLevel _tmp_1 = Parser_parse_struct_def(self); &_tmp_1; }));
+      |             ^~~~~~
+      |             |
+      |             rt_string_t *
+./runtime/rt_vec.h:23:40: note: expected 'NyxVec *' but argument is of type 'rt_string_t *'
+   23 | static inline void rt_vec_push(NyxVec* v, void* elem) {
+      |                                ~~~~~~~~^
+C:/xampp/htdocs/nyx/nyxc/main.c:784:30: error: implicit declaration of function 'TopLevel_parse_enum_def'; did you mean 'Parser_parse_enum_def'? [-Wimplicit-function-declaration]
+  784 | rt_vec_push(&items, (int64_t)TopLevel_parse_enum_def(self)));
+      |                              ^~~~~~~~~~~~~~~~~~~~~~~
+      |                              Parser_parse_enum_def
+C:/xampp/htdocs/nyx/nyxc/main.c:784:13: error: passing argument 1 of 'rt_vec_push' from incompatible pointer type [-Wincompatible-pointer-types]
+  784 | rt_vec_push(&items, (int64_t)TopLevel_parse_enum_def(self)));
+      |             ^~~~~~
+      |             |
+      |             rt_string_t *
+./runtime/rt_vec.h:23:40: note: expected 'NyxVec *' but argument is of type 'rt_string_t *'
+   23 | static inline void rt_vec_push(NyxVec* v, void* elem) {
+      |                                ~~~~~~~~^
+C:/xampp/htdocs/nyx/nyxc/main.c:784:21: error: passing argument 2 of 'rt_vec_push' makes pointer from integer without a cast [-Wint-conversion]
+  784 | rt_vec_push(&items, (int64_t)TopLevel_parse_enum_def(self)));
+      |                     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                     |
+      |                     long long int
+./runtime/rt_vec.h:23:49: note: expected 'void *' but argument is of type 'long long int'
+   23 | static inline void rt_vec_push(NyxVec* v, void* elem) {
+      |                                           ~~~~~~^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:784:60: error: expected ';' before ')' token
+  784 | rt_vec_push(&items, (int64_t)TopLevel_parse_enum_def(self)));
+      |                                                            ^
+      |                                                            ;
+C:/xampp/htdocs/nyx/nyxc/main.c:784:60: error: expected statement before ')' token
+C:/xampp/htdocs/nyx/nyxc/main.c:788:18: error: invalid use of void expression
+  788 | __match_result_0 = Parser_skip_to_semicolon(self);
+      |                  ^
+C:/xampp/htdocs/nyx/nyxc/main.c:792:18: error: invalid use of void expression
+  792 | __match_result_0 = Parser_skip_to_semicolon(self);
+      |                  ^
+C:/xampp/htdocs/nyx/nyxc/main.c:796:18: error: invalid use of void expression
+  796 | __match_result_0 = Parser_skip_to_semicolon(self);
+      |                  ^
+C:/xampp/htdocs/nyx/nyxc/main.c:802:20: error: incompatible type for argument 2 of 'Parser_error'
+  802 | Parser_error(self, rt_string_from("Unexpected token"));
+      |                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                    |
+      |                    rt_string_t
+C:/xampp/htdocs/nyx/nyxc/main.c:736:28: note: expected 'void *' but argument is of type 'rt_string_t'
+  736 | void Parser_error(Parser*, void*);
+      |                            ^~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:803:1: error: implicit declaration of function 'TopLevel_advance'; did you mean 'Lexer_advance'? [-Wimplicit-function-declaration]
+  803 | TopLevel_advance(self);
+      | ^~~~~~~~~~~~~~~~
+      | Lexer_advance
+C:/xampp/htdocs/nyx/nyxc/main.c:809:8: error: incompatible types when returning type 'rt_string_t' but 'NyxVec' was expected
+  809 | return items;
+      |        ^~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c: In function 'Parser_advance':
+C:/xampp/htdocs/nyx/nyxc/main.c:813:18: error: implicit declaration of function 'next_token' [-Wimplicit-function-declaration]
+  813 | (self->current = next_token());
+      |                  ^~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:813:18: error: incompatible types when assigning to type 'Token' from type 'int'
+C:/xampp/htdocs/nyx/nyxc/main.c: In function 'Parser_expect':
+C:/xampp/htdocs/nyx/nyxc/main.c:824:33: error: incompatible type for argument 2 of 'Parser_error'
+  824 | __if_val_2 = Parser_error(self, rt_string_from("Unexpected token"));
+      |                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                                 |
+      |                                 rt_string_t
+C:/xampp/htdocs/nyx/nyxc/main.c:736:28: note: expected 'void *' but argument is of type 'rt_string_t'
+  736 | void Parser_error(Parser*, void*);
+      |                            ^~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c: In function 'Parser_error':
+C:/xampp/htdocs/nyx/nyxc/main.c:830:43: error: implicit declaration of function 'void_to_string'; did you mean 'read_to_string'? [-Wimplicit-function-declaration]
+  830 | rt_vec_push(&(*self).errors, (rt_string_t)void_to_string(msg)));
+      |                                           ^~~~~~~~~~~~~~
+      |                                           read_to_string
+C:/xampp/htdocs/nyx/nyxc/main.c:830:1: error: conversion to non-scalar type requested
+  830 | rt_vec_push(&(*self).errors, (rt_string_t)void_to_string(msg)));
+      | ^~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:830:63: error: expected ';' before ')' token
+  830 | rt_vec_push(&(*self).errors, (rt_string_t)void_to_string(msg)));
+      |                                                               ^
+      |                                                               ;
+C:/xampp/htdocs/nyx/nyxc/main.c:830:63: error: expected statement before ')' token
+C:/xampp/htdocs/nyx/nyxc/main.c: In function 'Parser_parse_ident':
+C:/xampp/htdocs/nyx/nyxc/main.c:845:23: error: initialization of 'int64_t' {aka 'long long int'} from 'TokenKind *' makes integer from pointer without a cast [-Wint-conversion]
+  845 | { int64_t __iflet_2 = (&(*self).current.kind);
+      |                       ^
+C:/xampp/htdocs/nyx/nyxc/main.c:847:22: error: 'name' undeclared (first use in this function)
+  847 | rt_string_t result = name;
+      |                      ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:847:22: note: each undeclared identifier is reported only once for each function it appears in
+C:/xampp/htdocs/nyx/nyxc/main.c: In function 'Parser_parse_type':
+C:/xampp/htdocs/nyx/nyxc/main.c:857:27: error: initialization of 'int64_t' {aka 'long long int'} from 'TokenKind *' makes integer from pointer without a cast [-Wint-conversion]
+  857 | { int64_t __iflet_ret_2 = (&(*self).current.kind);
+      |                           ^
+C:/xampp/htdocs/nyx/nyxc/main.c:863:2: error: '__match_val_2' undeclared (first use in this function); did you mean '__match_result_2'?
+  863 |  __match_val_2 = rt_string_as_str(name);
+      |  ^~~~~~~~~~~~~
+      |  __match_result_2
+C:/xampp/htdocs/nyx/nyxc/main.c:863:18: error: implicit declaration of function 'rt_string_as_str' [-Wimplicit-function-declaration]
+  863 |  __match_val_2 = rt_string_as_str(name);
+      |                  ^~~~~~~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:891:60: error: incompatible types when initializing type 'Type *' using type 'Type'
+  891 | return (Type){ .tag = TAG_Type_Array, .data.Array = {.f0 = inner} };
+      |                                                            ^~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:896:68: error: incompatible types when initializing type 'Type *' using type 'Type'
+  896 | __if_val_4 = (Type){ .tag = TAG_Type_MutRef, .data.MutRef = {.f0 = Parser_parse_type(self)} };
+      |                                                                    ^~~~~~~~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:898:62: error: incompatible types when initializing type 'Type *' using type 'Type'
+  898 | __if_val_4 = (Type){ .tag = TAG_Type_Ref, .data.Ref = {.f0 = Parser_parse_type(self)} };
+      |                                                              ^~~~~~~~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c: In function 'Parser_parse_fn_decl':
+C:/xampp/htdocs/nyx/nyxc/main.c:909:24: error: invalid initializer
+  909 | rt_string_t generics = rt_vec_new(sizeof(int64_t));
+      |                        ^~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:913:13: error: passing argument 1 of 'rt_vec_push' from incompatible pointer type [-Wincompatible-pointer-types]
+  913 | rt_vec_push(&generics, (rt_string_t)Parser_parse_ident(self)));
+      |             ^~~~~~~~~
+      |             |
+      |             rt_string_t *
+./runtime/rt_vec.h:23:40: note: expected 'NyxVec *' but argument is of type 'rt_string_t *'
+   23 | static inline void rt_vec_push(NyxVec* v, void* elem) {
+      |                                ~~~~~~~~^
+C:/xampp/htdocs/nyx/nyxc/main.c:913:24: error: incompatible type for argument 2 of 'rt_vec_push'
+  913 | rt_vec_push(&generics, (rt_string_t)Parser_parse_ident(self)));
+      |                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                        |
+      |                        struct <anonymous>
+./runtime/rt_vec.h:23:49: note: expected 'void *' but argument is of type 'struct <anonymous>'
+   23 | static inline void rt_vec_push(NyxVec* v, void* elem) {
+      |                                           ~~~~~~^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:913:62: error: expected ';' before ')' token
+  913 | rt_vec_push(&generics, (rt_string_t)Parser_parse_ident(self)));
+      |                                                              ^
+      |                                                              ;
+C:/xampp/htdocs/nyx/nyxc/main.c:913:62: error: expected statement before ')' token
+C:/xampp/htdocs/nyx/nyxc/main.c:925:22: error: invalid initializer
+  925 | rt_string_t params = rt_vec_new(sizeof(int64_t));
+      |                      ^~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:931:13: error: passing argument 1 of 'rt_vec_push' from incompatible pointer type [-Wincompatible-pointer-types]
+  931 | rt_vec_push(&params, ({ Param _tmp_4 = (Param){.name = pname, .ty = ptype}; &_tmp_4; }));
+      |             ^~~~~~~
+      |             |
+      |             rt_string_t *
+./runtime/rt_vec.h:23:40: note: expected 'NyxVec *' but argument is of type 'rt_string_t *'
+   23 | static inline void rt_vec_push(NyxVec* v, void* elem) {
+      |                                ~~~~~~~~^
+C:/xampp/htdocs/nyx/nyxc/main.c:944:14: error: incompatible types when assigning to type 'TopLevel' from type 'Type'
+  944 | __if_val_5 = Parser_parse_type(self);
+      |              ^~~~~~~~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:946:14: error: incompatible types when assigning to type 'TopLevel' from type 'Type'
+  946 | __if_val_5 = (Type){ .tag = TAG_Type_Void};
+      |              ^
+C:/xampp/htdocs/nyx/nyxc/main.c:942:20: error: incompatible types when initializing type 'int64_t' {aka 'long long int'} using type 'TopLevel'
+  942 | int64_t ret_type = ({ TopLevel __if_val_5; if (((*self).current.kind.tag == TAG_TokenKind_Arrow)) {
+      |                    ^
+C:/xampp/htdocs/nyx/nyxc/main.c:951:71: error: incompatible types when initializing type 'void *' using type 'rt_string_t'
+  951 | return (TopLevel){ .tag = TAG_TopLevel_FnDecl, .data.FnDecl = { name, generics, params, ret_type, body, is_async } };
+      |                                                                       ^~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:951:81: error: incompatible types when initializing type 'long long unsigned int' using type 'rt_string_t'
+  951 | return (TopLevel){ .tag = TAG_TopLevel_FnDecl, .data.FnDecl = { name, generics, params, ret_type, body, is_async } };
+      |                                                                                 ^~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:951:99: error: incompatible types when initializing type 'long long unsigned int' using type 'Expr'
+  951 | return (TopLevel){ .tag = TAG_TopLevel_FnDecl, .data.FnDecl = { name, generics, params, ret_type, body, is_async } };
+      |                                                                                                   ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:951:105: error: initialization of 'void *' from 'int' makes pointer from integer without a cast [-Wint-conversion]
+  951 | return (TopLevel){ .tag = TAG_TopLevel_FnDecl, .data.FnDecl = { name, generics, params, ret_type, body, is_async } };
+      |                                                                                                         ^~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:951:105: note: (near initialization for '(anonymous).data.FnDecl.f2.data')
+C:/xampp/htdocs/nyx/nyxc/main.c: In function 'Parser_parse_struct_def':
+C:/xampp/htdocs/nyx/nyxc/main.c:957:24: error: invalid initializer
+  957 | rt_string_t generics = rt_vec_new(sizeof(int64_t));
+      |                        ^~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:961:13: error: passing argument 1 of 'rt_vec_push' from incompatible pointer type [-Wincompatible-pointer-types]
+  961 | rt_vec_push(&generics, (rt_string_t)Parser_parse_ident(self)));
+      |             ^~~~~~~~~
+      |             |
+      |             rt_string_t *
+./runtime/rt_vec.h:23:40: note: expected 'NyxVec *' but argument is of type 'rt_string_t *'
+   23 | static inline void rt_vec_push(NyxVec* v, void* elem) {
+      |                                ~~~~~~~~^
+C:/xampp/htdocs/nyx/nyxc/main.c:961:24: error: incompatible type for argument 2 of 'rt_vec_push'
+  961 | rt_vec_push(&generics, (rt_string_t)Parser_parse_ident(self)));
+      |                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                        |
+      |                        struct <anonymous>
+./runtime/rt_vec.h:23:49: note: expected 'void *' but argument is of type 'struct <anonymous>'
+   23 | static inline void rt_vec_push(NyxVec* v, void* elem) {
+      |                                           ~~~~~~^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:961:62: error: expected ';' before ')' token
+  961 | rt_vec_push(&generics, (rt_string_t)Parser_parse_ident(self)));
+      |                                                              ^
+      |                                                              ;
+C:/xampp/htdocs/nyx/nyxc/main.c:961:62: error: expected statement before ')' token
+C:/xampp/htdocs/nyx/nyxc/main.c:973:22: error: invalid initializer
+  973 | rt_string_t fields = rt_vec_new(sizeof(int64_t));
+      |                      ^~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:978:46: error: expected ';' before '}' token
+  978 | rt_vec_push(&fields, (int64_t)({ fname, ftype })));
+      |                                              ^~
+      |                                              ;
+C:/xampp/htdocs/nyx/nyxc/main.c:978:1: error: aggregate value used where an integer was expected
+  978 | rt_vec_push(&fields, (int64_t)({ fname, ftype })));
+      | ^~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:978:13: error: passing argument 1 of 'rt_vec_push' from incompatible pointer type [-Wincompatible-pointer-types]
+  978 | rt_vec_push(&fields, (int64_t)({ fname, ftype })));
+      |             ^~~~~~~
+      |             |
+      |             rt_string_t *
+./runtime/rt_vec.h:23:40: note: expected 'NyxVec *' but argument is of type 'rt_string_t *'
+   23 | static inline void rt_vec_push(NyxVec* v, void* elem) {
+      |                                ~~~~~~~~^
+C:/xampp/htdocs/nyx/nyxc/main.c:978:50: error: expected ';' before ')' token
+  978 | rt_vec_push(&fields, (int64_t)({ fname, ftype })));
+      |                                                  ^
+      |                                                  ;
+C:/xampp/htdocs/nyx/nyxc/main.c:978:50: error: expected statement before ')' token
+C:/xampp/htdocs/nyx/nyxc/main.c:987:77: error: incompatible types when initializing type 'void *' using type 'rt_string_t'
+  987 | return (TopLevel){ .tag = TAG_TopLevel_StructDef, .data.StructDef = { name, generics, fields } };
+      |                                                                             ^~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:987:87: error: incompatible types when initializing type 'long long unsigned int' using type 'rt_string_t'
+  987 | return (TopLevel){ .tag = TAG_TopLevel_StructDef, .data.StructDef = { name, generics, fields } };
+      |                                                                                       ^~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c: In function 'Parser_parse_enum_def':
+C:/xampp/htdocs/nyx/nyxc/main.c:993:24: error: invalid initializer
+  993 | rt_string_t generics = rt_vec_new(sizeof(int64_t));
+      |                        ^~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:997:13: error: passing argument 1 of 'rt_vec_push' from incompatible pointer type [-Wincompatible-pointer-types]
+  997 | rt_vec_push(&generics, (rt_string_t)Parser_parse_ident(self)));
+      |             ^~~~~~~~~
+      |             |
+      |             rt_string_t *
+./runtime/rt_vec.h:23:40: note: expected 'NyxVec *' but argument is of type 'rt_string_t *'
+   23 | static inline void rt_vec_push(NyxVec* v, void* elem) {
+      |                                ~~~~~~~~^
+C:/xampp/htdocs/nyx/nyxc/main.c:997:24: error: incompatible type for argument 2 of 'rt_vec_push'
+  997 | rt_vec_push(&generics, (rt_string_t)Parser_parse_ident(self)));
+      |                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                        |
+      |                        struct <anonymous>
+./runtime/rt_vec.h:23:49: note: expected 'void *' but argument is of type 'struct <anonymous>'
+   23 | static inline void rt_vec_push(NyxVec* v, void* elem) {
+      |                                           ~~~~~~^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:997:62: error: expected ';' before ')' token
+  997 | rt_vec_push(&generics, (rt_string_t)Parser_parse_ident(self)));
+      |                                                              ^
+      |                                                              ;
+C:/xampp/htdocs/nyx/nyxc/main.c:997:62: error: expected statement before ')' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1009:24: error: invalid initializer
+ 1009 | rt_string_t variants = rt_vec_new(sizeof(int64_t));
+      |                        ^~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1012:20: error: invalid initializer
+ 1012 | rt_string_t args = rt_vec_new(sizeof(int64_t));
+      |                    ^~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1017:13: error: passing argument 1 of 'rt_vec_push' from incompatible pointer type [-Wincompatible-pointer-types]
+ 1017 | rt_vec_push(&args, ({ Type _tmp_5 = Parser_parse_type(self); &_tmp_5; }));
+      |             ^~~~~
+      |             |
+      |             rt_string_t *
+./runtime/rt_vec.h:23:40: note: expected 'NyxVec *' but argument is of type 'rt_string_t *'
+   23 | static inline void rt_vec_push(NyxVec* v, void* elem) {
+      |                                ~~~~~~~~^
+C:/xampp/htdocs/nyx/nyxc/main.c:1030:47: error: expected ';' before '}' token
+ 1030 | rt_vec_push(&variants, (int64_t)({ vname, args })));
+      |                                               ^~
+      |                                               ;
+C:/xampp/htdocs/nyx/nyxc/main.c:1030:1: error: aggregate value used where an integer was expected
+ 1030 | rt_vec_push(&variants, (int64_t)({ vname, args })));
+      | ^~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1030:13: error: passing argument 1 of 'rt_vec_push' from incompatible pointer type [-Wincompatible-pointer-types]
+ 1030 | rt_vec_push(&variants, (int64_t)({ vname, args })));
+      |             ^~~~~~~~~
+      |             |
+      |             rt_string_t *
+./runtime/rt_vec.h:23:40: note: expected 'NyxVec *' but argument is of type 'rt_string_t *'
+   23 | static inline void rt_vec_push(NyxVec* v, void* elem) {
+      |                                ~~~~~~~~^
+C:/xampp/htdocs/nyx/nyxc/main.c:1030:51: error: expected ';' before ')' token
+ 1030 | rt_vec_push(&variants, (int64_t)({ vname, args })));
+      |                                                   ^
+      |                                                   ;
+C:/xampp/htdocs/nyx/nyxc/main.c:1030:51: error: expected statement before ')' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1039:73: error: incompatible types when initializing type 'void *' using type 'rt_string_t'
+ 1039 | return (TopLevel){ .tag = TAG_TopLevel_EnumDef, .data.EnumDef = { name, generics, variants } };
+      |                                                                         ^~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1039:83: error: incompatible types when initializing type 'long long unsigned int' using type 'rt_string_t'
+ 1039 | return (TopLevel){ .tag = TAG_TopLevel_EnumDef, .data.EnumDef = { name, generics, variants } };
+      |                                                                                   ^~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c: In function 'Parser_parse_block_expr':
+C:/xampp/htdocs/nyx/nyxc/main.c:1043:21: error: invalid initializer
+ 1043 | rt_string_t stmts = rt_vec_new(sizeof(int64_t));
+      |                     ^~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1045:13: error: passing argument 1 of 'rt_vec_push' from incompatible pointer type [-Wincompatible-pointer-types]
+ 1045 | rt_vec_push(&stmts, ({ Stmt _tmp_5 = Parser_parse_stmt(self); &_tmp_5; }));
+      |             ^~~~~~
+      |             |
+      |             rt_string_t *
+./runtime/rt_vec.h:23:40: note: expected 'NyxVec *' but argument is of type 'rt_string_t *'
+   23 | static inline void rt_vec_push(NyxVec* v, void* elem) {
+      |                                ~~~~~~~~^
+C:/xampp/htdocs/nyx/nyxc/main.c:1048:60: error: incompatible types when initializing type 'void *' using type 'rt_string_t'
+ 1048 | return (Expr){ .tag = TAG_Expr_Block, .data.Block = {.f0 = stmts} };
+      |                                                            ^~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c: In function 'Parser_parse_block':
+C:/xampp/htdocs/nyx/nyxc/main.c:1052:21: error: invalid initializer
+ 1052 | rt_string_t stmts = rt_vec_new(sizeof(Stmt));
+      |                     ^~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1054:13: error: passing argument 1 of 'rt_vec_push' from incompatible pointer type [-Wincompatible-pointer-types]
+ 1054 | rt_vec_push(&stmts, ({ Stmt _tmp_5 = Parser_parse_stmt(self); &_tmp_5; }));
+      |             ^~~~~~
+      |             |
+      |             rt_string_t *
+./runtime/rt_vec.h:23:40: note: expected 'NyxVec *' but argument is of type 'rt_string_t *'
+   23 | static inline void rt_vec_push(NyxVec* v, void* elem) {
+      |                                ~~~~~~~~^
+C:/xampp/htdocs/nyx/nyxc/main.c:1057:8: error: incompatible types when returning type 'rt_string_t' but 'NyxVec' was expected
+ 1057 | return stmts;
+      |        ^~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c: In function 'Parser_parse_stmt':
+C:/xampp/htdocs/nyx/nyxc/main.c:1072:14: error: 'None' undeclared (first use in this function)
+ 1072 | int64_t ty = None;
+      |              ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1075:1: error: cannot convert to a pointer type
+ 1075 | (ty = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (void*)Parser_parse_type(self); _tmp; }));
+      | ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1075:7: error: incompatible types when assigning to type 'int64_t' {aka 'long long int'} from type 'NyxOption'
+ 1075 | (ty = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (void*)Parser_parse_type(self); _tmp; }));
+      |       ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1084:82: error: incompatible types when initializing type 'long long int' using type 'Expr'
+ 1084 | __match_result_5 = (Stmt){ .tag = TAG_Stmt_Let, .data.Let = { name, mutable, ty, value } };
+      |                                                                                  ^~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1089:1: error: cannot convert to a pointer type
+ 1089 | __if_val_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (void*)Parser_parse_expr(self); _tmp; });
+      | ^~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1089:14: error: incompatible types when assigning to type 'Stmt' from type 'NyxOption'
+ 1089 | __if_val_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (void*)Parser_parse_expr(self); _tmp; });
+      |              ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1088:16: error: incompatible types when initializing type 'int64_t' {aka 'long long int'} using type 'Stmt'
+ 1088 | int64_t expr = ({ Stmt __if_val_7; if ((!((*self).current.kind.tag == 0/*unknown_pattern*/))) {
+      |                ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1097:77: error: expected ';' before '}' token
+ 1097 | __match_result_5 = (Stmt){ .tag = TAG_Stmt_Return, .data.Return = { expr } }};
+      |                                                                             ^
+      |                                                                             ;
+C:/xampp/htdocs/nyx/nyxc/main.c:1098:2: error: expected ')' before 'else'
+ 1098 | }
+      |  ^
+      |  )
+ 1099 |  else {
+      |  ~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1061:9: error: void value not ignored as it ought to be
+ 1061 | return ({
+      |        ~^
+ 1062 | Stmt __match_result_5;
+      | ~~~~~~~~~~~~~~~~~~~~~~
+ 1063 | TokenKind* __match_val_5 = (&(*self).current.kind);
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1064 | if ((*__match_val_5).tag == TAG_TokenKind_Let) {
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1065 | Parser_advance(self);
+      | ~~~~~~~~~~~~~~~~~~~~~
+ 1066 | int64_t mutable = ((*self).current.kind.tag == TAG_TokenKind_Mut);
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1067 | if (mutable) {
+      | ~~~~~~~~~~~~~~
+ 1068 | Parser_advance(self);
+      | ~~~~~~~~~~~~~~~~~~~~~
+ 1069 | }
+      | ~        
+ 1070 | ;
+      | ~        
+ 1071 | rt_string_t name = Parser_parse_ident(self);
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1072 | int64_t ty = None;
+      | ~~~~~~~~~~~~~~~~~~
+ 1073 | if (((*self).current.kind.tag == TAG_TokenKind_Colon)) {
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1074 | Parser_advance(self);
+      | ~~~~~~~~~~~~~~~~~~~~~
+ 1075 | (ty = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (void*)Parser_parse_type(self); _tmp; }));
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1076 | }
+      | ~        
+ 1077 | ;
+      | ~        
+ 1078 | Parser_expect(self, (TokenKind){ .tag = TAG_TokenKind_Equals});
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1079 | Expr value = Parser_parse_expr(self);
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1080 | if (((*self).current.kind.tag == TAG_TokenKind_Semicolon)) {
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1081 | Parser_advance(self);
+      | ~~~~~~~~~~~~~~~~~~~~~
+ 1082 | }
+      | ~        
+ 1083 | ;
+      | ~        
+ 1084 | __match_result_5 = (Stmt){ .tag = TAG_Stmt_Let, .data.Let = { name, mutable, ty, value } };
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1085 | }
+      | ~        
+ 1086 |  else if ((*__match_val_5).tag == TAG_TokenKind_Return) {
+      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1087 | Parser_advance(self);
+      | ~~~~~~~~~~~~~~~~~~~~~
+ 1088 | int64_t expr = ({ Stmt __if_val_7; if ((!((*self).current.kind.tag == 0/*unknown_pattern*/))) {
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1089 | __if_val_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (void*)Parser_parse_expr(self); _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1090 | } else {
+      | ~~~~~~~~ 
+ 1091 | __if_val_7 = None;
+      | ~~~~~~~~~~~~~~~~~~
+ 1092 | } __if_val_7; });
+      | ~~~~~~~~~~~~~~~~~
+ 1093 | if (((*self).current.kind.tag == TAG_TokenKind_Semicolon)) {
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1094 | Parser_advance(self);
+      | ~~~~~~~~~~~~~~~~~~~~~
+ 1095 | }
+      | ~        
+ 1096 | ;
+      | ~        
+ 1097 | __match_result_5 = (Stmt){ .tag = TAG_Stmt_Return, .data.Return = { expr } }};
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1098 | }
+      | ~        
+ 1099 |  else {
+      |  ~~~~    
+C:/xampp/htdocs/nyx/nyxc/main.c:1105:75: error: expected ';' before '}' token
+ 1105 | __match_result_5 = (Stmt){ .tag = TAG_Stmt_Expr, .data.Expr = { expr } }};
+      |                                                                           ^
+      |                                                                           ;
+ 1106 | }
+      | ~                                                                          
+C:/xampp/htdocs/nyx/nyxc/main.c: In function 'Parser_parse_type':
+C:/xampp/htdocs/nyx/nyxc/main.c:1107:1: error: '__match_result_5' undeclared (first use in this function)
+ 1107 | __match_result_5;
+      | ^~~~~~~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c: In function 'Parser_parse_ident':
+C:/xampp/htdocs/nyx/nyxc/main.c:1108:2: error: expected statement before ')' token
+ 1108 | });
+      |  ^
+C:/xampp/htdocs/nyx/nyxc/main.c: In function 'Parser_pratt':
+C:/xampp/htdocs/nyx/nyxc/main.c:1122:95: error: 'BinOp_Add' undeclared (first use in this function)
+ 1122 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_Add, 7LL, 8LL }); _tmp; });
+      |                                                                                               ^~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1122:114: error: expected ';' before '}' token
+ 1122 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_Add, 7LL, 8LL }); _tmp; });
+      |                                                                                                                  ^~
+      |                                                                                                                  ;
+C:/xampp/htdocs/nyx/nyxc/main.c:1122:20: error: incompatible types when assigning to type 'Expr' from type 'NyxOption'
+ 1122 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_Add, 7LL, 8LL }); _tmp; });
+      |                    ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1125:95: error: 'BinOp_Sub' undeclared (first use in this function)
+ 1125 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_Sub, 7LL, 8LL }); _tmp; });
+      |                                                                                               ^~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1125:114: error: expected ';' before '}' token
+ 1125 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_Sub, 7LL, 8LL }); _tmp; });
+      |                                                                                                                  ^~
+      |                                                                                                                  ;
+C:/xampp/htdocs/nyx/nyxc/main.c:1125:20: error: incompatible types when assigning to type 'Expr' from type 'NyxOption'
+ 1125 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_Sub, 7LL, 8LL }); _tmp; });
+      |                    ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1128:95: error: 'BinOp_Mul' undeclared (first use in this function)
+ 1128 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_Mul, 9LL, 10LL }); _tmp; });
+      |                                                                                               ^~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1128:115: error: expected ';' before '}' token
+ 1128 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_Mul, 9LL, 10LL }); _tmp; });
+      |                                                                                                                   ^~
+      |                                                                                                                   ;
+C:/xampp/htdocs/nyx/nyxc/main.c:1128:20: error: incompatible types when assigning to type 'Expr' from type 'NyxOption'
+ 1128 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_Mul, 9LL, 10LL }); _tmp; });
+      |                    ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1131:95: error: 'BinOp_Div' undeclared (first use in this function)
+ 1131 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_Div, 9LL, 10LL }); _tmp; });
+      |                                                                                               ^~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1131:115: error: expected ';' before '}' token
+ 1131 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_Div, 9LL, 10LL }); _tmp; });
+      |                                                                                                                   ^~
+      |                                                                                                                   ;
+C:/xampp/htdocs/nyx/nyxc/main.c:1131:20: error: incompatible types when assigning to type 'Expr' from type 'NyxOption'
+ 1131 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_Div, 9LL, 10LL }); _tmp; });
+      |                    ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1134:95: error: 'BinOp_Mod' undeclared (first use in this function)
+ 1134 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_Mod, 9LL, 10LL }); _tmp; });
+      |                                                                                               ^~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1134:115: error: expected ';' before '}' token
+ 1134 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_Mod, 9LL, 10LL }); _tmp; });
+      |                                                                                                                   ^~
+      |                                                                                                                   ;
+C:/xampp/htdocs/nyx/nyxc/main.c:1134:20: error: incompatible types when assigning to type 'Expr' from type 'NyxOption'
+ 1134 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_Mod, 9LL, 10LL }); _tmp; });
+      |                    ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1137:95: error: 'BinOp_Eq' undeclared (first use in this function); did you mean 'BinOp'?
+ 1137 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_Eq, 5LL, 6LL }); _tmp; });
+      |                                                                                               ^~~~~~~~
+      |                                                                                               BinOp
+C:/xampp/htdocs/nyx/nyxc/main.c:1137:113: error: expected ';' before '}' token
+ 1137 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_Eq, 5LL, 6LL }); _tmp; });
+      |                                                                                                                 ^~
+      |                                                                                                                 ;
+C:/xampp/htdocs/nyx/nyxc/main.c:1137:20: error: incompatible types when assigning to type 'Expr' from type 'NyxOption'
+ 1137 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_Eq, 5LL, 6LL }); _tmp; });
+      |                    ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1140:95: error: 'BinOp_NotEq' undeclared (first use in this function); did you mean 'TAG_BinOp_NotEq'?
+ 1140 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_NotEq, 5LL, 6LL }); _tmp; });
+      |                                                                                               ^~~~~~~~~~~
+      |                                                                                               TAG_BinOp_NotEq
+C:/xampp/htdocs/nyx/nyxc/main.c:1140:116: error: expected ';' before '}' token
+ 1140 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_NotEq, 5LL, 6LL }); _tmp; });
+      |                                                                                                                    ^~
+      |                                                                                                                    ;
+C:/xampp/htdocs/nyx/nyxc/main.c:1140:20: error: incompatible types when assigning to type 'Expr' from type 'NyxOption'
+ 1140 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_NotEq, 5LL, 6LL }); _tmp; });
+      |                    ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1143:95: error: 'BinOp_Lt' undeclared (first use in this function); did you mean 'BinOp'?
+ 1143 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_Lt, 5LL, 6LL }); _tmp; });
+      |                                                                                               ^~~~~~~~
+      |                                                                                               BinOp
+C:/xampp/htdocs/nyx/nyxc/main.c:1143:113: error: expected ';' before '}' token
+ 1143 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_Lt, 5LL, 6LL }); _tmp; });
+      |                                                                                                                 ^~
+      |                                                                                                                 ;
+C:/xampp/htdocs/nyx/nyxc/main.c:1143:20: error: incompatible types when assigning to type 'Expr' from type 'NyxOption'
+ 1143 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_Lt, 5LL, 6LL }); _tmp; });
+      |                    ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1146:95: error: 'BinOp_LtEq' undeclared (first use in this function); did you mean 'TAG_BinOp_LtEq'?
+ 1146 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_LtEq, 5LL, 6LL }); _tmp; });
+      |                                                                                               ^~~~~~~~~~
+      |                                                                                               TAG_BinOp_LtEq
+C:/xampp/htdocs/nyx/nyxc/main.c:1146:115: error: expected ';' before '}' token
+ 1146 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_LtEq, 5LL, 6LL }); _tmp; });
+      |                                                                                                                   ^~
+      |                                                                                                                   ;
+C:/xampp/htdocs/nyx/nyxc/main.c:1146:20: error: incompatible types when assigning to type 'Expr' from type 'NyxOption'
+ 1146 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_LtEq, 5LL, 6LL }); _tmp; });
+      |                    ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1149:95: error: 'BinOp_Gt' undeclared (first use in this function); did you mean 'BinOp'?
+ 1149 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_Gt, 5LL, 6LL }); _tmp; });
+      |                                                                                               ^~~~~~~~
+      |                                                                                               BinOp
+C:/xampp/htdocs/nyx/nyxc/main.c:1149:113: error: expected ';' before '}' token
+ 1149 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_Gt, 5LL, 6LL }); _tmp; });
+      |                                                                                                                 ^~
+      |                                                                                                                 ;
+C:/xampp/htdocs/nyx/nyxc/main.c:1149:20: error: incompatible types when assigning to type 'Expr' from type 'NyxOption'
+ 1149 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_Gt, 5LL, 6LL }); _tmp; });
+      |                    ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1152:95: error: 'BinOp_GtEq' undeclared (first use in this function); did you mean 'TAG_BinOp_GtEq'?
+ 1152 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_GtEq, 5LL, 6LL }); _tmp; });
+      |                                                                                               ^~~~~~~~~~
+      |                                                                                               TAG_BinOp_GtEq
+C:/xampp/htdocs/nyx/nyxc/main.c:1152:115: error: expected ';' before '}' token
+ 1152 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_GtEq, 5LL, 6LL }); _tmp; });
+      |                                                                                                                   ^~
+      |                                                                                                                   ;
+C:/xampp/htdocs/nyx/nyxc/main.c:1152:20: error: incompatible types when assigning to type 'Expr' from type 'NyxOption'
+ 1152 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_GtEq, 5LL, 6LL }); _tmp; });
+      |                    ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1155:95: error: 'BinOp_And' undeclared (first use in this function)
+ 1155 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_And, 3LL, 4LL }); _tmp; });
+      |                                                                                               ^~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1155:114: error: expected ';' before '}' token
+ 1155 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_And, 3LL, 4LL }); _tmp; });
+      |                                                                                                                  ^~
+      |                                                                                                                  ;
+C:/xampp/htdocs/nyx/nyxc/main.c:1155:20: error: incompatible types when assigning to type 'Expr' from type 'NyxOption'
+ 1155 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_And, 3LL, 4LL }); _tmp; });
+      |                    ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1158:95: error: 'BinOp_Or' undeclared (first use in this function); did you mean 'BinOp'?
+ 1158 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_Or, 1LL, 2LL }); _tmp; });
+      |                                                                                               ^~~~~~~~
+      |                                                                                               BinOp
+C:/xampp/htdocs/nyx/nyxc/main.c:1158:113: error: expected ';' before '}' token
+ 1158 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_Or, 1LL, 2LL }); _tmp; });
+      |                                                                                                                 ^~
+      |                                                                                                                 ;
+C:/xampp/htdocs/nyx/nyxc/main.c:1158:20: error: incompatible types when assigning to type 'Expr' from type 'NyxOption'
+ 1158 | __match_result_7 = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (int64_t)({ BinOp_Or, 1LL, 2LL }); _tmp; });
+      |                    ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1161:20: error: 'None' undeclared (first use in this function)
+ 1161 | __match_result_7 = None;
+      |                    ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1118:14: error: incompatible types when initializing type 'int64_t' {aka 'long long int'} using type 'Expr'
+ 1118 | int64_t op = ({
+      |              ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1168:18: error: request for member 'tag' in something not a structure or union
+ 1168 | if (__match_val_8.tag == TAG_int64_t_Some) {
+      |                  ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1168:26: error: 'TAG_int64_t_Some' undeclared (first use in this function)
+ 1168 | if (__match_val_8.tag == TAG_int64_t_Some) {
+      |                          ^~~~~~~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1170:31: error: 'r_bp' undeclared (first use in this function)
+ 1170 | Expr rhs = Parser_pratt(self, r_bp);
+      |                               ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1171:80: warning: excess elements in union initializer
+ 1171 | __match_result_8 = (lhs = (Expr){ .tag = TAG_Expr_Binary, .data.Binary = { op, lhs, rhs } });
+      |                                                                                ^~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1171:80: note: (near initialization for '(anonymous).data.Binary.f0.data')
+C:/xampp/htdocs/nyx/nyxc/main.c:1171:85: error: incompatible types when initializing type 'Expr *' using type 'Expr'
+ 1171 | __match_result_8 = (lhs = (Expr){ .tag = TAG_Expr_Binary, .data.Binary = { op, lhs, rhs } });
+      |                                                                                     ^~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1179:79: error: incompatible types when initializing type 'Expr *' using type 'Expr'
+ 1179 | __if_val_11 = (lhs = (Expr){ .tag = TAG_Expr_MethodCall, .data.MethodCall = { lhs, field, rt_vec_new(sizeof(int64_t)), args } });
+      |                                                                               ^~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1181:81: error: incompatible types when initializing type 'Expr *' using type 'Expr'
+ 1181 | __if_val_11 = (lhs = (Expr){ .tag = TAG_Expr_FieldAccess, .data.FieldAccess = { lhs, field } });
+      |                                                                                 ^~~
+C:/xampp/htdocs/nyx/nyxc/main.c: In function 'Parser_parse_prefix':
+C:/xampp/htdocs/nyx/nyxc/main.c:1197:31: error: initialization of 'rt_string_t *' from incompatible pointer type 'TokenKind *' [-Wincompatible-pointer-types]
+ 1197 | rt_string_t* __match_val_11 = (&(*self).current.kind);
+      |                               ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1198:22: error: 'rt_string_t' has no member named 'tag'
+ 1198 | if ((*__match_val_11).tag == TAG_TokenKind_IntLit) {
+      |                      ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1199:39: error: request for member 'IntLit' in something not a structure or union
+ 1199 |     int64_t n = (*__match_val_11).data.IntLit.f0;
+      |                                       ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1200:9: error: redefinition of 'n'
+ 1200 | int64_t n = (*n);
+      |         ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1199:13: note: previous definition of 'n' with type 'int64_t' {aka 'long long int'}
+ 1199 |     int64_t n = (*__match_val_11).data.IntLit.f0;
+      |             ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1200:14: error: invalid type argument of unary '*' (have 'int64_t' {aka 'long long int'})
+ 1200 | int64_t n = (*n);
+      |              ^~
+C:/xampp/htdocs/nyx/nyxc/main.c:1202:99: error: 'union <anonymous>' has no member named 'Int'
+ 1202 | __match_result_11 = (Expr){ .tag = TAG_Expr_Lit, .data.Lit = { (Type){ .tag = TAG_Type_Int, .data.Int = { n } }} } }};
+      |                                                                                                   ^~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1202:107: error: initialization of 'char *' from 'int64_t' {aka 'long long int'} makes pointer from integer without a cast [-Wint-conversion]
+ 1202 | __match_result_11 = (Expr){ .tag = TAG_Expr_Lit, .data.Lit = { (Type){ .tag = TAG_Type_Int, .data.Int = { n } }} } }};
+      |                                                                                                           ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1202:107: note: (near initialization for '(anonymous).data.Custom.f0.data')
+C:/xampp/htdocs/nyx/nyxc/main.c:1202:64: error: incompatible types when initializing type 'int' using type 'Type'
+ 1202 | __match_result_11 = (Expr){ .tag = TAG_Expr_Lit, .data.Lit = { (Type){ .tag = TAG_Type_Int, .data.Int = { n } }} } }};
+      |                                                                ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1202:115: error: expected ';' before '}' token
+ 1202 | __match_result_11 = (Expr){ .tag = TAG_Expr_Lit, .data.Lit = { (Type){ .tag = TAG_Type_Int, .data.Int = { n } }} } }};
+      |                                                                                                                   ^~
+      |                                                                                                                   ;
+C:/xampp/htdocs/nyx/nyxc/main.c:1202:118: error: expected ')' before ';' token
+ 1202 | __match_result_11 = (Expr){ .tag = TAG_Expr_Lit, .data.Lit = { (Type){ .tag = TAG_Type_Int, .data.Int = { n } }} } }};
+      |                                                                                                                      ^
+      |                                                                                                                      )
+C:/xampp/htdocs/nyx/nyxc/main.c:1195:9: error: void value not ignored as it ought to be
+ 1195 | return ({
+      |        ~^
+ 1196 | Expr __match_result_11;
+      | ~~~~~~~~~~~~~~~~~~~~~~~
+ 1197 | rt_string_t* __match_val_11 = (&(*self).current.kind);
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1198 | if ((*__match_val_11).tag == TAG_TokenKind_IntLit) {
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1199 |     int64_t n = (*__match_val_11).data.IntLit.f0;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1200 | int64_t n = (*n);
+      | ~~~~~~~~~~~~~~~~~
+ 1201 | Parser_advance(self);
+      | ~~~~~~~~~~~~~~~~~~~~~
+ 1202 | __match_result_11 = (Expr){ .tag = TAG_Expr_Lit, .data.Lit = { (Type){ .tag = TAG_Type_Int, .data.Int = { n } }} } }};
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1202:119: error: expected ';' before '}' token
+ 1202 | __match_result_11 = (Expr){ .tag = TAG_Expr_Lit, .data.Lit = { (Type){ .tag = TAG_Type_Int, .data.Int = { n } }} } }};
+      |                                                                                                                       ^
+      |                                                                                                                       ;
+ 1203 | }
+      | ~                                                                                                                      
+C:/xampp/htdocs/nyx/nyxc/main.c: At top level:
+C:/xampp/htdocs/nyx/nyxc/main.c:1204:2: error: expected identifier or '(' before 'else'
+ 1204 |  else if ((*__match_val_11).tag == TAG_TokenKind_FloatLit) {
+      |  ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1208:121: error: expected identifier or '(' before '}' token
+ 1208 | __match_result_11 = (Expr){ .tag = TAG_Expr_Lit, .data.Lit = { (Type){ .tag = TAG_Type_Float, .data.Float = { f } }} } }};
+      |                                                                                                                         ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1209:1: error: expected identifier or '(' before '}' token
+ 1209 | }
+      | ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1210:2: error: expected identifier or '(' before 'else'
+ 1210 |  else if ((*__match_val_11).tag == TAG_TokenKind_StringLit) {
+      |  ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1214:123: error: expected identifier or '(' before '}' token
+ 1214 | __match_result_11 = (Expr){ .tag = TAG_Expr_Lit, .data.Lit = { (Type){ .tag = TAG_Type_String, .data.String = { s } }} } }};
+      |                                                                                                                           ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1215:1: error: expected identifier or '(' before '}' token
+ 1215 | }
+      | ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1216:2: error: expected identifier or '(' before 'else'
+ 1216 |  else if ((*__match_val_11).tag == TAG_TokenKind_True) {
+      |  ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1218:119: error: expected identifier or '(' before '}' token
+ 1218 | __match_result_11 = (Expr){ .tag = TAG_Expr_Lit, .data.Lit = { (Type){ .tag = TAG_Type_Bool, .data.Bool = { 1 } }} } }};
+      |                                                                                                                       ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1219:1: error: expected identifier or '(' before '}' token
+ 1219 | }
+      | ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1220:2: error: expected identifier or '(' before 'else'
+ 1220 |  else if ((*__match_val_11).tag == TAG_TokenKind_False) {
+      |  ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1222:119: error: expected identifier or '(' before '}' token
+ 1222 | __match_result_11 = (Expr){ .tag = TAG_Expr_Lit, .data.Lit = { (Type){ .tag = TAG_Type_Bool, .data.Bool = { 0 } }} } }};
+      |                                                                                                                       ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1223:1: error: expected identifier or '(' before '}' token
+ 1223 | }
+      | ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1224:2: error: expected identifier or '(' before 'else'
+ 1224 |  else if ((*__match_val_11).tag == TAG_TokenKind_Null) {
+      |  ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1226:119: error: expected identifier or '(' before '}' token
+ 1226 | __match_result_11 = (Expr){ .tag = TAG_Expr_Lit, .data.Lit = { (Type){ .tag = TAG_Type_Int, .data.Int = { 0LL } }} } }};
+      |                                                                                                                       ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1227:1: error: expected identifier or '(' before '}' token
+ 1227 | }
+      | ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1228:2: error: expected identifier or '(' before 'else'
+ 1228 |  else if ((*__match_val_11).tag == TAG_TokenKind_Ident) {
+      |  ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1254:3: warning: data definition has no type or storage class
+ 1254 | } __if_val_13; });
+      |   ^~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1254:3: error: type defaults to 'int' in declaration of '__if_val_13' [-Wimplicit-int]
+C:/xampp/htdocs/nyx/nyxc/main.c:1254:16: error: expected identifier or '(' before '}' token
+ 1254 | } __if_val_13; });
+      |                ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1254:17: error: expected identifier or '(' before ')' token
+ 1254 | } __if_val_13; });
+      |                 ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1255:1: error: expected identifier or '(' before '}' token
+ 1255 | }
+      | ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1256:2: error: expected identifier or '(' before 'else'
+ 1256 |  else if ((*__match_val_11).tag == TAG_TokenKind_LParen) {
+      |  ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1262:2: error: expected identifier or '(' before 'else'
+ 1262 |  else if ((*__match_val_11).tag == TAG_TokenKind_Not) {
+      |  ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1266:2: error: expected identifier or '(' before 'else'
+ 1266 |  else if ((*__match_val_11).tag == TAG_TokenKind_Minus) {
+      |  ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1270:2: error: expected identifier or '(' before 'else'
+ 1270 |  else if ((*__match_val_11).tag == TAG_TokenKind_If) {
+      |  ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1273:2: error: expected identifier or '(' before 'else'
+ 1273 |  else if ((*__match_val_11).tag == TAG_TokenKind_While) {
+      |  ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1276:2: error: expected identifier or '(' before 'else'
+ 1276 |  else if ((*__match_val_11).tag == TAG_TokenKind_For) {
+      |  ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1279:2: error: expected identifier or '(' before 'else'
+ 1279 |  else if ((*__match_val_11).tag == TAG_TokenKind_Match) {
+      |  ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1282:2: error: expected identifier or '(' before 'else'
+ 1282 |  else if ((*__match_val_11).tag == TAG_TokenKind_Fn) {
+      |  ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1285:2: error: expected identifier or '(' before 'else'
+ 1285 |  else if ((*__match_val_11).tag == TAG_TokenKind_Pipe) {
+      |  ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1288:2: error: expected identifier or '(' before 'else'
+ 1288 |  else if ((*__match_val_11).tag == TAG_TokenKind_Return) {
+      |  ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1291:1: error: expected identifier or '(' before '}' token
+ 1291 | }
+      | ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1292:2: error: expected identifier or '(' before 'else'
+ 1292 |  else if ((*__match_val_11).tag == TAG_TokenKind_Await) {
+      |  ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1295:1: error: expected identifier or '(' before '}' token
+ 1295 | }
+      | ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1296:2: error: expected identifier or '(' before 'else'
+ 1296 |  else {
+      |  ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1298:119: error: expected identifier or '(' before '}' token
+ 1298 | __match_result_11 = (Expr){ .tag = TAG_Expr_Lit, .data.Lit = { (Type){ .tag = TAG_Type_Int, .data.Int = { 0LL } }} } }};
+      |                                                                                                                       ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1299:1: error: expected identifier or '(' before '}' token
+ 1299 | }
+      | ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1300:1: warning: data definition has no type or storage class
+ 1300 | __match_result_11;
+      | ^~~~~~~~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1300:1: error: type defaults to 'int' in declaration of '__match_result_11' [-Wimplicit-int]
+C:/xampp/htdocs/nyx/nyxc/main.c:1301:1: error: expected identifier or '(' before '}' token
+ 1301 | });
+      | ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1301:2: error: expected identifier or '(' before ')' token
+ 1301 | });
+      |  ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1302:1: error: expected identifier or '(' before '}' token
+ 1302 | }
+      | ^
+C:/xampp/htdocs/nyx/nyxc/main.c: In function 'Parser_parse_call_args':
+C:/xampp/htdocs/nyx/nyxc/main.c:1306:20: error: invalid initializer
+ 1306 | rt_string_t args = rt_vec_new(sizeof(Expr));
+      |                    ^~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1309:13: error: passing argument 1 of 'rt_vec_push' from incompatible pointer type [-Wincompatible-pointer-types]
+ 1309 | rt_vec_push(&args, ({ Expr _tmp_13 = Parser_parse_expr(self); &_tmp_13; }));
+      |             ^~~~~
+      |             |
+      |             rt_string_t *
+./runtime/rt_vec.h:23:40: note: expected 'NyxVec *' but argument is of type 'rt_string_t *'
+   23 | static inline void rt_vec_push(NyxVec* v, void* elem) {
+      |                                ~~~~~~~~^
+C:/xampp/htdocs/nyx/nyxc/main.c:1320:8: error: incompatible types when returning type 'rt_string_t' but 'NyxVec' was expected
+ 1320 | return args;
+      |        ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c: In function 'Parser_parse_if':
+C:/xampp/htdocs/nyx/nyxc/main.c:1329:24: error: invalid initializer
+ 1329 | rt_string_t else_ifs = rt_vec_new(sizeof(int64_t));
+      |                        ^~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1330:22: error: 'None' undeclared (first use in this function)
+ 1330 | int64_t else_block = None;
+      |                      ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1339:56: error: expected ';' before '}' token
+ 1339 | rt_vec_push(&else_ifs, (Parser*)({ elif_cond, elif_body })));
+      |                                                        ^~
+      |                                                        ;
+C:/xampp/htdocs/nyx/nyxc/main.c:1339:1: error: cannot convert to a pointer type
+ 1339 | rt_vec_push(&else_ifs, (Parser*)({ elif_cond, elif_body })));
+      | ^~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1339:13: error: passing argument 1 of 'rt_vec_push' from incompatible pointer type [-Wincompatible-pointer-types]
+ 1339 | rt_vec_push(&else_ifs, (Parser*)({ elif_cond, elif_body })));
+      |             ^~~~~~~~~
+      |             |
+      |             rt_string_t *
+./runtime/rt_vec.h:23:40: note: expected 'NyxVec *' but argument is of type 'rt_string_t *'
+   23 | static inline void rt_vec_push(NyxVec* v, void* elem) {
+      |                                ~~~~~~~~^
+C:/xampp/htdocs/nyx/nyxc/main.c:1339:60: error: expected ';' before ')' token
+ 1339 | rt_vec_push(&else_ifs, (Parser*)({ elif_cond, elif_body })));
+      |                                                            ^
+      |                                                            ;
+C:/xampp/htdocs/nyx/nyxc/main.c:1339:60: error: expected statement before ')' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1344:1: error: cannot convert to a pointer type
+ 1344 | (else_block = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (void*)body; _tmp; }));
+      | ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1344:15: error: incompatible types when assigning to type 'int64_t' {aka 'long long int'} from type 'NyxOption'
+ 1344 | (else_block = ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.int_val = (void*)body; _tmp; }));
+      |               ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1349:52: error: 'union <anonymous>' has no member named 'If'
+ 1349 | return (TokenKind){ .tag = TAG_TokenKind_If, .data.If = { cond, then, else_ifs, else_block } };
+      |                                                    ^~
+C:/xampp/htdocs/nyx/nyxc/main.c:1349:59: error: incompatible types when initializing type 'char *' using type 'Expr'
+ 1349 | return (TokenKind){ .tag = TAG_TokenKind_If, .data.If = { cond, then, else_ifs, else_block } };
+      |                                                           ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1349:65: error: incompatible types when initializing type 'long long unsigned int' using type 'NyxVec'
+ 1349 | return (TokenKind){ .tag = TAG_TokenKind_If, .data.If = { cond, then, else_ifs, else_block } };
+      |                                                                 ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1349:71: error: incompatible types when initializing type 'int' using type 'rt_string_t'
+ 1349 | return (TokenKind){ .tag = TAG_TokenKind_If, .data.If = { cond, then, else_ifs, else_block } };
+      |                                                                       ^~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1349:81: warning: excess elements in struct initializer
+ 1349 | return (TokenKind){ .tag = TAG_TokenKind_If, .data.If = { cond, then, else_ifs, else_block } };
+      |                                                                                 ^~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1349:81: note: (near initialization for '(anonymous).data.Ident')
+C:/xampp/htdocs/nyx/nyxc/main.c: In function 'Parser_parse_while':
+C:/xampp/htdocs/nyx/nyxc/main.c:1358:55: error: 'union <anonymous>' has no member named 'While'
+ 1358 | return (TokenKind){ .tag = TAG_TokenKind_While, .data.While = { cond, body } };
+      |                                                       ^~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1358:65: error: incompatible types when initializing type 'char *' using type 'Expr'
+ 1358 | return (TokenKind){ .tag = TAG_TokenKind_While, .data.While = { cond, body } };
+      |                                                                 ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1358:71: error: incompatible types when initializing type 'long long unsigned int' using type 'NyxVec'
+ 1358 | return (TokenKind){ .tag = TAG_TokenKind_While, .data.While = { cond, body } };
+      |                                                                       ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c: In function 'Parser_parse_for':
+C:/xampp/htdocs/nyx/nyxc/main.c:1369:53: error: 'union <anonymous>' has no member named 'For'
+ 1369 | return (TokenKind){ .tag = TAG_TokenKind_For, .data.For = { var, iter, body } };
+      |                                                     ^~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1369:66: warning: excess elements in struct initializer
+ 1369 | return (TokenKind){ .tag = TAG_TokenKind_For, .data.For = { var, iter, body } };
+      |                                                                  ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1369:66: note: (near initialization for '(anonymous).data.Ident')
+C:/xampp/htdocs/nyx/nyxc/main.c:1369:72: warning: excess elements in struct initializer
+ 1369 | return (TokenKind){ .tag = TAG_TokenKind_For, .data.For = { var, iter, body } };
+      |                                                                        ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1369:72: note: (near initialization for '(anonymous).data.Ident')
+C:/xampp/htdocs/nyx/nyxc/main.c:1369:8: error: incompatible types when returning type 'TokenKind' but 'Expr' was expected
+ 1369 | return (TokenKind){ .tag = TAG_TokenKind_For, .data.For = { var, iter, body } };
+      |        ^
+C:/xampp/htdocs/nyx/nyxc/main.c: In function 'Parser_parse_match':
+C:/xampp/htdocs/nyx/nyxc/main.c:1376:20: error: invalid initializer
+ 1376 | rt_string_t arms = rt_vec_new(sizeof(int64_t));
+      |                    ^~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1381:82: error: 'None' undeclared (first use in this function)
+ 1381 | rt_vec_push(&arms, ({ MatchArm _tmp_14 = (MatchArm){.pattern = pattern, .guard = None, .body = body}; &_tmp_14; }));
+      |                                                                                  ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1381:13: error: passing argument 1 of 'rt_vec_push' from incompatible pointer type [-Wincompatible-pointer-types]
+ 1381 | rt_vec_push(&arms, ({ MatchArm _tmp_14 = (MatchArm){.pattern = pattern, .guard = None, .body = body}; &_tmp_14; }));
+      |             ^~~~~
+      |             |
+      |             rt_string_t *
+./runtime/rt_vec.h:23:40: note: expected 'NyxVec *' but argument is of type 'rt_string_t *'
+   23 | static inline void rt_vec_push(NyxVec* v, void* elem) {
+      |                                ~~~~~~~~^
+C:/xampp/htdocs/nyx/nyxc/main.c:1389:55: error: 'union <anonymous>' has no member named 'Match'
+ 1389 | return (TokenKind){ .tag = TAG_TokenKind_Match, .data.Match = { expr, arms } };
+      |                                                       ^~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1389:65: error: incompatible types when initializing type 'char *' using type 'Expr'
+ 1389 | return (TokenKind){ .tag = TAG_TokenKind_Match, .data.Match = { expr, arms } };
+      |                                                                 ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1389:71: error: incompatible types when initializing type 'long long unsigned int' using type 'rt_string_t'
+ 1389 | return (TokenKind){ .tag = TAG_TokenKind_Match, .data.Match = { expr, arms } };
+      |                                                                       ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c: In function 'Parser_parse_pattern':
+C:/xampp/htdocs/nyx/nyxc/main.c:1395:31: error: initialization of 'rt_string_t *' from incompatible pointer type 'TokenKind *' [-Wincompatible-pointer-types]
+ 1395 | rt_string_t* __match_val_14 = (&(*self).current.kind);
+      |                               ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1396:22: error: 'rt_string_t' has no member named 'tag'
+ 1396 | if ((*__match_val_14).tag == TAG_TokenKind_Ident) {
+      |                      ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1397:46: error: request for member 'Ident' in something not a structure or union
+ 1397 |     rt_string_t name = (*__match_val_14).data.Ident.f0;
+      |                                              ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1398:13: error: redefinition of 'name'
+ 1398 | rt_string_t name = ({ rt_string_t _c = name; rt_string_retain(&_c); _c; });
+      |             ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1397:17: note: previous definition of 'name' with type 'rt_string_t'
+ 1397 |     rt_string_t name = (*__match_val_14).data.Ident.f0;
+      |                 ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1402:20: error: invalid initializer
+ 1402 | rt_string_t args = rt_vec_new(sizeof(int64_t));
+      |                    ^~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1405:13: error: passing argument 1 of 'rt_vec_push' from incompatible pointer type [-Wincompatible-pointer-types]
+ 1405 | rt_vec_push(&args, ({ Pattern _tmp_16 = Parser_parse_pattern(self); &_tmp_16; }));
+      |             ^~~~~
+      |             |
+      |             rt_string_t *
+./runtime/rt_vec.h:23:40: note: expected 'NyxVec *' but argument is of type 'rt_string_t *'
+   23 | static inline void rt_vec_push(NyxVec* v, void* elem) {
+      |                                ~~~~~~~~^
+C:/xampp/htdocs/nyx/nyxc/main.c:1416:61: error: 'union <anonymous>' has no member named 'Enum'
+ 1416 | __if_val_16 = (TokenKind){ .tag = TAG_TokenKind_Enum, .data.Enum = { new(), name, args } };
+      |                                                             ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1416:70: error: implicit declaration of function 'new' [-Wimplicit-function-declaration]
+ 1416 | __if_val_16 = (TokenKind){ .tag = TAG_TokenKind_Enum, .data.Enum = { new(), name, args } };
+      |                                                                      ^~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1416:70: error: initialization of 'char *' from 'int' makes pointer from integer without a cast [-Wint-conversion]
+C:/xampp/htdocs/nyx/nyxc/main.c:1416:70: note: (near initialization for '(anonymous).data.Ident.f0.data')
+C:/xampp/htdocs/nyx/nyxc/main.c:1416:77: error: incompatible types when initializing type 'long long unsigned int' using type 'rt_string_t'
+ 1416 | __if_val_16 = (TokenKind){ .tag = TAG_TokenKind_Enum, .data.Enum = { new(), name, args } };
+      |                                                                             ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1416:83: error: incompatible types when initializing type 'int' using type 'rt_string_t'
+ 1416 | __if_val_16 = (TokenKind){ .tag = TAG_TokenKind_Enum, .data.Enum = { new(), name, args } };
+      |                                                                                   ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1418:15: error: incompatible types when assigning to type 'Pattern' from type 'TokenKind'
+ 1418 | __if_val_16 = (TokenKind){ .tag = TAG_TokenKind_Ident, .data.Ident = { name } }};
+      |               ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1418:80: error: expected ';' before '}' token
+ 1418 | __if_val_16 = (TokenKind){ .tag = TAG_TokenKind_Ident, .data.Ident = { name } }};
+      |                                                                                ^
+      |                                                                                ;
+C:/xampp/htdocs/nyx/nyxc/main.c:1419:2: error: expected ')' before '__if_val_16'
+ 1419 | } __if_val_16; });
+      |  ^~~~~~~~~~~~
+      |  )
+C:/xampp/htdocs/nyx/nyxc/main.c:1400:19: error: invalid use of void expression
+ 1400 | __match_result_14 = ({ Pattern __if_val_16; if (((*self).current.kind.tag == TAG_TokenKind_LParen)) {
+      |                   ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1419:15: error: expected ';' before '}' token
+ 1419 | } __if_val_16; });
+      |               ^~
+      |               ;
+C:/xampp/htdocs/nyx/nyxc/main.c:1419:17: error: expected statement before ')' token
+ 1419 | } __if_val_16; });
+      |                 ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1420:2: error: expected ')' before 'else'
+ 1420 | }
+      |  ^
+      |  )
+ 1421 |  else if ((*__match_val_14).tag == TAG_TokenKind_Underscore) {
+      |  ~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1393:9: error: void value not ignored as it ought to be
+ 1393 | return ({
+      |        ~^
+ 1394 | Pattern __match_result_14;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1395 | rt_string_t* __match_val_14 = (&(*self).current.kind);
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1396 | if ((*__match_val_14).tag == TAG_TokenKind_Ident) {
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1397 |     rt_string_t name = (*__match_val_14).data.Ident.f0;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1398 | rt_string_t name = ({ rt_string_t _c = name; rt_string_retain(&_c); _c; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1399 | Parser_advance(self);
+      | ~~~~~~~~~~~~~~~~~~~~~
+ 1400 | __match_result_14 = ({ Pattern __if_val_16; if (((*self).current.kind.tag == TAG_TokenKind_LParen)) {
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1401 | Parser_advance(self);
+      | ~~~~~~~~~~~~~~~~~~~~~
+ 1402 | rt_string_t args = rt_vec_new(sizeof(int64_t));
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1403 | if ((!((*self).current.kind.tag == TAG_TokenKind_RParen))) {
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1404 | while (1) {
+      | ~~~~~~~~~~~
+ 1405 | rt_vec_push(&args, ({ Pattern _tmp_16 = Parser_parse_pattern(self); &_tmp_16; }));
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1406 | if ((!((*self).current.kind.tag == TAG_TokenKind_Comma))) {
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1407 | break;
+      | ~~~~~~   
+ 1408 | }
+      | ~        
+ 1409 | ;
+      | ~        
+ 1410 | Parser_advance(self);
+      | ~~~~~~~~~~~~~~~~~~~~~
+ 1411 | }
+      | ~        
+ 1412 | ;
+      | ~        
+ 1413 | }
+      | ~        
+ 1414 | ;
+      | ~        
+ 1415 | Parser_expect(self, (TokenKind){ .tag = TAG_TokenKind_RParen});
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1416 | __if_val_16 = (TokenKind){ .tag = TAG_TokenKind_Enum, .data.Enum = { new(), name, args } };
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1417 | } else {
+      | ~~~~~~~~ 
+ 1418 | __if_val_16 = (TokenKind){ .tag = TAG_TokenKind_Ident, .data.Ident = { name } }};
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1419 | } __if_val_16; });
+      | ~~~~~~~~~~~~~~~~~~
+ 1420 | }
+      | ~        
+ 1421 |  else if ((*__match_val_14).tag == TAG_TokenKind_Underscore) {
+      |  ~~~~    
+C:/xampp/htdocs/nyx/nyxc/main.c:1429:117: error: expected ';' before '}' token
+ 1429 | __match_result_14 = (Expr){ .tag = TAG_Expr_Lit, .data.Lit = { (Type){ .tag = TAG_Type_Int, .data.Int = { n } }} } }};
+      |                                                                                                                     ^
+      |                                                                                                                     ;
+C:/xampp/htdocs/nyx/nyxc/main.c: At top level:
+C:/xampp/htdocs/nyx/nyxc/main.c:1430:1: error: expected identifier or '(' before '}' token
+ 1430 | }
+      | ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1431:2: error: expected identifier or '(' before 'else'
+ 1431 |  else if ((*__match_val_14).tag == TAG_TokenKind_StringLit) {
+      |  ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1435:123: error: expected identifier or '(' before '}' token
+ 1435 | __match_result_14 = (Expr){ .tag = TAG_Expr_Lit, .data.Lit = { (Type){ .tag = TAG_Type_String, .data.String = { s } }} } }};
+      |                                                                                                                           ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1436:1: error: expected identifier or '(' before '}' token
+ 1436 | }
+      | ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1437:2: error: expected identifier or '(' before 'else'
+ 1437 |  else if ((*__match_val_14).tag == TAG_TokenKind_True) {
+      |  ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1439:119: error: expected identifier or '(' before '}' token
+ 1439 | __match_result_14 = (Expr){ .tag = TAG_Expr_Lit, .data.Lit = { (Type){ .tag = TAG_Type_Bool, .data.Bool = { 1 } }} } }};
+      |                                                                                                                       ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1440:1: error: expected identifier or '(' before '}' token
+ 1440 | }
+      | ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1441:2: error: expected identifier or '(' before 'else'
+ 1441 |  else if ((*__match_val_14).tag == TAG_TokenKind_False) {
+      |  ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1443:119: error: expected identifier or '(' before '}' token
+ 1443 | __match_result_14 = (Expr){ .tag = TAG_Expr_Lit, .data.Lit = { (Type){ .tag = TAG_Type_Bool, .data.Bool = { 0 } }} } }};
+      |                                                                                                                       ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1444:1: error: expected identifier or '(' before '}' token
+ 1444 | }
+      | ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1445:2: error: expected identifier or '(' before 'else'
+ 1445 |  else {
+      |  ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1449:1: warning: data definition has no type or storage class
+ 1449 | __match_result_14;
+      | ^~~~~~~~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1449:1: error: type defaults to 'int' in declaration of '__match_result_14' [-Wimplicit-int]
+C:/xampp/htdocs/nyx/nyxc/main.c:1450:1: error: expected identifier or '(' before '}' token
+ 1450 | });
+      | ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1450:2: error: expected identifier or '(' before ')' token
+ 1450 | });
+      |  ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1451:1: error: expected identifier or '(' before '}' token
+ 1451 | }
+      | ^
+C:/xampp/htdocs/nyx/nyxc/main.c: In function 'Parser_parse_lambda':
+C:/xampp/htdocs/nyx/nyxc/main.c:1456:22: error: invalid initializer
+ 1456 | rt_string_t params = rt_vec_new(sizeof(int64_t));
+      |                      ^~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1461:15: error: incompatible types when assigning to type 'Expr' from type 'Type'
+ 1461 | __if_val_17 = Parser_parse_type(self);
+      |               ^~~~~~~~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1463:15: error: incompatible types when assigning to type 'Expr' from type 'Type'
+ 1463 | __if_val_17 = (Type){ .tag = TAG_Type_Unknown};
+      |               ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1459:14: error: incompatible types when initializing type 'int64_t' {aka 'long long int'} using type 'Expr'
+ 1459 | int64_t ty = ({ Expr __if_val_17; if (((*self).current.kind.tag == TAG_TokenKind_Colon)) {
+      |              ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1465:13: error: passing argument 1 of 'rt_vec_push' from incompatible pointer type [-Wincompatible-pointer-types]
+ 1465 | rt_vec_push(&params, ({ Param _tmp_17 = (Param){.name = name, .ty = ty}; &_tmp_17; }));
+      |             ^~~~~~~
+      |             |
+      |             rt_string_t *
+./runtime/rt_vec.h:23:40: note: expected 'NyxVec *' but argument is of type 'rt_string_t *'
+   23 | static inline void rt_vec_push(NyxVec* v, void* elem) {
+      |                                ~~~~~~~~^
+C:/xampp/htdocs/nyx/nyxc/main.c:1474:57: error: incompatible types when initializing type 'void *' using type 'rt_string_t'
+ 1474 | return (Expr){ .tag = TAG_Expr_Lambda, .data.Lambda = { params, body } };
+      |                                                         ^~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1474:65: error: incompatible types when initializing type 'long long unsigned int' using type 'Expr'
+ 1474 | return (Expr){ .tag = TAG_Expr_Lambda, .data.Lambda = { params, body } };
+      |                                                                 ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1478:22: error: invalid initializer
+ 1478 | rt_string_t params = rt_vec_new(sizeof(int64_t));
+      |                      ^~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1484:15: error: incompatible types when assigning to type 'Expr' from type 'Type'
+ 1484 | __if_val_18 = Parser_parse_type(self);
+      |               ^~~~~~~~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1486:15: error: incompatible types when assigning to type 'Expr' from type 'Type'
+ 1486 | __if_val_18 = (Type){ .tag = TAG_Type_Unknown};
+      |               ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1482:14: error: incompatible types when initializing type 'int64_t' {aka 'long long int'} using type 'Expr'
+ 1482 | int64_t ty = ({ Expr __if_val_18; if (((*self).current.kind.tag == TAG_TokenKind_Colon)) {
+      |              ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1488:13: error: passing argument 1 of 'rt_vec_push' from incompatible pointer type [-Wincompatible-pointer-types]
+ 1488 | rt_vec_push(&params, ({ Param _tmp_18 = (Param){.name = pname, .ty = ty}; &_tmp_18; }));
+      |             ^~~~~~~
+      |             |
+      |             rt_string_t *
+./runtime/rt_vec.h:23:40: note: expected 'NyxVec *' but argument is of type 'rt_string_t *'
+   23 | static inline void rt_vec_push(NyxVec* v, void* elem) {
+      |                                ~~~~~~~~^
+C:/xampp/htdocs/nyx/nyxc/main.c:1500:57: error: incompatible types when initializing type 'void *' using type 'rt_string_t'
+ 1500 | return (Expr){ .tag = TAG_Expr_Lambda, .data.Lambda = { params, body } };
+      |                                                         ^~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1500:65: error: incompatible types when initializing type 'long long unsigned int' using type 'Expr'
+ 1500 | return (Expr){ .tag = TAG_Expr_Lambda, .data.Lambda = { params, body } };
+      |                                                                 ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c: In function 'TypeChecker_check_program':
+C:/xampp/htdocs/nyx/nyxc/main.c:1531:35: error: passing argument 2 of 'TypeChecker_check_top_level' makes pointer from integer without a cast [-Wint-conversion]
+ 1531 | TypeChecker_check_top_level(self, item);
+      |                                   ^~~~
+      |                                   |
+      |                                   int64_t {aka long long int}
+C:/xampp/htdocs/nyx/nyxc/main.c:1517:48: note: expected 'TopLevel *' but argument is of type 'int64_t' {aka 'long long int'}
+ 1517 | void TypeChecker_check_top_level(TypeChecker*, TopLevel*);
+      |                                                ^~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c: In function 'TypeChecker_push_scope':
+C:/xampp/htdocs/nyx/nyxc/main.c:1546:1: error: conversion to non-scalar type requested
+ 1546 | rt_vec_push(&(*self).env, (rt_string_t)rt_map_new()));
+      | ^~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1546:53: error: expected ';' before ')' token
+ 1546 | rt_vec_push(&(*self).env, (rt_string_t)rt_map_new()));
+      |                                                     ^
+      |                                                     ;
+C:/xampp/htdocs/nyx/nyxc/main.c:1546:53: error: expected statement before ')' token
+C:/xampp/htdocs/nyx/nyxc/main.c: In function 'TypeChecker_pop_scope':
+C:/xampp/htdocs/nyx/nyxc/main.c:1550:19: error: incompatible type for argument 1 of 'rt_vec_pop'
+ 1550 | rt_vec_pop((*self).env);
+      |            ~~~~~~~^~~~
+      |                   |
+      |                   NyxVec
+./runtime/rt_vec.h:47:39: note: expected 'NyxVec *' but argument is of type 'NyxVec'
+   47 | static inline void rt_vec_pop(NyxVec* v) {
+      |                               ~~~~~~~~^
+C:/xampp/htdocs/nyx/nyxc/main.c: In function 'TypeChecker_add_var':
+C:/xampp/htdocs/nyx/nyxc/main.c:1554:16: error: implicit declaration of function 'int64_t_unwrap' [-Wimplicit-function-declaration]
+ 1554 | rt_map_insert(&int64_t_unwrap(rt_vec_last_mut((*self).env)), name, ty);
+      |                ^~~~~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1554:31: error: implicit declaration of function 'rt_vec_last_mut' [-Wimplicit-function-declaration]
+ 1554 | rt_map_insert(&int64_t_unwrap(rt_vec_last_mut((*self).env)), name, ty);
+      |                               ^~~~~~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1554:15: error: lvalue required as unary '&' operand
+ 1554 | rt_map_insert(&int64_t_unwrap(rt_vec_last_mut((*self).env)), name, ty);
+      |               ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1554:68: error: incompatible type for argument 3 of 'rt_map_insert'
+ 1554 | rt_map_insert(&int64_t_unwrap(rt_vec_last_mut((*self).env)), name, ty);
+      |                                                                    ^~
+      |                                                                    |
+      |                                                                    Type
+In file included from C:/xampp/htdocs/nyx/nyxc/main.c:11:
+./runtime/rt_map.h:26:70: note: expected 'int64_t' {aka 'long long int'} but argument is of type 'Type'
+   26 | static inline void rt_map_insert(NyxMap* m, rt_string_t key, int64_t value) {
+      |                                                              ~~~~~~~~^~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c: In function 'TypeChecker_lookup':
+C:/xampp/htdocs/nyx/nyxc/main.c:1558:35: error: implicit declaration of function '_rev' [-Wimplicit-function-declaration]
+ 1558 | for (int64_t _scope = 0; _scope < _rev(rt_vec_iter((*self).env)).len; _scope++) {
+      |                                   ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1558:65: error: request for member 'len' in something not a structure or union
+ 1558 | for (int64_t _scope = 0; _scope < _rev(rt_vec_iter((*self).env)).len; _scope++) {
+      |                                                                 ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1560:23: error: implicit declaration of function 'int64_t_get' [-Wimplicit-function-declaration]
+ 1560 | { int64_t __iflet_0 = int64_t_get(scope, name);
+      |                       ^~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1562:78: error: 't' undeclared (first use in this function)
+ 1562 | return ({ NyxOption _tmp; _tmp.tag = OPTION_SOME; _tmp.data.ptr_val = (void*)t; _tmp; });
+      |                                                                              ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1567:8: error: 'Option' undeclared (first use in this function); did you mean 'NyxOption'?
+ 1567 | return Option.None;
+      |        ^~~~~~
+      |        NyxOption
+C:/xampp/htdocs/nyx/nyxc/main.c: In function 'TypeChecker_check_top_level':
+C:/xampp/htdocs/nyx/nyxc/main.c:1587:28: error: request for member 'name' in something not a structure or union
+ 1587 | TypeChecker_add_var(self, p.name, p.ty);
+      |                            ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1587:36: error: request for member 'ty' in something not a structure or union
+ 1587 | TypeChecker_add_var(self, p.name, p.ty);
+      |                                    ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1592:56: error: incompatible type for argument 2 of 'TypeChecker_check_expr'
+ 1592 | NyxResult __match_val_1 = TypeChecker_check_expr(self, body);
+      |                                                        ^~~~
+      |                                                        |
+      |                                                        Expr
+C:/xampp/htdocs/nyx/nyxc/main.c:1518:48: note: expected 'Expr *' but argument is of type 'Expr'
+ 1518 | NyxResult TypeChecker_check_expr(TypeChecker*, Expr*);
+      |                                                ^~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1597:39: error: expected ';' before ')' token
+ 1597 | rt_vec_push(&(*self).errors, (void*)e));
+      |                                       ^
+      |                                       ;
+C:/xampp/htdocs/nyx/nyxc/main.c:1597:39: error: expected statement before ')' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1601:18: error: invalid use of void expression
+ 1601 | __match_result_0 = TypeChecker_pop_scope(self);
+      |                  ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1606:27: error: invalid initializer
+ 1606 | rt_string_t field_types = rt_vec_new(sizeof(int64_t));
+      |                           ^~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1607:20: error: expected expression before 'for'
+ 1607 | __match_result_0 = for (int64_t __ = 0; __ < fields.len; __++) {
+      |                    ^~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1612:2: error: expected ')' before 'else'
+ 1612 | }
+      |  ^
+      |  )
+ 1613 |  else if ((*__match_val_0).tag == TAG_TopLevel_EnumDef) {
+      |  ~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1621:18: error: expected ';' before '}' token
+ 1621 | __match_result_0;
+      |                  ^
+      |                  ;
+ 1622 | });
+      | ~                 
+C:/xampp/htdocs/nyx/nyxc/main.c: In function 'TypeChecker_lookup':
+C:/xampp/htdocs/nyx/nyxc/main.c:1622:2: error: expected statement before ')' token
+ 1622 | });
+      |  ^
+C:/xampp/htdocs/nyx/nyxc/main.c: In function 'TypeChecker_check_expr':
+C:/xampp/htdocs/nyx/nyxc/main.c:1635:1: error: cannot convert to a pointer type
+ 1635 | __match_result_3 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_Int}; _tmp; });
+      | ^~~~~~~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1638:1: error: cannot convert to a pointer type
+ 1638 | __match_result_3 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_Float}; _tmp; });
+      | ^~~~~~~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1641:1: error: cannot convert to a pointer type
+ 1641 | __match_result_3 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_Bool}; _tmp; });
+      | ^~~~~~~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1644:1: error: cannot convert to a pointer type
+ 1644 | __match_result_3 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_String}; _tmp; });
+      | ^~~~~~~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1647:1: error: cannot convert to a pointer type
+ 1647 | __match_result_3 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_Char}; _tmp; });
+      | ^~~~~~~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1654:20: error: implicit declaration of function 'rt_option_ok_or_else' [-Wimplicit-function-declaration]
+ 1654 | __match_result_2 = rt_option_ok_or_else(TypeChecker_lookup(self, name), ((rt_string_t (*)())({ rt_string_t __lambda_4() { return rt_string_concat(rt_string_from("Undefined variable: "), name); } __lambda_4; })));
+      |                    ^~~~~~~~~~~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1654:66: error: incompatible type for argument 2 of 'TypeChecker_lookup'
+ 1654 | __match_result_2 = rt_option_ok_or_else(TypeChecker_lookup(self, name), ((rt_string_t (*)())({ rt_string_t __lambda_4() { return rt_string_concat(rt_string_from("Undefined variable: "), name); } __lambda_4; })));
+      |                                                                  ^~~~
+      |                                                                  |
+      |                                                                  rt_string_t
+C:/xampp/htdocs/nyx/nyxc/main.c:1557:55: note: expected 'void *' but argument is of type 'rt_string_t'
+ 1557 | NyxOption TypeChecker_lookup(TypeChecker* self, void* name) {
+      |                                                 ~~~~~~^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1658:17: error: invalid initializer
+ 1658 |     Expr left = (*__match_val_2).data.Binary.f1;
+      |                 ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1659:18: error: invalid initializer
+ 1659 |     Expr right = (*__match_val_2).data.Binary.f2;
+      |                  ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1660:43: error: incompatible type for argument 2 of 'TypeChecker_check_expr'
+ 1660 | int64_t lt = TypeChecker_check_expr(self, left) /* ? */;
+      |                                           ^~~~
+      |                                           |
+      |                                           Expr
+C:/xampp/htdocs/nyx/nyxc/main.c:1625:59: note: expected 'Expr *' but argument is of type 'Expr'
+ 1625 | NyxResult TypeChecker_check_expr(TypeChecker* self, Expr* expr) {
+      |                                                     ~~~~~~^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1661:43: error: incompatible type for argument 2 of 'TypeChecker_check_expr'
+ 1661 | int64_t rt = TypeChecker_check_expr(self, right) /* ? */;
+      |                                           ^~~~~
+      |                                           |
+      |                                           Expr
+C:/xampp/htdocs/nyx/nyxc/main.c:1625:59: note: expected 'Expr *' but argument is of type 'Expr'
+ 1625 | NyxResult TypeChecker_check_expr(TypeChecker* self, Expr* expr) {
+      |                                                     ~~~~~~^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1666:54: error: invalid operands to binary == (have 'int64_t' {aka 'long long int'} and 'Type')
+ 1666 | __match_result_5 = ({ NyxResult __if_val_7; if (((lt == (Type){ .tag = TAG_Type_Int}) && (rt == (Type){ .tag = TAG_Type_Int}))) {
+      |                                                      ^~
+C:/xampp/htdocs/nyx/nyxc/main.c:1666:94: error: invalid operands to binary == (have 'int64_t' {aka 'long long int'} and 'Type')
+ 1666 | __match_result_5 = ({ NyxResult __if_val_7; if (((lt == (Type){ .tag = TAG_Type_Int}) && (rt == (Type){ .tag = TAG_Type_Int}))) {
+      |                                                                                              ^~
+C:/xampp/htdocs/nyx/nyxc/main.c:1667:1: error: cannot convert to a pointer type
+ 1667 | __if_val_7 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_Int}; _tmp; });
+      | ^~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1668:17: error: invalid operands to binary == (have 'int64_t' {aka 'long long int'} and 'Type')
+ 1668 | } else if (((lt == (Type){ .tag = TAG_Type_Float}) && (rt == (Type){ .tag = TAG_Type_Float}))) {
+      |                 ^~
+C:/xampp/htdocs/nyx/nyxc/main.c:1668:59: error: invalid operands to binary == (have 'int64_t' {aka 'long long int'} and 'Type')
+ 1668 | } else if (((lt == (Type){ .tag = TAG_Type_Float}) && (rt == (Type){ .tag = TAG_Type_Float}))) {
+      |                                                           ^~
+C:/xampp/htdocs/nyx/nyxc/main.c:1669:1: error: cannot convert to a pointer type
+ 1669 | __if_val_7 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_Float}; _tmp; });
+      | ^~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1670:18: error: invalid operands to binary == (have 'int64_t' {aka 'long long int'} and 'Type')
+ 1670 | } else if ((((lt == (Type){ .tag = TAG_Type_String}) && (rt == (Type){ .tag = TAG_Type_String})) && (op.tag == TAG_BinOp_Add))) {
+      |                  ^~
+C:/xampp/htdocs/nyx/nyxc/main.c:1670:61: error: invalid operands to binary == (have 'int64_t' {aka 'long long int'} and 'Type')
+ 1670 | } else if ((((lt == (Type){ .tag = TAG_Type_String}) && (rt == (Type){ .tag = TAG_Type_String})) && (op.tag == TAG_BinOp_Add))) {
+      |                                                             ^~
+C:/xampp/htdocs/nyx/nyxc/main.c:1671:1: error: cannot convert to a pointer type
+ 1671 | __if_val_7 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_String}; _tmp; });
+      | ^~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1673:1: error: cannot convert to a pointer type
+ 1673 | __if_val_7 = ({ NyxResult _tmp; _tmp.tag = RESULT_ERR; _tmp.data.ptr_val = (void*)rt_string_from("Incompatible types for arithmetic"); _tmp; });
+      | ^~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1677:1: error: cannot convert to a pointer type
+ 1677 | __match_result_5 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_Bool}; _tmp; });
+      | ^~~~~~~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1680:1: error: cannot convert to a pointer type
+ 1680 | __match_result_5 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_Bool}; _tmp; });
+      | ^~~~~~~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1687:17: error: invalid initializer
+ 1687 |     Expr expr = (*__match_val_2).data.Unary.f1;
+      |                 ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1688:42: error: incompatible type for argument 2 of 'TypeChecker_check_expr'
+ 1688 | int64_t t = TypeChecker_check_expr(self, expr) /* ? */;
+      |                                          ^~~~
+      |                                          |
+      |                                          Expr
+C:/xampp/htdocs/nyx/nyxc/main.c:1625:59: note: expected 'Expr *' but argument is of type 'Expr'
+ 1625 | NyxResult TypeChecker_check_expr(TypeChecker* self, Expr* expr) {
+      |                                                     ~~~~~~^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1696:1: error: cannot convert to a pointer type
+ 1696 | __match_result_7 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_Bool}; _tmp; });
+      | ^~~~~~~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1699:136: error: initialization of 'Type *' from 'int64_t' {aka 'long long int'} makes pointer from integer without a cast [-Wint-conversion]
+ 1699 | __match_result_7 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_Ref, .data.Ref = {.f0 = t} }; _tmp; });
+      |                                                                                                                                        ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1699:136: note: (near initialization for '(anonymous).data.Ref.f0')
+C:/xampp/htdocs/nyx/nyxc/main.c:1699:1: error: cannot convert to a pointer type
+ 1699 | __match_result_7 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_Ref, .data.Ref = {.f0 = t} }; _tmp; });
+      | ^~~~~~~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1702:20: error: expected expression before '{' token
+ 1702 | __match_result_7 = { int64_t __iflet_8 = t;
+      |                    ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1711:2: error: expected statement before ')' token
+ 1711 | });
+      |  ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1712:2: error: expected ')' before 'else'
+ 1712 | }
+      |  ^
+      |  )
+ 1713 |  else if ((*__match_val_2).tag == TAG_Expr_Call) {
+      |  ~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1689:18: error: invalid use of void expression
+ 1689 | __match_result_2 = ({
+      |                  ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1768:18: error: expected ';' before '}' token
+ 1768 | __match_result_9;
+      |                  ^
+      |                  ;
+ 1769 | });
+      | ~                 
+C:/xampp/htdocs/nyx/nyxc/main.c:1769:2: error: expected statement before ')' token
+ 1769 | });
+      |  ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1770:43: error: 'else_ifs' undeclared (first use in this function)
+ 1770 | for (int64_t _elif_cond = 0; _elif_cond < else_ifs.len; _elif_cond++) {
+      |                                           ^~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1772:30: error: passing argument 2 of 'TypeChecker_check_expr' makes pointer from integer without a cast [-Wint-conversion]
+ 1772 | TypeChecker_check_expr(self, elif_cond) /* ? */;
+      |                              ^~~~~~~~~
+      |                              |
+      |                              int64_t {aka long long int}
+C:/xampp/htdocs/nyx/nyxc/main.c:1625:59: note: expected 'Expr *' but argument is of type 'int64_t' {aka 'long long int'}
+ 1625 | NyxResult TypeChecker_check_expr(TypeChecker* self, Expr* expr) {
+      |                                                     ~~~~~~^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1773:84: error: 'elif_body' undeclared (first use in this function); did you mean 'elif_cond'?
+ 1773 | TypeChecker_check_expr(self, (&(Expr){ .tag = TAG_Expr_Block, .data.Block = {.f0 = elif_body} })) /* ? */;
+      |                                                                                    ^~~~~~~~~
+      |                                                                                    elif_cond
+C:/xampp/htdocs/nyx/nyxc/main.c:1776:24: error: 'else_block' undeclared (first use in this function)
+ 1776 | { int64_t __iflet_10 = else_block;
+      |                        ^~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1778:2: error: 'result' undeclared (first use in this function); did you mean 'NyxResult'?
+ 1778 | (result = TypeChecker_check_expr(self, (&(Expr){ .tag = TAG_Expr_Block, .data.Block = {.f0 = else_b} })) /* ? */);
+      |  ^~~~~~
+      |  NyxResult
+C:/xampp/htdocs/nyx/nyxc/main.c:1778:94: error: 'else_b' undeclared (first use in this function); did you mean 'close_db'?
+ 1778 | (result = TypeChecker_check_expr(self, (&(Expr){ .tag = TAG_Expr_Block, .data.Block = {.f0 = else_b} })) /* ? */);
+      |                                                                                              ^~~~~~
+      |                                                                                              close_db
+C:/xampp/htdocs/nyx/nyxc/main.c:1783:2: error: 'else' without a previous 'if'
+ 1783 |  else if ((*__match_val_2).tag == TAG_Expr_While) {
+      |  ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1784:17: error: invalid initializer
+ 1784 |     Expr cond = (*__match_val_2).data.While.f0;
+      |                 ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1786:30: error: incompatible type for argument 2 of 'TypeChecker_check_expr'
+ 1786 | TypeChecker_check_expr(self, cond) /* ? */;
+      |                              ^~~~
+      |                              |
+      |                              Expr
+C:/xampp/htdocs/nyx/nyxc/main.c:1625:59: note: expected 'Expr *' but argument is of type 'Expr'
+ 1625 | NyxResult TypeChecker_check_expr(TypeChecker* self, Expr* expr) {
+      |                                                     ~~~~~~^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1787:137: error: expected ';' before ')' token
+ 1787 | TypeChecker_check_expr(self, (&(Expr){ .tag = TAG_Expr_Block, .data.Block = {.f0 = ({ NyxVec _cv = rt_vec_new(sizeof(int64_t)); body.len); for (int64_t _i = 0; _i < body.len; _i++) { int64_t _e = *(int64_t*)rt_vec_get(body, _i); rt_vec_push(&_cv, &_e); } _cv; })} })) /* ? */;
+      |                                                                                                                                         ^
+      |                                                                                                                                         ;
+C:/xampp/htdocs/nyx/nyxc/main.c:1787:137: error: expected statement before ')' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1788:1: error: cannot convert to a pointer type
+ 1788 | __match_result_2 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_Void}; _tmp; });
+      | ^~~~~~~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1792:17: error: invalid initializer
+ 1792 |     Expr iter = (*__match_val_2).data.For.f1;
+      |                 ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1794:30: error: incompatible type for argument 2 of 'TypeChecker_check_expr'
+ 1794 | TypeChecker_check_expr(self, iter) /* ? */;
+      |                              ^~~~
+      |                              |
+      |                              Expr
+C:/xampp/htdocs/nyx/nyxc/main.c:1625:59: note: expected 'Expr *' but argument is of type 'Expr'
+ 1625 | NyxResult TypeChecker_check_expr(TypeChecker* self, Expr* expr) {
+      |                                                     ~~~~~~^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1797:137: error: expected ';' before ')' token
+ 1797 | TypeChecker_check_expr(self, (&(Expr){ .tag = TAG_Expr_Block, .data.Block = {.f0 = ({ NyxVec _cv = rt_vec_new(sizeof(int64_t)); body.len); for (int64_t _i = 0; _i < body.len; _i++) { int64_t _e = *(int64_t*)rt_vec_get(body, _i); rt_vec_push(&_cv, &_e); } _cv; })} })) /* ? */;
+      |                                                                                                                                         ^
+      |                                                                                                                                         ;
+C:/xampp/htdocs/nyx/nyxc/main.c:1797:137: error: expected statement before ')' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1799:1: error: cannot convert to a pointer type
+ 1799 | __match_result_2 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_Void}; _tmp; });
+      | ^~~~~~~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1802:17: error: invalid initializer
+ 1802 |     Expr expr = (*__match_val_2).data.Match.f0;
+      |                 ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1804:30: error: incompatible type for argument 2 of 'TypeChecker_check_expr'
+ 1804 | TypeChecker_check_expr(self, expr) /* ? */;
+      |                              ^~~~
+      |                              |
+      |                              Expr
+C:/xampp/htdocs/nyx/nyxc/main.c:1625:59: note: expected 'Expr *' but argument is of type 'Expr'
+ 1625 | NyxResult TypeChecker_check_expr(TypeChecker* self, Expr* expr) {
+      |                                                     ~~~~~~^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1811:62: error: request for member 'body' in something not a structure or union
+ 1811 | NyxResult __match_val_10 = TypeChecker_check_expr(self, (&arm.body));
+      |                                                              ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1814:31: error: incompatible types when assigning to type 'Type' from type 'void *'
+ 1814 | __match_result_10 = (result = t);
+      |                               ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1818:39: error: expected ';' before ')' token
+ 1818 | rt_vec_push(&(*self).errors, (void*)e));
+      |                                       ^
+      |                                       ;
+C:/xampp/htdocs/nyx/nyxc/main.c:1818:39: error: expected statement before ')' token
+C:/xampp/htdocs/nyx/nyxc/main.c:1825:1: error: cannot convert to a pointer type
+ 1825 | __match_result_2 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)result; _tmp; });
+      | ^~~~~~~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1832:38: error: passing argument 2 of 'TypeChecker_check_stmt' makes pointer from integer without a cast [-Wint-conversion]
+ 1832 | (last = TypeChecker_check_stmt(self, s) /* ? */);
+      |                                      ^
+      |                                      |
+      |                                      int64_t {aka long long int}
+C:/xampp/htdocs/nyx/nyxc/main.c:1519:48: note: expected 'Stmt *' but argument is of type 'int64_t' {aka 'long long int'}
+ 1519 | NyxResult TypeChecker_check_stmt(TypeChecker*, Stmt*);
+      |                                                ^~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1832:9: error: incompatible types when assigning to type 'Type' from type 'NyxResult'
+ 1832 | (last = TypeChecker_check_stmt(self, s) /* ? */);
+      |         ^~~~~~~~~~~~~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1835:1: error: cannot convert to a pointer type
+ 1835 | __match_result_2 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)last; _tmp; });
+      | ^~~~~~~~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1839:18: error: invalid initializer
+ 1839 |     Expr value = (*__match_val_2).data.Let.f1;
+      |                  ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1841:43: error: incompatible type for argument 2 of 'TypeChecker_check_expr'
+ 1841 | int64_t vt = TypeChecker_check_expr(self, value) /* ? */;
+      |                                           ^~~~~
+      |                                           |
+      |                                           Expr
+C:/xampp/htdocs/nyx/nyxc/main.c:1625:59: note: expected 'Expr *' but argument is of type 'Expr'
+ 1625 | NyxResult TypeChecker_check_expr(TypeChecker* self, Expr* expr) {
+      |                                                     ~~~~~~^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1842:24: error: incompatible types when initializing type 'int64_t' {aka 'long long int'} using type 'NyxOption'
+ 1842 | { int64_t __iflet_11 = ty;
+      |                        ^~
+C:/xampp/htdocs/nyx/nyxc/main.c:1844:15: error: 'ann' undeclared (first use in this function); did you mean 'nan'?
+ 1844 | if (((vt != (*ann)) && ((*ann) != (Type){ .tag = TAG_Type_Unknown}))) {
+      |               ^~~
+      |               nan
+C:/xampp/htdocs/nyx/nyxc/main.c:1845:1: error: cannot convert to a pointer type
+ 1845 | return ({ NyxResult _tmp; _tmp.tag = RESULT_ERR; _tmp.data.ptr_val = (void*)rt_string_from("Type mismatch"); _tmp; });
+      | ^~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1850:84: error: incompatible type for argument 3 of 'TypeChecker_add_var'
+ 1850 | TypeChecker_add_var(self, ({ rt_string_t _c = name; rt_string_retain(&_c); _c; }), vt);
+      |                                                                                    ^~
+      |                                                                                    |
+      |                                                                                    int64_t {aka long long int}
+C:/xampp/htdocs/nyx/nyxc/main.c:1553:68: note: expected 'Type' but argument is of type 'int64_t' {aka 'long long int'}
+ 1553 | void TypeChecker_add_var(TypeChecker* self, rt_string_t name, Type ty) {
+      |                                                               ~~~~~^~
+C:/xampp/htdocs/nyx/nyxc/main.c:1853:2: error: expected '}' before 'else'
+ 1853 |  else if ((*__match_val_2).tag == TAG_Expr_Assign) {
+      |  ^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1855:18: error: invalid initializer
+ 1855 |     Expr value = (*__match_val_2).data.Assign.f1;
+      |                  ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1856:43: error: incompatible type for argument 2 of 'TypeChecker_check_expr'
+ 1856 | int64_t vt = TypeChecker_check_expr(self, value) /* ? */;
+      |                                           ^~~~~
+      |                                           |
+      |                                           Expr
+C:/xampp/htdocs/nyx/nyxc/main.c:1625:59: note: expected 'Expr *' but argument is of type 'Expr'
+ 1625 | NyxResult TypeChecker_check_expr(TypeChecker* self, Expr* expr) {
+      |                                                     ~~~~~~^~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1857:20: error: expected expression before '{' token
+ 1857 | __match_result_2 = { int64_t __iflet_11 = TypeChecker_lookup(self, name);
+      |                    ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1914:2: error: expected statement before ')' token
+ 1914 | });
+      |  ^
+C:/xampp/htdocs/nyx/nyxc/main.c:1915:2: error: expected ')' before 'NyxResult'
+ 1915 | }
+      |  ^
+      |  )
+ 1916 | 
+ 1917 | NyxResult TypeChecker_check_stmt(TypeChecker* self, Stmt* stmt) {
+      | ~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:1626:9: error: void value not ignored as it ought to be
+ 1626 | return ({
+      |        ~^
+ 1627 | NyxResult __match_result_2;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1628 | Expr* __match_val_2 = expr;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1629 | if ((*__match_val_2).tag == TAG_Expr_Lit) {
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1630 |     Literal lit = (*__match_val_2).data.Lit.f0;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1631 | __match_result_2 = ({
+      | ~~~~~~~~~~~~~~~~~~~~~
+ 1632 | NyxResult __match_result_3;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1633 | Literal __match_val_3 = lit;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1634 | if (__match_val_3.tag == TAG_Literal_Int) {
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1635 | __match_result_3 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_Int}; _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1636 | }
+      | ~        
+ 1637 |  else if (__match_val_3.tag == TAG_Literal_Float) {
+      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1638 | __match_result_3 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_Float}; _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1639 | }
+      | ~        
+ 1640 |  else if (__match_val_3.tag == TAG_Literal_Bool) {
+      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1641 | __match_result_3 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_Bool}; _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1642 | }
+      | ~        
+ 1643 |  else if (__match_val_3.tag == TAG_Literal_String) {
+      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1644 | __match_result_3 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_String}; _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1645 | }
+      | ~        
+ 1646 |  else if (__match_val_3.tag == TAG_Literal_Char) {
+      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1647 | __match_result_3 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_Char}; _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1648 | }
+      | ~        
+ 1649 | __match_result_3;
+      | ~~~~~~~~~~~~~~~~~
+ 1650 | });
+      | ~~~      
+ 1651 | }
+      | ~        
+ 1652 |  else if ((*__match_val_2).tag == TAG_Expr_Ident) {
+      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1653 |     rt_string_t name = (*__match_val_2).data.Ident.f0;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1654 | __match_result_2 = rt_option_ok_or_else(TypeChecker_lookup(self, name), ((rt_string_t (*)())({ rt_string_t __lambda_4() { return rt_string_concat(rt_string_from("Undefined variable: "), name); } __lambda_4; })));
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1655 | }
+      | ~        
+ 1656 |  else if ((*__match_val_2).tag == TAG_Expr_Binary) {
+      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1657 |     BinOp op = (*__match_val_2).data.Binary.f0;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1658 |     Expr left = (*__match_val_2).data.Binary.f1;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1659 |     Expr right = (*__match_val_2).data.Binary.f2;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1660 | int64_t lt = TypeChecker_check_expr(self, left) /* ? */;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1661 | int64_t rt = TypeChecker_check_expr(self, right) /* ? */;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1662 | __match_result_2 = ({
+      | ~~~~~~~~~~~~~~~~~~~~~
+ 1663 | NyxResult __match_result_5;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1664 | BinOp __match_val_5 = op;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1665 | if (0 || 0 || 0 || 0 || 0) {
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1666 | __match_result_5 = ({ NyxResult __if_val_7; if (((lt == (Type){ .tag = TAG_Type_Int}) && (rt == (Type){ .tag = TAG_Type_Int}))) {
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1667 | __if_val_7 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_Int}; _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1668 | } else if (((lt == (Type){ .tag = TAG_Type_Float}) && (rt == (Type){ .tag = TAG_Type_Float}))) {
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1669 | __if_val_7 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_Float}; _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1670 | } else if ((((lt == (Type){ .tag = TAG_Type_String}) && (rt == (Type){ .tag = TAG_Type_String})) && (op.tag == TAG_BinOp_Add))) {
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1671 | __if_val_7 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_String}; _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1672 | } else {
+      | ~~~~~~~~ 
+ 1673 | __if_val_7 = ({ NyxResult _tmp; _tmp.tag = RESULT_ERR; _tmp.data.ptr_val = (void*)rt_string_from("Incompatible types for arithmetic"); _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1674 | } __if_val_7; });
+      | ~~~~~~~~~~~~~~~~~
+ 1675 | }
+      | ~        
+ 1676 |  else if (0 || 0 || 0 || 0 || 0 || 0) {
+      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1677 | __match_result_5 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_Bool}; _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1678 | }
+      | ~        
+ 1679 |  else if (0 || 0) {
+      |  ~~~~~~~~~~~~~~~~~~
+ 1680 | __match_result_5 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_Bool}; _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1681 | }
+      | ~        
+ 1682 | __match_result_5;
+      | ~~~~~~~~~~~~~~~~~
+ 1683 | });
+      | ~~~      
+ 1684 | }
+      | ~        
+ 1685 |  else if ((*__match_val_2).tag == TAG_Expr_Unary) {
+      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1686 |     UnaryOp op = (*__match_val_2).data.Unary.f0;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1687 |     Expr expr = (*__match_val_2).data.Unary.f1;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1688 | int64_t t = TypeChecker_check_expr(self, expr) /* ? */;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1689 | __match_result_2 = ({
+      | ~~~~~~~~~~~~~~~~~~~~~
+ 1690 | NyxResult __match_result_7;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1691 | UnaryOp __match_val_7 = op;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1692 | if (__match_val_7.tag == TAG_UnaryOp_Neg) {
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1693 | __match_result_7 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (int64_t)t; _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1694 | }
+      | ~        
+ 1695 |  else if (__match_val_7.tag == TAG_UnaryOp_Not) {
+      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1696 | __match_result_7 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_Bool}; _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1697 | }
+      | ~        
+ 1698 |  else if (__match_val_7.tag == TAG_UnaryOp_Ref) {
+      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1699 | __match_result_7 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_Ref, .data.Ref = {.f0 = t} }; _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1700 | }
+      | ~        
+ 1701 |  else if (__match_val_7.tag == TAG_UnaryOp_Deref) {
+      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1702 | __match_result_7 = { int64_t __iflet_8 = t;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1703 | if (1) {
+      | ~~~~~~~~ 
+ 1704 | ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (int64_t)inner; _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1705 | } else {
+      | ~~~~~~~~ 
+ 1706 | ({ NyxResult _tmp; _tmp.tag = RESULT_ERR; _tmp.data.ptr_val = (void*)rt_string_from("Deref requires reference type"); _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1707 | }
+      | ~        
+ 1708 | ;
+      | ~        
+ 1709 | }
+      | ~        
+ 1710 | __match_result_7;
+      | ~~~~~~~~~~~~~~~~~
+ 1711 | });
+      | ~~~      
+ 1712 | }
+      | ~        
+ 1713 |  else if ((*__match_val_2).tag == TAG_Expr_Call) {
+      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1714 |     Expr func = (*__match_val_2).data.Call.f0;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1715 |     NyxVec args = (*__match_val_2).data.Call.f1;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1716 | int64_t fn_name = ({
+      | ~~~~~~~~~~~~~~~~~~~~
+ 1717 | rt_string_t __match_result_8;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1718 |  __match_val_8 = Expr_as_ref(func);
+      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1719 | if (__match_val_8.tag == TAG_Expr_Ident) {
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1720 |     rt_string_t name = __match_val_8.data.Ident.f0;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1721 | __match_result_8 = ({ rt_string_t _c = name; rt_string_retain(&_c); _c; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1722 | }
+      | ~        
+ 1723 |  else {
+      |  ~~~~~~  
+ 1724 | __match_result_8 = return ({ NyxResult _tmp; _tmp.tag = RESULT_ERR; _tmp.data.ptr_val = (void*)rt_string_from("Function calls must use direct names"); _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1725 | }
+      | ~        
+ 1726 | __match_result_8;
+      | ~~~~~~~~~~~~~~~~~
+ 1727 | });
+      | ~~~      
+ 1728 | for (int64_t _arg = 0; _arg < args.len; _arg++) {
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1729 |     int64_t arg = _arg;
+      |     ~~~~~~~~~~~~~~~~~~~
+ 1730 | TypeChecker_check_expr(self, arg) /* ? */;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1731 | }
+      | ~        
+ 1732 | ;
+      | ~        
+ 1733 | __match_result_2 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_Void}; _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1734 | }
+      | ~        
+ 1735 |  else if ((*__match_val_2).tag == TAG_Expr_MethodCall) {
+      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1736 |     Expr receiver = (*__match_val_2).data.MethodCall.f0;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1737 |     rt_string_t args = (*__match_val_2).data.MethodCall.f1;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1738 | TypeChecker_check_expr(self, receiver) /* ? */;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1739 | for (int64_t _arg = 0; _arg < args.len; _arg++) {
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1740 |     int64_t arg = _arg;
+      |     ~~~~~~~~~~~~~~~~~~~
+ 1741 | TypeChecker_check_expr(self, arg) /* ? */;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1742 | }
+      | ~        
+ 1743 | ;
+      | ~        
+ 1744 | __match_result_2 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_Void}; _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1745 | }
+      | ~        
+ 1746 |  else if ((*__match_val_2).tag == TAG_Expr_If) {
+      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1747 |     Expr cond = (*__match_val_2).data.If.f0;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1748 |     NyxVec then = (*__match_val_2).data.If.f1;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1749 |     NyxVec else_ifs = (*__match_val_2).data.If.f2;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1750 |     NyxOption else_block = (*__match_val_2).data.If.f3;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1751 | int64_t ct = TypeChecker_check_expr(self, cond) /* ? */;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1752 | if ((ct != (Type){ .tag = TAG_Type_Bool})) {
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1753 | rt_vec_push(&(*self).errors, (rt_string_t)rt_string_from("If condition must be bool")));
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1754 | }
+      | ~        
+ 1755 | ;
+      | ~        
+ 1756 | Type result = (Type){ .tag = TAG_Type_Void};
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1757 | ({
+      | ~~       
+ 1758 | NyxResult __match_result_9;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1759 | NyxResult __match_val_9 = TypeChecker_check_expr(self, (&(Expr){ .tag = TAG_Expr_Block, .data.Block = {.f0 = ({ NyxVec _cv = rt_vec_new(sizeof(int64_t)); then.len); for (int64_t _i = 0; _i < then.len; _i++) { int64_t _e = *(int64_t*)rt_vec_get(then, _i); rt_vec_push(&_cv, &_e); } _cv; })} }));
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1760 | if (__match_val_9.tag == RESULT_OK) {
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1761 |     void* t = __match_val_9.data.ptr_val;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1762 | __match_result_9 = (result = t);
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1763 | }
+      | ~        
+ 1764 |  else if (__match_val_9.tag == RESULT_ERR) {
+      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1765 |     void* e = __match_val_9.data.ptr_val;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1766 | rt_vec_push(&(*self).errors, (void*)e));
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1767 | }
+      | ~        
+ 1768 | __match_result_9;
+      | ~~~~~~~~~~~~~~~~~
+ 1769 | });
+      | ~~~      
+ 1770 | for (int64_t _elif_cond = 0; _elif_cond < else_ifs.len; _elif_cond++) {
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1771 |     int64_t elif_cond = _elif_cond;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1772 | TypeChecker_check_expr(self, elif_cond) /* ? */;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1773 | TypeChecker_check_expr(self, (&(Expr){ .tag = TAG_Expr_Block, .data.Block = {.f0 = elif_body} })) /* ? */;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1774 | }
+      | ~        
+ 1775 | ;
+      | ~        
+ 1776 | { int64_t __iflet_10 = else_block;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1777 | if (1) {
+      | ~~~~~~~~ 
+ 1778 | (result = TypeChecker_check_expr(self, (&(Expr){ .tag = TAG_Expr_Block, .data.Block = {.f0 = else_b} })) /* ? */);
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1779 | }
+      | ~        
+ 1780 | ;
+      | ~        
+ 1781 | __match_result_2 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)result; _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1782 | }
+      | ~        
+ 1783 |  else if ((*__match_val_2).tag == TAG_Expr_While) {
+      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1784 |     Expr cond = (*__match_val_2).data.While.f0;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1785 |     NyxVec body = (*__match_val_2).data.While.f1;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1786 | TypeChecker_check_expr(self, cond) /* ? */;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1787 | TypeChecker_check_expr(self, (&(Expr){ .tag = TAG_Expr_Block, .data.Block = {.f0 = ({ NyxVec _cv = rt_vec_new(sizeof(int64_t)); body.len); for (int64_t _i = 0; _i < body.len; _i++) { int64_t _e = *(int64_t*)rt_vec_get(body, _i); rt_vec_push(&_cv, &_e); } _cv; })} })) /* ? */;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1788 | __match_result_2 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_Void}; _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1789 | }
+      | ~        
+ 1790 |  else if ((*__match_val_2).tag == TAG_Expr_For) {
+      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1791 |     rt_string_t var = (*__match_val_2).data.For.f0;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1792 |     Expr iter = (*__match_val_2).data.For.f1;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1793 |     NyxVec body = (*__match_val_2).data.For.f2;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1794 | TypeChecker_check_expr(self, iter) /* ? */;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1795 | TypeChecker_push_scope(self);
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1796 | TypeChecker_add_var(self, ({ rt_string_t _c = var; rt_string_retain(&_c); _c; }), (Type){ .tag = TAG_Type_Int});
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1797 | TypeChecker_check_expr(self, (&(Expr){ .tag = TAG_Expr_Block, .data.Block = {.f0 = ({ NyxVec _cv = rt_vec_new(sizeof(int64_t)); body.len); for (int64_t _i = 0; _i < body.len; _i++) { int64_t _e = *(int64_t*)rt_vec_get(body, _i); rt_vec_push(&_cv, &_e); } _cv; })} })) /* ? */;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1798 | TypeChecker_pop_scope(self);
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1799 | __match_result_2 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_Void}; _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1800 | }
+      | ~        
+ 1801 |  else if ((*__match_val_2).tag == TAG_Expr_Match) {
+      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1802 |     Expr expr = (*__match_val_2).data.Match.f0;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1803 |     NyxVec arms = (*__match_val_2).data.Match.f1;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1804 | TypeChecker_check_expr(self, expr) /* ? */;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1805 | Type result = (Type){ .tag = TAG_Type_Void};
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1806 | for (int64_t _arm = 0; _arm < arms.len; _arm++) {
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1807 |     int64_t arm = _arm;
+      |     ~~~~~~~~~~~~~~~~~~~
+ 1808 | TypeChecker_push_scope(self);
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1809 | ({
+      | ~~       
+ 1810 | void* __match_result_10;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~
+ 1811 | NyxResult __match_val_10 = TypeChecker_check_expr(self, (&arm.body));
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1812 | if (__match_val_10.tag == RESULT_OK) {
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1813 |     void* t = __match_val_10.data.ptr_val;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1814 | __match_result_10 = (result = t);
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1815 | }
+      | ~        
+ 1816 |  else if (__match_val_10.tag == RESULT_ERR) {
+      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1817 |     void* e = __match_val_10.data.ptr_val;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1818 | rt_vec_push(&(*self).errors, (void*)e));
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1819 | }
+      | ~        
+ 1820 | __match_result_10;
+      | ~~~~~~~~~~~~~~~~~~
+ 1821 | });
+      | ~~~      
+ 1822 | TypeChecker_pop_scope(self);
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1823 | }
+      | ~        
+ 1824 | ;
+      | ~        
+ 1825 | __match_result_2 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)result; _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1826 | }
+      | ~        
+ 1827 |  else if ((*__match_val_2).tag == TAG_Expr_Block) {
+      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1828 |     NyxVec stmts = (*__match_val_2).data.Block.f0;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1829 | Type last = (Type){ .tag = TAG_Type_Void};
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1830 | for (int64_t _s = 0; _s < stmts.len; _s++) {
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1831 |     int64_t s = _s;
+      |     ~~~~~~~~~~~~~~~
+ 1832 | (last = TypeChecker_check_stmt(self, s) /* ? */);
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1833 | }
+      | ~        
+ 1834 | ;
+      | ~        
+ 1835 | __match_result_2 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)last; _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1836 | }
+      | ~        
+ 1837 |  else if ((*__match_val_2).tag == TAG_Expr_Let) {
+      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1838 |     rt_string_t name = (*__match_val_2).data.Let.f0;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1839 |     Expr value = (*__match_val_2).data.Let.f1;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1840 |     NyxOption ty = (*__match_val_2).data.Let.f2;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1841 | int64_t vt = TypeChecker_check_expr(self, value) /* ? */;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1842 | { int64_t __iflet_11 = ty;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1843 | if (1) {
+      | ~~~~~~~~ 
+ 1844 | if (((vt != (*ann)) && ((*ann) != (Type){ .tag = TAG_Type_Unknown}))) {
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1845 | return ({ NyxResult _tmp; _tmp.tag = RESULT_ERR; _tmp.data.ptr_val = (void*)rt_string_from("Type mismatch"); _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1846 | }
+      | ~        
+ 1847 | ;
+      | ~        
+ 1848 | }
+      | ~        
+ 1849 | ;
+      | ~        
+ 1850 | TypeChecker_add_var(self, ({ rt_string_t _c = name; rt_string_retain(&_c); _c; }), vt);
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1851 | __match_result_2 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (int64_t)vt; _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1852 | }
+      | ~        
+ 1853 |  else if ((*__match_val_2).tag == TAG_Expr_Assign) {
+      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1854 |     rt_string_t name = (*__match_val_2).data.Assign.f0;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1855 |     Expr value = (*__match_val_2).data.Assign.f1;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1856 | int64_t vt = TypeChecker_check_expr(self, value) /* ? */;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1857 | __match_result_2 = { int64_t __iflet_11 = TypeChecker_lookup(self, name);
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1858 | if (1) {
+      | ~~~~~~~~ 
+ 1859 | ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (int64_t)vt; _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1860 | } else {
+      | ~~~~~~~~ 
+ 1861 | ({ NyxResult _tmp; _tmp.tag = RESULT_ERR; _tmp.data.ptr_val = (void*)rt_string_concat(rt_string_from("Undefined variable: "), name); _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1862 | }
+      | ~        
+ 1863 | ;
+      | ~        
+ 1864 | }
+      | ~        
+ 1865 |  else if ((*__match_val_2).tag == TAG_Expr_Return) {
+      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1866 | __match_result_2 = TypeChecker_check_expr(self, e);
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1867 | }
+      | ~        
+ 1868 |  else if ((*__match_val_2).tag == TAG_Expr_Return) {
+      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1869 |     NyxOption None = (*__match_val_2).data.Return.f0;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1870 | __match_result_2 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_Void}; _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1871 | }
+      | ~        
+ 1872 |  else if ((*__match_val_2).tag == TAG_Expr_StructLiteral) {
+      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1873 |     rt_string_t name = (*__match_val_2).data.StructLiteral.f0;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1874 |     NyxVec fields = (*__match_val_2).data.StructLiteral.f1;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1875 | for (int64_t __ = 0; __ < fields.len; __++) {
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1876 |     int64_t _ = __;
+      |     ~~~~~~~~~~~~~~~
+ 1877 | TypeChecker_check_expr(self, val) /* ? */;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1878 | }
+      | ~        
+ 1879 | ;
+      | ~        
+ 1880 | __match_result_2 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_Custom, .data.Custom = {.f0 = ({ rt_string_t _c = name; rt_string_retain(&_c); _c; })} }; _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1881 | }
+      | ~        
+ 1882 |  else if ((*__match_val_2).tag == TAG_Expr_FieldAccess) {
+      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1883 |     Expr obj = (*__match_val_2).data.FieldAccess.f0;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1884 |     rt_string_t field = (*__match_val_2).data.FieldAccess.f1;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1885 | TypeChecker_check_expr(self, obj) /* ? */;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1886 | __match_result_2 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_Void}; _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1887 | }
+      | ~        
+ 1888 |  else if ((*__match_val_2).tag == TAG_Expr_Lambda) {
+      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1889 |     NyxVec params = (*__match_val_2).data.Lambda.f0;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1890 |     Expr body = (*__match_val_2).data.Lambda.f1;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1891 | TypeChecker_push_scope(self);
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1892 | for (int64_t _p = 0; _p < params.len; _p++) {
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1893 |     int64_t p = _p;
+      |     ~~~~~~~~~~~~~~~
+ 1894 | TypeChecker_add_var(self, p.name, p.ty);
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1895 | }
+      | ~        
+ 1896 | ;
+      | ~        
+ 1897 | int64_t bt = TypeChecker_check_expr(self, body) /* ? */;
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1898 | TypeChecker_pop_scope(self);
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1899 | int64_t param_types = rt_vec_collect(int64_t_map(rt_vec_iter(params), ((rt_string_t (*)(int64_t))({ rt_string_t __lambda_11(int64_t p) { return p.ty; } __lambda_11; }))));
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1900 | __match_result_2 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_Func, .data.Func = {.f0 = param_types, .f1 = bt} }; _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1901 | }
+      | ~        
+ 1902 |  else if ((*__match_val_2).tag == TAG_Expr_Await) {
+      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1903 |     Expr e = (*__match_val_2).data.Await.f0;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1904 | __match_result_2 = TypeChecker_check_expr(self, e);
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1905 | }
+      | ~        
+ 1906 |  else if ((*__match_val_2).tag == TAG_Expr_Question) {
+      |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1907 |     Expr e = (*__match_val_2).data.Question.f0;
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1908 | __match_result_2 = TypeChecker_check_expr(self, e);
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1909 | }
+      | ~        
+ 1910 |  else {
+      |  ~~~~~~  
+ 1911 | __match_result_2 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.int_val = (void*)(Type){ .tag = TAG_Type_Void}; _tmp; });
+      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1912 | }
+      | ~        
+ 1913 | __match_result_2;
+      | ~~~~~~~~~~~~~~~~~
+ 1914 | });
+      | ~~~      
+ 1915 | }
+      | ~        
+ 1916 | 
+      |          
+ 1917 | NyxResult TypeChecker_check_stmt(TypeChecker* self, Stmt* stmt) {
+      | ~~~~~~~~~
+C:/xampp/htdocs/nyx/nyxc/main.c:3597:53: error: expected ';' before '}' token
+ 3597 | return (ClosureConvertResult){.closures = closures};
+      |                                                     ^
+      |                                                     ;
+ 3598 | }
+      | ~                                                    
+
+error: process didn't exit successfully: `target\debug\nyx-bootstrap.exe C:/xampp/htdocs/nyx/nyxc/main.nyx` (exit code: 1)

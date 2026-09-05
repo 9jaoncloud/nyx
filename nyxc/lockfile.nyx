@@ -1,0 +1,142 @@
+module lockfile
+
+import std.io
+import std.fs
+import std.string
+
+pub struct LockEntry {
+    pub name: String,
+    pub version: String,
+    pub url: String,
+    pub checksum: String,
+    pub resolved_deps: Vec<String>,
+}
+
+pub struct Lockfile {
+    pub entries: Vec<LockEntry>,
+}
+
+pub fn new_lockfile() -> Lockfile {
+    Lockfile { entries: Vec.new() }
+}
+
+pub fn load_lockfile(path: String) -> Result<Lockfile, String> {
+    if !fs.exists(path) {
+        return Result.Ok(new_lockfile())
+    }
+
+    let content = match fs.read_to_string(path) {
+        Result.Ok(c) => c,
+        Result.Err(_) => return Result.Ok(new_lockfile()),
+    }
+
+    parse(content)
+}
+
+pub fn parse(content: String) -> Result<Lockfile, String> {
+    let mut lockfile = new_lockfile()
+    let mut current_name = ""
+    let mut current_version = ""
+    let mut current_url = ""
+    let mut current_checksum = ""
+    let mut in_package = false
+
+    let lines = content.split("\n")
+    for line in lines {
+        let trimmed = line.trim()
+        if trimmed == "" || trimmed.starts_with("#") {
+            continue
+        }
+
+        if trimmed == "[[package]]" {
+            if in_package && current_name != "" {
+                lockfile.entries.push(LockEntry {
+                    name: current_name.clone(),
+                    version: current_version.clone(),
+                    url: current_url.clone(),
+                    checksum: current_checksum.clone(),
+                    resolved_deps: Vec.new(),
+                })
+                current_name = ""
+                current_version = ""
+                current_url = ""
+                current_checksum = ""
+            }
+            in_package = true
+            continue
+        }
+
+        if trimmed.contains("=") {
+            let eq_pos = trimmed.index_of("=")
+            let key = trimmed.substring(0, eq_pos).trim()
+            let value_raw = trimmed.substring(eq_pos + 1).trim()
+            let value = strip_quotes(value_raw)
+
+            match key {
+                "name" => current_name = value,
+                "version" => current_version = value,
+                "url" => current_url = value,
+                "checksum" => current_checksum = value,
+                _ => {}
+            }
+        }
+    }
+
+    if in_package && current_name != "" {
+        lockfile.entries.push(LockEntry {
+            name: current_name.clone(),
+            version: current_version.clone(),
+            url: current_url.clone(),
+            checksum: current_checksum.clone(),
+            resolved_deps: Vec.new(),
+        })
+    }
+
+    Result.Ok(lockfile)
+}
+
+pub fn save_lockfile(lockfile: &Lockfile, path: String) -> Result<(), String> {
+    let mut content = "# Nyx lockfile - auto-generated, do not edit\n\n"
+
+    for entry in lockfile.entries.iter() {
+        content = content + "[[package]]\n"
+        content = content + "name = \"" + entry.name + "\"\n"
+        content = content + "version = \"" + entry.version + "\"\n"
+        content = content + "url = \"" + entry.url + "\"\n"
+        content = content + "checksum = \"" + entry.checksum + "\"\n\n"
+    }
+
+    fs.write(path, content)
+}
+
+pub fn contains(lockfile: &Lockfile, name: &String, version: &String) -> bool {
+    for entry in lockfile.entries.iter() {
+        if entry.name == *name && entry.version == *version {
+            return true
+        }
+    }
+    false
+}
+
+pub fn find(lockfile: &Lockfile, name: &String) -> Option<&LockEntry> {
+    for entry in lockfile.entries.iter() {
+        if entry.name == *name {
+            return Option.Some(entry)
+        }
+    }
+    Option.None
+}
+
+pub fn remove(lockfile: &mut Lockfile, name: &String) {
+    lockfile.entries.retain(|e| e.name != *name)
+}
+
+fn strip_quotes(s: String) -> String {
+    if s.starts_with("\"") && s.ends_with("\"") {
+        return s.substring(1, s.len() - 1)
+    }
+    if s.starts_with("'") && s.ends_with("'") {
+        return s.substring(1, s.len() - 1)
+    }
+    s
+}

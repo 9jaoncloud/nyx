@@ -1,0 +1,158 @@
+module build
+
+import std.io
+import std.fs
+import std.string
+import std.process
+import manifest
+import lockfile
+import resolver_pkg
+
+pub struct BuildConfig {
+    pub optimize: bool,
+    pub debug: bool,
+    pub target: String,
+    pub output_dir: String,
+}
+
+pub fn default_config() -> BuildConfig {
+    BuildConfig {
+        optimize: true,
+        debug: false,
+        target: "native".to_string(),
+        output_dir: "target".to_string(),
+    }
+}
+
+pub fn build_project(manifest: &manifest.Manifest, config: &BuildConfig) -> Result<(), String> {
+    std.io.println("Building " + manifest.name + " v" + manifest.version + "...")
+
+    if !fs.exists(&config.output_dir) {
+        fs.create_dir_all(&config.output_dir)?
+    }
+
+    let source_files = collect_nyx_files("src")?
+    if source_files.is_empty() {
+        return Result.Err("No .nyx files found in src/")
+    }
+
+    std.io.println("  Found " + source_files.len().to_string() + " source file(s)")
+
+    let mut c_files = Vec.new()
+    for file in source_files.iter() {
+        std.io.print("  Compiling " + file + "... ")
+        match compile_file(file, config) {
+            Result.Ok(c_path) => {
+                c_files.push(c_path)
+                std.io.println("ok")
+            }
+            Result.Err(e) => {
+                std.io.println("FAILED")
+                return Result.Err("Compilation failed for " + file + ": " + e)
+            }
+        }
+    }
+
+    let dep_c_files = collect_dependency_sources(manifest)?
+    for dep_file in dep_c_files.iter() {
+        c_files.push(dep_file.clone())
+    }
+
+    let output_name = config.output_dir + "/" + &manifest.name
+    std.io.print("  Linking " + output_name + "... ")
+
+    let mut cc_cmd = "gcc -o " + output_name
+    if config.optimize {
+        cc_cmd = cc_cmd + " -O2"
+    }
+    if config.debug {
+        cc_cmd = cc_cmd + " -g"
+    }
+    cc_cmd = cc_cmd + " -lm -lpthread"
+
+    for c_file in c_files.iter() {
+        cc_cmd = cc_cmd + " " + c_file
+    }
+
+    let exit_code = std.process.run(&cc_cmd)
+    if exit_code != 0 {
+        std.io.println("FAILED")
+        return Result.Err("Linker failed with exit code " + exit_code.to_string())
+    }
+
+    std.io.println("ok")
+    std.io.println("Build completed: " + output_name)
+    Result.Ok(())
+}
+
+pub fn compile_file(path: &String, config: &BuildConfig) -> Result<String, String> {
+    let out_path = path.replace(".nyx", ".c")
+    let full_out = config.output_dir + "/" + &out_path.replace("src/", "")
+    let cmd = "nyc " + path + " -o " + &full_out
+    let status = std.process.run(cmd)
+    if status != 0 {
+        return Result.Err("Compilation failed for " + path)
+    }
+    Result.Ok(full_out)
+}
+
+fn collect_nyx_files(dir: String) -> Result<Vec<String>, String> {
+    let mut files = Vec.new()
+    collect_recursive(&dir, &mut files)?
+    Result.Ok(files)
+}
+
+fn collect_recursive(dir: &String, files: &mut Vec<String>) -> Result<(), String> {
+    let entries = match fs.read_dir(dir) {
+        Result.Ok(e) => e,
+        Result.Err(_) => return Result.Ok(()),
+    }
+
+    for entry in entries.iter() {
+        let path = dir + "/" + entry
+        if fs.is_dir(&path) {
+            collect_recursive(&path, files)?
+        } else if entry.ends_with(".nyx") {
+            files.push(path)
+        }
+    }
+
+    Result.Ok(())
+}
+
+fn collect_dependency_sources(manifest: &manifest.Manifest) -> Result<Vec<String>, String> {
+    let mut files = Vec.new()
+    let packages_dir = ".nyx/packages"
+
+    if !fs.exists(packages_dir) {
+        return Result.Ok(files)
+    }
+
+    let entries = match fs.read_dir(packages_dir) {
+        Result.Ok(e) => e,
+        Result.Err(_) => return Result.Ok(files),
+    }
+
+    for entry in entries.iter() {
+        let pkg_dir = packages_dir + "/" + entry
+        if fs.is_dir(&pkg_dir) {
+            let src_dir = pkg_dir + "/src"
+            if fs.exists(&src_dir) {
+                let src_files = collect_nyx_files(&src_dir)?
+                for f in src_files.iter() {
+                    files.push(f.clone())
+                }
+            }
+        }
+    }
+
+    Result.Ok(files)
+}
+
+pub fn clean(output_dir: &String) -> Result<(), String> {
+    if fs.exists(output_dir) {
+        std.process.run("rm -rf " + output_dir)
+        std.io.println("Cleaned " + output_dir)
+    }
+    Result.Ok(())
+}

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legal Disclaimer, Terms of Use &amp; Liability Policies — The Nyx Programming Language</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="../../assets/css/9jaoncloud-waffle.css">
+    <style>
+        .legal-box {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .legal-box h2 {
+            color: #fff;
+            font-size: 1.35rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .legal-box p, .legal-box li {
+            color: #cbd5e1;
+            font-size: 0.95rem;
+            line-height: 1.8;
+            margin-bottom: 0.75rem;
+        }
+        .legal-highlight {
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 4px solid #ef4444;
+            padding: 1rem 1.25rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1.25rem 0;
+            color: #fca5a5;
+            font-size: 0.9rem;
+        }
+        .notice-tag {
+            background: rgba(168, 85, 247, 0.2);
+            color: #c084fc;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+
+    <main>
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:1rem; margin-bottom:2rem;">
+            <span class="notice-tag">Official Legal Protection &bull; Effective August 2026</span>
+            <div id="nineja-app-switcher"></div>
+        </div>
+
+        <h1>Legal Disclaimer, Limitation of Liability &amp; Governance Policy</h1>
+        <p style="color:var(--text-secondary); font-size:1.05rem; margin-bottom:2.5rem;">
+            This document sets forth the comprehensive legal framework, software disclaimers, liability limitations, and acceptable use policies governing the <strong>Nyx Programming Language</strong>, its compiler toolchain (<code>nyx</code>, <code>nyxc</code>, <code>nypm</code>), documentation, online sandboxes, and certification services developed by <strong><a href="https://9jaoncloud.com.ng/simeon-bala.php" target="_blank" rel="noopener noreferrer" style="color:inherit; text-decoration:underline; font-weight:inherit;" title="View Simeon Bala (Founder &amp; Chief Architect)">Simeon Bala</a></strong> and hosted under the <strong>9jaonCloud</strong> platform.
+        </p>
+
+        <!-- Section 1: AS-IS Software Disclaimer -->
+        <div class="legal-box">
+            <h2>🛡️ 1. "AS IS" Warranty Disclaimer &amp; Software Licensing</h2>
+            <p>
+                The Nyx Programming Language specification, compiler binaries, standard library, language server, package registry, and related tools (collectively, the "Software") are provided on an <strong>"AS IS"</strong> and <strong>"AS AVAILABLE"</strong> basis, without warranty of any kind, whether express, implied, statutory, or otherwise.
+            </p>
+            <div class="legal-highlight">
+                <strong>DISCLAIMER OF IMPLIED WARRANTIES:</strong> TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE CREATOR (SIMEON BALA), 9JAONCLOUD, ITS CONTRIBUTORS, AND AFFILIATES EXPRESSLY DISCLAIM ALL WARRANTIES, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, ACCURACY, AND NON-INFRINGEMENT.
+            </div>
+            <p>
+                Neither the creator nor 9jaonCloud warrants that:
+            </p>
+            <ul>
+                <li>The Software will meet your specific business, security, or computational requirements.</li>
+                <li>The compilation, execution, or interpretation of code will be uninterrupted, bug-free, or entirely secure.</li>
+                <li>The memory inference algorithms, SMT formal verifiers, or MLIR lowering pipelines will detect every defect, runtime error, or security vulnerability in user-authored applications.</li>
+            </ul>
+        </div>
+
+        <!-- Section 2: Limitation of Liability -->
+        <div class="legal-box">
+            <h2>⚖️ 2. Comprehensive Limitation of Liability</h2>
+            <p>
+                Under no circumstances and under no legal theory (whether in contract, tort, negligence, strict liability, or otherwise) shall <strong><a href="https://9jaoncloud.com.ng/simeon-bala.php" target="_blank" rel="noopener noreferrer" style="color:inherit; text-decoration:underline; font-weight:inherit;" title="View Simeon Bala (Founder &amp; Chief Architect)">Simeon Bala</a></strong>, <strong>9jaonCloud</strong>, or any contributor be liable to you or any third party for:
+            </p>
+            <ul>
+                <li><strong>Indirect, Consequential, or Incidental Damages:</strong> Including loss of business profits, lost revenue, commercial interruption, data corruption, system downtime, hardware failure, or reputational loss.</li>
+                <li><strong>Loss Arising from Third-Party Dependencies:</strong> Any issues, vulnerabilities, or financial losses caused by third-party packages installed via <code>nypm</code> or external C/LLVM linkers.</li>
+                <li><strong>User-Authored Software Execution:</strong> Any liability, financial loss, or regulatory penalties resulting from software, smart contracts, trading algorithms, medical systems, or infrastructure built using Nyx.</li>
+            </ul>
+            <p>
+                You assume total responsibility and all operational risks associated with building, testing, deploying, and distributing software written in Nyx.
+            </p>
+        </div>
+
+        <!-- Section 3: High-Risk Activities Disclaimer -->
+        <div class="legal-box">
+            <h2>⚠️ 3. High-Risk &amp; Mission-Critical Systems Notice</h2>
+            <p>
+                While Nyx provides formal SMT contracts and $O(1)$ Region-based memory safety, the Software is <strong>NOT</strong> fault-tolerant and is not engineered or certified as fail-safe for use in hazardous environments requiring fail-safe performance, including:
+            </p>
+            <ul>
+                <li>Life-support systems, emergency medical resuscitation, or patient-critical biomedical equipment.</li>
+                <li>Commercial avionics, air traffic control, nuclear facility controllers, or military defense armaments.</li>
+                <li>Autonomous mass transit navigation or automated real-time physical safety interlocks.</li>
+            </ul>
+            <p>
+                Any developer utilizing Nyx for mission-critical or life-safety applications must conduct independent, exhaustive, accredited formal verification and validation at their own expense and risk.
+            </p>
+        </div>
+
+        <!-- Section 4: Certification & Academic Credentials Disclaimer -->
+        <div class="legal-box">
+            <h2>🎓 4. Certification &amp; Academic Credentials Disclaimer</h2>
+            <p>
+                The <strong>Nyx Certificate of Technical Proficiency</strong> and CloudPass credentials issued via the Nyx Interactive Academy signify that the recipient has completed the specified online curriculum and achieved the required score on the multiple-choice examination.
+            </p>
+            <ul>
+                <li>Certificates do not constitute a state-accredited university degree or government-regulated occupational license.</li>
+                <li>Neither <a href="https://9jaoncloud.com.ng/simeon-bala.php" target="_blank" rel="noopener noreferrer" style="color:inherit; text-decoration:underline; font-weight:inherit;" title="View Simeon Bala (Founder &amp; Chief Architect)">Simeon Bala</a> nor 9jaonCloud guarantees employment, salary offers, commercial funding, or professional licensing as a result of obtaining a Nyx certification.</li>
+                <li>9jaonCloud reserves the right to revoke or void any certificate found to have been obtained through fraudulent means, automated bots, answer-sharing syndicates, or identity impersonation.</li>
+            </ul>
+        </div>
+
+        <!-- Section 5: Acceptable Use & Package Registry Policy -->
+        <div class="legal-box">
+            <h2>📦 5. Package Registry &amp; Acceptable Use Policy</h2>
+            <p>
+                By using Nyx and the decentralized package registry (<code>nypm</code>), you agree NOT to:
+            </p>
+            <ul>
+                <li>Publish, distribute, or compile malicious code, ransomware, keyloggers, botnets, or software designed to compromise computer systems without authorization.</li>
+                <li>Infringe upon the intellectual property, copyright, or trademark rights of third parties.</li>
+                <li>Engage in illegal financial market manipulation, unlicensed banking operations, or money laundering schemes.</li>
+            </ul>
+            <p>
+                9jaonCloud reserves the right to immediately take down malicious packages, blacklist offending cryptographic signing keys, and terminate developer CloudPass access.
+            </p>
+        </div>
+
+        <!-- Section 6: Intellectual Property & Trademarks -->
+        <div class="legal-box">
+            <h2>🏛️ 6. Intellectual Property &amp; Trademarks</h2>
+            <p>
+                The name <strong>"Nyx"</strong>, the Nyx logo mark (🌙), the <strong>"9jaonCloud"</strong> ecosystem marks, and associated branding are proprietary assets of <a href="https://9jaoncloud.com.ng/simeon-bala.php" target="_blank" rel="noopener noreferrer" style="color:inherit; text-decoration:underline; font-weight:inherit;" title="View Simeon Bala (Founder &amp; Chief Architect)">Simeon Bala</a> and 9jaonCloud.
+            </p>
+            <p>
+                Open-source portions of the standard library and public SDK are provided under permissible licensing, but use of official branding to imply official endorsement or sponsorship of third-party commercial products requires prior written consent.
+            </p>
+        </div>
+
+        
+        <!-- Section 8: SpecForge & Telemetry Transparency -->
+        <div class="legal-box" style="border-left: 4px solid #38bdf8; background: rgba(56, 189, 248, 0.04);">
+            <h2 style="color: #38bdf8;">📐 8. Transparent Disclosures: SpecForge Feedback Ingestion &amp; Telemetry</h2>
+            <p>
+                In strict compliance with the <strong>Nigeria Data Protection Act (NDPA) 2023</strong> and international privacy standards, we provide full transparency regarding the engineering platforms and telemetry used in the Nyx ecosystem:
+            </p>
+            <h3 style="color: #f8fafc; font-size: 1.1rem; margin-top: 1rem; margin-bottom: 0.5rem;">A. SpecForge Bug &amp; Proposal Triage Platform</h3>
+            <p>
+                All community bug submissions, compiler error logs, feature requests, and roadmap proposals are collected and triaged through <strong>SpecForge AI</strong> (official intake endpoint: <a href="https://specforge.9jaoncloud.com.ng/bug_report.php?token=85ef1ac50900f8bff142c95c85287db4" target="_blank" style="color: #38bdf8; font-weight: 700;">specforge.9jaoncloud.com.ng</a>).
+            </p>
+            <ul>
+                <li><strong>Data Processed:</strong> Defect titles, reproduction code snippets, observed vs. expected compiler diagnostics, browser environment headers, client console tracebacks, and optional reporter contact emails.</li>
+                <li><strong>Purpose &amp; Operational Rationale:</strong> To mathematically isolate compiler regressions, benchmark LLVM 18 target emissions, harden zero-GC region allocators, and notify submitting engineers when bugfixes are merged into release branches.</li>
+            </ul>
+            <h3 style="color: #f8fafc; font-size: 1.1rem; margin-top: 1.25rem; margin-bottom: 0.5rem;">B. First-Party Performance Telemetry &amp; Analytics</h3>
+            <p>
+                The Nyx web portal and interactive compiler sandboxes collect minimal, aggregated, first-party operational telemetry for the following explicit reasons:
+            </p>
+            <ul>
+                <li><strong>Compiler Latency &amp; WASM Load Profiling:</strong> Measuring browser execution speeds and runtime memory allocation to continuously optimize binary payload sizes.</li>
+                <li><strong>Error &amp; Crash Tracking:</strong> Capturing client-side WebAssembly panics and failed test runs to deploy instant web runtime patches.</li>
+                <li><strong>Security &amp; Abuse Prevention:</strong> Guarding against automated bot compilation attacks, denial-of-service attempts, and unauthorized resource draining.</li>
+                <li><strong>Zero Commercial Brokering:</strong> Contributor data and telemetry are never sold, rented, or shared with commercial data brokers or third-party advertisers.</li>
+            </ul>
+        </div>
+
+        <!-- Section 7: Governing Law & Jurisdiction -->
+        <div class="legal-box">
+            <h2>⚖️ 7. Governing Law &amp; Dispute Resolution</h2>
+            <p>
+                These terms, policies, and disclaimers shall be governed by and construed in accordance with the laws of the <strong>Federal Republic of Nigeria</strong>, without giving effect to any principles of conflicts of law.
+            </p>
+            <p>
+                Any legal action or proceeding arising under this agreement shall be brought exclusively in the courts of competent jurisdiction located in Nigeria.
+            </p>
+        </div>
+
+        <div style="margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: space-between;">
+            <a href="../../index.html" style="color: var(--accent-light); text-decoration: none;">&larr; Return to Nyx Portal Home</a>
+            <a href="mailto:nyx@9jaoncloud.com.ng" style="color: var(--accent-light); text-decoration: none;">Contact Legal / Inquiries &rarr;</a>
+        </div>
+    </main>
+
+    <script src="../navigation.js"></script>
+    <script src="../../assets/js/9jaoncloud-waffle.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

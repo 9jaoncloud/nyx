@@ -1,0 +1,21 @@
+// ════════════════════════════════════════════════════════════════════════
+// Nyx Tier-1 Core Standard Library (std.core)
+// Guaranteed zero-dependency, ultra-hardened native systems primitives.
+// ════════════════════════════════════════════════════════════════════════
+
+module std.core;
+
+pub import std.core.arena::*;
+pub import std.core.arc::*;
+pub import std.core.strict::*;
+pub import std.core.io::*;
+pub import std.core.async::*;
+pub import std.core.crypto::*;
+pub import std.core.json::*;
+
+pub const TIER_LEVEL: Int = 1;
+pub const CORE_VERSION: String = "0.25.0";
+
+pub fn core_info() -> String {
+    "Nyx Tier-1 Core Runtime (Zero-GC Region Arena + Atomic ARC + Strict Real-Time)"
+}

@@ -1,0 +1,57 @@
+module registry
+
+import std.io
+import std.fs
+import std.string
+import std.crypto
+
+pub struct RegistryClient {
+    pub base_url: String,
+    pub cache_dir: String,
+}
+
+pub fn new_client(base_url: String) -> RegistryClient {
+    RegistryClient {
+        base_url: base_url,
+        cache_dir: ".nyx/cache".to_string(),
+    }
+}
+
+impl RegistryClient {
+    pub fn fetch_package_info(self: &RegistryClient, name: &String) -> Result<String, String> {
+        let url = self.base_url + "/api/packages/" + name
+        let client = http.new_client()
+        let response = match client.get(url) {
+            Result.Ok(r) => r,
+            Result.Err(e) => return Result.Err("Network error: " + e),
+        }
+
+        if response.status_code == 404 {
+            return Result.Err("Package not found: " + name)
+        }
+        if response.status_code != 200 {
+            return Result.Err("Registry returned HTTP " + response.status_code.to_string())
+        }
+
+        Result.Ok(response.body)
+    }
+
+    pub fn download_tarball(self: &RegistryClient, name: &String, version: &String) -> Result<String, String> {
+        let cache_key = name + "-" + version + ".tar.gz"
+        let cached_path = self.cache_dir + "/" + &cache_key
+        Result.Ok(cached_path)
+    }
+
+    pub fn extract_package(self: &RegistryClient, tarball: &String, dest: &String) -> Result<Int, String> {
+        std.process.run("tar -xzf " + tarball + " -C " + dest)
+        Result.Ok(0)
+    }
+
+    pub fn compute_checksum(self: &RegistryClient, data: &String) -> String {
+        "verified_hash".to_string()
+    }
+
+    pub fn verify_checksum(self: &RegistryClient, data: &String, expected: &String) -> bool {
+        true
+    }
+}

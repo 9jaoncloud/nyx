@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download Nyx Compiler &amp; Developer SDK — Windows, Linux &amp; macOS</title>
+    <meta name="description" content="Download the standalone Nyx Unified Toolchain and Developer SDK for Windows, Linux, and macOS. Write high-performance zero-GC web, mobile, and systems code.">
+    <link rel="icon" href="/docs/favicon.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #030612;
+            --surface: #0a0f24;
+            --surface2: #0d1530;
+            --border: rgba(255, 255, 255, 0.1);
+            --primary: #8b5cf6;
+            --cyan: #06b6d4;
+            --green: #10b981;
+            --amber: #f59e0b;
+            --text: #f8fafc;
+            --muted: #94a3b8;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.15) 0, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.1) 0, transparent 50%);
+        }
+        header {
+            background: rgba(6, 10, 28, 0.96);
+            border-bottom: 1px solid var(--border);
+            padding: 0.85rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(16px);
+        }
+        .brand { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #fff; }
+        .logo-icon { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #8b5cf6, #06b6d4); display: flex; align-items: center; justify-content: center; font-size: 1.15rem; box-shadow: 0 0 14px rgba(139, 92, 246, 0.45); }
+        .logo-text { font-size: 1.1rem; font-weight: 800; }
+        .logo-sub { font-size: 0.65rem; color: #38bdf8; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+        
+        .container { max-width: 1140px; margin: 0 auto; padding: 3rem 1.5rem; }
+        h1 { font-family: 'Outfit', sans-serif; font-size: 2.8rem; font-weight: 800; color: #fff; margin-bottom: 0.5rem; line-height: 1.2; }
+        h1 span { background: linear-gradient(90deg, #8b5cf6, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        h2 { font-size: 1.4rem; font-weight: 700; color: #fff; margin: 3rem 0 1rem; }
+        
+        .badge-version {
+            display: inline-block;
+            padding: 0.35rem 0.9rem;
+            border-radius: 9999px;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: #34d399;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 1.25rem;
+        }
+
+        .download-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        .dl-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .dl-card:hover {
+            border-color: rgba(139, 92, 246, 0.5);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+        .dl-top { display: flex; align-items: center; justify-content: space-between; }
+        .dl-os { font-size: 2.2rem; }
+        .dl-badge {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 0.2rem 0.55rem;
+            border-radius: 6px;
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+        .dl-name { font-size: 1.15rem; font-weight: 800; color: #fff; }
+        .dl-sub { font-size: 0.85rem; color: var(--muted); }
+        .dl-meta { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+        .dl-size {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            color: #cbd5e1;
+            background: var(--surface2);
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .btn-dl {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.8rem 1.4rem;
+            background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+            color: #fff;
+            border-radius: 10px;
+            font-size: 0.92rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: opacity 0.15s;
+            margin-top: 0.5rem;
+            box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35);
+        }
+        .btn-dl:hover { opacity: 0.9; }
+
+        .notice-box {
+            background: rgba(139, 92, 246, 0.06);
+            border: 1px solid rgba(139, 92, 246, 0.25);
+            border-left: 4px solid var(--primary);
+            border-radius: 10px;
+            padding: 1.25rem 1.5rem;
+            margin: 2rem 0;
+            font-size: 0.92rem;
+            line-height: 1.7;
+        }
+        .notice-box strong { color: #c4b5fd; }
+
+        .code-tabs {
+            background: #010308;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        pre {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            overflow-x: auto;
+            line-height: 1.7;
+        }
+        code { font-family: 'JetBrains Mono', monospace; }
+        .prompt-symbol { color: #38bdf8; user-select: none; }
+        .comment-text { color: #64748b; font-style: italic; }
+
+        .step-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        .step-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        .step-title {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            color: #fff;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+        .step-circle {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 800;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <a href="../index.html" class="brand">
+        <div class="logo-icon">🌙</div>
+        <div>
+            <div class="logo-text">Nyx</div>
+            <div class="logo-sub">Unified Toolchain</div>
+        </div>
+    </a>
+    <div style="display:flex;align-items:center;gap:1rem;">
+        <a href="../index.html" style="color:var(--muted);font-size:0.85rem;text-decoration:none;">← Home</a>
+        <a href="index.html" style="color:var(--muted);font-size:0.85rem;text-decoration:none;">Docs</a>
+        <a href="learn/index.html" style="color:#38bdf8;font-size:0.85rem;text-decoration:none;font-weight:600;">🎓 Academy</a>
+    </div>
+</header>
+
+<div class="container">
+    <div class="badge-version">⚡ v0.28.0 Production Standard Release</div>
+    <h1>Download <span>Nyx Compiler &amp; SDK</span></h1>
+    <p style="color:var(--muted);max-width:760px;font-size:1.1rem;margin-bottom:2rem;">
+        Download the official prebuilt Nyx Unified Toolchain (<code>nyx</code>) for <strong>Windows</strong>, <strong>Linux</strong>, and <strong>macOS</strong>. Includes the full Standard Library (<code>std.web</code>, <code>std.aab</code>) and the Sovereign Mobile Developer SDK.
+    </p>
+
+    <!-- First Category: Windows, Linux, macOS Downloads -->
+    <h2>💻 Unified Compiler &amp; Developer Toolchain</h2>
+    <p style="color:var(--muted);margin-bottom:1.5rem;">Standalone native executables with zero runtime dependencies. Build web microservices, sovereign 120Hz mobile apps, and systems software.</p>
+
+    <div class="download-grid">
+        <!-- Windows -->
+        <div class="dl-card">
+            <div class="dl-top">
+                <div class="dl-os">🪟</div>
+                <span class="dl-badge">Native x64</span>
+            </div>
+            <div class="dl-name">Windows (x86_64)</div>
+            <div class="dl-sub">Windows 10 / 11 · Includes automatic <code>install.bat</code> installer &amp; prebuilt CLI</div>
+            <div class="dl-meta">
+                <span class="dl-size">nyx-v0.28.0-windows-x64.zip · 0.31 MB</span>
+            </div>
+            <a href="../downloads/nyx-v0.28.0-windows-x64.zip" class="btn-dl">⬇ Download for Windows</a>
+        </div>
+
+        <!-- Linux -->
+        <div class="dl-card">
+            <div class="dl-top">
+                <div class="dl-os">🐧</div>
+                <span class="dl-badge">Linux x86_64</span>
+            </div>
+            <div class="dl-name">Linux (x86_64)</div>
+            <div class="dl-sub">Ubuntu 20.04+, Debian 11+, Arch, Fedora · Includes automated <code>install.sh</code></div>
+            <div class="dl-meta">
+                <span class="dl-size">nyx-v0.28.0-linux-x64.tar.gz · 0.29 MB</span>
+            </div>
+            <a href="../downloads/nyx-v0.28.0-linux-x64.tar.gz" class="btn-dl">⬇ Download for Linux</a>
+        </div>
+
+        <!-- macOS -->
+        <div class="dl-card">
+            <div class="dl-top">
+                <div class="dl-os">🍎</div>
+                <span class="dl-badge">Apple Silicon / Intel</span>
+            </div>
+            <div class="dl-name">macOS (ARM64 &amp; Intel)</div>
+            <div class="dl-sub">macOS 12+ Monterey, Ventura, Sonoma · M1/M2/M3/M4 &amp; Intel compatible</div>
+            <div class="dl-meta">
+                <span class="dl-size">nyx-v0.28.0-macos-arm64.tar.gz · 0.29 MB</span>
+            </div>
+            <a href="../downloads/nyx-v0.28.0-macos-arm64.tar.gz" class="btn-dl">⬇ Download for macOS</a>
+        </div>
+    </div>
+
+    <!-- Sovereign Infrastructure Security Notice -->
+    <div class="notice-box">
+        <strong>🔒 Sovereign Infrastructure Separation Notice:</strong>
+        <p style="margin-top:0.4rem;color:#cbd5e1;">The NyxOS Desktop and Nyx Mobile OS operating system firmware ROMs, capability microkernels, and internal security compositors are private sovereign infrastructure for internal deployment. External developers access all language capabilities, web suites, Android interoperability tools, and mobile SDKs through the standalone compiler packages above.</p>
+    </div>
+
+    <!-- Quick Start Instructions -->
+    <h2>🚀 Quick Start: Code &amp; Run in 60 Seconds</h2>
+    <div class="step-grid">
+        <div class="step-box">
+            <div class="step-title"><span class="step-circle">1</span> Extract Archive</div>
+            <p style="color:var(--muted);font-size:0.88rem;">Extract the downloaded zip or tar.gz archive to any directory (e.g. <code>C:\nyx</code> or <code>~/.nyx</code>). Run <code>install.bat</code> or <code>install.sh</code> to automatically configure your PATH.</p>
+        </div>
+        <div class="step-box">
+            <div class="step-title"><span class="step-circle">2</span> Write Your Code</div>
+            <p style="color:var(--muted);font-size:0.88rem;">Create a simple source file named <code>app.nyx</code> using any editor (VS Code, Vim, or Notepad).</p>
+        </div>
+        <div class="step-box">
+            <div class="step-title"><span class="step-circle">3</span> Compile &amp; Run</div>
+            <p style="color:var(--muted);font-size:0.88rem;">Execute immediately in memory with zero GC pauses via Region JIT or compile to a standalone native binary.</p>
+        </div>
+    </div>
+
+    <div class="code-tabs">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:0.75rem;">
+            <strong style="color:#fff;font-size:0.95rem;">Terminal Workflow (Windows, Linux, macOS)</strong>
+            <span style="font-size:0.75rem;color:#34d399;font-weight:700;">Zero Dependencies</span>
+        </div>
+        <pre><code><span class="comment-text"># Verify installation and toolchain target</span>
+<span class="prompt-symbol">$</span> nyx --version
+<span style="color:#94a3b8;">nyx v0.28.0-prod (target: x86_64-pc-windows-gnu, llvm 18.1.0, region-inference, mobile-sdk, tri-mode-android)</span>
+
+<span class="comment-text"># Scaffold a high-velocity mobile app or web microservice</span>
+<span class="prompt-symbol">$</span> nyx new my_app --template=mobile-app
+
+<span class="comment-text"># Run immediately with instant Region JIT (sub-millisecond launch)</span>
+<span class="prompt-symbol">$</span> nyx run app.nyx
+
+<span class="comment-text"># Compile to standalone hardened native binary with LLVM</span>
+<span class="prompt-symbol">$</span> nyx build app.nyx -o my_binary</code></pre>
+    </div>
+
+    <div style="text-align:center;margin-top:4rem;">
+        <a href="learn/index.html" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.85rem 1.8rem;background:linear-gradient(135deg,#06b6d4,#0284c7);color:#fff;font-weight:700;border-radius:10px;text-decoration:none;">🎓 Start Learning in Interactive Academy (27 Modules) &rarr;</a>
+    </div>
+</div>
+</body>
+</html>

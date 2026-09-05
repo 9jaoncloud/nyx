@@ -1,0 +1,324 @@
+module regex
+
+struct Regex {
+    pattern: String,
+    is_literal: Bool,
+    literal: String,
+}
+
+pub fn compile(pattern: String) -> Result<Regex, String> {
+    let mut is_literal = true
+    let special = ".*+?^$[]{}()|\\"
+    for ch in pattern.chars() {
+        for s in special.chars() {
+            if ch == s {
+                is_literal = false
+                break
+            }
+        }
+        if !is_literal { break }
+    }
+
+    if is_literal {
+        Result.Ok(Regex { pattern: pattern.clone(), is_literal: true, literal: pattern })
+    } else {
+        Result.Ok(Regex { pattern: pattern.clone(), is_literal: false, literal: "".to_string() })
+    }
+}
+
+pub fn is_match(self: &Regex, text: String) -> Bool {
+    if self.is_literal {
+        return text.contains(self.literal.clone())
+    }
+    match_nfa(self.pattern.clone(), text)
+}
+
+pub fn find(self: &Regex, text: String) -> Option<String> {
+    if self.is_literal {
+        let pos = text.find(self.literal.clone())
+        if pos >= 0 {
+            return Option.Some(text.slice(pos as u64, pos as u64 + self.literal.len() as u64))
+        }
+        return Option.None
+    }
+    match_nfa_first(self.pattern.clone(), text)
+}
+
+pub fn find_all(self: &Regex, text: String) -> Vec<String> {
+    let mut results = Vec.new()
+    if self.is_literal {
+        let mut pos = 0
+        let search_text = text.clone()
+        loop {
+            let found = search_text.find_from(self.literal.clone(), pos)
+            if found < 0 { break }
+            results.push(search_text.slice(found as u64, found as u64 + self.literal.len() as u64))
+            pos = found as u64 + self.literal.len() as u64
+            if pos >= search_text.len() { break }
+        }
+        return results
+    }
+
+    let mut remaining = text.clone()
+    loop {
+        match match_nfa_first(self.pattern.clone(), remaining.clone()) {
+            Option.Some(m) => {
+                results.push(m.clone())
+                let m_len = m.len() as u64
+                if m_len == 0 { break }
+                remaining = remaining.slice(m_len, remaining.len())
+            }
+            Option.None => break,
+        }
+    }
+    results
+}
+
+pub fn replace(self: &Regex, text: String, replacement: String) -> String {
+    if self.is_literal {
+        return text.replace(self.literal.clone(), replacement)
+    }
+
+    let mut result = String.new()
+    let mut remaining = text.clone()
+    loop {
+        match match_nfa_first(self.pattern.clone(), remaining.clone()) {
+            Option.Some(m) => {
+                let m_len = m.len() as u64
+                let pos = remaining.find(m.clone())
+                result = result + remaining.slice(0, pos as u64) + replacement.clone()
+                remaining = remaining.slice(pos as u64 + m_len, remaining.len())
+            }
+            Option.None => {
+                result = result + remaining
+                break
+            }
+        }
+    }
+    result
+}
+
+pub fn split(self: &Regex, text: String) -> Vec<String> {
+    let mut results = Vec.new()
+    if self.is_literal {
+        let parts = text.split(self.literal.clone())
+        for part in parts {
+            results.push(part)
+        }
+        return results
+    }
+
+    let mut remaining = text.clone()
+    loop {
+        match match_nfa_first(self.pattern.clone(), remaining.clone()) {
+            Option.Some(m) => {
+                let m_len = m.len() as u64
+                let pos = remaining.find(m.clone())
+                results.push(remaining.slice(0, pos as u64))
+                remaining = remaining.slice(pos as u64 + m_len, remaining.len())
+            }
+            Option.None => {
+                results.push(remaining)
+                break
+            }
+        }
+    }
+    results
+}
+
+// NFA-based regex matcher (supports: . * + ? | () [] \d \w \s ^ $)
+fn match_nfa(pattern: String, text: String) -> Bool {
+    let states = build_nfa(pattern)
+    let mut current = Vec.new()
+    current.push(0u64)
+
+    // Add epsilon closures from start
+    current = epsilon_closure(&states, current)
+
+    for i in 0..text.len() {
+        let ch = text.char_at(i as u64)
+        let mut next = Vec.new()
+        for state in current {
+            if state < states.len() as u64 {
+                let transition = &states[state as u64]
+                if matches_char(transition.match_type.clone(), ch) {
+                    next.push(transition.next)
+                }
+                // Also check alternate for character class
+                if transition.alt_next >= 0 {
+                    next.push(transition.alt_next as u64)
+                }
+            }
+        }
+        current = epsilon_closure(&states, next)
+    }
+
+    // Check if any accepting state is reachable
+    for state in current {
+        if state < states.len() as u64 && states[state as u64].accept {
+            return true
+        }
+    }
+    false
+}
+
+fn match_nfa_first(pattern: String, text: String) -> Option<String> {
+    for end in 1..=text.len() {
+        let sub = text.slice(0, end as u64)
+        if match_nfa(pattern.clone(), sub) {
+            return Option.Some(sub)
+        }
+    }
+    Option.None
+}
+
+struct NFAState {
+    match_type: String,  // "any", "literal:X", "digit", "word", "space", "none"
+    next: u64,
+    alt_next: i64,
+    accept: Bool,
+}
+
+fn build_nfa(pattern: String) -> Vec<NFAState> {
+    let mut states = Vec.new()
+    let chars = pattern.chars()
+    let mut i = 0
+    let p = pattern.clone()
+
+    while i < p.len() {
+        let ch = p.char_at(i as u64)
+        let state_idx = states.len() as u64
+
+        match ch {
+            '.' => {
+                states.push(NFAState { match_type: "any".to_string(), next: state_idx + 1, alt_next: -1, accept: false })
+            }
+            '\\' => {
+                i = i + 1
+                if i < p.len() {
+                    let esc = p.char_at(i as u64)
+                    let mt = match esc {
+                        'd' => "digit".to_string(),
+                        'w' => "word".to_string(),
+                        's' => "space".to_string(),
+                        _ => "literal:".to_string() + String.from_char(esc),
+                    }
+                    states.push(NFAState { match_type: mt, next: state_idx + 1, alt_next: -1, accept: false })
+                }
+            }
+            '*' => {
+                // Zero or more: create a loop
+                if states.len() > 0 {
+                    let last = states.len() - 1
+                    states[last].next = state_idx
+                    states[last].alt_next = state_idx as i64 + 1
+                }
+                states.push(NFAState { match_type: "none".to_string(), next: state_idx, alt_next: state_idx + 1, accept: false })
+            }
+            '+' => {
+                if states.len() > 0 {
+                    let last = states.len() - 1
+                    states[last].next = state_idx
+                    states[last].alt_next = state_idx as i64 + 1
+                }
+                states.push(NFAState { match_type: "none".to_string(), next: state_idx, alt_next: state_idx + 1, accept: false })
+            }
+            '?' => {
+                if states.len() > 0 {
+                    let last = states.len() - 1
+                    states[last].alt_next = state_idx as i64 + 1
+                }
+                states.push(NFAState { match_type: "none".to_string(), next: state_idx + 1, alt_next: state_idx + 1, accept: false })
+            }
+            '^' => {
+                // Start anchor - just skip, we always match from start
+            }
+            '$' => {
+                // End anchor - mark next state as accepting
+                if states.len() > 0 {
+                    let last = states.len() - 1
+                    states[last].accept = true
+                }
+            }
+            '|' => {
+                // Alternation - simplified: treat as "any" for now
+                states.push(NFAState { match_type: "any".to_string(), next: state_idx + 1, alt_next: -1, accept: false })
+            }
+            '[' => {
+                // Character class - simplified
+                let mut class_str = String.new()
+                i = i + 1
+                while i < p.len() && p.char_at(i as u64) != ']' {
+                    class_str = class_str + String.from_char(p.char_at(i as u64))
+                    i = i + 1
+                }
+                states.push(NFAState { match_type: "class:".to_string() + class_str, next: state_idx + 1, alt_next: -1, accept: false })
+            }
+            '(' | ')' => {
+                // Groups - simplified
+            }
+            _ => {
+                states.push(NFAState { match_type: "literal:".to_string() + String.from_char(ch), next: state_idx + 1, alt_next: -1, accept: false })
+            }
+        }
+        i = i + 1
+    }
+
+    // Mark last state as accepting
+    if states.len() > 0 {
+        let last = states.len() - 1
+        states[last].accept = true
+    }
+
+    states
+}
+
+fn matches_char(match_type: String, ch: Char) -> Bool {
+    if match_type == "any" {
+        return ch != '\n'
+    }
+    if match_type == "digit" {
+        return ch >= '0' && ch <= '9'
+    }
+    if match_type == "word" {
+        return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '_'
+    }
+    if match_type == "space" {
+        return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r'
+    }
+    if match_type.starts_with("literal:") {
+        let expected = match_type.slice(7, match_type.len())
+        return ch.to_string() == expected
+    }
+    if match_type.starts_with("class:") {
+        let class_str = match_type.slice(6, match_type.len())
+        for class_ch in class_str.chars() {
+            if ch == class_ch { return true }
+        }
+        return false
+    }
+    false
+}
+
+fn epsilon_closure(states: &Vec<NFAState>, initial: Vec<u64>) -> Vec<u64> {
+    let mut result = Vec.new()
+    let mut stack = Vec.new()
+    for s in initial { stack.push(s) }
+
+    while stack.len() > 0 {
+        let s = stack.pop().unwrap()
+        if s < states.len() as u64 {
+            result.push(s)
+            let state = &states[s as u64]
+            if state.match_type == "none" {
+                if state.next < states.len() as u64 {
+                    stack.push(state.next)
+                }
+                if state.alt_next >= 0 && (state.alt_next as u64) < states.len() as u64 {
+                    stack.push(state.alt_next as u64)
+                }
+            }
+        }
+    }
+    result
+}

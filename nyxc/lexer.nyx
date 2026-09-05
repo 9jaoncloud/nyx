@@ -1,0 +1,223 @@
+module lexer
+
+import token.*
+import std.string
+
+pub struct Lexer {
+    source: String,
+    pos: Int,
+    line: Int,
+    col: Int,
+}
+
+pub fn new_lexer(source: String) -> Lexer {
+    Lexer { source, pos: 0, line: 1, col: 1 }
+}
+
+impl Lexer {
+    pub fn next_token(self: &mut Lexer) -> Token {
+        self.skip_whitespace()
+        if self.pos >= self.source.len() {
+            return Token { kind: TokenKind.EOF, line: self.line, col: self.col }
+        }
+        let ch = self.source[self.pos]
+        match ch {
+            '(' => { self.advance(); Token { kind: TokenKind.LParen, line: self.line, col: self.col - 1 } }
+            ')' => { self.advance(); Token { kind: TokenKind.RParen, line: self.line, col: self.col - 1 } }
+            '{' => { self.advance(); Token { kind: TokenKind.LBrace, line: self.line, col: self.col - 1 } }
+            '}' => { self.advance(); Token { kind: TokenKind.RBrace, line: self.line, col: self.col - 1 } }
+            '[' => { self.advance(); Token { kind: TokenKind.LBracket, line: self.line, col: self.col - 1 } }
+            ']' => { self.advance(); Token { kind: TokenKind.RBracket, line: self.line, col: self.col - 1 } }
+            ',' => { self.advance(); Token { kind: TokenKind.Comma, line: self.line, col: self.col - 1 } }
+            ';' => { self.advance(); Token { kind: TokenKind.Semicolon, line: self.line, col: self.col - 1 } }
+            ':' => {
+                if self.peek() == ':' {
+                    self.advance()
+                    self.advance()
+                    Token { kind: TokenKind.PathSep, line: self.line, col: self.col - 2 }
+                } else {
+                    self.advance()
+                    Token { kind: TokenKind.Colon, line: self.line, col: self.col - 1 }
+                }
+            }
+            '=' => {
+                if self.peek() == '=' { self.advance(); self.advance(); Token { kind: TokenKind.EqEq, line: self.line, col: self.col - 2 } }
+                else if self.peek() == '>' { self.advance(); self.advance(); Token { kind: TokenKind.FatArrow, line: self.line, col: self.col - 2 } }
+                else { self.advance(); Token { kind: TokenKind.Equals, line: self.line, col: self.col - 1 } }
+            }
+            '+' => { self.advance(); Token { kind: TokenKind.Plus, line: self.line, col: self.col - 1 } }
+            '-' => {
+                if self.peek() == '>' {
+                    self.advance(); self.advance(); Token { kind: TokenKind.Arrow, line: self.line, col: self.col - 2 }
+                } else {
+                    self.advance(); Token { kind: TokenKind.Minus, line: self.line, col: self.col - 1 } }
+            }
+            '*' => { self.advance(); Token { kind: TokenKind.Star, line: self.line, col: self.col - 1 } }
+            '/' => {
+                if self.peek() == '/' {
+                    while self.pos < self.source.len() && self.source[self.pos] != '\n' { self.advance() }
+                    return self.next_token()
+                } else if self.peek() == '*' {
+                    self.advance(); self.advance()
+                    while self.pos < self.source.len() {
+                        if self.source[self.pos] == '*' && self.peek() == '/' {
+                            self.advance(); self.advance(); break
+                        }
+                        self.advance()
+                    }
+                    return self.next_token()
+                } else {
+                    self.advance(); Token { kind: TokenKind.Slash, line: self.line, col: self.col - 1 }
+                }
+            }
+            '%' => { self.advance(); Token { kind: TokenKind.Percent, line: self.line, col: self.col - 1 } }
+            '<' => {
+                if self.peek() == '=' { self.advance(); self.advance(); Token { kind: TokenKind.LtEq, line: self.line, col: self.col - 2 } }
+                else { self.advance(); Token { kind: TokenKind.Lt, line: self.line, col: self.col - 1 } }
+            }
+            '>' => {
+                if self.peek() == '=' { self.advance(); self.advance(); Token { kind: TokenKind.GtEq, line: self.line, col: self.col - 2 } }
+                else { self.advance(); Token { kind: TokenKind.Gt, line: self.line, col: self.col - 1 } }
+            }
+            '&' => { self.advance(); if self.peek() == '&' { self.advance(); Token { kind: TokenKind.And, line: self.line, col: self.col - 2 } } else { Token { kind: TokenKind.Ampersand, line: self.line, col: self.col - 1 } } }
+            '|' => { self.advance(); if self.peek() == '|' { self.advance(); Token { kind: TokenKind.Or, line: self.line, col: self.col - 2 } } else { Token { kind: TokenKind.Pipe, line: self.line, col: self.col - 1 } } }
+            '!' => {
+                if self.peek() == '=' { self.advance(); self.advance(); Token { kind: TokenKind.NotEq, line: self.line, col: self.col - 2 } }
+                else { self.advance(); Token { kind: TokenKind.Not, line: self.line, col: self.col - 1 } }
+            }
+            '.' => {
+                if self.peek() == '.' { self.advance(); self.advance(); Token { kind: TokenKind.DotDot, line: self.line, col: self.col - 2 } }
+                else { self.advance(); Token { kind: TokenKind.Dot, line: self.line, col: self.col - 1 } }
+            }
+            '?' => { self.advance(); Token { kind: TokenKind.Question, line: self.line, col: self.col - 1 } }
+            '_' => { self.advance(); Token { kind: TokenKind.Underscore, line: self.line, col: self.col - 1 } }
+            '0'..='9' => self.read_number(),
+            '"' => self.read_string(),
+            'a'..='z' | 'A'..='Z' => self.read_ident(),
+            _ => { self.advance(); Token { kind: TokenKind.EOF, line: self.line, col: self.col } }
+        }
+    }
+
+    fn advance(self: &mut Lexer) {
+        if self.source[self.pos] == '\n' { self.line += 1; self.col = 1 }
+        else { self.col += 1 }
+        self.pos += 1
+    }
+
+    fn peek(self: &Lexer) -> Char {
+        if self.pos + 1 < self.source.len() { self.source[self.pos + 1] } else { '\0' }
+    }
+
+    fn skip_whitespace(self: &mut Lexer) {
+        while self.pos < self.source.len() {
+            let ch = self.source[self.pos]
+            if ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n' {
+                self.advance()
+            } else {
+                break
+            }
+        }
+    }
+
+    fn read_number(self: &mut Lexer) -> Token {
+        let line = self.line
+        let col = self.col
+        let mut num_str = ""
+        let mut is_float = false
+        while self.pos < self.source.len() {
+            let ch = self.source[self.pos]
+            if ch >= '0' && ch <= '9' {
+                num_str = num_str + ch.to_string()
+                self.advance()
+            } else if ch == '.' && !is_float {
+                is_float = true
+                num_str = num_str + ch.to_string()
+                self.advance()
+            } else {
+                break
+            }
+        }
+        if is_float {
+            Token { kind: TokenKind.FloatLit(0.0), line, col }
+        } else {
+            let mut val = 0 as Int
+            for i in 0..num_str.len() {
+                let ch = num_str[i]
+                val = val * 10 + (ch as Int - '0' as Int)
+            }
+            Token { kind: TokenKind.IntLit(val), line, col }
+        }
+    }
+
+    fn read_string(self: &mut Lexer) -> Token {
+        let line = self.line
+        let col = self.col
+        self.advance() // skip opening quote
+        let mut content = ""
+        while self.pos < self.source.len() && self.source[self.pos] != '"' {
+            if self.source[self.pos] == '\\' {
+                self.advance()
+                if self.pos < self.source.len() {
+                    let escaped = self.source[self.pos]
+                    match escaped {
+                        'n' => content = content + "\n",
+                        't' => content = content + "\t",
+                        'r' => content = content + "\r",
+                        '\\' => content = content + "\\",
+                        '"' => content = content + "\"",
+                        '0' => content = content + "\0",
+                        _ => content = content + escaped.to_string(),
+                    }
+                    self.advance()
+                }
+            } else {
+                content = content + self.source[self.pos].to_string()
+                self.advance()
+            }
+        }
+        if self.pos < self.source.len() {
+            self.advance() // skip closing quote
+        }
+        Token { kind: TokenKind.StringLit(content), line, col }
+    }
+    fn read_ident(self: &mut Lexer) -> Token {
+        let line = self.line
+        let col = self.col
+        let mut word = ""
+        while self.pos < self.source.len() {
+            let ch = self.source[self.pos]
+            if ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z' || ch >= '0' && ch <= '9' || ch == '_' {
+                word = word + ch.to_string()
+                self.advance()
+            } else {
+                break
+            }
+        }
+        match word {
+            "fn" => Token { kind: TokenKind.Fn, line, col },
+            "let" => Token { kind: TokenKind.Let, line, col },
+            "mut" => Token { kind: TokenKind.Mut, line, col },
+            "if" => Token { kind: TokenKind.If, line, col },
+            "else" => Token { kind: TokenKind.Else, line, col },
+            "while" => Token { kind: TokenKind.While, line, col },
+            "for" => Token { kind: TokenKind.For, line, col },
+            "in" => Token { kind: TokenKind.In, line, col },
+            "return" => Token { kind: TokenKind.Return, line, col },
+            "struct" => Token { kind: TokenKind.Struct, line, col },
+            "enum" => Token { kind: TokenKind.Enum, line, col },
+            "match" => Token { kind: TokenKind.Match, line, col },
+            "trait" => Token { kind: TokenKind.Trait, line, col },
+            "impl" => Token { kind: TokenKind.Impl, line, col },
+            "import" => Token { kind: TokenKind.Import, line, col },
+            "module" => Token { kind: TokenKind.Module, line, col },
+            "pub" => Token { kind: TokenKind.Pub, line, col },
+            "async" => Token { kind: TokenKind.Async, line, col },
+            "await" => Token { kind: TokenKind.Await, line, col },
+            "true" => Token { kind: TokenKind.True, line, col },
+            "false" => Token { kind: TokenKind.False, line, col },
+            "self" => Token { kind: TokenKind.SelfKw, line, col },
+            "null" => Token { kind: TokenKind.Null, line, col },
+            _ => Token { kind: TokenKind.Ident(word.to_string()), line, col },
+        }
+    }
+}

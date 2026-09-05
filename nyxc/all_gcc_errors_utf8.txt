@@ -1,0 +1,443 @@
+﻿gcc.exe : nyxc\main.c: In function 'Lexer_read_number':
+At line:2 char:1
++ & C:\msys64\mingw64\bin\gcc.exe -I. -Ic:\xampp\htdocs\nyx\nyx-bootstr ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (nyxc\main.c: In...r_read_number'::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+nyxc\main.c:575:1: error: 'ch' undeclared (first use in this function)
+  575 | ch = num_str.data[i];
+      | ^~
+nyxc\main.c:575:1: note: each undeclared identifier is reported only once for each function it appears in
+nyxc\main.c: At top level:
+nyxc\main.c:730:37: warning: no semicolon at end of struct or union
+  730 | typedef struct { void* f0; void* f1 } NyxTuple2;
+      |                                     ^
+nyxc\main.c:731:47: warning: no semicolon at end of struct or union
+  731 | typedef struct { void* f0; void* f1; void* f2 } NyxTuple3;
+      |                                               ^
+nyxc\main.c: In function 'Parser_parse_type':
+nyxc\main.c:896:60: error: incompatible types when initializing type 'Type *' using type 'Type'
+  896 | return (Type){ .tag = TAG_Type_Array, .data.Array = {.f0 = inner} };
+      |                                                            ^~~~~
+nyxc\main.c:901:69: error: incompatible types when initializing type 'Type *' using type 'Type'
+  901 | __if_res_11 = (Type){ .tag = TAG_Type_MutRef, .data.MutRef = {.f0 = Parser_parse_type(self)} };
+      |                                                                     ^~~~~~~~~~~~~~~~~
+nyxc\main.c:903:63: error: incompatible types when initializing type 'Type *' using type 'Type'
+  903 | __if_res_11 = (Type){ .tag = TAG_Type_Ref, .data.Ref = {.f0 = Parser_parse_type(self)} };
+      |                                                               ^~~~~~~~~~~~~~~~~
+nyxc\main.c: In function 'Parser_parse_stmt':
+nyxc\main.c:1109:1: error: 'expr' undeclared (first use in this function); did you mean 'Expr'?
+ 1109 | expr = Parser_parse_expr(self);
+      | ^~~~
+      | Expr
+nyxc\main.c: In function 'Parser_pratt':
+nyxc\main.c:1179:31: error: 'r_bp' undeclared (first use in this function)
+ 1179 | Expr rhs = Parser_pratt(self, r_bp);
+      |                               ^~~~
+nyxc\main.c:1180:83: error: incompatible types when initializing type 'int' using type 'NyxOption'
+ 1180 | __match_result_57 = (lhs = (Expr){ .tag = TAG_Expr_Binary, .data.Binary = { .f0 = op, .f1 = ({ Expr _stmp_1 = 
+lhs; &_stmp_1; }), .f2 = ({ Expr _stmp_2 = rhs; &_stmp_2; }) } });
+      |                                                                                   ^~
+nyxc\main.c: In function 'Parser_parse_pattern':
+nyxc\main.c:35:30: error: incompatible types when assigning to type 'Pattern' from type 'int'
+   35 | #define TAG_Pattern_Wildcard 1
+      |                              ^
+nyxc\main.c:1433:21: note: in expansion of macro 'TAG_Pattern_Wildcard'
+ 1433 | __match_result_70 = TAG_Pattern_Wildcard;
+      |                     ^~~~~~~~~~~~~~~~~~~~
+nyxc\main.c:35:30: error: incompatible types when assigning to type 'Pattern' from type 'int'
+   35 | #define TAG_Pattern_Wildcard 1
+      |                              ^
+nyxc\main.c:1457:21: note: in expansion of macro 'TAG_Pattern_Wildcard'
+ 1457 | __match_result_70 = TAG_Pattern_Wildcard;
+      |                     ^~~~~~~~~~~~~~~~~~~~
+nyxc\main.c: In function 'Parser_parse_lambda':
+nyxc\main.c:1489:1: error: 'params' undeclared (first use in this function); did you mean 'Param'?
+ 1489 | params = rt_vec_new(sizeof(int64_t));
+      | ^~~~~~
+      | Param
+nyxc\main.c:1493:1: error: 'ty' undeclared (first use in this function)
+ 1493 | ty = ({ Type __if_res_79; if ((((*self).current).kind.tag == TAG_TokenKind_Colon)) {
+      | ^~
+nyxc\main.c:1511:1: error: 'body' undeclared (first use in this function)
+ 1511 | body = Parser_parse_expr(self);
+      | ^~~~
+nyxc\main.c: In function 'TypeChecker_pop_scope':
+nyxc\main.c:1562:19: error: incompatible type for argument 1 of 'rt_vec_pop'
+ 1562 | rt_vec_pop((*self).env);
+      |            ~~~~~~~^~~~
+      |                   |
+      |                   NyxVec
+In file included from nyxc\main.c:9:
+c:\xampp\htdocs\nyx\nyx-bootstrap/runtime/rt_vec.h:50:39: note: expected 'NyxVec *' but argument is of type 'NyxVec'
+   50 | static inline void rt_vec_pop(NyxVec* v) {
+      |                               ~~~~~~~~^
+nyxc\main.c: In function 'TypeChecker_add_var':
+nyxc\main.c:1566:118: error: incompatible type for argument 1 of 'rt_vec_get'
+ 1566 | rt_map_insert(&({ NyxOption _u = ({ NyxVec _v = ((*self).env); (_v.len > 0) ? 
+rt_option_some_int((int64_t)rt_vec_get(&_v, _v.len - 1)) : rt_option_none(); }); _u.data.ptr_val; }), name, ty);
+      |                                                                                                                
+      ^~~
+      |                                                                                                                
+      |
+      |                                                                                                                
+      NyxVec *
+c:\xampp\htdocs\nyx\nyx-bootstrap/runtime/rt_vec.h:34:39: note: expected 'NyxVec' but argument is of type 'NyxVec *'
+   34 | static inline void* rt_vec_get(NyxVec v, size_t idx) {
+      |                                ~~~~~~~^
+nyxc\main.c:1566:15: error: lvalue required as unary '&' operand
+ 1566 | rt_map_insert(&({ NyxOption _u = ({ NyxVec _v = ((*self).env); (_v.len > 0) ? 
+rt_option_some_int((int64_t)rt_vec_get(&_v, _v.len - 1)) : rt_option_none(); }); _u.data.ptr_val; }), name, ty);
+      |               ^
+nyxc\main.c:1566:187: error: incompatible type for argument 3 of 'rt_map_insert'
+ 1566 | rt_map_insert(&({ NyxOption _u = ({ NyxVec _v = ((*self).env); (_v.len > 0) ? 
+rt_option_some_int((int64_t)rt_vec_get(&_v, _v.len - 1)) : rt_option_none(); }); _u.data.ptr_val; }), name, ty);
+      |                                                                                                                
+                                                                           ^~
+      |                                                                                                                
+                                                                           |
+      |                                                                                                                
+                                                                           Type
+In file included from nyxc\main.c:11:
+c:\xampp\htdocs\nyx\nyx-bootstrap/runtime/rt_map.h:26:70: note: expected 'int64_t' {aka 'long long int'} but argument 
+is of type 'Type'
+   26 | static inline void rt_map_insert(NyxMap* m, rt_string_t key, int64_t value) {
+      |                                                              ~~~~~~~~^~~~~
+nyxc\main.c: In function 'TypeChecker_lookup':
+nyxc\main.c:1577:8: error: 'Option' undeclared (first use in this function); did you mean 'NyxOption'?
+ 1577 | return Option.None;
+      |        ^~~~~~
+      |        NyxOption
+nyxc\main.c: In function 'TypeChecker_check_expr':
+nyxc\main.c:1711:154: error: initialization of 'Type *' from 'int64_t' {aka 'long long int'} makes pointer from 
+integer without a cast [-Wint-conversion]
+ 1711 | __match_result_10 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.ptr_val = (void*)({ Type _stmp_ = 
+(Type){ .tag = TAG_Type_Ref, .data.Ref = {.f0 = t} }; &_stmp_; }); _tmp; });
+      |                                                                                                                
+                                          ^
+nyxc\main.c:1711:154: note: (near initialization for '(anonymous).data.Ref.f0')
+nyxc\main.c:1714:33: error: incompatible types when assigning to type 'NyxResult' from type 'int'
+ 1714 | __match_result_10 = /* iflet */ 0;
+      |                                 ^
+nyxc\main.c:1724:23: error: invalid initializer
+ 1724 | Expr __match_val_11 = func;
+      |                       ^~~~
+nyxc\main.c:1724:23: note: (near initialization for 'fn_name')
+nyxc\main.c:1765:180: error: expected ';' before ')' token
+ 1765 | NyxResult __match_val_14 = TypeChecker_check_expr(self, ({ Expr _utmp_ = (Expr){ .tag = TAG_Expr_Block, 
+.data.Block = {.f0 = ({{ NyxVec _cv = rt_vec_new(sizeof(int64_t)); then.len); for (int64_t _i = 0; _i < then.len; 
+_i++) { int64_t _e = *(int64_t*)rt_vec_get(then, _i); rt_vec_push(&_cv, &_e); } _cv; }})} }; &_utmp_; }));
+      |                                                                                                                
+                                                                    ^
+      |                                                                                                                
+                                                                    ;
+nyxc\main.c:1765:180: error: expected statement before ')' token
+nyxc\main.c:1765:126: error: void value not ignored as it ought to be
+ 1765 | NyxResult __match_val_14 = TypeChecker_check_expr(self, ({ Expr _utmp_ = (Expr){ .tag = TAG_Expr_Block, 
+.data.Block = {.f0 = ({{ NyxVec _cv = rt_vec_new(sizeof(int64_t)); then.len); for (int64_t _i = 0; _i < then.len; 
+_i++) { int64_t _e = *(int64_t*)rt_vec_get(then, _i); rt_vec_push(&_cv, &_e); } _cv; }})} }; &_utmp_; }));
+      |                                                                                                                
+              ^
+nyxc\main.c:1768:31: error: incompatible types when assigning to type 'Type' from type 'void *'
+ 1768 | __match_result_14 = (result = t);
+      |                               ^
+nyxc\main.c:1781:179: error: expected ';' before ')' token
+ 1781 | ({ NyxResult _qres = TypeChecker_check_expr(self, ({ Expr _utmp_ = (Expr){ .tag = TAG_Expr_Block, .data.Block 
+= {.f0 = ({{ NyxVec _cv = rt_vec_new(sizeof(int64_t)); elif_body.len); for (int64_t _i = 0; _i < elif_body.len; _i++) 
+{ int64_t _e = *(int64_t*)rt_vec_get(elif_body, _i); rt_vec_push(&_cv, &_e); } _cv; }})} }; &_utmp_; })); if 
+(_qres.tag == RESULT_ERR) { return _qres; } (int64_t)_qres.data.int_val; });
+      |                                                                                                                
+                                                                   ^
+      |                                                                                                                
+                                                                   ;
+nyxc\main.c:1781:179: error: expected statement before ')' token
+nyxc\main.c:1781:120: error: void value not ignored as it ought to be
+ 1781 | ({ NyxResult _qres = TypeChecker_check_expr(self, ({ Expr _utmp_ = (Expr){ .tag = TAG_Expr_Block, .data.Block 
+= {.f0 = ({{ NyxVec _cv = rt_vec_new(sizeof(int64_t)); elif_body.len); for (int64_t _i = 0; _i < elif_body.len; _i++) 
+{ int64_t _e = *(int64_t*)rt_vec_get(elif_body, _i); rt_vec_push(&_cv, &_e); } _cv; }})} }; &_utmp_; })); if 
+(_qres.tag == RESULT_ERR) { return _qres; } (int64_t)_qres.data.int_val; });
+      |                                                                                                                
+        ^
+nyxc\main.c:1791:174: error: expected ';' before ')' token
+ 1791 | ({ NyxResult _qres = TypeChecker_check_expr(self, ({ Expr _utmp_ = (Expr){ .tag = TAG_Expr_Block, .data.Block 
+= {.f0 = ({{ NyxVec _cv = rt_vec_new(sizeof(int64_t)); body.len); for (int64_t _i = 0; _i < body.len; _i++) { int64_t 
+_e = *(int64_t*)rt_vec_get(body, _i); rt_vec_push(&_cv, &_e); } _cv; }})} }; &_utmp_; })); if (_qres.tag == 
+RESULT_ERR) { return _qres; } (int64_t)_qres.data.int_val; });
+      |                                                                                                                
+                                                              ^
+      |                                                                                                                
+                                                              ;
+nyxc\main.c:1791:174: error: expected statement before ')' token
+nyxc\main.c:1791:120: error: void value not ignored as it ought to be
+ 1791 | ({ NyxResult _qres = TypeChecker_check_expr(self, ({ Expr _utmp_ = (Expr){ .tag = TAG_Expr_Block, .data.Block 
+= {.f0 = ({{ NyxVec _cv = rt_vec_new(sizeof(int64_t)); body.len); for (int64_t _i = 0; _i < body.len; _i++) { int64_t 
+_e = *(int64_t*)rt_vec_get(body, _i); rt_vec_push(&_cv, &_e); } _cv; }})} }; &_utmp_; })); if (_qres.tag == 
+RESULT_ERR) { return _qres; } (int64_t)_qres.data.int_val; });
+      |                                                                                                                
+        ^
+nyxc\main.c:1801:174: error: expected ';' before ')' token
+ 1801 | ({ NyxResult _qres = TypeChecker_check_expr(self, ({ Expr _utmp_ = (Expr){ .tag = TAG_Expr_Block, .data.Block 
+= {.f0 = ({{ NyxVec _cv = rt_vec_new(sizeof(int64_t)); body.len); for (int64_t _i = 0; _i < body.len; _i++) { int64_t 
+_e = *(int64_t*)rt_vec_get(body, _i); rt_vec_push(&_cv, &_e); } _cv; }})} }; &_utmp_; })); if (_qres.tag == 
+RESULT_ERR) { return _qres; } (int64_t)_qres.data.int_val; });
+      |                                                                                                                
+                                                              ^
+      |                                                                                                                
+                                                              ;
+nyxc\main.c:1801:174: error: expected statement before ')' token
+nyxc\main.c:1801:120: error: void value not ignored as it ought to be
+ 1801 | ({ NyxResult _qres = TypeChecker_check_expr(self, ({ Expr _utmp_ = (Expr){ .tag = TAG_Expr_Block, .data.Block 
+= {.f0 = ({{ NyxVec _cv = rt_vec_new(sizeof(int64_t)); body.len); for (int64_t _i = 0; _i < body.len; _i++) { int64_t 
+_e = *(int64_t*)rt_vec_get(body, _i); rt_vec_push(&_cv, &_e); } _cv; }})} }; &_utmp_; })); if (_qres.tag == 
+RESULT_ERR) { return _qres; } (int64_t)_qres.data.int_val; });
+      |                                                                                                                
+        ^
+nyxc\main.c:1809:1: error: 'result' undeclared (first use in this function); did you mean 'NyxResult'?
+ 1809 | result = (Type){ .tag = TAG_Type_Void};
+      | ^~~~~~
+      | NyxResult
+nyxc\main.c:1836:8: error: incompatible types when assigning to type 'Type' from type 'long long int'
+ 1836 | last = ({ NyxResult _qres = TypeChecker_check_stmt(self, &(s)); if (_qres.tag == RESULT_ERR) { return _qres; } 
+(int64_t)_qres.data.int_val; });
+      |        ^
+nyxc\main.c:1847:84: error: incompatible type for argument 3 of 'TypeChecker_add_var'
+ 1847 | TypeChecker_add_var(self, ({ rt_string_t _c = name; rt_string_retain(&_c); _c; }), vt);
+      |                                                                                    ^~
+      |                                                                                    |
+      |                                                                                    int64_t {aka long long int}
+nyxc\main.c:1565:68: note: expected 'Type' but argument is of type 'int64_t' {aka 'long long int'}
+ 1565 | void TypeChecker_add_var(TypeChecker* self, rt_string_t name, Type ty) {
+      |                                                               ~~~~~^~
+nyxc\main.c:1853:1: error: 'vt' undeclared (first use in this function)
+ 1853 | vt = ({ NyxResult _qres = TypeChecker_check_expr(self, value); if (_qres.tag == RESULT_ERR) { return _qres; } 
+(int64_t)_qres.data.int_val; });
+      | ^~
+nyxc\main.c:1854:32: error: incompatible types when assigning to type 'NyxResult' from type 'int'
+ 1854 | __match_result_6 = /* iflet */ 0;
+      |                                ^
+nyxc\main.c:1870:51: error: passing argument 2 of 'TypeChecker_check_expr' from incompatible pointer type 
+[-Wincompatible-pointer-types]
+ 1870 | ({ NyxResult _qres = TypeChecker_check_expr(self, &(val)); if (_qres.tag == RESULT_ERR) { return _qres; } 
+(int64_t)_qres.data.int_val; });
+      |                                                   ^~~~~~
+      |                                                   |
+      |                                                   int64_t * {aka long long int *}
+nyxc\main.c:1637:59: note: expected 'Expr *' but argument is of type 'int64_t *' {aka 'long long int *'}
+ 1637 | NyxResult TypeChecker_check_expr(TypeChecker* self, Expr* expr) {
+      |                                                     ~~~~~~^~~~
+nyxc\main.c: In function '__lambda_18':
+nyxc\main.c:1892:111: error: request for member 'ty' in something not a structure or union
+ 1892 | NyxVec param_types = rt_vec_collect(int64_t_map(rt_vec_iter(params), ({ Type __lambda_18(int64_t p) { return 
+p.ty; } __lambda_18; })));
+      |                                                                                                               ^
+nyxc\main.c: In function 'TypeChecker_check_expr':
+nyxc\main.c:1892:71: error: passing argument 2 of 'int64_t_map' from incompatible pointer type 
+[-Wincompatible-pointer-types]
+ 1892 | NyxVec param_types = rt_vec_collect(int64_t_map(rt_vec_iter(params), ({ Type __lambda_18(int64_t p) { return 
+p.ty; } __lambda_18; })));
+      |                                                                      
+~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                                                                       |
+      |                                                                       Type (*)(int64_t) {aka Type (*)(long 
+long int)}
+c:\xampp\htdocs\nyx\nyx-bootstrap/runtime/rt_vec.h:107:59: note: expected 'int64_t (*)(int64_t)' {aka 'long long int 
+(*)(long long int)'} but argument is of type 'Type (*)(int64_t)' {aka 'Type (*)(long long int)'}
+  107 | static inline NyxVec int64_t_map(NyxVecIter it, int64_t (*fn)(int64_t)) {
+      |                                                 ~~~~~~~~~~^~~~~~~~~~~~
+nyxc\main.c:1893:174: error: initialization of 'Type *' from 'int64_t' {aka 'long long int'} makes pointer from 
+integer without a cast [-Wint-conversion]
+ 1893 | __match_result_6 = ({ NyxResult _tmp; _tmp.tag = RESULT_OK; _tmp.data.ptr_val = (void*)({ Type _stmp_ = 
+(Type){ .tag = TAG_Type_Func, .data.Func = {.f0 = param_types, .f1 = bt} }; &_stmp_; }); _tmp; });
+      |                                                                                                                
+                                                              ^~
+nyxc\main.c:1893:174: note: (near initialization for '(anonymous).data.Func.f1')
+nyxc\main.c: In function 'TypeChecker_check_stmt':
+nyxc\main.c:1920:84: error: incompatible type for argument 3 of 'TypeChecker_add_var'
+ 1920 | TypeChecker_add_var(self, ({ rt_string_t _c = name; rt_string_retain(&_c); _c; }), vt);
+      |                                                                                    ^~
+      |                                                                                    |
+      |                                                                                    int64_t {aka long long int}
+nyxc\main.c:1565:68: note: expected 'Type' but argument is of type 'int64_t' {aka 'long long int'}
+ 1565 | void TypeChecker_add_var(TypeChecker* self, rt_string_t name, Type ty) {
+      |                                                               ~~~~~^~
+nyxc\main.c: In function 'generate_mlir':
+nyxc\main.c:1978:1: error: aggregate value used where an integer was expected
+ 1978 | out = rt_string_concat(rt_string_concat(rt_string_concat(rt_string_concat(out, rt_string_from("%")), ({ 
+rt_string_t _s; _s.data = (char*)malloc(32); _s.length = snprintf(_s.data, 32, "%lld", (long 
+long)((*(Param*)rt_vec_get(params, i))).name); _s.ref_count = 1; _s; })), rt_string_from(": ")), 
+mlir_type((&(((*(Param*)rt_vec_get(params, i))).ty))));
+      | ^~~
+nyxc\main.c:1992:257: error: request for member 'f0' in something not a structure or union
+ 1992 | out = rt_string_concat(rt_string_concat(rt_string_concat(rt_string_concat(rt_string_concat(out, 
+rt_string_from("    ")), ({ rt_string_t _s; _s.data = (char*)malloc(32); _s.length = snprintf(_s.data, 32, "%lld", 
+(long long)((*(void**)rt_vec_get(fields, i))).f0); _s.ref_count = 1; _s; })), rt_string_from(": ")), 
+mlir_type((&(((*(void**)rt_vec_get(fields, i))).f1)))), rt_string_from(",\\n"));
+      |                                                                                                                
+                                                                                                                       
+                          ^
+nyxc\main.c:1992:360: error: request for member 'f1' in something not a structure or union
+ 1992 | out = rt_string_concat(rt_string_concat(rt_string_concat(rt_string_concat(rt_string_concat(out, 
+rt_string_from("    ")), ({ rt_string_t _s; _s.data = (char*)malloc(32); _s.length = snprintf(_s.data, 32, "%lld", 
+(long long)((*(void**)rt_vec_get(fields, i))).f0); _s.ref_count = 1; _s; })), rt_string_from(": ")), 
+mlir_type((&(((*(void**)rt_vec_get(fields, i))).f1)))), rt_string_from(",\\n"));
+      |                                                                                                                
+                                                                                                                       
+                                                                                                                       
+          ^
+nyxc\main.c:2007:33: error: request for member 'len' in something not a structure or union
+ 2007 | for (int64_t i = 0LL; i < vtypes.len; i++) {
+      |                                 ^
+nyxc\main.c:2012:48: error: subscripted value is neither array nor pointer nor vector
+ 2012 | out = rt_string_concat(out, mlir_type((&(vtypes[i]))));
+      |                                                ^
+nyxc\main.c:2032:1: error: aggregate value used where an integer was expected
+ 2032 | out = rt_string_concat(out, ({ rt_string_t _s; _s.data = (char*)malloc(32); _s.length = snprintf(_s.data, 32, 
+"%lld", (long long)(*(rt_string_t*)rt_vec_get(path, i))); _s.ref_count = 1; _s; }));
+      | ^~~
+nyxc\main.c: In function 'mlir_type':
+nyxc\main.c:2114:1: error: 's' undeclared (first use in this function)
+ 2114 | s = rt_string_from("!nyx.func<(");
+      | ^
+nyxc\main.c: In function 'emit_mlir_expr':
+nyxc\main.c:2234:16: error: incompatible type for argument 2 of 'push_str'
+ 2234 | push_str(out, ({ rt_string_t _utmp_ = ({ rt_string_t _s; _s.data = (char*)malloc(2); _s.data[0] = c; 
+_s.data[1] = 0; _s.length = 1; _s.ref_count = 1; _s; }); &_utmp_; }));
+      |               ~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                |
+      |                rt_string_t *
+In file included from nyxc\main.c:12:
+c:\xampp\htdocs\nyx\nyx-bootstrap/runtime/rt_stdlib.h:73:54: note: expected 'rt_string_t' but argument is of type 
+'rt_string_t *'
+   73 | static inline void* push_str(void** out, rt_string_t s) {
+      |                                          ~~~~~~~~~~~~^
+nyxc\main.c:2356:16: error: passing argument 1 of 'emit_mlir_stmt' from incompatible pointer type 
+[-Wincompatible-pointer-types]
+ 2356 | emit_mlir_stmt(&(stmt), out);
+      |                ^~~~~~~
+      |                |
+      |                int64_t * {aka long long int *}
+nyxc\main.c:2161:27: note: expected 'Stmt *' but argument is of type 'int64_t *' {aka 'long long int *'}
+ 2161 | void emit_mlir_stmt(Stmt* stmt, void* out) {
+      |                     ~~~~~~^~~~
+nyxc\main.c:2367:38: warning: dereferencing 'void *' pointer
+ 2367 | for (int64_t _stmt = 0; _stmt < stmts->len; _stmt++) {
+      |                                      ^~
+nyxc\main.c:2367:38: error: request for member 'len' in something not a structure or union
+nyxc\main.c:2368:42: warning: dereferencing 'void *' pointer
+ 2368 |     int64_t stmt = *(int64_t*)rt_vec_get(*(stmts), _stmt);
+      |                                          ^~~~~~~~
+nyxc\main.c:2368:42: error: invalid use of void expression
+nyxc\main.c:2369:16: error: passing argument 1 of 'emit_mlir_stmt' from incompatible pointer type 
+[-Wincompatible-pointer-types]
+ 2369 | emit_mlir_stmt(&(stmt), out);
+      |                ^~~~~~~
+      |                |
+      |                int64_t * {aka long long int *}
+nyxc\main.c:2161:27: note: expected 'Stmt *' but argument is of type 'int64_t *' {aka 'long long int *'}
+ 2161 | void emit_mlir_stmt(Stmt* stmt, void* out) {
+      |                     ~~~~~~^~~~
+nyxc\main.c:2417:52: error: request for member 'f0' in something not a structure or union
+ 2417 | push_str(out, (&(((*(void**)rt_vec_get(fields, i))).f0)));
+      |                                                    ^
+nyxc\main.c:2419:53: error: request for member 'f1' in something not a structure or union
+ 2419 | emit_mlir_expr((&(((*(void**)rt_vec_get(fields, i))).f1)), out);
+      |                                                     ^
+nyxc\main.c: In function 'generate_llvm_dialect':
+nyxc\main.c:2606:1: error: aggregate value used where an integer was expected
+ 2606 | out = rt_string_concat(rt_string_concat(rt_string_concat(rt_string_concat(out, rt_string_from("%")), ({ 
+rt_string_t _s; _s.data = (char*)malloc(32); _s.length = snprintf(_s.data, 32, "%lld", (long 
+long)((*(Param*)rt_vec_get(params, i))).name); _s.ref_count = 1; _s; })), rt_string_from(": ")), 
+llvm_type((&(((*(Param*)rt_vec_get(params, i))).ty))));
+      | ^~~
+nyxc\main.c:2619:259: error: request for member 'f0' in something not a structure or union
+ 2619 | out = rt_string_concat(rt_string_concat(rt_string_concat(rt_string_concat(rt_string_concat(out, 
+rt_string_from("  ;   ")), ({ rt_string_t _s; _s.data = (char*)malloc(32); _s.length = snprintf(_s.data, 32, "%lld", 
+(long long)((*(void**)rt_vec_get(fields, i))).f0); _s.ref_count = 1; _s; })), rt_string_from(": ")), 
+llvm_type((&(((*(void**)rt_vec_get(fields, i))).f1)))), rt_string_from("\\n"));
+      |                                                                                                                
+                                                                                                                       
+                            ^
+nyxc\main.c:2619:362: error: request for member 'f1' in something not a structure or union
+ 2619 | out = rt_string_concat(rt_string_concat(rt_string_concat(rt_string_concat(rt_string_concat(out, 
+rt_string_from("  ;   ")), ({ rt_string_t _s; _s.data = (char*)malloc(32); _s.length = snprintf(_s.data, 32, "%lld", 
+(long long)((*(void**)rt_vec_get(fields, i))).f0); _s.ref_count = 1; _s; })), rt_string_from(": ")), 
+llvm_type((&(((*(void**)rt_vec_get(fields, i))).f1)))), rt_string_from("\\n"));
+      |                                                                                                                
+                                                                                                                       
+                                                                                                                       
+            ^
+nyxc\main.c: In function 'emit_llvm_expr':
+nyxc\main.c:2750:16: error: incompatible type for argument 2 of 'push_str'
+ 2750 | push_str(out, ({ rt_string_t _utmp_ = ({ rt_string_t _s; _s.data = (char*)malloc(2); _s.data[0] = c; 
+_s.data[1] = 0; _s.length = 1; _s.ref_count = 1; _s; }); &_utmp_; }));
+      |               ~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                |
+      |                rt_string_t *
+c:\xampp\htdocs\nyx\nyx-bootstrap/runtime/rt_stdlib.h:73:54: note: expected 'rt_string_t' but argument is of type 
+'rt_string_t *'
+   73 | static inline void* push_str(void** out, rt_string_t s) {
+      |                                          ~~~~~~~~~~~~^
+nyxc\main.c: In function 'nyx_main':
+nyxc\main.c:2933:42: error: incompatible type for argument 1 of 'read_to_string'
+ 2933 | NyxResult __match_val_1 = read_to_string(filename);
+      |                                          ^~~~~~~~
+      |                                          |
+      |                                          int64_t {aka long long int}
+c:\xampp\htdocs\nyx\nyx-bootstrap/runtime/rt_stdlib.h:11:38: note: expected 'rt_string_t' but argument is of type 
+'int64_t' {aka 'long long int'}
+   11 | NyxResult read_to_string(rt_string_t path);
+      |                          ~~~~~~~~~~~~^~~~
+nyxc\main.c:2936:18: error: assignment to 'int64_t' {aka 'long long int'} from 'void *' makes integer from pointer 
+without a cast [-Wint-conversion]
+ 2936 | __match_result_1 = s;
+      |                  ^
+nyxc\main.c:2955:23: error: incompatible type for argument 1 of 'new_lexer'
+ 2955 | Lexer lex = new_lexer(source);
+      |                       ^~~~~~
+      |                       |
+      |                       int64_t {aka long long int}
+nyxc\main.c:317:29: note: expected 'rt_string_t' but argument is of type 'int64_t' {aka 'long long int'}
+  317 | Lexer new_lexer(rt_string_t source) {
+      |                 ~~~~~~~~~~~~^~~~~~
+nyxc\main.c:2972:27: error: incompatible type for argument 1 of 'new_parser'
+ 2972 | Parser parse = new_parser(source);
+      |                           ^~~~~~
+      |                           |
+      |                           int64_t {aka long long int}
+nyxc\main.c:771:31: note: expected 'rt_string_t' but argument is of type 'int64_t' {aka 'long long int'}
+  771 | Parser new_parser(rt_string_t source) {
+      |                   ~~~~~~~~~~~~^~~~~~
+nyxc\main.c:2988:17: error: passing argument 1 of 'print_top_level' from incompatible pointer type 
+[-Wincompatible-pointer-types]
+ 2988 | print_top_level(&(item));
+      |                 ^~~~~~~
+      |                 |
+      |                 int64_t * {aka long long int *}
+nyxc\main.c:2891:22: note: expected 'TopLevel *' but argument is of type 'int64_t *' {aka 'long long int *'}
+ 2891 | void print_top_level(TopLevel*);
+      |                      ^~~~~~~~~
+nyxc\main.c:3074:16: error: initialization of 'int64_t' {aka 'long long int'} from 'void *' makes integer from pointer 
+without a cast [-Wint-conversion]
+ 3074 | int64_t path = ({ NyxOption _u = output_file; _u.data.ptr_val; });
+      |                ^
+nyxc\main.c:3075:1: error: 'mlir_code' undeclared (first use in this function); did you mean 'mlir_type'?
+ 3075 | mlir_code = generate_mlir((&(program)));
+      | ^~~~~~~~~
+      | mlir_type
+nyxc\main.c:3078:41: error: incompatible type for argument 1 of 'write_string'
+ 3078 | NyxResult __match_val_14 = write_string(path, mlir_code);
+      |                                         ^~~~
+      |                                         |
+      |                                         int64_t {aka long long int}
+c:\xampp\htdocs\nyx\nyx-bootstrap/runtime/rt_stdlib.h:12:36: note: expected 'rt_string_t' but argument is of type 
+'int64_t' {aka 'long long int'}
+   12 | NyxResult write_string(rt_string_t path, rt_string_t content);
+      |                        ~~~~~~~~~~~~^~~~
+nyxc\main.c: In function 'print_top_level':
+nyxc\main.c:3386:1: error: aggregate value used where an integer was expected
+ 3386 | rt_println(rt_string_concat(rt_string_from("  use "), ({ rt_string_t _s; _s.data = (char*)malloc(32); 
+_s.length = snprintf(_s.data, 32, "%lld", (long long)path); _s.ref_count = 1; _s; })));
+      | ^~~~~~~~~~

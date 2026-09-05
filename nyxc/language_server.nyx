@@ -1,0 +1,439 @@
+module language_server
+
+import std.io
+import std.fs
+import std.string
+import std.json
+
+pub struct Position {
+    pub line: Int,
+    pub character: Int,
+}
+
+pub struct Range {
+    pub start: Position,
+    pub end: Position,
+}
+
+pub struct Diagnostic {
+    pub range: Range,
+    pub severity: Int,
+    pub code: String,
+    pub source: String,
+    pub message: String,
+}
+
+pub struct CompletionItem {
+    pub label: String,
+    pub kind: Int,
+    pub detail: String,
+    pub documentation: String,
+    pub insert_text: String,
+}
+
+pub struct HoverInfo {
+    pub contents: String,
+    pub range: Range,
+}
+
+pub struct Location {
+    pub uri: String,
+    pub range: Range,
+}
+
+pub struct TextDocumentItem {
+    pub uri: String,
+    pub language_id: String,
+    pub version: Int,
+    pub text: String,
+}
+
+pub struct LSPServer {
+    pub documents: Map<String, TextDocumentItem>,
+    pub diagnostics: Map<String, Vec<Diagnostic>>,
+    pub capabilities: String,
+}
+
+pub fn new_server() -> LSPServer {
+    LSPServer {
+        documents: Map.new(),
+        diagnostics: Map.new(),
+        capabilities: r#"{
+            "textDocumentSync": 1,
+            "completionProvider": { "triggerCharacters": [".", "::"] },
+            "hoverProvider": true,
+            "definitionProvider": true,
+            "referencesProvider": true,
+            "documentSymbolProvider": true,
+            "inlayHintProvider": true,
+            "semanticTokensProvider": { "full": true }
+        }"#.to_string(),
+    }
+}
+
+impl LSPServer {
+    pub fn handle_initialize(self: &LSPServer) -> String {
+        let result = r#"{
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": {
+                "capabilities": """# + &self.capabilities + r#"""
+            }
+        }"#
+        result
+    }
+
+    pub fn handle_did_open(self: &mut LSPServer, doc: TextDocumentItem) {
+        let uri = doc.uri.clone()
+        self.documents.insert(uri.clone(), doc)
+        self.analyze_document(&uri)
+    }
+
+    pub fn handle_did_change(self: &mut LSPServer, uri: &String, new_text: &String) {
+        if let Some(doc) = self.documents.get_mut(uri) {
+            doc.text = new_text.clone()
+            doc.version = doc.version + 1
+        }
+        self.analyze_document(uri)
+    }
+
+    pub fn handle_hover(self: &LSPServer, uri: &String, position: Position) -> Option<HoverInfo> {
+        let doc = match self.documents.get(uri) {
+            Some(d) => d,
+            None => return None,
+        }
+        let line = match self.get_line(&doc.text, position.line) {
+            Some(l) => l,
+            None => return None,
+        }
+        let word = match self.get_word_at(&line, position.character) {
+            Some(w) => w,
+            None => return None,
+        }
+
+        let type_info = self.resolve_type(&word, &doc.text)
+
+        Some(HoverInfo {
+            contents: format!("**{}**: `{}`", word, type_info),
+            range: Range {
+                start: position,
+                end: Position { line: position.line, character: position.character + word.len() as Int },
+            },
+        })
+    }
+
+    pub fn handle_completion(self: &LSPServer, uri: &String, position: Position) -> Vec<CompletionItem> {
+        let mut items = Vec.new()
+        let doc = match self.documents.get(uri) {
+            Some(d) => d,
+            None => return items,
+        }
+
+        let line = match self.get_line(&doc.text, position.line) {
+            Some(l) => l,
+            None => return items,
+        }
+
+        let keywords = ["fn", "let", "mut", "if", "else", "while", "for", "return", "struct", "enum", "impl", "pub", "import", "module", "async", "await", "match", "true", "false"]
+        let std_fns = ["println", "print", "eprintln", "read_to_string", "write", "exists", "create_dir", "parse", "len", "push", "pop", "contains"]
+
+        for kw in keywords.iter() {
+            items.push(CompletionItem {
+                label: kw.to_string(),
+                kind: 14,
+                detail: "keyword".to_string(),
+                documentation: "".to_string(),
+                insert_text: kw.to_string(),
+            })
+        }
+
+        for f in std_fns.iter() {
+            items.push(CompletionItem {
+                label: f.to_string(),
+                kind: 3,
+                detail: "function".to_string(),
+                documentation: format!("std function: {}", f),
+                insert_text: f.to_string() + "($1)",
+            })
+        }
+
+        items
+    }
+
+    pub fn handle_definition(self: &LSPServer, uri: &String, position: Position) -> Option<Location> {
+        let doc = match self.documents.get(uri) {
+            Some(d) => d,
+            None => return None,
+        }
+        let line = match self.get_line(&doc.text, position.line) {
+            Some(l) => l,
+            None => return None,
+        }
+        let word = match self.get_word_at(&line, position.character) {
+            Some(w) => w,
+            None => return None,
+        }
+
+        let lines: Vec<&str> = doc.text.split("\n").collect()
+        for (i, l) in lines.iter().enumerate() {
+            if l.contains(&("fn ".to_string() + &word)) || l.contains(&("struct ".to_string() + &word)) {
+                return Some(Location {
+                    uri: uri.clone(),
+                    range: Range {
+                        start: Position { line: i as Int, character: 0 },
+                        end: Position { line: i as Int, character: l.len() as Int },
+                    },
+                })
+            }
+        }
+
+        None
+    }
+
+    pub fn handle_references(self: &LSPServer, uri: &String, position: Position) -> Vec<Location> {
+        let mut refs = Vec.new()
+        let doc = match self.documents.get(uri) {
+            Some(d) => d,
+            None => return refs,
+        }
+
+        let line = match self.get_line(&doc.text, position.line) {
+            Some(l) => l,
+            None => return refs,
+        }
+
+        let word = match self.get_word_at(&line, position.character) {
+            Some(w) => w,
+            None => return refs,
+        }
+
+        let lines: Vec<&str> = doc.text.split("\n").collect()
+        for (i, l) in lines.iter().enumerate() {
+            if l.contains(&word) {
+                refs.push(Location {
+                    uri: uri.clone(),
+                    range: Range {
+                        start: Position { line: i as Int, character: 0 },
+                        end: Position { line: i as Int, character: l.len() as Int },
+                    },
+                })
+            }
+        }
+
+        refs
+    }
+
+    pub fn handle_document_symbols(self: &LSPServer, uri: &String) -> Vec<CompletionItem> {
+        let mut symbols = Vec.new()
+        let doc = match self.documents.get(uri) {
+            Some(d) => d,
+            None => return symbols,
+        }
+
+        let lines: Vec<&str> = doc.text.split("\n").collect()
+        for (i, l) in lines.iter().enumerate() {
+            let trimmed = l.trim()
+            if trimmed.starts_with("pub fn ") || trimmed.starts_with("fn ") {
+                let name = trimmed.replace("pub fn ", "").replace("fn ", "")
+                let name = name.split("(").next().unwrap_or("").to_string()
+                symbols.push(CompletionItem {
+                    label: name,
+                    kind: 12,
+                    detail: "function".to_string(),
+                    documentation: "".to_string(),
+                    insert_text: "".to_string(),
+                })
+            } else if trimmed.starts_with("pub struct ") || trimmed.starts_with("struct ") {
+                let name = trimmed.replace("pub struct ", "").replace("struct ", "")
+                let name = name.split("{").next().unwrap_or("").trim().to_string()
+                symbols.push(CompletionItem {
+                    label: name,
+                    kind: 23,
+                    detail: "struct".to_string(),
+                    documentation: "".to_string(),
+                    insert_text: "".to_string(),
+                })
+            } else if trimmed.starts_with("pub enum ") || trimmed.starts_with("enum ") {
+                let name = trimmed.replace("pub enum ", "").replace("enum ", "")
+                let name = name.split("{").next().unwrap_or("").trim().to_string()
+                symbols.push(CompletionItem {
+                    label: name,
+                    kind: 10,
+                    detail: "enum".to_string(),
+                    documentation: "".to_string(),
+                    insert_text: "".to_string(),
+                })
+            }
+        }
+
+        symbols
+    }
+
+    fn analyze_document(self: &mut LSPServer, uri: &String) {
+        let doc = match self.documents.get(uri) {
+            Some(d) => d,
+            None => return,
+        }
+
+        let mut diagnostics = Vec.new()
+        let lines: Vec<&str> = doc.text.split("\n").collect()
+
+        for (i, l) in lines.iter().enumerate() {
+            let trimmed = l.trim()
+
+            if trimmed.contains("println(") && !trimmed.ends_with(")") {
+                diagnostics.push(Diagnostic {
+                    range: Range {
+                        start: Position { line: i as Int, character: 0 },
+                        end: Position { line: i as Int, character: l.len() as Int },
+                    },
+                    severity: 1,
+                    code: "E001".to_string(),
+                    source: "nyx-lsp".to_string(),
+                    message: "Unclosed function call".to_string(),
+                })
+            }
+
+            if trimmed.starts_with("let ") && !trimmed.contains("=") {
+                diagnostics.push(Diagnostic {
+                    range: Range {
+                        start: Position { line: i as Int, character: 0 },
+                        end: Position { line: i as Int, character: l.len() as Int },
+                    },
+                    severity: 1,
+                    code: "E002".to_string(),
+                    source: "nyx-lsp".to_string(),
+                    message: "Let binding missing initializer".to_string(),
+                })
+            }
+        }
+
+        self.diagnostics.insert(uri.clone(), diagnostics)
+    }
+
+    fn get_line(self: &LSPServer, text: &String, line: Int) -> Option<String> {
+        let lines: Vec<&str> = text.split("\n").collect()
+        if (line as usize) < lines.len() {
+            Some(lines[line as usize].to_string())
+        } else {
+            None
+        }
+    }
+
+    fn get_word_at(self: &LSPServer, line: &String, position: Int) -> Option<String> {
+        let chars: Vec<char> = line.chars().collect()
+        let pos = position as usize
+        if pos >= chars.len() { return None }
+
+        let mut start = pos
+        while start > 0 && chars[start - 1].is_alphanumeric() || (start > 0 && chars[start - 1] == '_') {
+            start -= 1
+        }
+
+        let mut end = pos
+        while end < chars.len() && (chars[end].is_alphanumeric() || chars[end] == '_') {
+            end += 1
+        }
+
+        if start < end {
+            Some(chars[start..end].iter().collect())
+        } else {
+            None
+        }
+    }
+
+    fn resolve_type(self: &LSPServer, name: &String, source: &String) -> String {
+        let lines: Vec<&str> = source.split("\n").collect()
+        for l in lines.iter() {
+            let trimmed = l.trim()
+            if trimmed.contains(&("fn ".to_string() + name)) {
+                if let Some(paren_pos) = trimmed.find('(') {
+                    let before = &trimmed[..paren_pos]
+                    if let Some(arrow_pos) = before.find("->") {
+                        return before[arrow_pos + 2..].trim().to_string()
+                    }
+                    return before.trim().to_string()
+                }
+            }
+            if trimmed.contains(&("let ".to_string() + name)) {
+                if let Some(colon_pos) = trimmed.find(':') {
+                    if let Some(eq_pos) = trimmed.find('=') {
+                        if colon_pos < eq_pos {
+                            return trimmed[colon_pos + 1..eq_pos].trim().to_string()
+                        }
+                    }
+                }
+            }
+        }
+        "unknown".to_string()
+    }
+
+    pub fn handle_inlay_hints(self: &LSPServer, uri: &String) -> Vec<String> {
+        let mut hints = Vec.new()
+        let doc = match self.documents.get(uri) {
+            Some(d) => d,
+            None => return hints,
+        }
+
+        let lines: Vec<&str> = doc.text.split("\n").collect()
+        for (i, l) in lines.iter().enumerate() {
+            let trimmed = l.trim()
+            if trimmed.starts_with("let ") && trimmed.contains('=') && !trimmed.contains(':') {
+                if let Some(eq_pos) = trimmed.find('=') {
+                    let var_name = trimmed[4..eq_pos].trim()
+                    hints.push(format!("Line {}: {} := <inferred>", i + 1, var_name))
+                }
+            }
+        }
+
+        hints
+    }
+
+    pub fn handle_semantic_tokens(self: &LSPServer, uri: &String) -> Vec<Int> {
+        let mut tokens = Vec.new()
+        let doc = match self.documents.get(uri) {
+            Some(d) => d,
+            None => return tokens,
+        }
+
+        let lines: Vec<&str> = doc.text.split("\n").collect()
+        let mut prev_line = 0
+        let mut prev_start = 0
+
+        for (i, l) in lines.iter().enumerate() {
+            let chars: Vec<char> = l.chars().collect()
+            let mut j = 0
+            while j < chars.len() {
+                if chars[j].is_alphanumeric() || chars[j] == '_' {
+                    let start = j
+                    while j < chars.len() && (chars[j].is_alphanumeric() || chars[j] == '_') {
+                        j += 1
+                    }
+                    let word: String = chars[start..j].iter().collect()
+                    let token_type = if ["fn", "let", "mut", "if", "else", "while", "for", "return", "struct", "enum", "impl", "pub", "import", "module", "async", "await", "match"].contains(&word.as_str()) {
+                        1
+                    } else if ["true", "false"].contains(&word.as_str()) {
+                        2
+                    } else if j < chars.len() && chars[j] == '(' {
+                        8
+                    } else {
+                        0
+                    }
+
+                    tokens.push((i as Int) - prev_line)
+                    tokens.push((start as Int) - prev_start)
+                    tokens.push((j - start) as Int)
+                    tokens.push(token_type)
+                    tokens.push(0)
+
+                    prev_line = i as Int
+                    prev_start = start as Int
+                } else {
+                    j += 1
+                }
+            }
+        }
+
+        tokens
+    }
+}

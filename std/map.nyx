@@ -1,0 +1,72 @@
+module map
+
+pub struct Map<K, V> {
+    entries: Vec<(K, V)>,
+}
+
+pub fn new<K, V>() -> Map<K, V> {
+    Map { entries: Vec.new() }
+}
+
+impl<K, V> Map<K, V> where K: Eq {
+    pub fn insert(self: &mut Map<K, V>, key: K, value: V) {
+        self.entries.push((key, value))
+    }
+
+    pub fn get(self: &Map<K, V>, key: &K) -> Option<V> {
+        for (k, v) in self.entries {
+            if k == key { return Option.Some(v) }
+        }
+        Option.None
+    }
+
+    pub fn remove(self: &mut Map<K, V>, key: &K) -> Option<V> {
+        for i in 0..self.entries.len() {
+            let (k, v) = self.entries.get(i).unwrap()
+            if k == key {
+                let removed = self.entries.get(i).unwrap()
+                self.entries.remove(i)
+                return Option.Some(removed.1)
+            }
+            i = i + 1
+        }
+        Option.None
+    }
+
+    pub fn contains_key(self: &Map<K, V>, key: &K) -> Bool {
+        for (k, _v) in self.entries {
+            if k == key { return true }
+        }
+        false
+    }
+
+    pub fn keys(self: &Map<K, V>) -> Vec<K> {
+        let mut result = Vec.new()
+        for (k, _v) in self.entries {
+            result.push(k)
+        }
+        result
+    }
+
+    pub fn values(self: &Map<K, V>) -> Vec<V> {
+        let mut result = Vec.new()
+        for (_k, v) in self.entries {
+            result.push(v)
+        }
+        result
+    }
+
+    pub fn clear(self: &mut Map<K, V>) {
+        self.entries = Vec.new()
+    }
+
+    pub fn size(self: &Map<K, V>) -> Int {
+        self.entries.len()
+    }
+
+    pub fn is_empty(self: &Map<K, V>) -> Bool {
+        self.entries.len() == 0
+    }
+
+    pub fn len(self: &Map<K, V>) -> Int { self.entries.len() }
+}

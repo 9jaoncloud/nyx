@@ -1,0 +1,463 @@
+module fuzzer
+
+import std.io
+import std.fs
+import std.string
+import std.process
+import std.crypto
+
+pub struct FuzzConfig {
+    pub max_iterations: Int,
+    pub max_depth: Int,
+    pub mutation_rate: Int,
+    pub seed: Int,
+    pub grammar_path: String,
+    pub corpus_dir: String,
+    pub output_dir: String,
+    pub timeout_ms: Int,
+}
+
+pub fn default_config() -> FuzzConfig {
+    FuzzConfig {
+        max_iterations: 10000,
+        max_depth: 5,
+        mutation_rate: 30,
+        seed: 0,
+        grammar_path: "grammar.nyx".to_string(),
+        corpus_dir: "fuzz/corpus".to_string(),
+        output_dir: "fuzz/output".to_string(),
+        timeout_ms: 5000,
+    }
+}
+
+pub struct FuzzResult {
+    pub iteration: Int,
+    pub input: String,
+    pub passed: Bool,
+    pub crash: Bool,
+    pub timeout: Bool,
+    pub output: String,
+    pub duration_ms: Int,
+}
+
+pub struct Fuzzer {
+    config: FuzzConfig,
+    corpus: Vec<String>,
+    crashes: Vec<FuzzResult>,
+    coverage: Map<String, Bool>,
+    total_runs: Int,
+    total_crashes: Int,
+    total_timeouts: Int,
+}
+
+pub fn new_fuzzer(config: FuzzConfig) -> Fuzzer {
+    Fuzzer {
+        config: config,
+        corpus: Vec.new(),
+        crashes: Vec.new(),
+        coverage: Map.new(),
+        total_runs: 0,
+        total_crashes: 0,
+        total_timeouts: 0,
+    }
+}
+
+impl Fuzzer {
+    pub fn load_corpus(self: &mut Fuzzer) {
+        if !fs.exists(&self.config.corpus_dir) {
+            fs.create_dir_all(&self.config.corpus_dir)?
+        }
+
+        let entries = match fs.read_dir(&self.config.corpus_dir) {
+            Result.Ok(e) => e,
+            Result.Err(_) => return,
+        }
+
+        for entry in entries.iter() {
+            let path = &self.config.corpus_dir + "/" + entry
+            if let Result.Ok(content) = fs.read_to_string(&path) {
+                self.corpus.push(content)
+            }
+        }
+
+        if self.corpus.is_empty() {
+            self.corpus.push("fn main() { println(\"hello\"); }".to_string())
+            self.corpus.push("let x: Int = 42;".to_string())
+            self.corpus.push("struct Point { x: Int, y: Int }".to_string())
+            self.corpus.push("enum Option { Some(Int), None }".to_string())
+            self.corpus.push("if true { 1 } else { 0 }".to_string())
+            self.corpus.push("while true { break; }".to_string())
+            self.corpus.push("for i in [1,2,3] { println(i); }".to_string())
+            self.corpus.push("match x { 1 => \"one\", _ => \"other\" }".to_string())
+            self.corpus.push("async { await fetch(\"url\") }".to_string())
+            self.corpus.push("|x| x + 1".to_string())
+        }
+    }
+
+    pub fn fuzz_grammar_based(self: &mut Fuzzer) -> Vec<FuzzResult> {
+        let mut results = Vec.new()
+
+        for i in 0..self.config.max_iterations {
+            let input = self.generate_from_grammar(0)
+            let result = self.run_fuzz_input(i, &input)
+            self.process_result(&result)
+            results.push(result)
+
+            if i % 100 == 0 {
+                std.io.println("Grammar fuzzing: " + i.to_string() + "/" + self.config.max_iterations.to_string())
+            }
+        }
+
+        results
+    }
+
+    pub fn fuzz_mutation_based(self: &mut Fuzzer) -> Vec<FuzzResult> {
+        let mut results = Vec.new()
+
+        for i in 0..self.config.max_iterations {
+            let base = if self.corpus.is_empty() {
+                "fn main() {}".to_string()
+            } else {
+                let idx = (crypto.random_int() as usize) % self.corpus.len()
+                self.corpus[idx].clone()
+            }
+
+            let input = self.mutate(&base)
+            let result = self.run_fuzz_input(i, &input)
+            self.process_result(&result)
+            results.push(result)
+
+            if i % 100 == 0 {
+                std.io.println("Mutation fuzzing: " + i.to_string() + "/" + self.config.max_iterations.to_string())
+            }
+        }
+
+        results
+    }
+
+    pub fn fuzz_combined(self: &mut Fuzzer) -> Vec<FuzzResult> {
+        let mut results = Vec.new()
+
+        let half = self.config.max_iterations / 2
+
+        for i in 0..half {
+            let input = self.generate_from_grammar(0)
+            let result = self.run_fuzz_input(i, &input)
+            self.process_result(&result)
+            results.push(result)
+        }
+
+        for i in 0..half {
+            let base = if self.corpus.is_empty() {
+                "fn main() {}".to_string()
+            } else {
+                let idx = (crypto.random_int() as usize) % self.corpus.len()
+                self.corpus[idx].clone()
+            }
+
+            let input = self.mutate(&base)
+            let result = self.run_fuzz_input(half + i, &input)
+            self.process_result(&result)
+            results.push(result)
+        }
+
+        results
+    }
+
+    fn generate_from_grammar(self: &Fuzzer, depth: Int) -> String {
+        if depth >= self.config.max_depth {
+            return self.generate_leaf()
+        }
+
+        let choice = crypto.random_int() % 12
+
+        match choice {
+            0 => {
+                let name = self.random_ident()
+                let ret = self.random_type()
+                let body = self.generate_from_grammar(depth + 1)
+                format!("fn {}() -> {} {{ {} }}", name, ret, body)
+            }
+            1 => {
+                let name = self.random_ident()
+                let ty = self.random_type()
+                let val = self.generate_from_grammar(depth + 1)
+                format!("let {} {}: {} = {};", if crypto.random_int() % 2 == 0 { "mut" } else { "" }, name, ty, val)
+            }
+            2 => {
+                let name = self.random_ident()
+                let fields = self.generate_struct_fields(depth + 1)
+                format!("struct {} {{ {} }}", name, fields)
+            }
+            3 => {
+                let name = self.random_ident()
+                let variants = self.generate_enum_variants(depth + 1)
+                format!("enum {} {{ {} }}", name, variants)
+            }
+            4 => {
+                let cond = self.generate_from_grammar(depth + 1)
+                let then = self.generate_from_grammar(depth + 1)
+                format!("if {} {{ {} }}", cond, then)
+            }
+            5 => {
+                let cond = self.generate_from_grammar(depth + 1)
+                let body = self.generate_from_grammar(depth + 1)
+                format!("while {} {{ {} }}", cond, body)
+            }
+            6 => {
+                let var = self.random_ident()
+                let iter = self.generate_from_grammar(depth + 1)
+                let body = self.generate_from_grammar(depth + 1)
+                format!("for {} in {} {{ {} }}", var, iter, body)
+            }
+            7 => {
+                let name = self.random_ident()
+                let arg = self.generate_from_grammar(depth + 1)
+                format!("{}({})", name, arg)
+            }
+            8 => {
+                let left = self.generate_from_grammar(depth + 1)
+                let op = ["+", "-", "*", "/", "%", "==", "!=", "<", ">", "<=", ">=", "&&", "||"][(crypto.random_int() as usize) % 14]
+                let right = self.generate_from_grammar(depth + 1)
+                format!("{} {} {}", left, op, right)
+            }
+            9 => {
+                format!("println({})", self.generate_from_grammar(depth + 1))
+            }
+            10 => {
+                let scrutinee = self.generate_from_grammar(depth + 1)
+                let arm_body = self.generate_from_grammar(depth + 1)
+                format!("match {} {{ _ => {} }}", scrutinee, arm_body)
+            }
+            _ => {
+                format!("{{ {} }}", self.generate_from_grammar(depth + 1))
+            }
+        }
+    }
+
+    fn generate_leaf(self: &Fuzzer) -> String {
+        let choice = crypto.random_int() % 7
+        match choice {
+            0 => (crypto.random_int() % 1000).to_string(),
+            1 => {
+                let v = crypto.random_int() % 100
+                format!("{}.{}", v, crypto.random_int() % 100)
+            }
+            2 => {
+                let b = crypto.random_int() % 2 == 0
+                if b { "true".to_string() } else { "false".to_string() }
+            }
+            3 => {
+                let len = (crypto.random_int() as usize) % 20 + 1
+                let mut s = "\"".to_string()
+                for _ in 0..len {
+                    let c = (crypto.random_int() as u8 % 94 + 32) as char
+                    s = s + &c.to_string()
+                }
+                s + "\""
+            }
+            4 => self.random_ident(),
+            5 => "()".to_string(),
+            6 => "null".to_string(),
+            _ => "0".to_string(),
+        }
+    }
+
+    fn mutate(self: &Fuzzer, input: &String) -> String {
+        let mut chars: Vec<char> = input.chars().collect()
+        if chars.is_empty() { return input.clone() }
+
+        let mutation = crypto.random_int() % 8
+
+        match mutation {
+            0 => {
+                let pos = (crypto.random_int() as usize) % chars.len()
+                let new_char = (crypto.random_int() as u8 % 128) as char
+                chars[pos] = new_char
+            }
+            1 => {
+                let pos = (crypto.random_int() as usize) % chars.len()
+                chars.remove(pos)
+            }
+            2 => {
+                let pos = (crypto.random_int() as usize) % chars.len()
+                let new_char = (crypto.random_int() as u8 % 128) as char
+                chars.insert(pos, new_char)
+            }
+            3 => {
+                let pos1 = (crypto.random_int() as usize) % chars.len()
+                let pos2 = (crypto.random_int() as usize) % chars.len()
+                if pos1 != pos2 {
+                    let temp = chars[pos1]
+                    chars[pos1] = chars[pos2]
+                    chars[pos2] = temp
+                }
+            }
+            4 => {
+                let pos = (crypto.random_int() as usize) % chars.len()
+                let new_char = chars[pos].to_uppercase().next().unwrap_or(chars[pos])
+                chars[pos] = new_char
+            }
+            5 => {
+                let pos = (crypto.random_int() as usize) % chars.len()
+                let new_char = chars[pos].to_lowercase().next().unwrap_or(chars[pos])
+                chars[pos] = new_char
+            }
+            6 => {
+                let pos = (crypto.random_int() as usize) % chars.len()
+                let repeats = (crypto.random_int() as usize) % 10 + 1
+                let c = chars[pos]
+                for _ in 0..repeats {
+                    chars.insert(pos, c)
+                }
+            }
+            7 => {
+                let pos = (crypto.random_int() as usize) % chars.len()
+                let del_count = (crypto.random_int() as usize) % 5 + 1
+                let end = (pos + del_count).min(chars.len())
+                chars.drain(pos..end)
+            }
+            _ => {}
+        }
+
+        chars.iter().collect()
+    }
+
+    fn generate_struct_fields(self: &Fuzzer, depth: Int) -> String {
+        let count = (crypto.random_int() as usize) % 4 + 1
+        let mut fields = Vec.new()
+        for _ in 0..count {
+            let name = self.random_ident()
+            let ty = self.random_type()
+            fields.push(format!("{}: {}", name, ty))
+        }
+        fields.join(", ")
+    }
+
+    fn generate_enum_variants(self: &Fuzzer, depth: Int) -> String {
+        let count = (crypto.random_int() as usize) % 4 + 1
+        let mut variants = Vec.new()
+        for _ in 0..count {
+            let name = self.random_variant_name()
+            if crypto.random_int() % 3 == 0 {
+                let ty = self.random_type()
+                variants.push(format!("{}({})", name, ty))
+            } else {
+                variants.push(name)
+            }
+        }
+        variants.join(", ")
+    }
+
+    fn random_ident(self: &Fuzzer) -> String {
+        let names = ["x", "y", "z", "foo", "bar", "baz", "n", "i", "j", "k", "val", "result", "data", "item", "count", "sum", "max", "min", "tmp", "buf"]
+        let idx = (crypto.random_int() as usize) % names.len()
+        names[idx].to_string()
+    }
+
+    fn random_variant_name(self: &Fuzzer) -> String {
+        let names = ["None", "Some", "Ok", "Err", "Red", "Green", "Blue", "Empty", "Next", "Done"]
+        let idx = (crypto.random_int() as usize) % names.len()
+        names[idx].to_string()
+    }
+
+    fn random_type(self: &Fuzzer) -> String {
+        let types = ["Int", "Float", "Bool", "String", "Char", "Void"]
+        let idx = (crypto.random_int() as usize) % types.len()
+        types[idx].to_string()
+    }
+
+    fn run_fuzz_input(self: &Fuzzer, iteration: Int, input: &String) -> FuzzResult {
+        let tmp_path = "/tmp/nyx_fuzz_input.nyx"
+        fs.write(tmp_path, input)
+
+        let start = 0
+        let exit_code = std.process.run("nyxc " + tmp_path)
+        let duration = 0
+
+        FuzzResult {
+            iteration: iteration,
+            input: input.clone(),
+            passed: exit_code == 0,
+            crash: exit_code < 0 || exit_code > 128,
+            timeout: false,
+            output: "".to_string(),
+            duration_ms: duration,
+        }
+    }
+
+    fn process_result(self: &mut Fuzzer, result: &FuzzResult) {
+        self.total_runs = self.total_runs + 1
+
+        if result.crash {
+            self.total_crashes = self.total_crashes + 1
+            self.crashes.push(result.clone())
+            self.save_crash(result)
+
+            let crash_dir = &self.config.output_dir + "/crashes"
+            if !fs.exists(&crash_dir) {
+                fs.create_dir_all(&crash_dir)?
+            }
+        }
+
+        if result.timeout {
+            self.total_timeouts = self.total_timeouts + 1
+        }
+
+        if result.passed {
+            self.corpus.push(result.input.clone())
+        }
+    }
+
+    fn save_crash(self: &Fuzzer, result: &FuzzResult) {
+        let crash_file = &self.config.output_dir + "/crash_" + result.iteration.to_string() + ".nyx"
+        let _ = fs.write(&crash_file, &result.input)
+    }
+
+    pub fn minimize_crash(self: &Fuzzer, crash: &String) -> String {
+        let mut minimized = crash.clone()
+        let lines: Vec<&str> = crash.split("\n").collect()
+
+        for i in 0..lines.len() {
+            let mut reduced = Vec.new()
+            for (j, l) in lines.iter().enumerate() {
+                if i != j {
+                    reduced.push(*l)
+                }
+            }
+            let candidate = reduced.join("\n")
+            if self.test_input(&candidate) {
+                minimized = candidate
+            }
+        }
+
+        minimized
+    }
+
+    fn test_input(self: &Fuzzer, input: &String) -> bool {
+        let tmp_path = "/tmp/nyx_fuzz_minimize.nyx"
+        fs.write(tmp_path, input)
+        let exit_code = std.process.run("nyxc " + tmp_path)
+        exit_code < 0 || exit_code > 128
+    }
+
+    pub fn report(self: &Fuzzer) -> String {
+        let mut report = "# Fuzzing Report\n\n"
+        report = report + "Total runs: " + self.total_runs.to_string() + "\n"
+        report = report + "Crashes: " + self.total_crashes.to_string() + "\n"
+        report = report + "Timeouts: " + self.total_timeouts.to_string() + "\n"
+        report = report + "Corpus size: " + self.corpus.len().to_string() + "\n"
+        report = report + "Unique crashes: " + self.crashes.len().to_string() + "\n\n"
+
+        if !self.crashes.is_empty() {
+            report = report + "## Crash Details\n\n"
+            for (i, crash) in self.crashes.iter().enumerate() {
+                report = report + "### Crash " + (i + 1).to_string() + "\n"
+                report = report + "Iteration: " + crash.iteration.to_string() + "\n"
+                report = report + "```\n" + &crash.input + "\n```\n\n"
+            }
+        }
+
+        report
+    }
+}

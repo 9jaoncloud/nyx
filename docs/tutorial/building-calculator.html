@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tutorial: Building a Zero-GC Calculator in Nyx — Nyx Documentation</title>
+    <meta name="description" content="Learn how to build a high-performance, zero-garbage-collection desktop and CLI calculator in Nyx using algebraic enums, region memory inference, and pure state transitions.">
+    <meta name="keywords" content="Nyx programming language, calculator tutorial, zero-GC, region memory inference, systems programming, desktop GUI app, Simeon Bala, 9jaonCloud">
+    <meta property="og:title" content="Tutorial: Building a Zero-GC Calculator in Nyx">
+    <meta property="og:description" content="Complete step-by-step guide to constructing a deterministic, zero-allocation calculator engine and UI with Nyx.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://nyx.9jaoncloud.com.ng/docs/tutorial/building-calculator.html">
+    <link rel="stylesheet" href="../style.css">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Building a Zero-GC Calculator in Nyx",
+      "description": "Step-by-step guide to constructing an algebraic, zero-allocation calculator in Nyx.",
+      "author": {
+        "@type": "Person",
+        "name": "Simeon Bala",
+        "affiliation": {
+          "@type": "Organization",
+          "name": "9jaonCloud Sovereign Systems"
+        }
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "9jaonCloud Sovereign Systems",
+        "url": "https://nyx.9jaoncloud.com.ng"
+      }
+    }
+    </script>
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <h1>Tutorial: Building a Zero-GC Calculator</h1>
+        <p class="lead">Learn how to construct a deterministic, zero-allocation desktop and CLI calculator in Nyx utilizing algebraic enums, static region memory inference, and pure state transitions.</p>
+
+        <div style="background: rgba(168, 85, 247, 0.1); border-left: 4px solid #a855f7; padding: 1.25rem; border-radius: 8px; margin-bottom: 2rem;">
+            <strong>🎯 Key Concepts Covered:</strong>
+            <ul style="margin-top: 0.5rem; margin-left: 1.25rem;">
+                <li>Algebraic State Enums (<code>Operation::Add</code>, <code>Subtract</code>, <code>Multiply</code>, <code>Divide</code>, <code>Power</code>, <code>Modulo</code>)</li>
+                <li>Zero-Heap Dynamic String &amp; Buffer formatting via static region inference</li>
+                <li>Division-by-zero resilience without unhandled runtime panics</li>
+                <li>State transition separation for CLI and Material GUI wrappers</li>
+            </ul>
+        </div>
+
+        <h2>1. Complete Public Source Code (<code>std/apps/calculator.nyx</code>)</h2>
+        <p>The entire source code is available in the public Nyx repository under <a href="../../examples/apps/calculator.nyx" target="_blank" style="color:#38bdf8;"><code>examples/apps/calculator.nyx</code></a>:</p>
+
+<pre><code class="language-nyx">module std.apps.calculator
+
+import std.math
+import std.string
+
+pub enum Operation {
+    None,
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
+    Power,
+    Modulo,
+}
+
+pub struct CalculatorState {
+    pub display: String,
+    pub previous_val: Float,
+    pub current_op: Operation,
+    pub should_reset_on_next_input: Bool,
+    pub history: Vec[String],
+}
+
+impl CalculatorState {
+    pub fn new() -> CalculatorState {
+        CalculatorState {
+            display: "0".to_string(),
+            previous_val: 0.0,
+            current_op: Operation.None,
+            should_reset_on_next_input: false,
+            history: Vec.new(),
+        }
+    }
+
+    pub fn input_digit(self: &mut Self, digit: String) {
+        if self.should_reset_on_next_input || self.display == "0" {
+            self.display = digit;
+            self.should_reset_on_next_input = false;
+        } else {
+            self.display = self.display + digit;
+        }
+    }
+
+    pub fn input_decimal(self: &mut Self) {
+        if self.should_reset_on_next_input {
+            self.display = "0.".to_string();
+            self.should_reset_on_next_input = false;
+        } else if !self.display.contains(".") {
+            self.display = self.display + ".";
+        }
+    }
+
+    pub fn set_operation(self: &mut Self, op: Operation) {
+        self.previous_val = self.display.to_float();
+        self.current_op = op;
+        self.should_reset_on_next_input = true;
+    }
+
+    pub fn compute_result(self: &mut Self) -> Float {
+        let current = self.display.to_float();
+        let mut result = current;
+
+        match self.current_op {
+            Operation.Add => { result = self.previous_val + current; },
+            Operation.Subtract => { result = self.previous_val - current; },
+            Operation.Multiply => { result = self.previous_val * current; },
+            Operation.Divide => {
+                if current != 0.0 {
+                    result = self.previous_val / current;
+                } else {
+                    self.display = "Error: Div by 0".to_string();
+                    return 0.0;
+                }
+            },
+            Operation.Power => { result = math.pow(self.previous_val, current); },
+            Operation.Modulo => { result = (self.previous_val as Int % current as Int) as Float; },
+            Operation.None => {},
+        }
+
+        let entry = self.previous_val.to_string() + " op " + current.to_string() + " = " + result.to_string();
+        self.history.push(entry);
+        self.display = result.to_string();
+        self.current_op = Operation.None;
+        self.should_reset_on_next_input = true;
+        result
+    }
+
+    pub fn clear(self: &mut Self) {
+        self.display = "0".to_string();
+        self.previous_val = 0.0;
+        self.current_op = Operation.None;
+        self.should_reset_on_next_input = false;
+    }
+}</code></pre>
+
+        <h2>2. Architectural Deep Dive: Zero-GC Memory Management</h2>
+        <p>In traditional garbage-collected languages (such as JavaScript, Python, or Java), string concatenations like <code>self.display + digit</code> create intermediate objects that pollute the heap and trigger periodic GC stop-the-world pauses. In Nyx:</p>
+        <ul>
+            <li><strong>Static Region Lifetime:</strong> The compiler's escape analysis identifies that <code>CalculatorState</code> is local to the active UI frame or CLI process. All string manipulations are allocated into the contiguous frame region.</li>
+            <li><strong>Zero Tracing Overhead:</strong> When the window is closed or an operation completes, the entire memory region resets in $O(1)$ constant time with zero destructor sweeps.</li>
+            <li><strong>Division by Zero Safety:</strong> Arithmetic operations handle errors explicitly through structured state updates rather than throwing untrapped exceptions.</li>
+        </ul>
+
+        <h2>3. Compiling &amp; Running the App</h2>
+        <p>Compile and launch the calculator application using the Nyx toolchain:</p>
+        <pre><code class="language-bash"># Run directly via CLI JIT / Interpreter
+nyx run std/apps/calculator.nyx
+
+# Build an optimized native release binary
+nyx build --release std/apps/calculator.nyx -o bin/nyx-calc.exe</code></pre>
+
+        <div class="next-prev-links" style="margin-top: 3rem;">
+            <a href="building-a-desktop-app.html">&larr; Building a Desktop App</a>
+            <a href="building-snake-arcade.html">Building Snake Arcade Game &rarr;</a>
+        </div>
+    </main>
+    <script src="../navigation.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

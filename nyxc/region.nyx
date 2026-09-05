@@ -1,0 +1,26 @@
+module region
+
+import ast.*
+
+pub fn infer_regions(program: Vec<TopLevel>) -> Vec<TopLevel> {
+    program.iter().map(|item| match item {
+        TopLevel.FnDecl{ name, generics, params, ret_type, body, is_async } => {
+            TopLevel.FnDecl{ name: name.clone(), generics: generics.clone(), params: params.clone(), ret_type: ret_type.clone(), body: wrap_body(body), is_async: *is_async }
+        }
+        _ => item.clone()
+    }).collect()
+}
+
+fn wrap_body(body: &Expr) -> Expr {
+    if let Expr.Block(stmts) = body {
+        let mut new_stmts = Vec.new()
+        new_stmts.push(Stmt::Let{ name: "__arena".to_string(), mutable: true, ty: None, value: Expr::Call{ func: Expr::Ident("arena_create".to_string()), generic_args: Vec.new(), args: Vec.new() } })
+        for stmt in stmts {
+            new_stmts.push(stmt.clone())
+        }
+        new_stmts.push(Stmt::Expr(Expr::Call{ func: Expr::Ident("arena_destroy".to_string()), generic_args: Vec.new(), args: { let mut a = Vec.new(); a.push(Expr::Ident("__arena".to_string())); a } }))
+        Expr::Block(new_stmts)
+    } else {
+        body.clone()
+    }
+}

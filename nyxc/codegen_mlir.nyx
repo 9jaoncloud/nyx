@@ -1,0 +1,419 @@
+module codegen_mlir
+
+import ast.*
+
+pub fn generate_mlir(program: &Vec<TopLevel>) -> String {
+    let mut out = "// Nyx MLIR Dialect IR\n"
+    out = out + "// dialects: nyx.func, nyx.struct, nyx.region, nyx.async\n\n"
+    out = out + "module {\n"
+
+    for item in program {
+        match item {
+            TopLevel.FnDecl{ name, generics, params, ret_type, body, is_async } => {
+                if *is_async {
+                    out = out + "  nyx.async.func @" + name.clone() + "("
+                } else {
+                    out = out + "  nyx.func @" + name.clone() + "("
+                }
+                for i in 0..params.len() {
+                    if i > 0 { out = out + ", " }
+                    out = out + "%" + params[i].name.clone() + ": " + mlir_type(&params[i].ty)
+                }
+                out = out + ") -> " + mlir_type(ret_type) + " {\n"
+                out = out + "  ^bb0:\n"
+                out = out + emit_mlir_body(body)
+                out = out + "  }\n\n"
+            }
+            TopLevel.StructDef{ name, generics, fields } => {
+                out = out + "  nyx.struct @" + name.clone() + " {\n"
+                for (fname, fty) in fields {
+                    out = out + "    " + fname.clone() + ": " + mlir_type(&fty) + ",\n"
+                }
+                out = out + "  }\n\n"
+            }
+            TopLevel.EnumDef{ name, generics, variants } => {
+                out = out + "  nyx.enum @" + name.clone() + " {\n"
+                for (vname, vtypes) in variants {
+                    out = out + "    " + vname.clone() + "("
+                    for i in 0..vtypes.len() {
+                        if i > 0 { out = out + ", " }
+                        out = out + mlir_type(&vtypes[i])
+                    }
+                    out = out + ")\n"
+                }
+                out = out + "  }\n\n"
+            }
+            TopLevel.Module(name) => {
+                out = out + "  // module " + name.clone() + "\n\n"
+            }
+            TopLevel.Import(path) => {
+                out = out + "  // import "
+                for i in 0..path.len() {
+                    if i > 0 { out = out + "." }
+                    out = out + path[i].clone()
+                }
+                out = out + "\n\n"
+            }
+            _ => {}
+        }
+    }
+
+    out = out + "}\n"
+    out
+}
+
+fn mlir_type(ty: &Type) -> String {
+    match ty {
+        Type.Int => "i64".to_string(),
+        Type.Float => "f64".to_string(),
+        Type.Bool => "i1".to_string(),
+        Type.String => "!nyx.str".to_string(),
+        Type.Char => "!nyx.char".to_string(),
+        Type.Void => "none".to_string(),
+        Type.Custom(n) => "!nyx.struct<@" + n.clone() + ">".to_string(),
+        Type.Generic(n) => "!nyx.generic<" + n.clone() + ">".to_string(),
+        Type.Ref(inner) => "!nyx.ref<" + mlir_type(inner) + ">".to_string(),
+        Type.MutRef(inner) => "!nyx.mutref<" + mlir_type(inner) + ">".to_string(),
+        Type.Array(inner) => "!nyx.array<" + mlir_type(inner) + ">".to_string(),
+        Type.Option(inner) => "!nyx.option<" + mlir_type(inner) + ">".to_string(),
+        Type.Result(ok, err) => "!nyx.result<" + mlir_type(ok) + ", " + mlir_type(err) + ">".to_string(),
+        Type.Tuple(types) => {
+            let mut s = "!nyx.tuple<".to_string()
+            for i in 0..types.len() {
+                if i > 0 { s = s + ", " }
+                s = s + mlir_type(&types[i])
+            }
+            s + ">"
+        }
+        Type.Func(params, ret) => {
+            let mut s = "!nyx.func<(".to_string()
+            for i in 0..params.len() {
+                if i > 0 { s = s + ", " }
+                s = s + mlir_type(&params[i])
+            }
+            s + ") -> " + mlir_type(ret) + ">"
+        }
+        Type.Region(name) => "!nyx.region<'" + name.clone() + ">".to_string(),
+        Type.Recursive(name) => "!nyx.rec<" + name.clone() + ">".to_string(),
+        Type.Unknown => "!nyx.unknown".to_string(),
+    }
+}
+
+fn emit_mlir_body(body: &Expr) -> String {
+    match body {
+        Expr.Block(stmts) => {
+            let mut out = ""
+            for stmt in stmts {
+                out = out + emit_mlir_stmt(stmt)
+            }
+            out
+        }
+        _ => {
+            "    " + emit_mlir_expr(body) + "\n"
+        }
+    }
+}
+
+fn emit_mlir_stmt(stmt: &Stmt) -> String {
+    match stmt {
+        Stmt.Let{ name, value, ty, mutable } => {
+            let mut out = "    %" + name.clone()
+            if *mutable { out = out + " mut" }
+            out = out + " = " + emit_mlir_expr(value) + "\n"
+            out
+        }
+        Stmt.Expr(expr) => {
+            "    " + emit_mlir_expr(expr) + "\n"
+        }
+        Stmt.Return(Option.Some(e)) => {
+            "    nyx.return " + emit_mlir_expr(e) + "\n"
+        }
+        Stmt.Return(Option.None) => {
+            "    nyx.return\n".to_string()
+        }
+    }
+}
+
+fn emit_mlir_expr(expr: &Expr) -> String {
+    match expr {
+        Expr.Lit(lit) => {
+            match lit {
+                Literal.Int(n) => n.to_string(),
+                Literal.Float(n) => "nyx.const " + n.to_string(),
+                Literal.Bool(b) => if *b { "true".to_string() } else { "false".to_string() },
+                Literal.String(s) => "nyx.str \"" + s.clone() + "\"",
+                Literal.Char(c) => "nyx.char '" + c.to_string() + "'",
+            }
+        }
+        Expr.Ident(name) => {
+            "%" + name.clone()
+        }
+        Expr.Binary{ op, left, right } => {
+            let op_str = match op {
+                BinOp.Add => "nyx.add",
+                BinOp.Sub => "nyx.sub",
+                BinOp.Mul => "nyx.mul",
+                BinOp.Div => "nyx.div",
+                BinOp.Mod => "nyx.mod",
+                BinOp.Eq => "nyx.cmp_eq",
+                BinOp.NotEq => "nyx.cmp_ne",
+                BinOp.Lt => "nyx.cmp_lt",
+                BinOp.LtEq => "nyx.cmp_lte",
+                BinOp.Gt => "nyx.cmp_gt",
+                BinOp.GtEq => "nyx.cmp_gte",
+                BinOp.And => "nyx.and",
+                BinOp.Or => "nyx.or",
+            }
+            op_str.to_string() + " " + emit_mlir_expr(left) + ", " + emit_mlir_expr(right)
+        }
+        Expr.Call{ func, args, .. } => {
+            let mut out = "call " + emit_mlir_expr(func) + "("
+            for i in 0..args.len() {
+                if i > 0 { out = out + ", " }
+                out = out + emit_mlir_expr(&args[i])
+            }
+            out + ")"
+        }
+        Expr.MethodCall{ receiver, method, args, .. } => {
+            let mut out = "call " + emit_mlir_expr(receiver) + "." + method.clone() + "("
+            for i in 0..args.len() {
+                if i > 0 { out = out + ", " }
+                out = out + emit_mlir_expr(&args[i])
+            }
+            out + ")"
+        }
+        Expr.If{ cond, then, else_ifs, else_block } => {
+            let mut out = "nyx.if " + emit_mlir_expr(cond) + " {\n"
+            for stmt in then {
+                out = out + emit_mlir_stmt(stmt)
+            }
+            for (elif_cond, elif_body) in else_ifs {
+                out = out + "  } nyx.if " + emit_mlir_expr(elif_cond) + " {\n"
+                for stmt in elif_body {
+                    out = out + emit_mlir_stmt(stmt)
+                }
+            }
+            match else_block {
+                Option.Some(stmts) => {
+                    out = out + "  } nyx.else {\n"
+                    for stmt in stmts {
+                        out = out + emit_mlir_stmt(stmt)
+                    }
+                }
+                Option.None => {}
+            }
+            out + "  }\n"
+        }
+        Expr.While{ cond, body } => {
+            let mut out = "nyx.while " + emit_mlir_expr(cond) + " {\n"
+            for stmt in body {
+                out = out + emit_mlir_stmt(stmt)
+            }
+            out + "  }\n"
+        }
+        Expr.For{ var, iter, body } => {
+            let mut out = "nyx.for %" + var.clone() + " in " + emit_mlir_expr(iter) + " {\n"
+            for stmt in body {
+                out = out + emit_mlir_stmt(stmt)
+            }
+            out + "  }\n"
+        }
+        Expr.StructLiteral{ name, fields, .. } => {
+            let mut out = "nyx.struct " + name.clone() + " {"
+            let mut first = true
+            for (fname, fval) in fields {
+                if !first { out = out + ", " }
+                first = false
+                out = out + fname.clone() + ": " + emit_mlir_expr(fval)
+            }
+            out + "}"
+        }
+        Expr.FieldAccess{ obj, field } => {
+            emit_mlir_expr(obj) + "." + field.clone()
+        }
+        Expr.Return(Option.Some(e)) => {
+            "nyx.return " + emit_mlir_expr(e)
+        }
+        Expr.Return(Option.None) => {
+            "nyx.return".to_string()
+        }
+        Expr.Block(stmts) => {
+            let mut out = "{\n"
+            for stmt in stmts {
+                out = out + emit_mlir_stmt(stmt)
+            }
+            out + "}"
+        }
+        Expr.Let{ name, value, .. } => {
+            "%" + name.clone() + " = " + emit_mlir_expr(value)
+        }
+        Expr.Unary{ op, expr } => {
+            match op {
+                UnaryOp.Not => "nyx.not " + emit_mlir_expr(expr),
+                UnaryOp.Neg => "nyx.neg " + emit_mlir_expr(expr),
+                UnaryOp.Ref => "nyx.ref " + emit_mlir_expr(expr),
+                UnaryOp.Deref => "nyx.deref " + emit_mlir_expr(expr),
+            }
+        }
+        Expr.Match{ expr, arms } => {
+            let mut out = "nyx.match " + emit_mlir_expr(expr) + " {\n"
+            for arm in arms {
+                out = out + "  "
+                match &arm.pattern {
+                    Pattern.Ident(s) => { out = out + "%" + s.clone() }
+                    Pattern.Wildcard => { out = out + "_" }
+                    Pattern.Lit(lit) => {
+                        match lit {
+                            Literal.Int(n) => { out = out + n.to_string() }
+                            Literal.String(s) => { out = out + "\"" + s.clone() + "\"" }
+                            Literal.Bool(b) => { out = out + (if *b { "true" } else { "false" }) }
+                            _ => { out = out + "?" }
+                        }
+                    }
+                    Pattern.Enum{ variant, .. } => { out = out + variant.clone() }
+                }
+                out = out + " => " + emit_mlir_expr(&arm.body) + "\n"
+            }
+            out + "}\n"
+        }
+        Expr.Lambda{ params, body } => {
+            let mut out = "nyx.lambda ("
+            for i in 0..params.len() {
+                if i > 0 { out = out + ", " }
+                out = out + "%" + params[i].name.clone() + ": " + mlir_type(&params[i].ty)
+            }
+            out + ") => " + emit_mlir_expr(body)
+        }
+        Expr.Await(e) => {
+            "nyx.await " + emit_mlir_expr(e)
+        }
+        Expr.Assign{ name, value } => {
+            name.clone() + " = " + emit_mlir_expr(value)
+        }
+        Expr.Question(e) => {
+            emit_mlir_expr(e) + "?"
+        }
+        _ => "".to_string(),
+    }
+}
+
+pub fn generate_llvm_dialect(program: &Vec<TopLevel>) -> String {
+    let mut out = "; Nyx -> LLVM Dialect\n"
+    out = out + "module {\n"
+    out = out + "  llvm.func @nyx_println(i64) -> none\n"
+    out = out + "  llvm.func @nyx_print_int(i64) -> none\n"
+    out = out + "  llvm.func @nyx_print_f64(f64) -> none\n\n"
+
+    for item in program {
+        match item {
+            TopLevel.FnDecl{ name, params, ret_type, body, .. } => {
+                out = out + "  llvm.func @" + name.clone() + "("
+                for i in 0..params.len() {
+                    if i > 0 { out = out + ", " }
+                    out = out + "%" + params[i].name.clone() + ": " + llvm_type(&params[i].ty)
+                }
+                out = out + ") -> " + llvm_type(ret_type) + " {\n"
+                out = out + "  ^bb0:\n"
+                out = out + emit_llvm_body(body)
+                out = out + "  }\n\n"
+            }
+            TopLevel.StructDef{ name, fields } => {
+                out = out + "  ; struct " + name.clone() + " {\n"
+                for (fname, fty) in fields {
+                    out = out + "  ;   " + fname.clone() + ": " + llvm_type(&fty) + "\n"
+                }
+                out = out + "  ; }\n\n"
+            }
+            _ => {}
+        }
+    }
+
+    out = out + "}\n"
+    out
+}
+
+fn llvm_type(ty: &Type) -> String {
+    match ty {
+        Type.Int => "i64".to_string(),
+        Type.Float => "f64".to_string(),
+        Type.Bool => "i1".to_string(),
+        Type.String => "i8*".to_string(),
+        Type.Char => "i8".to_string(),
+        Type.Void => "void".to_string(),
+        _ => "i8*".to_string(),
+    }
+}
+
+fn emit_llvm_body(body: &Expr) -> String {
+    match body {
+        Expr.Block(stmts) => {
+            let mut out = ""
+            for stmt in stmts {
+                out = out + emit_llvm_stmt(stmt)
+            }
+            out
+        }
+        _ => "".to_string(),
+    }
+}
+
+fn emit_llvm_stmt(stmt: &Stmt) -> String {
+    match stmt {
+        Stmt.Let{ name, value, .. } => {
+            "    %" + name.clone() + " = " + emit_llvm_expr(value) + "\n"
+        }
+        Stmt.Expr(expr) => {
+            "    " + emit_llvm_expr(expr) + "\n"
+        }
+        Stmt.Return(Option.Some(e)) => {
+            "    llvm.return " + emit_llvm_expr(e) + "\n"
+        }
+        Stmt.Return(Option.None) => {
+            "    llvm.return\n".to_string()
+        }
+    }
+}
+
+fn emit_llvm_expr(expr: &Expr) -> String {
+    match expr {
+        Expr.Lit(lit) => {
+            match lit {
+                Literal.Int(n) => n.to_string(),
+                Literal.Float(n) => n.to_string(),
+                Literal.Bool(b) => if *b { "1".to_string() } else { "0".to_string() },
+                Literal.String(s) => "getelementptr([" + s.len().to_string() + " x i8], [" + s.len().to_string() + " x i8]* @str_" + s.clone() + ", i32 0, i32 0)",
+                Literal.Char(c) => c.to_string(),
+            }
+        }
+        Expr.Ident(name) => {
+            "%" + name.clone()
+        }
+        Expr.Binary{ op, left, right } => {
+            let op_str = match op {
+                BinOp.Add => "add i64",
+                BinOp.Sub => "sub i64",
+                BinOp.Mul => "mul i64",
+                BinOp.Div => "sdiv i64",
+                BinOp.Mod => "srem i64",
+                BinOp.Eq => "icmp eq i64",
+                BinOp.NotEq => "icmp ne i64",
+                BinOp.Lt => "icmp slt i64",
+                BinOp.LtEq => "icmp sle i64",
+                BinOp.Gt => "icmp sgt i64",
+                BinOp.GtEq => "icmp sge i64",
+                BinOp.And => "and i1",
+                BinOp.Or => "or i1",
+            }
+            op_str.to_string() + " " + emit_llvm_expr(left) + ", " + emit_llvm_expr(right)
+        }
+        Expr.Call{ func, args, .. } => {
+            let mut out = "call " + emit_llvm_expr(func) + "("
+            for i in 0..args.len() {
+                if i > 0 { out = out + ", " }
+                out = out + "i64 " + emit_llvm_expr(&args[i])
+            }
+            out + ")"
+        }
+        _ => "/* unsupported */".to_string(),
+    }
+}

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nyx Systems Language Documentation (9jaonCloud) — The Unified Language</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.75rem; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:12px; padding:0.85rem 1.25rem; margin-bottom:1.5rem;">
+            <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+                <span style="background:#10b981; color:#022c22; font-size:0.75rem; font-weight:800; padding:0.25rem 0.6rem; border-radius:6px; text-transform:uppercase;">v0.28.0 Production Release</span>
+                <strong style="color:#6ee7b7; font-size:0.95rem;">Enterprise Web Suite, Sovereign Mobile SDK &amp; Tri-Mode Android Interoperability</strong>
+            </div>
+            <a href="roadmap.html#milestone-11" style="color:#38bdf8; font-weight:600; text-decoration:none; font-size:0.88rem;">Explore Milestone 11 &rarr;</a>
+        </div>
+
+        <div class="hero">
+            <div style="display:inline-block; padding: 0.35rem 1rem; border-radius: 9999px; background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.3); color: #c4b5fd; font-size: 0.85rem; font-weight: 600; margin-bottom: 1rem;">
+                👨‍💻 By <a href="https://9jaoncloud.com.ng/simeon-bala.php" target="_blank" rel="noopener noreferrer" style="color:inherit; text-decoration:underline; font-weight:inherit;" title="View Simeon Bala (Founder &amp; Chief Architect)">Simeon Bala</a> &bull; Powered by <a href="https://9jaoncloud.com.ng" target="_blank" style="color:#38bdf8; text-decoration:none;">9jaonCloud</a> (<a href="mailto:nyx@9jaoncloud.com.ng" style="color:#c4b5fd; text-decoration:none;">nyx@9jaoncloud.com.ng</a>)
+            </div>
+            <h1>&#x1f319; The Nyx Programming Language</h1>
+            <p>One unified language for enterprise web microservices, sovereign 120Hz mobile apps, desktop systems, and cloud infrastructure. Region-based Zero-GC safety, native Android APK/AAB execution, and delightful ergonomics.</p>
+            <div class="cta">
+                <a href="setup/installation.html" class="btn btn-primary">Install Nyx</a>
+                <a href="../nyxoffice.html" class="btn btn-primary" style="background: linear-gradient(135deg, #8b5cf6, #38bdf8); border:none;">📝 NyxOffice Suite (Live)</a>
+                <a href="../os-preview.html" class="btn btn-primary" style="background: linear-gradient(135deg, #10b981, #0284c7); border:none;">🖥️ NyxOS 120 FPS Desktop Live</a>
+                <a href="learn/index.html" class="btn btn-primary" style="background: linear-gradient(135deg, #06b6d4, #0284c7); border:none;">🎓 Interactive Academy (27 Modules)</a>
+                <a href="../mobile.html" class="btn btn-primary" style="background: linear-gradient(135deg, #f59e0b, #d97706); border:none;">📱 Sovereign Mobile SDK (120Hz)</a>
+                <a href="../downloads/nyx-v0.28.0-windows-x64.zip" class="btn btn-primary" style="background: linear-gradient(135deg, #10b981, #059669); border:none;">⬇️ Download Prebuilt CLI (v0.28 x64)</a>
+                <a href="../athena/dashboard.html" class="btn btn-primary" style="background: linear-gradient(135deg, #a855f7, #6366f1); border:none;">⚡ Athena Trading Demo</a>
+                <a href="benchmarks.html" class="btn btn-primary" style="background: linear-gradient(135deg, #0284c7, #0ea5e9); border:none;">📊 15-Language Benchmarks</a>
+                <a href="../comparison.html" class="btn btn-primary" style="background: linear-gradient(135deg, #7c3aed, #6366f1); border:none;">🏆 Head-to-Head Comparison</a>
+                <a href="roadmap.html" class="btn btn-primary" style="background: linear-gradient(135deg, #f59e0b, #d97706); border:none;">🗺️ Engineering Roadmap (v0.28)</a>
+                <a href="paper/index.html" class="btn btn-primary" style="background: linear-gradient(135deg, #9333ea, #db2777); border:none;">📄 Academic Papers</a>
+                <a href="../rss.xml" class="btn btn-secondary" target="_blank">📡 RSS Feed (rss.xml)</a>
+                <a href="ecosystem.html" class="btn btn-secondary">🌐 Ecosystem Directory</a>
+                <a href="cross_platform_tester.html" class="btn btn-secondary">🌍 Platform Simulator</a>
+                <a href="legal/terms-and-disclaimer.html" class="btn btn-secondary">⚖️ Legal Terms &amp; Disclaimer</a>
+                <a href="security.html" class="btn btn-secondary">🛡️ Security Model</a>
+            </div>
+        </div>
+
+        <div id="search-container">
+            <input type="text" id="search-input" placeholder="Search documentation...">
+            <div id="search-results"></div>
+        </div>
+
+        <div class="feature-grid">
+            <div class="feature" style="border-color: rgba(56, 189, 248, 0.4); background: rgba(56, 189, 248, 0.04);">
+                <div class="icon">🌐</div>
+                <h4 style="color:#38bdf8;">Enterprise Web Suite (v0.28)</h4>
+                <p>Fluent QueryEngine, Server-Driven UI, SSE streaming at 2.5M req/sec, and zero-reflection binary serialization.</p>
+            </div>
+            <div class="feature" style="border-color: rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.04);">
+                <div class="icon">📱</div>
+                <h4 style="color:#fbbf24;">Sovereign Mobile SDK</h4>
+                <p>Fine-grained reactive signals (<code>Signal&lt;T&gt;</code>), 0.00ms GC pause <code>FrameArena</code>, 120 FPS Vulkan rasterizer, and sub-4ms touch.</p>
+            </div>
+            <div class="feature" style="border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.04);">
+                <div class="icon">🤖</div>
+                <h4 style="color:#34d399;">Tri-Mode Android Interop</h4>
+                <p>Run APKs and AAB bundles directly on NyxOS via NDK Direct Bridge, ART Micro-Container Sandbox, and AOT DEX Transpiler.</p>
+            </div>
+            <div class="feature">
+                <div class="icon">&#x1f680;</div>
+                <h4>True Cross-Platform</h4>
+                <p>Compile native binaries, WebAssembly, iOS, and Android from one unified codebase.</p>
+            </div>
+            <div class="feature">
+                <div class="icon">&#x1f6e1;&#xfe0f;</div>
+                <h4>Memory Safe Without GC</h4>
+                <p>Region-based bump allocation &amp; compile-time escape proofs — zero GC pauses, zero use-after-free.</p>
+            </div>
+            <div class="feature">
+                <div class="icon">&#x26a1;</div>
+                <h4>Fearless Structured Concurrency</h4>
+                <p>Async nurseries and isolate regions with compile-time data race elimination.</p>
+            </div>
+        </div>
+
+        <div style="margin: 3rem 0; padding: 2rem; border-radius: 12px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08);">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
+                <div>
+                    <h3 style="color:#f8fafc; font-size:1.4rem; margin-bottom:0.25rem;">✨ v0.28 Production Highlights &amp; Code Architecture</h3>
+                    <p style="color:#94a3b8; font-size:0.9rem;">First-principles implementation of high-throughput web microservices and 120Hz sovereign mobile interfaces.</p>
+                </div>
+                <div style="display:flex; gap:0.5rem;">
+                    <a href="../mobile.html" class="btn btn-secondary" style="font-size:0.8rem; padding:0.4rem 0.8rem;">Explore Mobile SDK &rarr;</a>
+                    <a href="roadmap.html#milestone-11" class="btn btn-secondary" style="font-size:0.8rem; padding:0.4rem 0.8rem;">Read Architecture Spec &rarr;</a>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:1.5rem;">
+                <div style="background:rgba(0,0,0,0.4); border:1px solid rgba(56, 189, 248, 0.2); border-radius:8px; padding:1.25rem;">
+                    <h4 style="color:#38bdf8; margin-bottom:0.75rem; font-size:1rem;">⚡ std.web Reactive Microservice</h4>
+                    <pre style="background:transparent; padding:0; margin:0; font-size:0.8rem; color:#cbd5e1; overflow-x:auto;"><code>import std.web;
+
+fn main() {
+    let app = WebApp.new();
+    app.get("/events", fun(req) {
+        return Response::sse(fun(stream) {
+            stream.send("tick", now_iso8601());
+        });
+    });
+    app.listen("0.0.0.0:8080");
+}</code></pre>
+                </div>
+
+                <div style="background:rgba(0,0,0,0.4); border:1px solid rgba(245, 158, 11, 0.2); border-radius:8px; padding:1.25rem;">
+                    <h4 style="color:#fbbf24; margin-bottom:0.75rem; font-size:1rem;">📱 sdk.ui.mobile_sdk Component</h4>
+                    <pre style="background:transparent; padding:0; margin:0; font-size:0.8rem; color:#cbd5e1; overflow-x:auto;"><code>import sdk.ui.mobile_sdk;
+
+fn CounterWidget() -> Widget {
+    let count = Signal.new(0);
+    return Column([
+        Text("Taps: ${count.value}"),
+        Button("Increment", fun() {
+            count.update(fun(c) { return c + 1; });
+        })
+    ]);
+}</code></pre>
+                </div>
+
+                <div style="background:rgba(0,0,0,0.4); border:1px solid rgba(16, 185, 129, 0.2); border-radius:8px; padding:1.25rem;">
+                    <h4 style="color:#34d399; margin-bottom:0.75rem; font-size:1rem;">🤖 Tri-Mode Android CLI</h4>
+                    <pre style="background:transparent; padding:0; margin:0; font-size:0.8rem; color:#cbd5e1; overflow-x:auto;"><code># Inspect manifest and permissions
+nyx apk inspect app.apk
+
+# Transpile AAB bundle to target APK
+nyx aab transpile bundle.aab --out=app.apk
+
+# Execute via native NDK or sandbox
+nyx apk run app.apk --mode=ndk
+nyx apk run app.apk --mode=container</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <h2>Documentation Sections</h2>
+        <div class="card-grid">
+            <div class="card" style="border-color: rgba(6, 182, 212, 0.3);">
+                <h3>🎓 Interactive Academy</h3>
+                <p>Learn Nyx step-by-step with 27 interactive lessons, live in-browser compiler, and code exercises.</p>
+                <a href="learn/index.html" class="card-link">Open Academy &rarr;</a>
+            </div>
+            <div class="card" style="border-color: rgba(245, 158, 11, 0.3);">
+                <h3>📱 Sovereign Mobile SDK</h3>
+                <p>120 FPS Vulkan GPU engine, fine-grained reactive signals, hardware keystores, and zero GC pauses.</p>
+                <a href="../mobile.html" class="card-link">Explore Mobile SDK &rarr;</a>
+            </div>
+            <div class="card" style="border-color: rgba(56, 189, 248, 0.4); background: rgba(56, 189, 248, 0.04);">
+                <h3 style="color:#38bdf8;">⚡ Mobile Frontier Architecture &amp; Roadmap</h3>
+                <p>On-device SLM zero-copy scheduling, NIST FIPS 203 post-quantum enclaves, and 10.2" tri-fold compositing.</p>
+                <a href="features/mobile_frontier.html" class="card-link" style="color:#38bdf8;">Explore Mobile Frontier &rarr;</a>
+            </div>
+            <div class="card">
+                <h3>&#x1f4d6; Language Guide</h3>
+                <p>Learn Nyx from scratch — types, functions, memory model, concurrency.</p>
+                <a href="language/introduction.html" class="card-link">Start reading &rarr;</a>
+            </div>
+            <div class="card">
+                <h3>&#x2699;&#xfe0f; Setup & Installation</h3>
+                <p>Get Nyx running on your machine. Prerequisites, prebuilt CLI, and build instructions.</p>
+                <a href="setup/installation.html" class="card-link">Get set up &rarr;</a>
+            </div>
+            <div class="card">
+                <h3>&#x1f3d7;&#xfe0f; Tutorials</h3>
+                <p>Build real applications — web microservices, mobile apps, and desktop GUIs.</p>
+                <a href="tutorial/getting-started.html" class="card-link">Follow along &rarr;</a>
+            </div>
+            <div class="card">
+                <h3>&#x1f4da; Standard Library</h3>
+                <p>Reference for all standard modules — web, aab, io, http, json, crypto, db, ui.</p>
+                <a href="stdlib/index.html" class="card-link">Browse API &rarr;</a>
+            </div>
+            <div class="card">
+                <h3>&#x1f52c; Internals</h3>
+                <p>How Nyx works under the hood — compiler pipeline, region inference, MLIR, LLVM 18.</p>
+                <a href="internals/compiler-pipeline.html" class="card-link">Peek inside &rarr;</a>
+            </div>
+            <div class="card">
+                <h3>&#x1f4dd; API Reference</h3>
+                <p>Auto-generated API documentation from Nyx source doc comments.</p>
+                <a href="api/index.html" class="card-link">Explore API &rarr;</a>
+            </div>
+        </div>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+            <p>The Nyx Programming Language &bull; Architected by <strong><a href="https://9jaoncloud.com.ng/simeon-bala.php" target="_blank" rel="noopener noreferrer" style="color:inherit; text-decoration:underline; font-weight:inherit;" title="View Simeon Bala (Founder &amp; Chief Architect)">Simeon Bala</a></strong> &bull; Powered by <a href="https://9jaoncloud.com.ng" target="_blank" style="color:var(--accent);">9jaonCloud</a></p>
+            <p style="margin-top: 0.4rem;">Official Portal: <a href="https://nyx.9jaoncloud.com.ng" style="color:var(--accent);">nyx.9jaoncloud.com.ng</a> | Email: <a href="mailto:nyx@9jaoncloud.com.ng" style="color:var(--accent);">nyx@9jaoncloud.com.ng</a></p>
+            <p style="margin-top: 0.4rem; font-size: 0.8rem; color: #64748b;">&copy; 2026 <a href="https://9jaoncloud.com.ng/simeon-bala.php" target="_blank" rel="noopener noreferrer" style="color:inherit; text-decoration:underline; font-weight:inherit;" title="View Simeon Bala (Founder &amp; Chief Architect)">Simeon Bala</a> &bull; 9jaoncloud.com.ng. All rights reserved.</p>
+        </footer>
+    </main>
+    <script src="navigation.js"></script>
+    <script src="search.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

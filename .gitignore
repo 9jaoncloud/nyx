@@ -1,0 +1,19 @@
+# Build & Binary Artifacts
+*.o
+*.obj
+*.so
+*.dylib
+*.wasm
+bin/
+target/
+dist/
+build/
+.nyx_cache/
+
+# Sensitive & Local Configuration
+.env
+.env.*
+*.json
+credentials/
+scratch/
+backup-*/

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Installation — Nyx Documentation</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <h1>Installing Nyx</h1>
+
+        <p>Nyx is under active development. The bootstrap compiler is built from source. Once stable releases are available, you'll use a simple installer.</p>
+
+        <h2>Prerequisites</h2>
+        <table>
+            <tr><th>Tool</th><th>Purpose</th><th>Install</th></tr>
+            <tr><td>Rust</td><td>Bootstrap compiler</td><td><code>curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh</code></td></tr>
+            <tr><td>LLVM 18+</td><td>Code generation (future)</td><td><code>apt install llvm-18-dev</code> or from <a href="https://llvm.org">llvm.org</a></td></tr>
+            <tr><td>CMake + Ninja</td><td>Build system</td><td><code>apt install cmake ninja-build</code></td></tr>
+            <tr><td>Git</td><td>Version control</td><td><code>apt install git</code></td></tr>
+            <tr><td>GCC or Clang</td><td>C compilation (bootstrap)</td><td><code>apt install build-essential</code></td></tr>
+        </table>
+
+        <h2>Build the Bootstrap Compiler</h2>
+<pre><code>git clone https://github.com/9jaoncloud/nyx-programming-language-bootstrap
+cd nyx-bootstrap
+cargo build --release</code></pre>
+
+        <p>Add to your PATH:</p>
+<pre><code>export PATH="$PWD/target/release:$PATH"
+nyc --version</code></pre>
+
+        <h2>Build from Source (Full Toolchain)</h2>
+<pre><code>git clone https://github.com/9jaoncloud/nyx
+cd nyx
+chmod +x scripts/bootstrap.sh
+./scripts/bootstrap.sh</code></pre>
+
+        <p>This script:</p>
+        <ol>
+            <li>Builds the Rust bootstrap compiler (<code>nyc</code>)</li>
+            <li>Uses <code>nyc</code> to compile the Nyx self-hosted compiler</li>
+            <li>Compiles the standard library</li>
+            <li>Builds the package manager (<code>nyx</code>)</li>
+        </ol>
+
+        <h2>Verify Installation</h2>
+<pre><code>nyx --version
+# Nyx Package Manager v0.1.0
+
+nyx init hello-world
+cd hello-world
+nyx run
+# Hello from Nyx!</code></pre>
+
+        <h2>Platform-Specific Notes</h2>
+
+        <h3>Linux</h3>
+        <p>Install dev packages: <code>apt install build-essential llvm-18-dev cmake ninja-build pkg-config libssl-dev</code></p>
+
+        <h3>macOS</h3>
+        <p>Install via Homebrew: <code>brew install llvm@18 cmake ninja</code></p>
+
+        <h3>Windows</h3>
+        <p>Use WSL2 (recommended) or MSYS2 with MinGW. Install LLVM from <a href="https://llvm.org">llvm.org</a> and add to PATH.</p>
+
+        <div class="note">
+            <strong>Note:</strong> The WebAssembly target requires LLVM built with the WASM backend. For mobile targets you'll need Xcode (iOS) and Android NDK (Android).
+        </div>
+
+        <p><a href="../setup/quickstart.html" class="btn btn-primary">Next: Quick Start &rarr;</a></p>
+    </main>
+    <script src="../navigation.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sovereign National Operating System (SovereignOS) — 8-Pillar Command HUD</title>
+    <meta name="description" content="Live Command & Control HUD for the 8 Interconnected Pillars of National Infrastructure: Healthcare, Transport, Comms, Defense, Citizen ID, Treasury, Energy, and Intelligence.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <style>
+        :root {
+            --bg: #030611;
+            --surface: rgba(15, 23, 42, 0.88);
+            --border: rgba(255, 255, 255, 0.1);
+            --primary: #8b5cf6;
+            --cyan: #38bdf8;
+            --emerald: #10b981;
+            --amber: #f59e0b;
+            --rose: #f43f5e;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.2) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(56, 189, 248, 0.18) 0px, transparent 50%),
+                radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.12) 0px, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        header {
+            background: rgba(4, 6, 18, 0.95);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            padding: 0.85rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .brand { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #fff; }
+        .nav-links { display: flex; gap: 1rem; align-items: center; }
+        .nav-links a { color: var(--text-muted); text-decoration: none; font-size: 0.88rem; font-weight: 600; }
+        .nav-links a:hover { color: #fff; }
+
+        .container { max-width: 1440px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+        .hud-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .hud-title h1 { font-size: 2.4rem; font-weight: 800; color: #fff; line-height: 1.2; }
+        .hud-title h1 span {
+            background: linear-gradient(135deg, #c084fc, #38bdf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hud-meta { display: flex; gap: 1rem; font-size: 0.82rem; font-family: 'JetBrains Mono', monospace; }
+        .hud-badge {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            padding: 0.35rem 0.8rem;
+            border-radius: 6px;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            font-weight: bold;
+        }
+
+        /* 8-Pillar Grid */
+        .pillars-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+        .pillar-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            backdrop-filter: blur(16px);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.2s;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+        .pillar-box:hover { border-color: var(--primary); transform: translateY(-3px); }
+        .pillar-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
+        .pillar-icon { font-size: 2rem; }
+        .pillar-status {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 0.2rem 0.55rem;
+            border-radius: 9999px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .status-optimal { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+        .status-active { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); }
+
+        .pillar-box h3 { font-size: 1.15rem; font-weight: 800; color: #fff; margin-bottom: 0.4rem; }
+        .pillar-box p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1rem; }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 8px;
+            padding: 0.6rem 0.85rem;
+            font-size: 0.8rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .metric-val { color: #fff; font-weight: bold; }
+
+        /* Cross-Pillar Interoperability Bus */
+        .bus-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(16px);
+            margin-bottom: 3rem;
+        }
+        .bus-card h2 { font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 1rem; }
+        .bus-flow {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        .bus-step {
+            background: rgba(139, 92, 246, 0.08);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 10px;
+            padding: 1.25rem;
+        }
+        .bus-step h4 { font-size: 0.95rem; font-weight: 800; color: #c084fc; margin-bottom: 0.35rem; }
+        .bus-step p { font-size: 0.8rem; color: #cbd5e1; margin: 0; line-height: 1.5; }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="index.html" class="brand">
+            <div style="width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, #8b5cf6, #38bdf8); display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">🏛️</div>
+            <div style="display: flex; flex-direction: column; line-height: 1.15;">
+                <span style="font-size: 1.2rem; font-weight: 800; color: #fff;">SovereignOS National HUD</span>
+                <span style="font-size: 0.68rem; color: #38bdf8; font-weight: 700; text-transform: uppercase;">8-Pillar State Infrastructure</span>
+            </div>
+        </a>
+        <nav class="nav-links">
+            <a href="index.html">Nyx Lang</a>
+            <a href="nyxos.html">🌙 NyxOS</a>
+            <a href="mobile.html">📱 Mobile</a>
+            <a href="hardware.html">⚡ Hardware</a>
+            <a href="docs/whitepaper.html">📑 Whitepaper</a>
+            <a href="admin/index.php" style="color: var(--cyan);">📊 Admin CRM</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="hud-header">
+            <div class="hud-title">
+                <div style="font-size: 0.8rem; font-weight: 800; color: #34d399; text-transform: uppercase; margin-bottom: 0.4rem;">
+                    ● National Core Infrastructure Online
+                </div>
+                <h1>Sovereign National <span>Operating System</span></h1>
+            </div>
+            <div class="hud-meta">
+                <div class="hud-badge">● 8 Pillars Synchronized</div>
+                <div class="hud-badge" style="background: rgba(56,189,248,0.15); color: #38bdf8; border-color: rgba(56,189,248,0.3);">
+                    CRDT State-Based Mesh Active
+                </div>
+            </div>
+        </div>
+
+        <!-- 8 Pillars Live Telemetry -->
+        <div class="pillars-grid">
+            <!-- Pillar 1: Healthcare -->
+            <div class="pillar-box">
+                <div>
+                    <div class="pillar-top">
+                        <div class="pillar-icon">🏥</div>
+                        <span class="pillar-status status-optimal">● OPTIMAL</span>
+                    </div>
+                    <h3>1. Universal Healthcare</h3>
+                    <p>HL7 FHIR electronic health registry, DICOM imaging vault, and real-time biosignal mesh with zero patient data leaks.</p>
+                </div>
+                <div class="metric-row">
+                    <span style="color: var(--text-muted);">Encounters/Sec</span>
+                    <span class="metric-val" style="color: #34d399;">14,280 ops/s</span>
+                </div>
+            </div>
+
+            <!-- Pillar 2: Transport -->
+            <div class="pillar-box">
+                <div>
+                    <div class="pillar-top">
+                        <div class="pillar-icon">🚗</div>
+                        <span class="pillar-status status-optimal">● OPTIMAL</span>
+                    </div>
+                    <h3>2. Transport &amp; Logistics</h3>
+                    <p>Uber H3 hexagonal spatial indexing (PostGIS) managing maritime port flows, road traffic, and sub-50μs railway interlocking.</p>
+                </div>
+                <div class="metric-row">
+                    <span style="color: var(--text-muted);">Active Vehicles</span>
+                    <span class="metric-val" style="color: #38bdf8;">142,500 H3 Cells</span>
+                </div>
+            </div>
+
+            <!-- Pillar 3: Mesh Comms -->
+            <div class="pillar-box">
+                <div>
+                    <div class="pillar-top">
+                        <div class="pillar-icon">📡</div>
+                        <span class="pillar-status status-optimal">● OPTIMAL</span>
+                    </div>
+                    <h3>3. Sovereign Comms &amp; Mesh</h3>
+                    <p>Local-first CRDT synchronization allowing hospitals and border checkpoints to operate 100% offline during blackouts.</p>
+                </div>
+                <div class="metric-row">
+                    <span style="color: var(--text-muted);">Offline Mesh Nodes</span>
+                    <span class="metric-val" style="color: #c084fc;">4,810 Synced</span>
+                </div>
+            </div>
+
+            <!-- Pillar 4: Defense -->
+            <div class="pillar-box">
+                <div>
+                    <div class="pillar-top">
+                        <div class="pillar-icon">🛡️</div>
+                        <span class="pillar-status status-optimal">● OPTIMAL</span>
+                    </div>
+                    <h3>4. Defense &amp; Cyber Radar</h3>
+                    <p>NIDS threat vector radar and Zero-Knowledge Proof (ZKP) biometric border clearance with zero decrypted citizen biometric exposure.</p>
+                </div>
+                <div class="metric-row">
+                    <span style="color: var(--text-muted);">ZKP Clearances</span>
+                    <span class="metric-val" style="color: #34d399;">8.2ms Verif</span>
+                </div>
+            </div>
+
+            <!-- Pillar 5: Citizen Identity -->
+            <div class="pillar-box">
+                <div>
+                    <div class="pillar-top">
+                        <div class="pillar-icon">👤</div>
+                        <span class="pillar-status status-optimal">● OPTIMAL</span>
+                    </div>
+                    <h3>5. Citizen Digital Identity</h3>
+                    <p>Hardware TPM-backed Decentralized ID (DID) with instant social benefit disbursement via Nyx Mobile Sovereign Wallet.</p>
+                </div>
+                <div class="metric-row">
+                    <span style="color: var(--text-muted);">DID Identities</span>
+                    <span class="metric-val" style="color: #fff;">18.4M Citizens</span>
+                </div>
+            </div>
+
+            <!-- Pillar 6: Treasury -->
+            <div class="pillar-box">
+                <div>
+                    <div class="pillar-top">
+                        <div class="pillar-icon">🏦</div>
+                        <span class="pillar-status status-optimal">● OPTIMAL</span>
+                    </div>
+                    <h3>6. Sovereign Treasury</h3>
+                    <p>Exact 128-bit fixed-point ledger with native ISO-20022 `pacs.008` inter-agency wire generation and zero float error.</p>
+                </div>
+                <div class="metric-row">
+                    <span style="color: var(--text-muted);">Settlement Precision</span>
+                    <span class="metric-val" style="color: #34d399;">128-Bit Exact</span>
+                </div>
+            </div>
+
+            <!-- Pillar 7: Energy IoT -->
+            <div class="pillar-box">
+                <div>
+                    <div class="pillar-top">
+                        <div class="pillar-icon">🛰️</div>
+                        <span class="pillar-status status-optimal">● OPTIMAL</span>
+                    </div>
+                    <h3>7. Energy &amp; Power Grid</h3>
+                    <p>Direct silicon telemetry from 16 KB SRAM microcontrollers monitoring dam and power grid transformer stability.</p>
+                </div>
+                <div class="metric-row">
+                    <span style="color: var(--text-muted);">Grid Frequency</span>
+                    <span class="metric-val" style="color: #34d399;">50.00 Hz (Stable)</span>
+                </div>
+            </div>
+
+            <!-- Pillar 8: Strategic AI -->
+            <div class="pillar-box">
+                <div>
+                    <div class="pillar-top">
+                        <div class="pillar-icon">🧠</div>
+                        <span class="pillar-status status-active">● ACTIVE</span>
+                    </div>
+                    <h3>8. Strategic Intelligence</h3>
+                    <p>Autonomous ReAct policy agents and Mixture-of-Experts (MoE) economic simulation models forecasting macro-policies.</p>
+                </div>
+                <div class="metric-row">
+                    <span style="color: var(--text-muted);">MoE Parameters</span>
+                    <span class="metric-val" style="color: #38bdf8;">100B Streamed</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cross-Pillar Interoperability Bus Architecture -->
+        <div class="bus-card">
+            <h2>🌐 System Design: End-to-End Interoperability Pipeline</h2>
+            <p style="color: var(--text-muted); font-size: 0.95rem;">How an event flows securely across the national operating system in real time:</p>
+
+            <div class="bus-flow">
+                <div class="bus-step">
+                    <h4>Step 1: Edge Event</h4>
+                    <p>Citizen touches fingerprint on <strong>Nyx Phone One</strong> &rarr; Hardware Secure Enclave creates a Zero-Knowledge Proof token (0 biometric leak).</p>
+                </div>
+                <div class="bus-step">
+                    <h4>Step 2: P2P Mesh Router</h4>
+                    <p>Token dispatches over <strong>In-Kernel Mesh (10.240.x.x)</strong> in 4.2ms to local provincial hospital or border checkpoint.</p>
+                </div>
+                <div class="bus-step">
+                    <h4>Step 3: Offline CRDT Sync</h4>
+                    <p>If internet is offline, transaction commits to local <strong>NyxFS B-Tree</strong>; merges deterministically with National Database upon reconnect.</p>
+                </div>
+                <div class="bus-step">
+                    <h4>Step 4: Treasury Settlement</h4>
+                    <p>128-bit fixed point ledger settles medical or civil benefit in <strong>14.2ms</strong> with ISO-20022 compliant cryptographic audit trail.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

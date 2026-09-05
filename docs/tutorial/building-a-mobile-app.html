@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building a Mobile App — Nyx Documentation</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <h1>Tutorial: Building a Mobile App (iOS & Android)</h1>
+        <p class="lead">Write your mobile user interface and business logic once in Nyx, and deploy to iOS and Android with 100% native platform performance.</p>
+
+        <h2>1. Initializing the Mobile Project</h2>
+        <pre><code>nyx init nyx-mobile-app --template mobile
+cd nyx-mobile-app</code></pre>
+
+        <h2>2. Building the Mobile Screen Layout</h2>
+        <p>Nyx provides native mobile widgets that adapt to iOS Cupertino and Android Material Design 3 design languages:</p>
+<pre><code>import std.mobile
+import std.ui
+import std.gis.geo
+
+pub fn main() {
+    let mut app = mobile.create_app("Nyx Field Explorer")
+
+    // Navigation Scaffold
+    let mut scaffold = mobile.Scaffold.new()
+        .with_top_app_bar(mobile.AppBar::title("Field Inspector"))
+        .with_bottom_nav([
+            mobile.NavItem::icon("map", "Map"),
+            mobile.NavItem::icon("sensors", "Sensors"),
+            mobile.NavItem::icon("settings", "Settings")
+        ])
+
+    // Touch & Location Sensor Interaction
+    let location_card = ui.Card::elevated("Current Coordinates")
+        .with_padding(12.0)
+        .on_tap(|| {
+            let coords = mobile.sensors.get_current_location()
+            mobile.toast("Acquired GPS: " + coords.to_string())
+        })
+
+    scaffold.set_body(location_card)
+    app.run(scaffold)
+}</code></pre>
+
+        <h2>3. Accessing Mobile Hardware Sensors</h2>
+        <p>Nyx provides direct bindings to mobile OS device APIs without bridging overhead:</p>
+<pre><code>import std.mobile.sensors
+
+// Gyroscope & Accelerometer streaming
+sensors.watch_accelerometer(|x, y, z| {
+    if z < 0.0 {
+        mobile.vibrate(50) // Haptic feedback on device flip
+    }
+})</code></pre>
+
+        <h2>4. Building and Deploying</h2>
+        <h3>Android Build (.apk & .aab):</h3>
+<pre><code># Build debug APK for connected Android phone
+nyx build --target aarch64-linux-android --bundle-apk
+
+# Generate release Android App Bundle for Google Play
+nyx package --target android --release</code></pre>
+
+        <h3>iOS Build (.ipa & Xcode Project):</h3>
+<pre><code># Build iOS Framework and launch in iOS Simulator
+nyx run --target aarch64-apple-ios-sim
+
+# Generate signed release IPA for App Store submission
+nyx package --target ios --release --sign "Apple Development: Team ID"</code></pre>
+
+        <div class="next-prev-links">
+            <a href="building-a-desktop-app.html">&larr; Building a Desktop App</a>
+            <a href="../stdlib/index.html">Standard Library Overview &rarr;</a>
+        </div>
+    </main>
+    <script src="../navigation.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

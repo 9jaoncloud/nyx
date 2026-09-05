@@ -1,0 +1,12 @@
+module utils
+
+pub fn capitalize(s: String) -> String {
+    if s.len() == 0 { return s }
+    s[0].to_upper() + s[1..]
+}
+
+pub fn indent(level: Int) -> String {
+    let mut out = ""
+    for _ in 0..level { out = out + "  " }
+    out
+}

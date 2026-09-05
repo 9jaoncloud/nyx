@@ -1,0 +1,58 @@
+﻿nyxc\main.c:864:13: error: redefinition of 'name'
+nyxc\main.c:896:60: error: incompatible types when initializing type 'Type *' using type 'Type'
+nyxc\main.c:901:69: error: incompatible types when initializing type 'Type *' using type 'Type'
+nyxc\main.c:903:63: error: incompatible types when initializing type 'Type *' using type 'Type'
+nyxc\main.c:1131:1: error: cannot convert to a pointer type
+nyxc\main.c:1134:1: error: cannot convert to a pointer type
+nyxc\main.c:1137:1: error: cannot convert to a pointer type
+nyxc\main.c:1140:1: error: cannot convert to a pointer type
+nyxc\main.c:1143:1: error: cannot convert to a pointer type
+nyxc\main.c:1146:1: error: cannot convert to a pointer type
+nyxc\main.c:1149:1: error: cannot convert to a pointer type
+nyxc\main.c:1152:1: error: cannot convert to a pointer type
+nyxc\main.c:1155:1: error: cannot convert to a pointer type
+nyxc\main.c:1158:1: error: cannot convert to a pointer type
+nyxc\main.c:1161:1: error: cannot convert to a pointer type
+nyxc\main.c:1164:1: error: cannot convert to a pointer type
+nyxc\main.c:1167:1: error: cannot convert to a pointer type
+nyxc\main.c:1199:9: error: redefinition of 'n'
+nyxc\main.c:1205:9: error: conflicting types for 'f'; have 'int64_t' {aka 'long long int'}
+nyxc\main.c:1211:13: error: redefinition of 's'
+nyxc\main.c:1229:13: error: redefinition of 'name'
+nyxc\main.c:1398:13: error: redefinition of 'name'
+nyxc\main.c:1427:9: error: redefinition of 'n'
+nyxc\main.c:1433:13: error: redefinition of 's'
+nyxc\main.c:1559:15: error: passing argument 1 of 'rt_map_insert' from incompatible pointer type 
+nyxc\main.c:1667:14: error: initialization of 'int64_t' {aka 'long long int'} from 'void *' makes integer from pointer 
+nyxc\main.c:1668:14: error: initialization of 'int64_t' {aka 'long long int'} from 'void *' makes integer from pointer 
+nyxc\main.c:1695:13: error: initialization of 'int64_t' {aka 'long long int'} from 'void *' makes integer from pointer 
+nyxc\main.c:1706:154: error: initialization of 'Type *' from 'int64_t' {aka 'long long int'} makes pointer from 
+nyxc\main.c:1709:33: error: incompatible types when assigning to type 'NyxResult' from type 'int'
+nyxc\main.c:1719:23: error: invalid initializer
+nyxc\main.c:1752:14: error: initialization of 'int64_t' {aka 'long long int'} from 'void *' makes integer from pointer 
+nyxc\main.c:1763:31: error: incompatible types when assigning to type 'Type' from type 'void *'
+nyxc\main.c:1813:31: error: incompatible types when assigning to type 'Type' from type 'void *'
+nyxc\main.c:1831:8: error: incompatible types when assigning to type 'Type' from type 'void *'
+nyxc\main.c:1840:14: error: initialization of 'int64_t' {aka 'long long int'} from 'void *' makes integer from pointer 
+nyxc\main.c:1842:84: error: incompatible type for argument 3 of 'TypeChecker_add_var'
+nyxc\main.c:1848:14: error: initialization of 'int64_t' {aka 'long long int'} from 'void *' makes integer from pointer 
+nyxc\main.c:1849:32: error: incompatible types when assigning to type 'NyxResult' from type 'int'
+nyxc\main.c:1865:51: error: passing argument 2 of 'TypeChecker_check_expr' from incompatible pointer type 
+nyxc\main.c:1885:14: error: initialization of 'int64_t' {aka 'long long int'} from 'void *' makes integer from pointer 
+nyxc\main.c:1893:174: error: initialization of 'Type *' from 'int64_t' {aka 'long long int'} makes pointer from 
+nyxc\main.c:1918:14: error: initialization of 'int64_t' {aka 'long long int'} from 'void *' makes integer from pointer 
+nyxc\main.c:1920:84: error: incompatible type for argument 3 of 'TypeChecker_add_var'
+nyxc\main.c:1992:257: error: request for member 'f0' in something not a structure or union
+nyxc\main.c:1992:360: error: request for member 'f1' in something not a structure or union
+nyxc\main.c:2356:16: error: passing argument 1 of 'emit_mlir_stmt' from incompatible pointer type 
+nyxc\main.c:2367:38: error: request for member 'len' in something not a structure or union
+nyxc\main.c:2368:42: error: invalid use of void expression
+nyxc\main.c:2369:16: error: passing argument 1 of 'emit_mlir_stmt' from incompatible pointer type 
+nyxc\main.c:2417:49: error: request for member 'f0' in something not a structure or union
+nyxc\main.c:2419:53: error: request for member 'f1' in something not a structure or union
+nyxc\main.c:2619:259: error: request for member 'f0' in something not a structure or union
+nyxc\main.c:2619:362: error: request for member 'f1' in something not a structure or union
+nyxc\main.c:2936:18: error: assignment to 'int64_t' {aka 'long long int'} from 'void *' makes integer from pointer 
+nyxc\main.c:2955:23: error: incompatible type for argument 1 of 'new_lexer'
+nyxc\main.c:2972:27: error: incompatible type for argument 1 of 'new_parser'
+nyxc\main.c:2988:17: error: passing argument 1 of 'print_top_level' from incompatible pointer type 

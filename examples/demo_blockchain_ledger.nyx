@@ -1,0 +1,44 @@
+import std.io
+import std.blockchain.ledger
+
+fn main() {
+    println("=================================================================")
+    println("  ⛓️  NYX CRYPTOGRAPHIC BLOCKCHAIN LEDGER & PBFT (std.blockchain) ")
+    println("=================================================================")
+
+    // 1. Initialize Distributed Ledger & Ingest Transactions
+    let mut chain = ledger.create_ledger("nyx-mainnet-1".to_string())
+    println("✓ Genesis Block Hash: " + chain.latest_block_hash)
+
+    ledger.add_transaction(&mut chain, "tx-001".to_string(), "0xAlice...".to_string(), "0xBob...".to_string(), 50.0)
+    ledger.add_transaction(&mut chain, "tx-002".to_string(), "0xBob...".to_string(), "0xCharlie...".to_string(), 12.5)
+    let pending = chain.pending_tx_count
+    println("✓ Mempool Ingested Transactions: " + pending.to_string())
+
+    // 2. Mine & Commit Block with Merkle Root
+    let block = ledger.mine_block(&mut chain, 208421)
+    let height = block.height
+    let txs = block.tx_count
+    println("✓ Mined Block #" + height.to_string() + ": Nonce=" + block.nonce.to_string() + " TXs=" + txs.to_string())
+    println("✓ Computed Block Merkle Root: " + block.merkle_root)
+    println("✓ Updated Chain Tip Hash: " + chain.latest_block_hash)
+
+    // 3. Practical Byzantine Fault Tolerance (PBFT) 3-Phase Consensus
+    let mut pbft = ledger.create_pbft(4) // 4 nodes -> f=1, quorum = 2f+1 = 3
+    println("✓ PBFT Consensus Engine Initialized (4 Nodes, Fault Tolerance f=1)")
+
+    let prep_ok = ledger.pbft_vote_prepare(&mut pbft)
+    let prep_ok2 = ledger.pbft_vote_prepare(&mut pbft)
+    let prep_state = pbft.phase
+    println("✓ PBFT Phase After Quorum Votes: Phase=" + prep_state.to_string())
+
+    let commit_ok = ledger.pbft_vote_commit(&mut pbft)
+    let commit_ok2 = ledger.pbft_vote_commit(&mut pbft)
+    let commit_ok3 = ledger.pbft_vote_commit(&mut pbft)
+    let final_phase = pbft.phase
+    println("✓ PBFT Final Block Commitment Quorum: Phase=" + final_phase.to_string() + " (Finalized)")
+
+    println("=================================================================")
+    println("  ✓ BLOCKCHAIN LEDGER & PBFT CONSENSUS COMPLETE - ALL OK         ")
+    println("=================================================================")
+}
