@@ -1,0 +1,131 @@
+import std.ui
+
+fn main() {
+    println("=== Nyx Google Material Design 3 Desktop Dashboard ===")
+    println("Initializing Material Design 3 UI Engine & Native Window...")
+
+    let theme = ui.MaterialTheme.dark()
+    let renderer = ui.MaterialRenderer.new(theme)
+
+    let mut window = ui.Window.new(960, 640, "Nyx Material 3 Studio Dashboard".to_string())
+    let mut canvas = window.canvas()
+
+    println("Rendering Material 3 components...")
+
+    // 1. Clear background
+    canvas.fill(&theme.background)
+
+    // 2. Navigation Rail on the left
+    let mut nav_items = Vec.new()
+    nav_items.push(ui.NavItem { label: "Overview".to_string(), icon: "dashboard".to_string(), is_active: true })
+    nav_items.push(ui.NavItem { label: "Analytics".to_string(), icon: "analytics".to_string(), is_active: false })
+    nav_items.push(ui.NavItem { label: "Nodes".to_string(), icon: "dns".to_string(), is_active: false })
+    nav_items.push(ui.NavItem { label: "Settings".to_string(), icon: "settings".to_string(), is_active: false })
+
+    let rail = ui.NavigationRailWidget { items: nav_items, width: 180.0 }
+    renderer.draw_navigation_rail(&mut canvas, &rail, 0.0, 0.0, 640.0)
+
+    // 3. Top App Bar
+    let app_bar = ui.TopAppBarWidget {
+        title: "Nyx Cloud Enterprise Monitor".to_string(),
+        subtitle: "Material 3 Autonomous Cluster / v0.13.0".to_string(),
+        width: 780.0,
+    }
+    renderer.draw_top_app_bar(&mut canvas, &app_bar, 180.0, 0.0)
+
+    // 4. Metric Cards (M3 Elevated & Filled Cards)
+    let card1 = ui.CardWidget {
+        title: "Cluster Throughput".to_string(),
+        subtitle: "1.48M ops/sec (+14.2%)".to_string(),
+        variant: ui.CardVariant.Elevated,
+        width: 230.0,
+        height: 120.0,
+        elevation: 3.0,
+    }
+    renderer.draw_card(&mut canvas, &card1, 204.0, 88.0)
+
+    let badge1 = ui.BadgeWidget {
+        text: "OPTIMAL".to_string(),
+        bg_color: ui.Color.hex(0xFF1B5E20),
+        text_color: ui.Color.hex(0xFFC8E6C9),
+    }
+    renderer.draw_badge(&mut canvas, &badge1, 350.0, 100.0)
+
+    let card2 = ui.CardWidget {
+        title: "P99 Latency".to_string(),
+        subtitle: "180 microseconds".to_string(),
+        variant: ui.CardVariant.Elevated,
+        width: 230.0,
+        height: 120.0,
+        elevation: 3.0,
+    }
+    renderer.draw_card(&mut canvas, &card2, 458.0, 88.0)
+
+    let badge2 = ui.BadgeWidget {
+        text: "FAST".to_string(),
+        bg_color: ui.Color.hex(0xFF0D47A1),
+        text_color: ui.Color.hex(0xFFBBDEFB),
+    }
+    renderer.draw_badge(&mut canvas, &badge2, 620.0, 100.0)
+
+    let card3 = ui.CardWidget {
+        title: "Memory Pressure".to_string(),
+        subtitle: "12% Bump / 0% GC Pause".to_string(),
+        variant: ui.CardVariant.Elevated,
+        width: 230.0,
+        height: 120.0,
+        elevation: 3.0,
+    }
+    renderer.draw_card(&mut canvas, &card3, 712.0, 88.0)
+
+    let badge3 = ui.BadgeWidget {
+        text: "REGION HEAP".to_string(),
+        bg_color: ui.Color.hex(0xFF4A148C),
+        text_color: ui.Color.hex(0xFFE1BEE7),
+    }
+    renderer.draw_badge(&mut canvas, &badge3, 830.0, 100.0)
+
+    // 5. Main Content Panel (Outlined Card with detail view)
+    let main_panel = ui.CardWidget {
+        title: "Real-time Node Distribution & Concurrency Stream".to_string(),
+        subtitle: "Structured nursery tasks running asynchronously across all cores".to_string(),
+        variant: ui.CardVariant.Outlined,
+        width: 738.0,
+        height: 300.0,
+        elevation: 0.0,
+    }
+    renderer.draw_card(&mut canvas, &main_panel, 204.0, 230.0)
+
+    // 6. Action Buttons in Material 3 styles
+    let btn_filled = ui.ButtonWidget {
+        label: "Deploy Pipeline".to_string(),
+        variant: ui.ButtonVariant.Filled,
+        width: 160.0,
+        height: 40.0,
+    }
+    renderer.draw_button(&mut canvas, &btn_filled, 224.0, 470.0)
+
+    let btn_tonal = ui.ButtonWidget {
+        label: "Trigger Scale-Out".to_string(),
+        variant: ui.ButtonVariant.Tonal,
+        width: 170.0,
+        height: 40.0,
+    }
+    renderer.draw_button(&mut canvas, &btn_tonal, 400.0, 470.0)
+
+    let btn_outlined = ui.ButtonWidget {
+        label: "View Telemetry".to_string(),
+        variant: ui.ButtonVariant.Outlined,
+        width: 160.0,
+        height: 40.0,
+    }
+    renderer.draw_button(&mut canvas, &btn_outlined, 586.0, 470.0)
+
+    // 7. Flush and swap backbuffer to native window
+    window.swap_buffers()
+    println("Material 3 UI rendered successfully to screen.")
+
+    // Process initial events and exit cleanly
+    window.poll_events()
+    println("Dashboard initialization complete.")
+}

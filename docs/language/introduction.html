@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Introduction — Nyx Documentation</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <h1>Introduction to Nyx</h1>
+
+        <p>Nyx is a modern, safe, and productive programming language that unifies web, mobile, and desktop development. Write one codebase and compile it to native binaries, WebAssembly, iOS, or Android — all from the same tools.</p>
+
+        <div class="note">
+            <strong>Named after Nyx</strong>, the primordial Greek goddess of the night — calm, powerful, and encompassing everything.
+        </div>
+
+        <h2>What's Broken in Today's Languages?</h2>
+        <table>
+            <tr><th>Language</th><th>Pain Point</th></tr>
+            <tr><td>PHP</td><td>Inconsistent stdlib, poor concurrency, weak typing</td></tr>
+            <tr><td>Python</td><td>GIL kills parallelism, slow CPU performance, packaging nightmares</td></tr>
+            <tr><td>Lua</td><td>Tiny stdlib, no native async/await, ecosystem fragmentation</td></tr>
+            <tr><td>JavaScript</td><td>Framework churn, single-threaded, runtime dependency on Node/Deno</td></tr>
+            <tr><td>General</td><td>Different languages for web (JS), mobile (Swift/Kotlin), desktop (C#/Electron)</td></tr>
+        </table>
+
+        <h2>Nyx's Core Design Philosophy</h2>
+        <p><strong>"One language, all platforms. Predictable performance, delightful ergonomics."</strong></p>
+
+        <ul>
+            <li><strong>True cross-platform by default</strong> — Compiles natively to machine code, WebAssembly, and mobile targets via LLVM/MLIR.</li>
+            <li><strong>Gradual, sound typing</strong> — Full type inference. Write fast scripts without types, then harden them later.</li>
+            <li><strong>Fearless concurrency & parallelism</strong> — Structured concurrency with compile-time data race prevention.</li>
+            <li><strong>Batteries-included but not bloated</strong> — Rich stdlib covering HTTP, GUI, databases, ML — all tree-shakeable.</li>
+            <li><strong>Deploy as a single binary</strong> — No interpreter, no virtualenv, no Docker needed.</li>
+        </ul>
+
+        <h2>Quick Example</h2>
+<pre><code>// main.nyx
+fn main() {
+    std.io.println("Hello from Nyx!")
+}</code></pre>
+
+        <p>Compile and run:</p>
+<pre><code>nyx build
+nyx run</code></pre>
+
+        <h2>Key Features</h2>
+        <ul>
+            <li><strong>Gradual typing</strong> with full inference and no <code>any</code> escape hatches</li>
+            <li><strong>No null</strong> — <code>Option&lt;T&gt;</code> forces you to handle absence</li>
+            <li><strong>Region-based memory management</strong> — No GC pauses, no manual free</li>
+            <li><strong>Structured concurrency</strong> — async/await + nursery pattern</li>
+            <li><strong>Skia-powered UI toolkit</strong> — Build native-feeling interfaces everywhere</li>
+            <li><strong>MLIR-based compiler</strong> — Multi-target code generation via LLVM</li>
+        </ul>
+
+        <p><a href="../setup/installation.html" class="btn btn-primary">Next: Installation &rarr;</a></p>
+    </main>
+    <script src="../navigation.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

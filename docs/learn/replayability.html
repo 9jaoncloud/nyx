@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deterministic Execution &amp; Perfect Replayability Guide — Nyx Documentation</title>
+    <meta name="description" content="Learn how Nyx achieves 100% deterministic execution and perfect time-travel replayability. Eliminate Heisenbugs with region bump frames and input trace logging.">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="../../favicon.ico">
+    <style>
+        .replay-diagram {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.75rem;
+            margin: 2rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 1rem;
+            text-align: center;
+        }
+        .replay-node {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
+            min-width: 180px;
+        }
+        .replay-node h4 { color: #38bdf8; margin-bottom: 0.25rem; font-size: 1rem; }
+        .replay-node p { font-size: 0.8rem; color: #94a3b8; margin: 0; }
+        .replay-arrow { color: #a855f7; font-size: 1.5rem; font-weight: bold; }
+        .callout-tip {
+            background: rgba(16, 185, 129, 0.08);
+            border-left: 4px solid #10b981;
+            padding: 1.25rem 1.5rem;
+            border-radius: 0 10px 10px 0;
+            margin: 1.75rem 0;
+        }
+        .callout-tip h4 { color: #34d399; margin: 0 0 0.4rem; font-size: 1.1rem; }
+        .callout-tip p { margin: 0; color: #f1f5f9; font-size: 0.95rem; }
+    </style>
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+
+    <main>
+        <div style="display:inline-block; padding: 0.35rem 0.85rem; border-radius: 9999px; background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.3); color: #c084fc; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; margin-bottom: 1rem;">
+            Advanced Developer Guide
+        </div>
+        <h1>Deterministic Execution &amp; Perfect Replayability</h1>
+        <p class="lead" style="font-size: 1.15rem; color: var(--text-muted); margin-bottom: 2rem;">
+            How Nyx eliminates "Heisenbugs" and enables 100% predictable time-travel record-and-replay debugging without performance overhead.
+        </p>
+
+        <!-- Section 1: The Concept -->
+        <h2>1. What is Perfect Replayability?</h2>
+        <p>
+            In traditional software development, the most difficult bugs to fix are <strong>Heisenbugs</strong> — intermittent bugs that occur on a beta tester's machine or in production, but vanish the moment a developer attempts to reproduce them locally.
+        </p>
+        <p>
+            <strong>Perfect Replayability</strong> means that if a programming language eliminates non-deterministic runtime behaviour, you can record a lightweight trace of external inputs (keystrokes, network packets, seed timestamps), send that small <code>.nyxtrace</code> log file to a developer, and <strong>re-execute the exact same memory states step-by-step</strong>.
+        </p>
+
+        <div class="replay-diagram">
+            <div class="replay-node">
+                <h4>1. Beta Tester Machine</h4>
+                <p>Records inputs to <code>trace.nyxtrace</code> (50 KB)</p>
+            </div>
+            <div class="replay-arrow">&rarr;</div>
+            <div class="replay-node">
+                <h4>2. Lightweight Trace</h4>
+                <p>Contains only external inputs &amp; seed values</p>
+            </div>
+            <div class="replay-arrow">&rarr;</div>
+            <div class="replay-node">
+                <h4>3. Developer IDE / Athena</h4>
+                <p>100% exact bug reproduction &amp; time travel</p>
+            </div>
+        </div>
+
+        <!-- Section 2: Why Conventional Languages Fail -->
+        <h2>2. Why Most Languages Fail at Replayability</h2>
+        <p>
+            Traditional languages (C, C++, Java, Go, JS) suffer from three sources of non-determinism:
+        </p>
+        <ul>
+            <li><strong>Garbage Collection Pauses:</strong> Background GC threads wake up unpredictably based on system CPU load, reordering memory allocations and altering thread interleavings.</li>
+            <li><strong>Pointer Address Instability (ASLR):</strong> Allocating memory in C yields different raw memory addresses each run. If a map or sorting algorithm depends on pointer addresses, execution branches diverge.</li>
+            <li><strong>Uncontrolled Thread Race Conditions:</strong> Shared global memory creates unpredictable scheduling races across multi-core CPUs.</li>
+        </ul>
+
+        <!-- Section 3: How Nyx Solves Determinism -->
+        <h2>3. How Nyx Enforces 100% Deterministic Execution</h2>
+        <p>
+            Nyx was engineered from first principles with deterministic foundations:
+        </p>
+        <ol>
+            <li><strong>Deterministic $O(1)$ Region Bump Frames:</strong> Memory allocations progress sequentially along contiguous thread-local arenas (<code>arena_base</code> to <code>arena_top</code>) with <strong>zero GC sweeps</strong> or pointer address hashing randomness.</li>
+            <li><strong>Structured Actor Message Passing:</strong> Threads never share unmanaged mutable memory. Instead, tasks communicate through deterministic actor channels where message arrival order can be serialized and replayed.</li>
+            <li><strong>Mathematical <code>@pure</code> Contracts:</strong> Pure functions guarantee that given input $X$, they always produce output $Y$ with zero hidden global state.</li>
+        </ol>
+
+        <div class="callout-tip">
+            <h4>💡 Built-in Trace Driver</h4>
+            <p>
+                Because Nyx is fully deterministic, recording a session requires storing <strong>only external inputs</strong>, keeping trace log files under 100 KB even after hours of execution.
+            </p>
+        </div>
+
+        <!-- Section 4: Hands-On Code Example -->
+        <h2>4. Hands-On Code Example: Recording &amp; Replaying in Nyx</h2>
+        <p>
+            Here is a practical example showing how to build a stateful financial order processor with deterministic trace recording:
+        </p>
+
+        <h3>A. The Deterministic Business Logic</h3>
+        <pre><code class="language-nyx"><span class="kw">import</span> std::debug::TraceRecorder
+<span class="kw">import</span> std::collections::List
+
+<span class="typ">struct</span> Order {
+    id: <span class="typ">int</span>,
+    account: <span class="typ">string</span>,
+    amount: <span class="typ">float</span>
+}
+
+<span class="typ">struct</span> Ledger {
+    balance: <span class="typ">float</span>,
+    orders: List&lt;Order&gt;
+}
+
+<span class="comment">// Pure deterministic state transition</span>
+<span class="kw">@pure</span>
+<span class="kw">fn</span> process_order(ledger: Ledger, order: Order) -&gt; Ledger {
+    <span class="kw">let</span> new_balance = ledger.balance + order.amount
+    <span class="kw">let</span> updated_orders = ledger.orders.push(order)
+    <span class="kw">return</span> Ledger { balance: new_balance, orders: updated_orders }
+}</code></pre>
+
+        <h3>B. Enabling Beta Trace Recording</h3>
+        <pre><code class="language-nyx"><span class="kw">fn</span> main() {
+    <span class="comment">// Enable deterministic input recording for beta testers</span>
+    <span class="kw">let</span> recorder = TraceRecorder::start(<span class="str">"session_crash.nyxtrace"</span>)
+    
+    <span class="kw">var</span> ledger = Ledger { balance: 1000.0, orders: List::new() }
+    
+    <span class="comment">// Simulating incoming external input events</span>
+    <span class="kw">for</span> event <span class="kw">in</span> recorder.stream_inputs() {
+        <span class="kw">let</span> order = Order { id: event.id, account: event.user, amount: event.value }
+        ledger = process_order(ledger, order)
+    }
+    
+    recorder.stop()
+    println(<span class="str">"Trace successfully recorded to session_crash.nyxtrace"</span>)
+}</code></pre>
+
+        <h3>C. Replaying the Crash in Athena IDE / Local CLI</h3>
+        <p>
+            When a beta tester submits <code>session_crash.nyxtrace</code>, you can replay the exact run locally:
+        </p>
+        <pre><code class="language-bash"><span class="comment"># Replay the execution trace step-by-step</span>
+$ nyx run app.nyx --replay session_crash.nyxtrace
+
+<span class="comment"># Launch Athena Time-Travel Debugger</span>
+$ nyx debug app.nyx --replay session_crash.nyxtrace --visualize</code></pre>
+
+        <!-- Section 5: Summary -->
+        <h2>5. Key Architectural Benefits</h2>
+        <ul>
+            <li><strong>Zero-Friction Bug Fixes:</strong> Eliminate days spent attempting to guess user reproduction steps.</li>
+            <li><strong>Deterministic Regression Tests:</strong> Save real-world failure traces as automated test cases in CI/CD.</li>
+            <li><strong>Sovereign &amp; Auditable:</strong> Provide cryptographically verifiable execution logs for high-stakes healthcare, banking, and government systems.</li>
+        </ul>
+
+        <div style="margin-top: 3rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+            <a href="../language/concurrency.html" class="btn-primary" style="display:inline-block; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #a855f7, #6366f1); color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">📘 Structured Concurrency Docs</a>
+            <a href="../../faq.html" style="display:inline-block; padding: 0.75rem 1.5rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">❓ Read Architecture FAQ</a>
+        </div>
+    </main>
+
+    <script src="../sidebar.js"></script>
+</body>
+</html>

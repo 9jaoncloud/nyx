@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Safety Guarantees — Nyx Language</title>
+    <meta name="description" content="What Nyx guarantees about memory safety, where those guarantees end, how cyclic structures and FFI boundaries are handled.">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .guarantee-card { background: var(--bg-surface); border: 1px solid rgba(16,185,129,0.25); border-left: 4px solid var(--success); border-radius: 8px; padding: 1.25rem 1.5rem; margin: 1.25rem 0; }
+        .guarantee-card h3 { margin-top: 0; color: #34d399; }
+        .limit-card { background: var(--bg-surface); border: 1px solid rgba(248,113,113,0.2); border-left: 4px solid #f87171; border-radius: 8px; padding: 1.25rem 1.5rem; margin: 1.25rem 0; }
+        .limit-card h3 { margin-top: 0; color: #f87171; }
+        .neutral-card { background: var(--bg-surface); border: 1px solid var(--border); border-left: 4px solid #38bdf8; border-radius: 8px; padding: 1.25rem 1.5rem; margin: 1.25rem 0; }
+        .neutral-card h3 { margin-top: 0; color: #38bdf8; }
+        pre { background: #020617; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.25rem; font-size: 0.82rem; overflow-x: auto; line-height: 1.6; }
+        code { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+        .matrix-table { width: 100%; border-collapse: collapse; }
+        .matrix-table th, .matrix-table td { padding: 0.55rem 0.75rem; border: 1px solid var(--border); font-size: 0.85rem; }
+        .matrix-table th { background: var(--bg-elevated); }
+        .safe { color: #34d399; font-weight: 700; }
+        .unsafe { color: #f87171; font-weight: 700; }
+        .partial { color: #fbbf24; font-weight: 700; }
+    </style>
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <h1>Memory Safety Guarantees</h1>
+        <p style="color:var(--text-muted)">
+            What Nyx statically guarantees, what it delegates to runtime checks, and where safety ends at system boundaries.
+            This page directly answers the two most common expert questions about region-based memory systems: <strong>cyclic structures (C7)</strong> and <strong>FFI safety boundaries (C9)</strong>.
+        </p>
+
+        <!-- Summary Table -->
+        <h2>Safety Property Matrix</h2>
+        <table class="matrix-table">
+            <thead><tr><th>Property</th><th>Status</th><th>Mechanism</th></tr></thead>
+            <tbody>
+                <tr><td>Use-after-free</td><td class="safe">Statically prevented</td><td>Affine types — every value has exactly one owner; the compiler rejects any use after move or region expiry</td></tr>
+                <tr><td>Double-free</td><td class="safe">Statically prevented</td><td>Move semantics prohibit the same value from being freed twice — the borrow checker enforces this at compile time</td></tr>
+                <tr><td>Null pointer dereference</td><td class="safe">Statically prevented</td><td>No null in safe Nyx — optional values are encoded as <code>Option&lt;T&gt;</code>; raw pointers only in <code>unsafe {}</code> blocks</td></tr>
+                <tr><td>Buffer overflow (safe code)</td><td class="safe">Statically prevented</td><td>Slice indexing is bounds-checked at compile time where statically provable; runtime check otherwise</td></tr>
+                <tr><td>Data races</td><td class="safe">Statically prevented</td><td>The capability type system prevents shared mutable state across capability boundaries without explicit synchronisation</td></tr>
+                <tr><td>Memory leaks (acyclic)</td><td class="safe">Statically prevented</td><td>Region bump arenas are freed at scope exit; ARC pool objects are freed at last-owner drop — both are deterministic</td></tr>
+                <tr><td>Memory leaks (cyclic)</td><td class="partial">ARC: possible; Regions: prevented</td><td>See C7 section below — regions cannot cycle; ARC cycles require <code>Weak&lt;T&gt;</code> to break</td></tr>
+                <tr><td>Integer overflow</td><td class="partial">Debug: panic; Release: wrapping</td><td>Overflow behaviour is explicit — use <code>.wrapping_add()</code>, <code>.checked_add()</code>, or <code>.saturating_add()</code></td></tr>
+                <tr><td>FFI memory safety</td><td class="unsafe">Unsafe boundary</td><td>See C9 section below — all extern C calls require an <code>unsafe {}</code> block; the caller takes responsibility</td></tr>
+                <tr><td>Stack overflow</td><td class="partial">Runtime detection</td><td>Guard pages on thread stacks detect overflow; infinite recursion is not statically detected in the general case</td></tr>
+            </tbody>
+        </table>
+
+        <!-- C7 — Cyclic Structures -->
+        <h2>C7 — Cyclic Structures</h2>
+        <p>Region-based memory systems have one classical weakness: if a reference cycle forms within objects in the same region, neither pointer can be safely freed first. Here is exactly how Nyx handles this:</p>
+
+        <div class="guarantee-card">
+            <h3>✔ Region Bump Arena — Cycle-Immune by Construction</h3>
+            <p>Objects in the region bump arena are <strong>entirely free of cycles</strong> by design. The region allocator assigns objects sequential bump addresses within a single contiguous arena. The <strong>escape analysis</strong> that classifies an allocation as "region-eligible" requires that no reference to the object escapes the enclosing scope. A cycle between two region-allocated objects would require a reference to escape, which the escape analysis would detect and reclassify to the ARC pool. Therefore: <em>if an object is region-allocated, it is guaranteed acyclic.</em></p>
+        </div>
+
+        <div class="neutral-card">
+            <h3>⚠ ARC Pool — Cycles Require Weak References</h3>
+            <p>Objects that escape region scope enter the <strong>lock-free ARC (Automatic Region Continuation) pool</strong>. ARC uses atomic reference counting. Like all reference-counting systems, ARC cannot automatically detect or break reference cycles — a cycle keeps the ref-count of both nodes permanently above zero, causing a memory leak.</p>
+            <p><strong>Nyx's solution:</strong> the <code>Weak&lt;T&gt;</code> type, which is a non-owning reference that does not increment the ref-count. Use <code>Weak&lt;T&gt;</code> for back-pointers and parent references in graphs and trees:</p>
+            <pre><code>// Example: doubly-linked node — correct use of Weak
+struct Node {
+    value: i32,
+    next: Option&lt;Arc&lt;Node&gt;&gt;,   // strong forward reference
+    prev: Option&lt;Weak&lt;Node&gt;&gt;,  // weak back-reference — no cycle
+}
+
+// The compiler emits a warning (level: warn-cycle) when it detects
+// two Arc&lt;T&gt; fields that form a potential cycle at compile time.
+// Use @must_weak to make this a hard error on a type:
+@must_weak(back_references)
+struct TreeNode { ... }</code></pre>
+            <p style="margin-top:0.75rem;"><strong>Static cycle warning:</strong> nyxc performs best-effort static cycle detection. When two <code>Arc&lt;T&gt;</code> fields form a provable cycle in the type graph, the compiler emits <code>warn[E0441]: potential ARC reference cycle</code> and suggests the <code>Weak</code> alternative. This is a warning by default and a hard error with <code>--deny cycles</code>.</p>
+        </div>
+
+        <div class="limit-card">
+            <h3>✗ What We Do Not Guarantee</h3>
+            <p>Nyx does <strong>not</strong> statically prevent all possible ARC cycles. Dynamic graphs whose topology cannot be determined at compile time (e.g. a graph built from user input at runtime) can form cycles if the programmer uses <code>Arc</code> for both directions. The compiler warning covers type-level cycles; it cannot prevent runtime topology cycles.</p>
+            <p><strong>Recommendation:</strong> Use <code>Weak&lt;T&gt;</code> for any "parent" or "back" pointer in a graph, tree, or observer pattern. The Nyx standard library's <code>std::graph</code> module uses <code>Weak</code> for all internal back-edges.</p>
+        </div>
+
+        <!-- C9 — FFI Boundaries -->
+        <h2>C9 — FFI Safety Boundaries</h2>
+        <p>Foreign Function Interface (FFI) calls cross from Nyx's statically-verified world into unmanaged C/C++ code. This is the most common question from systems engineers.</p>
+
+        <div class="neutral-card">
+            <h3>The FFI Boundary Contract</h3>
+            <p>All <code>extern "C"</code> calls in Nyx must be wrapped in an <code>unsafe {}</code> block. This is not optional — the compiler enforces it. The <code>unsafe</code> block is an explicit contract that the programmer has verified the following conditions:</p>
+            <ol style="margin: 0.75rem 0 0 1.25rem; line-height: 2;">
+                <li>The pointer arguments are valid, non-null, and correctly aligned</li>
+                <li>The lifetime of any pointer outlasts the call</li>
+                <li>The C function does not retain the pointer after return (or the programmer has ensured this is safe)</li>
+                <li>The C function is thread-safe if called from multiple Nyx threads</li>
+            </ol>
+        </div>
+
+        <pre><code>// FFI boundary example — calling a C library function
+extern "C" {
+    fn c_process_buffer(ptr: *const u8, len: usize) -> i32;
+}
+
+fn process(data: &amp;[u8]) -&gt; Result&lt;i32, String&gt; {
+    // Safe wrapper — hides the unsafe block from callers
+    let result = unsafe {
+        // Preconditions verified:
+        // 1. data.as_ptr() is valid — guaranteed by slice reference
+        // 2. data.len() matches the pointer — guaranteed by slice metadata
+        // 3. c_process_buffer does not retain the pointer (documented in C header)
+        c_process_buffer(data.as_ptr(), data.len())
+    };
+    if result &lt; 0 { Err("C library error: ".to_string() + result.to_string()) }
+    else { Ok(result) }
+}</code></pre>
+
+        <div class="guarantee-card">
+            <h3>✔ What Nyx Guarantees at the FFI Boundary</h3>
+            <ul style="margin: 0.5rem 0 0 1.25rem; line-height: 1.9;">
+                <li>All pointers passed to C are <strong>correctly typed and aligned</strong> (enforced by the type system)</li>
+                <li>Nyx-owned memory passed to C is <strong>pinned</strong> for the duration of the call — the GC/region system will not move or free it during the call</li>
+                <li>Return values from C are <strong>not assumed safe</strong> — raw pointers returned from C have no lifetime in the Nyx type system until the programmer wraps them in a safe abstraction</li>
+                <li>Any memory <strong>allocated by C</strong> (malloc, new) must be freed by C (free, delete) — Nyx will not attempt to region-free foreign memory</li>
+            </ul>
+        </div>
+
+        <div class="limit-card">
+            <h3>✗ What Nyx Does NOT Guarantee Across FFI</h3>
+            <ul style="margin: 0.5rem 0 0 1.25rem; line-height: 1.9;">
+                <li>Use-after-free in C code that retains a Nyx pointer after the Nyx scope expires</li>
+                <li>Data races in C code that uses Nyx-passed pointers on multiple threads</li>
+                <li>Undefined behaviour in C code itself (buffer overflows, etc.)</li>
+                <li>Memory leaks in C-allocated memory that Nyx holds as a raw pointer without a drop handler</li>
+            </ul>
+            <p style="margin-top:0.75rem;"><strong>Mitigation:</strong> Use the <code>std::ffi::CBox&lt;T&gt;</code> type to attach a C <code>free()</code> destructor to any C-allocated pointer brought into Nyx scope. This ensures the C memory is freed when the Nyx wrapper drops.</p>
+        </div>
+
+        <!-- What is safe Nyx -->
+        <h2>Safe vs Unsafe Nyx</h2>
+        <p>Like Rust, Nyx distinguishes between <strong>safe</strong> and <strong>unsafe</strong> code. The vast majority of application code is safe. Unsafe code is restricted to:</p>
+        <ul style="margin: 0.75rem 0 0 1.25rem; line-height: 2;">
+            <li>Calling <code>extern "C"</code> functions</li>
+            <li>Dereferencing raw pointers (<code>*const T</code>, <code>*mut T</code>)</li>
+            <li>Implementing <code>unsafe trait</code> (e.g., <code>Send</code>, <code>Sync</code> for custom types)</li>
+            <li>Accessing <code>static mut</code> globals</li>
+            <li>Writing inline assembly (<code>asm! { }</code>)</li>
+        </ul>
+        <p style="margin-top:0.75rem;">The standard library itself uses unsafe internally, but exposes safe public APIs. If you are writing application code in Nyx and you reach for <code>unsafe</code>, there is almost certainly a safer standard library alternative — open an issue and we will point you to it.</p>
+
+        <h2>Formal Verification Status</h2>
+        <div class="neutral-card">
+            <h3>Current Status: Engineering Guarantees, Not Formal Proof</h3>
+            <p>The safety properties listed in the matrix above are enforced by the nyxc type-checker and borrow-checker. They are verified by the compiler on every compilation of safe code. They are <strong>not</strong> currently backed by a machine-checked formal proof of the type system's soundness.</p>
+            <p>The Nyx type system is inspired by and closely related to Rust's ownership model (which itself has a WIP formal model, Stacked Borrows / Tree Borrows). Formal verification of Nyx's region inference algorithm is on the research roadmap.</p>
+        </div>
+    </main>
+    <script src="navigation.js"></script>
+</body>
+</html>

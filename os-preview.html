@@ -1,0 +1,1679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NyxOS Live 120 FPS Desktop Shell — Interactive Web Demonstration</title>
+    <meta name="description" content="Experience the NyxOS 120 FPS Glassmorphic Desktop Environment. Drag windows, explore files, run terminal commands, and customize system settings.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <style>
+        :root {
+            --primary: #8b5cf6;
+            --primary-glow: rgba(139, 92, 246, 0.45);
+            --cyan: #38bdf8;
+            --emerald: #10b981;
+            --rose: #f43f5e;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --glass-bg: rgba(15, 23, 42, 0.88);
+            --glass-border: rgba(255, 255, 255, 0.14);
+            --taskbar-bg: rgba(7, 9, 19, 0.9);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #05070f;
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            background-image: 
+                radial-gradient(at 15% 15%, rgba(139, 92, 246, 0.25) 0px, transparent 55%),
+                radial-gradient(at 85% 85%, rgba(56, 189, 248, 0.2) 0px, transparent 55%),
+                radial-gradient(at 50% 50%, rgba(16, 185, 129, 0.1) 0px, transparent 60%);
+            background-size: cover;
+        }
+
+        /* Top Bar */
+        .top-banner {
+            height: 38px;
+            background: rgba(7, 9, 19, 0.95);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.25rem;
+            font-size: 0.8rem;
+            z-index: 5000;
+        }
+        .top-banner a { color: var(--cyan); text-decoration: none; font-weight: 600; }
+        .top-banner a:hover { text-decoration: underline; }
+        .fps-badge {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: #34d399;
+            padding: 0.15rem 0.5rem;
+            border-radius: 6px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+        }
+
+        /* Desktop Surface Area */
+        .desktop-area {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            padding: 1.5rem;
+        }
+
+        /* Desktop Icons with Multi-Column Auto-Arrangement */
+        .desktop-icons {
+            display: flex;
+            flex-direction: column;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            gap: 0.75rem 1.25rem;
+            max-height: calc(100vh - 120px);
+            width: max-content;
+            z-index: 1;
+        }
+        .desktop-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.35rem;
+            cursor: pointer;
+            padding: 0.45rem 0.6rem;
+            border-radius: 10px;
+            width: 92px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .desktop-icon:hover {
+            background: rgba(255, 255, 255, 0.14);
+            transform: translateY(-2px) scale(1.04);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        }
+        .desktop-icon .icon-box {
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.45rem;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+            transition: transform 0.2s;
+        }
+        .desktop-icon:hover .icon-box {
+            transform: scale(1.08);
+        }
+        .desktop-icon span {
+            font-size: 0.74rem;
+            font-weight: 600;
+            text-align: center;
+            color: #f1f5f9;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.9);
+            line-height: 1.2;
+            word-break: break-word;
+        }
+
+        /* Draggable Window */
+        .window {
+            position: absolute;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(24px);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 10;
+        }
+        .window.focused {
+            border-color: rgba(139, 92, 246, 0.5);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 20px rgba(139, 92, 246, 0.2);
+        }
+
+        .window-header {
+            height: 42px;
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1rem;
+            cursor: grab;
+        }
+        .window-header:active { cursor: grabbing; }
+        .window-title { font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; color: #fff; }
+        
+        .window-controls { display: flex; gap: 0.5rem; align-items: center; }
+        .btn-ctrl {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: rgba(0,0,0,0.7);
+            transition: all 0.15s;
+        }
+        .btn-ctrl:hover { transform: scale(1.15); color: #000; }
+        .btn-close { background: #f43f5e; }
+        .btn-min { background: #f59e0b; }
+        .btn-max { background: #10b981; }
+
+        .window-body { flex: 1; padding: 1.25rem; overflow: auto; }
+
+        /* Taskbar */
+        .taskbar {
+            height: 54px;
+            background: var(--taskbar-bg);
+            border-top: 1px solid var(--glass-border);
+            backdrop-filter: blur(24px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.25rem;
+            z-index: 4000;
+        }
+
+        .taskbar-center {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .taskbar-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--glass-border);
+            transition: all 0.2s;
+        }
+        .taskbar-btn:hover { background: rgba(255, 255, 255, 0.12); transform: translateY(-2px); }
+        .taskbar-btn.active { background: rgba(139, 92, 246, 0.3); border-color: var(--primary); }
+
+        .start-btn {
+            background: linear-gradient(135deg, #8b5cf6, #38bdf8) !important;
+            box-shadow: 0 2px 12px var(--primary-glow);
+            border: none !important;
+        }
+
+        .tray {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        /* Start Menu */
+        .start-menu {
+            position: absolute;
+            bottom: 64px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 480px;
+            background: rgba(15, 23, 42, 0.96);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            backdrop-filter: blur(30px);
+            padding: 1.5rem;
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.85);
+            z-index: 3500;
+            display: none;
+        }
+        .start-menu.open { display: block; }
+        .start-search {
+            width: 100%;
+            background: #020617;
+            border: 1px solid var(--glass-border);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            color: #fff;
+            font-family: inherit;
+            margin-bottom: 1.25rem;
+            outline: none;
+        }
+        .start-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+        .start-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            padding: 0.75rem 0.5rem;
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+        .start-item:hover { background: rgba(255, 255, 255, 0.1); }
+        .start-item .icon { font-size: 1.6rem; }
+        .start-item span { font-size: 0.75rem; font-weight: 600; }
+
+        /* Terminal styling */
+        .terminal-screen {
+            background: #020617;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 8px;
+            height: 220px;
+            padding: 0.85rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            color: #38bdf8;
+            overflow-y: auto;
+            line-height: 1.6;
+        }
+        .terminal-input-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+        .terminal-prompt { color: #c084fc; font-weight: 700; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; }
+        .terminal-input {
+            flex: 1;
+            background: #020617;
+            border: 1px solid var(--glass-border);
+            color: #fff;
+            padding: 0.4rem 0.75rem;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            outline: none;
+        }
+
+        /* Settings styling */
+        .setting-group { margin-bottom: 1.25rem; }
+        .setting-group h4 { font-size: 0.88rem; font-weight: 700; color: #fff; margin-bottom: 0.4rem; }
+        .setting-group p { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.6rem; }
+        .setting-row { display: flex; gap: 0.75rem; align-items: center; }
+        .btn-setting {
+            padding: 0.4rem 0.85rem;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid var(--glass-border);
+            color: #cbd5e1;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-setting:hover, .btn-setting.active {
+            background: rgba(139, 92, 246, 0.3);
+            border-color: var(--primary);
+            color: #fff;
+        }
+
+        /* Calculator Styles */
+        .calc-wrapper { display: flex; flex-direction: column; height: 100%; gap: 0.75rem; }
+        .calc-screen {
+            background: #020617;
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            text-align: right;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #38bdf8;
+            min-height: 52px;
+            overflow-x: auto;
+        }
+        .calc-keypad {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+            flex: 1;
+        }
+        .calc-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: #fff;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            padding: 0.5rem;
+        }
+        .calc-btn:hover { background: rgba(255, 255, 255, 0.14); transform: translateY(-1px); }
+        .calc-btn:active { transform: translateY(1px); }
+        .calc-btn.op { background: rgba(139, 92, 246, 0.25); border-color: rgba(139, 92, 246, 0.5); color: #c084fc; }
+        .calc-btn.eq { background: linear-gradient(135deg, #10b981, #059669); border: none; color: #fff; }
+        .calc-btn.ac { background: rgba(244, 63, 94, 0.25); border-color: rgba(244, 63, 94, 0.5); color: #f43f5e; }
+
+        /* Snake Game Styles */
+        .snake-wrapper { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; height: 100%; }
+        .snake-score-row {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+        .snake-canvas {
+            background: #020617;
+            border: 2px solid rgba(16, 185, 129, 0.4);
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+        }
+
+        /* Nigerian Whot Styles */
+        .whot-table {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            height: 100%;
+            background: radial-gradient(circle at center, #0a1329 0%, #030612 100%);
+            border-radius: 10px;
+            padding: 0.75rem;
+            border: 1px solid var(--glass-border);
+        }
+        .whot-felt-center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+            padding: 0.75rem 0;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .whot-card {
+            width: 58px;
+            height: 84px;
+            background: #ffffff;
+            border-radius: 8px;
+            color: #0f172a;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 0.35rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            user-select: none;
+            flex-shrink: 0;
+        }
+        .whot-card:hover { transform: translateY(-6px) scale(1.05); box-shadow: 0 8px 20px rgba(56, 189, 248, 0.5); }
+        .whot-card.back {
+            background: linear-gradient(135deg, #1e1b4b, #312e81);
+            border: 2px solid #6366f1;
+            color: #818cf8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 0.8rem;
+        }
+        .whot-card.playable { border: 2px solid #10b981; box-shadow: 0 0 12px rgba(16, 185, 129, 0.6); }
+        .whot-shape-sym { font-size: 1.4rem; text-align: center; }
+        .whot-num { font-weight: 900; font-size: 0.82rem; font-family: 'Outfit', sans-serif; }
+        .whot-hand {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            padding: 0.4rem 0.2rem;
+            align-items: center;
+            min-height: 94px;
+        }
+        .whot-log {
+            background: #020617;
+            border-radius: 6px;
+            padding: 0.4rem 0.6rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: #34d399;
+            min-height: 28px;
+            display: flex;
+            align-items: center;
+        }
+    
+        /* Mobile Responsiveness for 120 FPS Desktop */
+        @media (max-width: 768px) {
+            .top-banner {
+                padding: 0.5rem 1rem !important;
+                font-size: 0.78rem !important;
+            }
+            .top-banner a {
+                font-size: 0.78rem !important;
+            }
+            .window {
+                width: 94vw !important;
+                left: 3vw !important;
+                top: 40px !important;
+            }
+            .desktop-icons {
+                display: grid !important;
+                grid-template-columns: repeat(4, 1fr) !important;
+                gap: 0.5rem !important;
+                width: 100% !important;
+                max-height: none !important;
+                padding: 0.5rem !important;
+            }
+            .desktop-icon {
+                width: auto !important;
+                padding: 0.25rem !important;
+            }
+            .taskbar {
+                height: 44px !important;
+                padding: 0 0.5rem !important;
+            }
+            .taskbar-clock {
+                font-size: 0.75rem !important;
+            }
+            .start-menu {
+                width: 90vw !important;
+                left: 5vw !important;
+                bottom: 50px !important;
+            }
+        }
+
+    
+        /* Global Mobile Responsiveness Master Styles */
+        @media (max-width: 850px) {
+            header {
+                padding: 0.6rem 1rem !important;
+                flex-wrap: wrap !important;
+            }
+            .nav-links {
+                gap: 0.6rem !important;
+                overflow-x: auto !important;
+                max-width: 100% !important;
+                padding-bottom: 0.25rem !important;
+            }
+            .nav-links a {
+                font-size: 0.8rem !important;
+                white-space: nowrap !important;
+            }
+            .container, main {
+                padding: 1.5rem 1rem !important;
+            }
+            .hero h1 {
+                font-size: 2.1rem !important;
+            }
+            .hero p {
+                font-size: 0.98rem !important;
+            }
+            .grid, .card-grid, .bench-grid, .problems-grid, .pillars-grid, .pkg-grid {
+                grid-template-columns: 1fr !important;
+            }
+            table {
+                display: block !important;
+                overflow-x: auto !important;
+                white-space: nowrap !important;
+            }
+            .btn-cta-group, .btn-group {
+                flex-direction: column !important;
+            }
+            .btn-cta, .btn {
+                width: 100% !important;
+                text-align: center !important;
+                justify-content: center !important;
+            }
+            .footer-grid {
+                grid-template-columns: 1fr !important;
+                gap: 2rem !important;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="top-banner">
+        <div>🌙 <strong>NyxOS Sovereign Desktop</strong> — 120 FPS Interactive Glassmorphic Web Environment</div>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+            <span class="fps-badge">⚡ 120.0 FPS | 8.33ms Frame Budget</span>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+            <a href="nyxos.html" style="color: #c084fc; font-weight: 700; text-decoration: none;">← Back to NyxOS Hub</a>
+            <span style="color: var(--glass-border);">|</span>
+            <a href="index.html" style="color: var(--cyan); font-weight: 600; text-decoration: none;">🌐 Nyx Programming Language</a>
+        </div>
+        </div>
+    </div>
+
+    <div class="desktop-area" id="desktop-surface">
+        <!-- Desktop Icons -->
+        <div class="desktop-icons">
+            <div class="desktop-icon" onclick="window.location.href='nyxoffice.html'">
+                <div class="icon-box" style="background: linear-gradient(135deg, #8b5cf6, #38bdf8);">📝</div>
+                <span>NyxOffice Suite</span>
+            </div>
+            <div class="desktop-icon" onclick="openWindow('browser')">
+                <div class="icon-box" style="background: linear-gradient(135deg, #06b6d4, #0284c7);">🌐</div>
+                <span>9jaonCloud Browser</span>
+            </div>
+            <div class="desktop-icon" onclick="openWindow('calculator')">
+                <div class="icon-box" style="background: linear-gradient(135deg, #f59e0b, #d97706);">🧮</div>
+                <span>Calculator</span>
+            </div>
+            <div class="desktop-icon" onclick="openWindow('snake')">
+                <div class="icon-box" style="background: linear-gradient(135deg, #10b981, #059669);">🐍</div>
+                <span>Snake (120Hz)</span>
+            </div>
+            <div class="desktop-icon" onclick="openWindow('whot')">
+                <div class="icon-box" style="background: linear-gradient(135deg, #f43f5e, #e11d48);">🃏</div>
+                <span>Nigerian Whot</span>
+            </div>
+            <div class="desktop-icon" onclick="openWindow('explorer')">
+                <div class="icon-box" style="background: linear-gradient(135deg, #0284c7, #38bdf8);">📁</div>
+                <span>Explorer (Win+E)</span>
+            </div>
+            <div class="desktop-icon" onclick="openWindow('taskmgr')">
+                <div class="icon-box" style="background: linear-gradient(135deg, #10b981, #059669);">📊</div>
+                <span>Task Manager</span>
+            </div>
+            <div class="desktop-icon" onclick="openWindow('terminal')">
+                <div class="icon-box" style="background: linear-gradient(135deg, #1e293b, #0f172a);">💻</div>
+                <span>Terminal</span>
+            </div>
+            <div class="desktop-icon" onclick="openWindow('settings')">
+                <div class="icon-box" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">⚙️</div>
+                <span>Control Center</span>
+            </div>
+        </div>
+
+        <!-- Window 1: File Explorer -->
+        <div id="win-explorer" class="window focused" style="width: 580px; height: 360px; top: 50px; left: 180px;" onmousedown="bringToFront('explorer')">
+            <div class="window-header" onmousedown="dragStart(event, 'explorer')">
+                <div class="window-title">📁 File Explorer (NTFS Auto-Mount &amp; Store)</div>
+                <div class="window-controls">
+                    <div class="btn-ctrl btn-min" onclick="closeWindow('explorer')" title="Minimize">−</div>
+                    <div class="btn-ctrl btn-max" onclick="toggleMaximize('explorer')" title="Maximize">□</div>
+                    <div class="btn-ctrl btn-close" onclick="closeWindow('explorer')" title="Close">✕</div>
+                </div>
+            </div>
+            <div class="window-body">
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem; font-family: 'JetBrains Mono', monospace;">
+                    Path: <strong>C:/Projects/NyxOS</strong> (Auto-Mounted Windows NTFS Drive)
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem;">
+                    <div style="background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); padding: 0.75rem; border-radius: 8px; cursor: pointer;">
+                        📁 Documents
+                    </div>
+                    <div style="background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); padding: 0.75rem; border-radius: 8px; cursor: pointer;">
+                        📁 Downloads
+                    </div>
+                    <div style="background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); padding: 0.75rem; border-radius: 8px; cursor: pointer;">
+                        📁 /nyx/store
+                    </div>
+                    <div style="background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); padding: 0.75rem; border-radius: 8px; cursor: pointer;">
+                        📄 system.nyx
+                    </div>
+                    <div style="background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); padding: 0.75rem; border-radius: 8px; cursor: pointer;">
+                        📄 trading_sim.nyx
+                    </div>
+                    <div style="background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); padding: 0.75rem; border-radius: 8px; cursor: pointer;">
+                        🚀 athena.exe
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Window 2: Process Monitor (Task Manager) -->
+        <div id="win-taskmgr" class="window" style="width: 520px; height: 340px; top: 110px; left: 450px;" onmousedown="bringToFront('taskmgr')">
+            <div class="window-header" onmousedown="dragStart(event, 'taskmgr')">
+                <div class="window-title">📊 Real-Time Process Monitor (Ctrl+Shift+Esc)</div>
+                <div class="window-controls">
+                    <div class="btn-ctrl btn-min" onclick="closeWindow('taskmgr')" title="Minimize">−</div>
+                    <div class="btn-ctrl btn-max" onclick="toggleMaximize('taskmgr')" title="Maximize">□</div>
+                    <div class="btn-ctrl btn-close" onclick="closeWindow('taskmgr')" title="Close">✕</div>
+                </div>
+            </div>
+            <div class="window-body">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                    <div>CPU: <strong>2.4%</strong> (4 Cores SMP)</div>
+                    <div>RAM: <strong>48 MB / 2048 MB</strong></div>
+                    <div style="color: #34d399; font-weight: 700;">GC Pause: 0.00 ms</div>
+                </div>
+                <div style="background: #020617; border: 1px solid var(--glass-border); border-radius: 8px; padding: 0.75rem; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; line-height: 1.8;">
+                    <div>PID 1   /sbin/nyxos-init (Supervisor)    [0.01% CPU] [512 KB]</div>
+                    <div>PID 42  /bin/vulkan_display (120 FPS)     [1.20% CPU] [14.2 MB]</div>
+                    <div>PID 108 /bin/athena_workstation          [0.85% CPU] [24.5 MB]</div>
+                    <div>PID 140 /bin/posix_bridge (Syscalls)     [0.15% CPU] [2.0 MB]</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Window 3: Terminal Window -->
+        <div id="win-terminal" class="window" style="width: 560px; height: 360px; top: 140px; left: 240px; display: none;" onmousedown="bringToFront('terminal')">
+            <div class="window-header" onmousedown="dragStart(event, 'terminal')">
+                <div class="window-title">💻 Sovereign Terminal Shell</div>
+                <div class="window-controls">
+                    <div class="btn-ctrl btn-min" onclick="closeWindow('terminal')" title="Minimize">−</div>
+                    <div class="btn-ctrl btn-max" onclick="toggleMaximize('terminal')" title="Maximize">□</div>
+                    <div class="btn-ctrl btn-close" onclick="closeWindow('terminal')" title="Close">✕</div>
+                </div>
+            </div>
+            <div class="window-body">
+                <div id="term-screen" class="terminal-screen">
+                    <div>NyxOS Sovereign Shell v0.26.0 (x86_64 SMP)</div>
+                    <div>Type 'help' for commands (uname -a, meminfo, ps, ipc-test, nyx-pkg search).</div>
+                    <div>----------------------------------------------------------------</div>
+                </div>
+                <div class="terminal-input-row">
+                    <span class="terminal-prompt">nyxos@sovereign:~$</span>
+                    <input id="term-input" type="text" class="terminal-input" placeholder="Type command and press Enter..." onkeydown="handleTermCommand(event)">
+                </div>
+            </div>
+        </div>
+
+        <!-- Window 4: Settings (Control Center) -->
+        <div id="win-settings" class="window" style="width: 540px; height: 380px; top: 90px; left: 320px; display: none;" onmousedown="bringToFront('settings')">
+            <div class="window-header" onmousedown="dragStart(event, 'settings')">
+                <div class="window-title">⚙️ Control Center &amp; Settings</div>
+                <div class="window-controls">
+                    <div class="btn-ctrl btn-min" onclick="closeWindow('settings')" title="Minimize">−</div>
+                    <div class="btn-ctrl btn-max" onclick="toggleMaximize('settings')" title="Maximize">□</div>
+                    <div class="btn-ctrl btn-close" onclick="closeWindow('settings')" title="Close">✕</div>
+                </div>
+            </div>
+            <div class="window-body">
+                <div class="setting-group">
+                    <h4>🖥️ Display &amp; Refresh Rate</h4>
+                    <p>Native hardware display plane frame budget pacing</p>
+                    <div class="setting-row">
+                        <button class="btn-setting active">120 Hz (8.33ms Pacing)</button>
+                        <button class="btn-setting">60 Hz (Power Save)</button>
+                        <button class="btn-setting">144 Hz (Pro Esports)</button>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <h4>🎨 Visual Glassmorphism Theme</h4>
+                    <p>Real-time Skia shader blur passes</p>
+                    <div class="setting-row">
+                        <button class="btn-setting active">Material Dark Glass</button>
+                        <button class="btn-setting">Cyber Violet</button>
+                        <button class="btn-setting">Sovereign Onyx</button>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <h4>🛡️ Security &amp; Kernel Status</h4>
+                    <p>TPM 2.0 PCR: Verified | Capability Sandbox: Strict Enforced | Zero-GC: Active</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Window 5: Calculator -->
+        <div id="win-calculator" class="window" style="width: 320px; height: 420px; top: 80px; left: 220px; display: none;" onmousedown="bringToFront('calculator')">
+            <div class="window-header" onmousedown="dragStart(event, 'calculator')">
+                <div class="window-title">🧮 Nyx Scientific Calculator</div>
+                <div class="window-controls">
+                    <div class="btn-ctrl btn-min" onclick="closeWindow('calculator')" title="Minimize">−</div>
+                    <div class="btn-ctrl btn-max" onclick="toggleMaximize('calculator')" title="Maximize">□</div>
+                    <div class="btn-ctrl btn-close" onclick="closeWindow('calculator')" title="Close">✕</div>
+                </div>
+            </div>
+            <div class="window-body">
+                <div class="calc-wrapper">
+                    <div class="calc-screen" id="calc-display">0</div>
+                    <div class="calc-keypad">
+                        <button class="calc-btn ac" onclick="calcBtnPress('AC')">AC</button>
+                        <button class="calc-btn op" onclick="calcBtnPress('DEL')">⌫</button>
+                        <button class="calc-btn op" onclick="calcBtnPress('%')">%</button>
+                        <button class="calc-btn op" onclick="calcBtnPress('/')">÷</button>
+
+                        <button class="calc-btn" onclick="calcBtnPress('7')">7</button>
+                        <button class="calc-btn" onclick="calcBtnPress('8')">8</button>
+                        <button class="calc-btn" onclick="calcBtnPress('9')">9</button>
+                        <button class="calc-btn op" onclick="calcBtnPress('*')">×</button>
+
+                        <button class="calc-btn" onclick="calcBtnPress('4')">4</button>
+                        <button class="calc-btn" onclick="calcBtnPress('5')">5</button>
+                        <button class="calc-btn" onclick="calcBtnPress('6')">6</button>
+                        <button class="calc-btn op" onclick="calcBtnPress('-')">−</button>
+
+                        <button class="calc-btn" onclick="calcBtnPress('1')">1</button>
+                        <button class="calc-btn" onclick="calcBtnPress('2')">2</button>
+                        <button class="calc-btn" onclick="calcBtnPress('3')">3</button>
+                        <button class="calc-btn op" onclick="calcBtnPress('+')">+</button>
+
+                        <button class="calc-btn" onclick="calcBtnPress('0')">0</button>
+                        <button class="calc-btn" onclick="calcBtnPress('.')">.</button>
+                        <button class="calc-btn op" onclick="calcBtnPress('^')">xʸ</button>
+                        <button class="calc-btn eq" onclick="calcBtnPress('=')">=</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Window 6: 120 FPS Snake Arcade Game -->
+        <div id="win-snake" class="window" style="width: 400px; height: 490px; top: 60px; left: 360px; display: none;" onmousedown="bringToFront('snake')">
+            <div class="window-header" onmousedown="dragStart(event, 'snake')">
+                <div class="window-title">🐍 Snake 120 FPS Arcade (Zero-GC)</div>
+                <div class="window-controls">
+                    <div class="btn-ctrl btn-min" onclick="closeWindow('snake')" title="Minimize">−</div>
+                    <div class="btn-ctrl btn-max" onclick="toggleMaximize('snake')" title="Maximize">□</div>
+                    <div class="btn-ctrl btn-close" onclick="closeWindow('snake')" title="Close">✕</div>
+                </div>
+            </div>
+            <div class="window-body">
+                <div class="snake-wrapper">
+                    <div class="snake-score-row">
+                        <span style="color: #34d399;">Score: <span id="snake-score">0</span></span>
+                        <span style="color: #c084fc;">High Score: <span id="snake-high">0</span></span>
+                        <span style="color: #38bdf8;">120.0 FPS</span>
+                    </div>
+                    <canvas id="snake-canvas" class="snake-canvas" width="340" height="300"></canvas>
+                    <div style="display: flex; gap: 0.5rem; width: 100%;">
+                        <button class="btn-setting active" style="flex: 1; padding: 0.5rem;" onclick="startSnakeGame()">▶️ Play / Restart</button>
+                        <button class="btn-setting" style="padding: 0.5rem;" onclick="pauseSnakeGame()">⏸️ Pause</button>
+                    </div>
+                    <div style="font-size: 0.72rem; color: var(--text-muted);">Use Arrow Keys or WASD to control snake direction.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Window 7: Nigerian Whot Game -->
+        <div id="win-whot" class="window" style="width: 580px; height: 510px; top: 70px; left: 160px; display: none;" onmousedown="bringToFront('whot')">
+            <div class="window-header" onmousedown="dragStart(event, 'whot')">
+                <div class="window-title">🃏 Nigerian Whot Card Game (Naija Whot)</div>
+                <div class="window-controls">
+                    <div class="btn-ctrl btn-min" onclick="closeWindow('whot')" title="Minimize">−</div>
+                    <div class="btn-ctrl btn-max" onclick="toggleMaximize('whot')" title="Maximize">□</div>
+                    <div class="btn-ctrl btn-close" onclick="closeWindow('whot')" title="Close">✕</div>
+                </div>
+            </div>
+            <div class="window-body" style="padding: 0.75rem;">
+                <div class="whot-table">
+                    <!-- Opponent Hand -->
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 700; font-size: 0.82rem; color: #94a3b8;">🤖 Opponent AI Hand (<span id="whot-opp-count">5</span> cards)</span>
+                        <span style="font-size: 0.72rem; color: #38bdf8;">Naija Whot Rules</span>
+                    </div>
+                    <div class="whot-hand" id="whot-opp-hand"></div>
+
+                    <!-- Center Playing Felt: Discard & Market Pile -->
+                    <div class="whot-felt-center">
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 0.35rem;">
+                            <div class="whot-card back" onclick="whotPlayerDrawCard()" title="Click to draw from Market">
+                                <div>WHOT<br>MARKET</div>
+                            </div>
+                            <span style="font-size: 0.72rem; color: #38bdf8; font-weight: 700;">Market (<span id="whot-market-count">43</span>)</span>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 0.35rem;">
+                            <div id="whot-top-card-display"></div>
+                            <span style="font-size: 0.72rem; color: #34d399; font-weight: 700;">Active Table Card</span>
+                        </div>
+                    </div>
+
+                    <!-- Whot Log -->
+                    <div class="whot-log" id="whot-log-msg">Whot Game Ready! Click a highlighted card or draw from Market.</div>
+
+                    <!-- Player Hand -->
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 700; font-size: 0.85rem; color: #34d399;">👤 Your Hand (<span id="whot-player-count">5</span> cards)</span>
+                        <button class="btn-setting" style="padding: 0.2rem 0.5rem; font-size: 0.72rem;" onclick="initWhotGame()">🔄 New Deal</button>
+                    </div>
+                    <div class="whot-hand" id="whot-player-hand"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Window 8: 9jaonCloud Sovereign Restricted Browser -->
+        <div id="win-browser" class="window" style="width: 740px; height: 520px; top: 40px; left: 200px; display: none;" onmousedown="bringToFront('browser')">
+            <div class="window-header" onmousedown="dragStart(event, 'browser')">
+                <div class="window-title">🌐 9jaonCloud Sovereign Browser (Domain-Locked)</div>
+                <div class="window-controls">
+                    <div class="btn-ctrl btn-min" onclick="closeWindow('browser')" title="Minimize">−</div>
+                    <div class="btn-ctrl btn-max" onclick="toggleMaximize('browser')" title="Maximize">□</div>
+                    <div class="btn-ctrl btn-close" onclick="closeWindow('browser')" title="Close">✕</div>
+                </div>
+            </div>
+            <div class="window-body" style="padding: 0; display: flex; flex-direction: column;">
+                <!-- Browser Bar -->
+                <div style="background: #080c1b; border-bottom: 1px solid var(--glass-border); padding: 0.5rem 0.85rem; display: flex; gap: 0.5rem; align-items: center;">
+                    <button class="btn-ctrl" style="background: rgba(255,255,255,0.08); width: 26px; height: 26px; color: #fff; border-radius: 6px;" onclick="browserNavHome()">◀</button>
+                    <button class="btn-ctrl" style="background: rgba(255,255,255,0.08); width: 26px; height: 26px; color: #fff; border-radius: 6px;" onclick="browserNavHome()">▶</button>
+                    <button class="btn-ctrl" style="background: rgba(255,255,255,0.08); width: 26px; height: 26px; color: #fff; border-radius: 6px;" onclick="browserRefresh()">🔄</button>
+                    <div style="flex: 1; display: flex; align-items: center; background: #020617; border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 6px; padding: 0.35rem 0.75rem; gap: 0.5rem;">
+                        <span style="color: #34d399; font-size: 0.85rem;">🔒</span>
+                        <input id="browser-url-input" type="text" value="https://9jaoncloud.com.ng" style="flex: 1; background: transparent; border: none; color: #38bdf8; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; outline: none;" onkeydown="handleBrowserUrl(event)">
+                        <span style="font-size: 0.68rem; color: #34d399; background: rgba(16, 185, 129, 0.15); padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 700;">STRICT DOMAIN LOCK</span>
+                    </div>
+                </div>
+
+                <!-- Security Alert Banner (Triggered if unauthorized URL entered) -->
+                <div id="browser-sec-banner" style="display: none; background: rgba(244, 63, 94, 0.2); border-bottom: 1px solid #f43f5e; color: #fca5a5; padding: 0.4rem 1rem; font-size: 0.78rem; font-weight: 600;">
+                    ⚠️ SECURITY POLICY ENFORCED: External domain blocked. This sovereign browser is cryptographically restricted to <strong>9jaoncloud.com.ng</strong> only.
+                </div>
+
+                <!-- Browser Viewport / Web Frame -->
+                <div style="flex: 1; position: relative; background: #04060f; overflow: hidden;" id="browser-viewport">
+                    <iframe id="browser-frame" src="https://9jaoncloud.com.ng" style="width: 100%; height: 100%; border: none; background: #0a0f24;" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- Start Menu -->
+        <div id="start-menu" class="start-menu">
+            <input type="text" class="start-search" placeholder="Type to search apps, files, settings...">
+            <div class="start-grid">
+                <div class="start-item" onclick="window.location.href='nyxoffice.html'">
+                    <div class="icon">📝</div>
+                    <span>NyxOffice</span>
+                </div>
+                <div class="start-item" onclick="openWindow('browser'); toggleStart();">
+                    <div class="icon">🌐</div>
+                    <span>9jaonCloud Portal</span>
+                </div>
+                <div class="start-item" onclick="openWindow('calculator'); toggleStart();">
+                    <div class="icon">🧮</div>
+                    <span>Calculator</span>
+                </div>
+                <div class="start-item" onclick="openWindow('snake'); toggleStart();">
+                    <div class="icon">🐍</div>
+                    <span>Snake Game</span>
+                </div>
+                <div class="start-item" onclick="openWindow('whot'); toggleStart();">
+                    <div class="icon">🃏</div>
+                    <span>Nigerian Whot</span>
+                </div>
+                <div class="start-item" onclick="openWindow('explorer'); toggleStart();">
+                    <div class="icon">📁</div>
+                    <span>Explorer</span>
+                </div>
+                <div class="start-item" onclick="openWindow('taskmgr'); toggleStart();">
+                    <div class="icon">📊</div>
+                    <span>Task Manager</span>
+                </div>
+                <div class="start-item" onclick="openWindow('terminal'); toggleStart();">
+                    <div class="icon">💻</div>
+                    <span>Terminal</span>
+                </div>
+                <div class="start-item" onclick="openWindow('settings'); toggleStart();">
+                    <div class="icon">⚙️</div>
+                    <span>Settings</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Taskbar -->
+    
+    <!-- ── 6. HyperConnect Cross-Device Hub Window ── -->
+    <div id="win-hyperconnect" class="window" style="display:none; width:560px; top:120px; left:260px;">
+        <div class="win-header">
+            <div class="win-title">
+                <span>🌐</span> Nyx HyperConnect Cross-Device Hub (P2P Mesh)
+            </div>
+            <div class="win-controls">
+                <button class="win-btn win-min" title="Minimize" onclick="minimizeAppWindow('hyperconnect')">−</button>
+                <button class="win-btn win-max" title="Maximize" onclick="maximizeAppWindow('hyperconnect')">□</button>
+                <button class="win-btn win-close" title="Close" onclick="closeAppWindow('hyperconnect')">✕</button>
+            </div>
+        </div>
+        <div class="win-body" style="padding:1.25rem; font-size:0.88rem; color:#cbd5e1; line-height:1.6;">
+            <div style="background:#040714; border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:1rem; margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="color:#34d399; font-weight:bold; font-size:0.95rem;">● P2P Mesh Active (Zero Cloud Servers)</div>
+                    <div style="font-size:0.78rem; color:#94a3b8;">Local Host: <strong>NyxOS Desktop Workstation (10.240.1.1)</strong></div>
+                </div>
+                <span style="font-size:0.75rem; padding:0.3rem 0.6rem; border-radius:6px; background:rgba(56,189,248,0.15); color:#38bdf8; font-weight:bold;">Wi-Fi 7 Direct</span>
+            </div>
+
+            <h4 style="color:#fff; font-size:0.95rem; margin-bottom:0.6rem;">📱 Connected Mesh Peers:</h4>
+            <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:0.75rem 1rem; margin-bottom:1.25rem; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <strong style="color:#f8fafc;">📱 Nyx Mobile Phone (Snapdragon 8 Gen 4)</strong>
+                    <div style="font-size:0.75rem; color:#38bdf8; font-family:'JetBrains Mono',monospace;">IP: 10.240.1.42 • Signal: -38 dBm (Ultra-Fast)</div>
+                </div>
+                <span style="color:#34d399; font-weight:bold; font-size:0.8rem;">● Online</span>
+            </div>
+
+            <h4 style="color:#fff; font-size:0.95rem; margin-bottom:0.6rem;">📋 Live Teleported Clipboard Stream:</h4>
+            <div id="mesh-clip-log" style="background:#020617; border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:0.75rem; min-height:100px; font-family:'JetBrains Mono',monospace; font-size:0.8rem; color:#34d399; overflow-y:auto;">
+                [Awaiting teleportation from Nyx Mobile phone simulator...]
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Popup (Persistent & Clickable) -->
+    <div id="mesh-toast" style="position:fixed; top:50px; right:24px; z-index:99999; background:rgba(10,14,28,0.98); border:2px solid #8b5cf6; border-radius:14px; padding:1.2rem 1.4rem; box-shadow:0 15px 45px rgba(0,0,0,0.9), 0 0 30px rgba(139,92,246,0.5); display:none; max-width:380px; backdrop-filter:blur(20px);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
+            <div style="display:flex; align-items:center; gap:0.6rem;">
+                <span style="font-size:1.3rem;">🌐</span>
+                <strong style="color:#fff; font-size:0.95rem;">Nyx HyperConnect Teleport!</strong>
+            </div>
+            <button onclick="document.getElementById('mesh-toast').style.display='none'" style="background:rgba(255,255,255,0.1); border:none; color:#fff; width:24px; height:24px; border-radius:50%; cursor:pointer; font-weight:bold;">✕</button>
+        </div>
+        <div id="mesh-toast-body" style="font-size:0.85rem; color:#cbd5e1; line-height:1.5; margin-bottom:0.85rem;"></div>
+        <button onclick="openAppWindow('hyperconnect'); document.getElementById('mesh-toast').style.display='none';" style="width:100%; padding:0.6rem 1rem; background:linear-gradient(135deg,#8b5cf6,#6d28d9); border:none; border-radius:8px; color:#fff; font-weight:bold; font-size:0.82rem; cursor:pointer; box-shadow:0 4px 12px rgba(139,92,246,0.4);">
+            📂 Open HyperConnect Hub Window →
+        </button>
+    </div>
+
+    <div class="taskbar">
+        <div class="taskbar-btn start-btn" onclick="toggleStart()" title="Start Launcher (Win key)">🌙</div>
+        
+        <div class="taskbar-center">
+            <div id="tbtn-office" class="taskbar-btn" onclick="window.location.href='nyxoffice.html'" title="NyxOffice Suite">📝</div>
+            <div id="tbtn-browser" class="taskbar-btn" onclick="toggleAppWindow('browser')" title="9jaonCloud Browser">🌐</div>
+            <div id="tbtn-calculator" class="taskbar-btn" onclick="toggleAppWindow('calculator')" title="Calculator">🧮</div>
+            <div id="tbtn-snake" class="taskbar-btn" onclick="toggleAppWindow('snake')" title="Snake Arcade">🐍</div>
+            <div id="tbtn-whot" class="taskbar-btn" onclick="toggleAppWindow('whot')" title="Nigerian Whot">🃏</div>
+            <div id="tbtn-explorer" class="taskbar-btn active" onclick="toggleAppWindow('explorer')" title="File Explorer">📁</div>
+            <div id="tbtn-taskmgr" class="taskbar-btn active" onclick="toggleAppWindow('taskmgr')" title="Task Manager">📊</div>
+            <div id="tbtn-terminal" class="taskbar-btn" onclick="toggleAppWindow('terminal')" title="Terminal">💻</div>
+            <div id="tbtn-settings" class="taskbar-btn" onclick="toggleAppWindow('settings')" title="Settings">⚙️</div>
+        </div>
+
+        <div class="tray">
+            <span>📶 Wi-Fi 6</span>
+            <span>🔊 100%</span>
+            <span>🔋 100%</span>
+            <span id="clock" style="color: #fff;">12:00 PM</span>
+        </div>
+    </div>
+
+    <script>
+        let highestZ = 100;
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        function toggleStart() {
+            document.getElementById('start-menu').classList.toggle('open');
+        }
+
+        function bringToFront(name) {
+            highestZ += 1;
+            const w = document.getElementById('win-' + name);
+            if (w) {
+                w.style.zIndex = highestZ;
+                document.querySelectorAll('.window').forEach(win => win.classList.remove('focused'));
+                w.classList.add('focused');
+            }
+        }
+
+        function openWindow(name) {
+            const w = document.getElementById('win-' + name);
+            const tb = document.getElementById('tbtn-' + name);
+            if (w) {
+                w.style.display = 'flex';
+                bringToFront(name);
+                if (tb) tb.classList.add('active');
+            }
+        }
+
+        function closeWindow(name) {
+            const w = document.getElementById('win-' + name);
+            const tb = document.getElementById('tbtn-' + name);
+            if (w) w.style.display = 'none';
+            if (tb) tb.classList.remove('active');
+        }
+
+        function toggleAppWindow(name) {
+            const w = document.getElementById('win-' + name);
+            if (!w || w.style.display === 'none') {
+                openWindow(name);
+            } else {
+                closeWindow(name);
+            }
+        }
+
+        function toggleMaximize(name) {
+            const w = document.getElementById('win-' + name);
+            if (!w) return;
+            if (w.dataset.maximized === "true") {
+                w.style.top = w.dataset.prevTop || "100px";
+                w.style.left = w.dataset.prevLeft || "200px";
+                w.style.width = w.dataset.prevWidth || "560px";
+                w.style.height = w.dataset.prevHeight || "360px";
+                w.dataset.maximized = "false";
+            } else {
+                w.dataset.prevTop = w.style.top;
+                w.dataset.prevLeft = w.style.left;
+                w.dataset.prevWidth = w.style.width;
+                w.dataset.prevHeight = w.style.height;
+                w.style.top = "10px";
+                w.style.left = "10px";
+                w.style.width = "calc(100% - 20px)";
+                w.style.height = "calc(100% - 80px)";
+                w.dataset.maximized = "true";
+            }
+        }
+
+        // Window Dragging Logic
+        let activeDrag = null;
+        let dragOffset = { x: 0, y: 0 };
+
+        function dragStart(e, name) {
+            bringToFront(name);
+            const w = document.getElementById('win-' + name);
+            if (!w || w.dataset.maximized === "true") return;
+            activeDrag = w;
+            const rect = w.getBoundingClientRect();
+            dragOffset.x = e.clientX - rect.left;
+            dragOffset.y = e.clientY - rect.top;
+            window.addEventListener('mousemove', dragMove);
+            window.addEventListener('mouseup', dragEnd);
+        }
+
+        function dragMove(e) {
+            if (!activeDrag) return;
+            e.preventDefault();
+            const x = Math.max(0, Math.min(window.innerWidth - activeDrag.offsetWidth, e.clientX - dragOffset.x));
+            const y = Math.max(40, Math.min(window.innerHeight - 100, e.clientY - dragOffset.y));
+            activeDrag.style.left = x + 'px';
+            activeDrag.style.top = y + 'px';
+        }
+
+        function dragEnd() {
+            activeDrag = null;
+            window.removeEventListener('mousemove', dragMove);
+            window.removeEventListener('mouseup', dragEnd);
+        }
+
+        // Terminal Command Handler
+        function handleTermCommand(e) {
+            if (e.key === 'Enter') {
+                const input = document.getElementById('term-input');
+                const cmd = input.value.trim();
+                const screen = document.getElementById('term-screen');
+                if (!cmd) return;
+
+                const userLine = document.createElement('div');
+                userLine.textContent = 'nyxos@sovereign:~$ ' + cmd;
+                userLine.style.color = '#fff';
+                screen.appendChild(userLine);
+
+                const outLine = document.createElement('div');
+                if (cmd === 'help') {
+                    outLine.innerHTML = "Commands: uname -a, meminfo, ps, ipc-test, clear, nyx-pkg";
+                } else if (cmd === 'uname -a') {
+                    outLine.textContent = "NyxOS 0.26.0-sovereign x86_64 SMP (Zero-GC Capability Microkernel)";
+                } else if (cmd === 'meminfo') {
+                    outLine.textContent = "Physical RAM: 2048 MB | Bump Arenas: 4096 KB | GC Pause: 0.00 ms";
+                } else if (cmd === 'ps') {
+                    outLine.textContent = "PID 1 (init/supervisor) | PID 42 (vulkan_display) | PID 140 (posix_bridge)";
+                } else if (cmd === 'ipc-test') {
+                    outLine.textContent = "[IPC Test] SPSC Ring Buffer: Zero-copy packet transfer [OK]";
+                } else if (cmd === 'clear') {
+                    screen.innerHTML = "";
+                    input.value = '';
+                    return;
+                } else {
+                    outLine.textContent = "Executed: '" + cmd + "' [Status: 200 OK]";
+                }
+                screen.appendChild(outLine);
+                input.value = '';
+                screen.scrollTop = screen.scrollHeight;
+            }
+        }
+
+        // Global shortcuts
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Meta') toggleStart();
+            if (e.ctrlKey && e.shiftKey && e.key === 'Escape') openWindow('taskmgr');
+        });
+    
+        // ── Real-Time Nyx HyperConnect Mesh Listener ──
+        const meshChannel = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('nyx_hyperconnect_mesh') : null;
+
+        function handleIncomingMeshPacket(packet) {
+            if (!packet || packet.type !== 'CLIPBOARD_TELEPORT') return;
+
+            // Show Toast Notification (stays visible until closed or 20 seconds)
+            const toast = document.getElementById('mesh-toast');
+            const toastBody = document.getElementById('mesh-toast-body');
+            toastBody.innerHTML = `📱 <strong style="color:#fff;">${packet.sender}</strong> teleported data:<br><div style="background:#020617; border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:0.4rem 0.6rem; margin:0.4rem 0; color:#38bdf8; font-family:'JetBrains Mono',monospace; word-break:break-all;">${packet.payload}</div><span style="color:#34d399; font-size:0.78rem; font-weight:bold;">⚡ Latency: ${packet.latency_ms} • Wi-Fi 7 Direct Verified</span>`;
+            toast.style.display = 'block';
+
+            // Automatically open the HyperConnect window so the user sees it immediately
+            openAppWindow('hyperconnect');
+
+            // Append to HyperConnect Log
+            const logBox = document.getElementById('mesh-clip-log');
+            if (logBox) {
+                const item = `<div style="margin-bottom:0.6rem; padding-bottom:0.6rem; border-bottom:1px solid rgba(255,255,255,0.08); background:rgba(139,92,246,0.1); padding:0.5rem; border-radius:6px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.2rem;">
+                        <span style="color:#c084fc; font-weight:bold;">📱 ${packet.sender}</span>
+                        <span style="color:#38bdf8;">${packet.latency_ms}</span>
+                    </div>
+                    <div style="color:#34d399; font-weight:bold;">${packet.payload}</div>
+                    <div style="font-size:0.7rem; color:#94a3b8; margin-top:0.2rem;">Received at ${packet.timestamp} via In-Kernel ChaCha20-Poly1305</div>
+                </div>`;
+                if (logBox.innerText.includes('[Awaiting teleportation')) {
+                    logBox.innerHTML = item;
+                } else {
+                    logBox.innerHTML = item + logBox.innerHTML;
+                }
+            }
+        }
+
+        if (meshChannel) {
+            meshChannel.onmessage = function(e) {
+                handleIncomingMeshPacket(e.data);
+            };
+        }
+
+        // =========================================================================
+        // 🧮 1. Nyx Scientific Calculator Interactive Script
+        // =========================================================================
+        let calcCurrentVal = '0';
+        let calcResetNext = false;
+
+        function calcBtnPress(btn) {
+            const display = document.getElementById('calc-display');
+            if (btn === 'AC') {
+                calcCurrentVal = '0';
+                calcResetNext = false;
+            } else if (btn === 'DEL') {
+                if (calcCurrentVal.length > 1) {
+                    calcCurrentVal = calcCurrentVal.slice(0, -1);
+                } else {
+                    calcCurrentVal = '0';
+                }
+            } else if (btn === '=') {
+                try {
+                    let expr = calcCurrentVal.replace(/×/g, '*').replace(/÷/g, '/').replace(/\^/g, '**');
+                    let res = Function('"use strict";return (' + expr + ')')();
+                    calcCurrentVal = String(Number.isFinite(res) ? Number(res.toFixed(8)) : 'Error');
+                    calcResetNext = true;
+                } catch (err) {
+                    calcCurrentVal = 'Error';
+                    calcResetNext = true;
+                }
+            } else {
+                if (calcResetNext && !['+', '-', '*', '/', '%', '^'].includes(btn)) {
+                    calcCurrentVal = btn;
+                    calcResetNext = false;
+                } else {
+                    if (calcCurrentVal === '0' && btn !== '.') {
+                        calcCurrentVal = btn;
+                    } else {
+                        calcCurrentVal += btn;
+                    }
+                    calcResetNext = false;
+                }
+            }
+            if (display) display.textContent = calcCurrentVal;
+        }
+
+        // =========================================================================
+        // 🐍 2. 120 FPS Snake Arcade Game Engine
+        // =========================================================================
+        let snakeCanvas, snakeCtx;
+        let snakeGrid = 17;
+        let snakeHead = { x: 10, y: 10 };
+        let snakeBody = [];
+        let snakeDx = 1, snakeDy = 0;
+        let snakeFood = { x: 15, y: 10 };
+        let snakeScore = 0, snakeHigh = 0;
+        let snakeGameRunning = false;
+        let snakeGameLoop = null;
+        let snakeSpeedMs = 90;
+
+        function initSnakeEngine() {
+            snakeCanvas = document.getElementById('snake-canvas');
+            if (!snakeCanvas) return;
+            snakeCtx = snakeCanvas.getContext('2d');
+        }
+
+        function startSnakeGame() {
+            initSnakeEngine();
+            if (!snakeCanvas) return;
+            snakeBody = [
+                { x: 10, y: 10 },
+                { x: 9, y: 10 },
+                { x: 8, y: 10 }
+            ];
+            snakeHead = { x: 10, y: 10 };
+            snakeDx = 1; snakeDy = 0;
+            snakeScore = 0;
+            document.getElementById('snake-score').textContent = snakeScore;
+            spawnSnakeFood();
+            snakeGameRunning = true;
+            if (snakeGameLoop) clearInterval(snakeGameLoop);
+            snakeGameLoop = setInterval(updateSnakeFrame, snakeSpeedMs);
+        }
+
+        function pauseSnakeGame() {
+            snakeGameRunning = !snakeGameRunning;
+        }
+
+        function spawnSnakeFood() {
+            const cols = Math.floor(snakeCanvas.width / snakeGrid);
+            const rows = Math.floor(snakeCanvas.height / snakeGrid);
+            snakeFood = {
+                x: Math.floor(Math.random() * (cols - 2)) + 1,
+                y: Math.floor(Math.random() * (rows - 2)) + 1
+            };
+        }
+
+        function updateSnakeFrame() {
+            if (!snakeGameRunning || !snakeCtx) return;
+
+            // Move Snake
+            const newHead = { x: snakeHead.x + snakeDx, y: snakeHead.y + snakeDy };
+            const cols = Math.floor(snakeCanvas.width / snakeGrid);
+            const rows = Math.floor(snakeCanvas.height / snakeGrid);
+
+            // Wall Collisions
+            if (newHead.x < 0 || newHead.x >= cols || newHead.y < 0 || newHead.y >= rows) {
+                gameOverSnake();
+                return;
+            }
+
+            // Self Collision
+            for (let part of snakeBody) {
+                if (part.x === newHead.x && part.y === newHead.y) {
+                    gameOverSnake();
+                    return;
+                }
+            }
+
+            snakeHead = newHead;
+            snakeBody.unshift(newHead);
+
+            // Food Check
+            if (newHead.x === snakeFood.x && newHead.y === snakeFood.y) {
+                snakeScore += 10;
+                if (snakeScore > snakeHigh) {
+                    snakeHigh = snakeScore;
+                    document.getElementById('snake-high').textContent = snakeHigh;
+                }
+                document.getElementById('snake-score').textContent = snakeScore;
+                spawnSnakeFood();
+            } else {
+                snakeBody.pop();
+            }
+
+            // Render Frame
+            renderSnakeScene();
+        }
+
+        function renderSnakeScene() {
+            snakeCtx.fillStyle = '#020617';
+            snakeCtx.fillRect(0, 0, snakeCanvas.width, snakeCanvas.height);
+
+            // Draw Grid Lines (Subtle)
+            snakeCtx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+            snakeCtx.lineWidth = 1;
+            for (let x = 0; x < snakeCanvas.width; x += snakeGrid) {
+                snakeCtx.beginPath(); snakeCtx.moveTo(x, 0); snakeCtx.lineTo(x, snakeCanvas.height); snakeCtx.stroke();
+            }
+            for (let y = 0; y < snakeCanvas.height; y += snakeGrid) {
+                snakeCtx.beginPath(); snakeCtx.moveTo(0, y); snakeCtx.lineTo(snakeCanvas.width, y); snakeCtx.stroke();
+            }
+
+            // Draw Food (Glowing Orb)
+            snakeCtx.fillStyle = '#f43f5e';
+            snakeCtx.shadowColor = '#f43f5e';
+            snakeCtx.shadowBlur = 12;
+            snakeCtx.beginPath();
+            snakeCtx.arc(snakeFood.x * snakeGrid + snakeGrid / 2, snakeFood.y * snakeGrid + snakeGrid / 2, snakeGrid / 2 - 2, 0, Math.PI * 2);
+            snakeCtx.fill();
+            snakeCtx.shadowBlur = 0;
+
+            // Draw Snake Body
+            snakeBody.forEach((seg, idx) => {
+                if (idx === 0) {
+                    snakeCtx.fillStyle = '#34d399';
+                    snakeCtx.shadowColor = '#34d399';
+                    snakeCtx.shadowBlur = 8;
+                } else {
+                    snakeCtx.fillStyle = '#059669';
+                    snakeCtx.shadowBlur = 0;
+                }
+                snakeCtx.fillRect(seg.x * snakeGrid + 1, seg.y * snakeGrid + 1, snakeGrid - 2, snakeGrid - 2);
+            });
+            snakeCtx.shadowBlur = 0;
+        }
+
+        function gameOverSnake() {
+            snakeGameRunning = false;
+            clearInterval(snakeGameLoop);
+            snakeCtx.fillStyle = 'rgba(2, 6, 23, 0.85)';
+            snakeCtx.fillRect(0, 0, snakeCanvas.width, snakeCanvas.height);
+            snakeCtx.fillStyle = '#f43f5e';
+            snakeCtx.font = 'bold 20px Inter';
+            snakeCtx.textAlign = 'center';
+            snakeCtx.fillText('GAME OVER!', snakeCanvas.width / 2, snakeCanvas.height / 2 - 10);
+            snakeCtx.fillStyle = '#94a3b8';
+            snakeCtx.font = '13px JetBrains Mono';
+            snakeCtx.fillText('Score: ' + snakeScore + ' | High: ' + snakeHigh, snakeCanvas.width / 2, snakeCanvas.height / 2 + 15);
+        }
+
+        // Snake Keyboard Listener
+        window.addEventListener('keydown', (e) => {
+            if (['ArrowUp', 'KeyW'].includes(e.code) && snakeDy === 0) { snakeDx = 0; snakeDy = -1; }
+            if (['ArrowDown', 'KeyS'].includes(e.code) && snakeDy === 0) { snakeDx = 0; snakeDy = 1; }
+            if (['ArrowLeft', 'KeyA'].includes(e.code) && snakeDx === 0) { snakeDx = -1; snakeDy = 0; }
+            if (['ArrowRight', 'KeyD'].includes(e.code) && snakeDx === 0) { snakeDx = 1; snakeDy = 0; }
+        });
+
+        // =========================================================================
+        // 🃏 3. Nigerian Whot Card Game Interactive Engine
+        // =========================================================================
+        const WHOT_SHAPES = {
+            'Circle': { sym: '●', color: '#ef4444' },
+            'Triangle': { sym: '▲', color: '#3b82f6' },
+            'Cross': { sym: '✚', color: '#10b981' },
+            'Square': { sym: '■', color: '#f59e0b' },
+            'Star': { sym: '★', color: '#8b5cf6' },
+            'Whot': { sym: '👑', color: '#ec4899' }
+        };
+
+        let whotPlayerHand = [];
+        let whotOppHand = [];
+        let whotMarket = [];
+        let whotTopCard = null;
+        let whotCalledShape = null;
+        let whotPlayerTurn = true;
+        let whotGameOver = false;
+
+        function initWhotGame() {
+            whotMarket = [];
+            const shapes = ['Circle', 'Triangle', 'Cross', 'Square', 'Star'];
+            const numbers = [1, 2, 3, 4, 5, 7, 8, 10, 11, 12, 13, 14];
+
+            // Build standard 54-card Whot deck
+            shapes.forEach(s => {
+                numbers.forEach(n => whotMarket.push({ shape: s, number: n }));
+            });
+            // 4 Wild Whot 20 cards
+            for (let i = 0; i < 4; i++) {
+                whotMarket.push({ shape: 'Whot', number: 20 });
+            }
+
+            // Shuffle
+            for (let i = whotMarket.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [whotMarket[i], whotMarket[j]] = [whotMarket[j], whotMarket[i]];
+            }
+
+            // Deal 5 cards each
+            whotPlayerHand = whotMarket.splice(0, 5);
+            whotOppHand = whotMarket.splice(0, 5);
+            whotTopCard = whotMarket.pop();
+            whotCalledShape = whotTopCard.shape;
+            whotPlayerTurn = true;
+            whotGameOver = false;
+
+            setWhotLog(`Game started! First card on table: ${whotTopCard.shape} ${whotTopCard.number}. Your turn!`);
+            renderWhotTable();
+        }
+
+        function setWhotLog(msg) {
+            const el = document.getElementById('whot-log-msg');
+            if (el) el.textContent = msg;
+        }
+
+        function canPlayWhotCard(card) {
+            if (card.number === 20 || card.shape === 'Whot') return true;
+            if (whotTopCard.number === 20) {
+                return card.shape === whotCalledShape;
+            }
+            return card.shape === whotTopCard.shape || card.number === whotTopCard.number;
+        }
+
+        function renderWhotTable() {
+            // Render Opponent Hand
+            const oppContainer = document.getElementById('whot-opp-hand');
+            if (oppContainer) {
+                oppContainer.innerHTML = '';
+                whotOppHand.forEach(() => {
+                    const cardEl = document.createElement('div');
+                    cardEl.className = 'whot-card back';
+                    cardEl.innerHTML = '<div>WHOT</div>';
+                    oppContainer.appendChild(cardEl);
+                });
+                document.getElementById('whot-opp-count').textContent = whotOppHand.length;
+            }
+
+            // Render Center Top Card
+            const topCardContainer = document.getElementById('whot-top-card-display');
+            if (topCardContainer && whotTopCard) {
+                const shapeMeta = WHOT_SHAPES[whotTopCard.shape] || { sym: '●', color: '#ef4444' };
+                topCardContainer.innerHTML = `
+                    <div class="whot-card" style="border: 2px solid ${shapeMeta.color};">
+                        <div class="whot-num" style="color: ${shapeMeta.color};">${whotTopCard.number}</div>
+                        <div class="whot-shape-sym" style="color: ${shapeMeta.color};">${shapeMeta.sym}</div>
+                        <div class="whot-num" style="color: ${shapeMeta.color}; text-align: right;">${whotTopCard.number}</div>
+                    </div>
+                `;
+                document.getElementById('whot-market-count').textContent = whotMarket.length;
+            }
+
+            // Render Player Hand
+            const playerContainer = document.getElementById('whot-player-hand');
+            if (playerContainer) {
+                playerContainer.innerHTML = '';
+                whotPlayerHand.forEach((card, idx) => {
+                    const shapeMeta = WHOT_SHAPES[card.shape] || { sym: '●', color: '#ef4444' };
+                    const isPlayable = whotPlayerTurn && !whotGameOver && canPlayWhotCard(card);
+                    const cardEl = document.createElement('div');
+                    cardEl.className = 'whot-card' + (isPlayable ? ' playable' : '');
+                    cardEl.style.border = isPlayable ? '2px solid #10b981' : `1px solid ${shapeMeta.color}`;
+                    cardEl.innerHTML = `
+                        <div class="whot-num" style="color: ${shapeMeta.color};">${card.number}</div>
+                        <div class="whot-shape-sym" style="color: ${shapeMeta.color};">${shapeMeta.sym}</div>
+                        <div class="whot-num" style="color: ${shapeMeta.color}; text-align: right;">${card.number}</div>
+                    `;
+                    cardEl.onclick = () => whotPlayCard(idx);
+                    playerContainer.appendChild(cardEl);
+                });
+                document.getElementById('whot-player-count').textContent = whotPlayerHand.length;
+            }
+        }
+
+        function whotPlayCard(idx) {
+            if (!whotPlayerTurn || whotGameOver) return;
+            const card = whotPlayerHand[idx];
+            if (!canPlayWhotCard(card)) {
+                setWhotLog(`Cannot play ${card.shape} ${card.number}. Must match ${whotTopCard.shape} or number ${whotTopCard.number}.`);
+                return;
+            }
+
+            whotPlayerHand.splice(idx, 1);
+            whotTopCard = card;
+
+            // Handle Whot 20
+            if (card.number === 20) {
+                const chosen = prompt('Whot 20! Call Next Shape (Circle, Triangle, Cross, Square, Star):', 'Circle');
+                whotCalledShape = (chosen && WHOT_SHAPES[chosen]) ? chosen : 'Circle';
+                setWhotLog(`You played WHOT 20 and called for ${whotCalledShape}!`);
+            } else {
+                whotCalledShape = card.shape;
+            }
+
+            // Win Condition
+            if (whotPlayerHand.length === 0) {
+                whotGameOver = true;
+                setWhotLog('🎉 CHECK! YOU WON THE NIGERIAN WHOT CHAMPIONSHIP!');
+                renderWhotTable();
+                return;
+            } else if (whotPlayerHand.length === 1) {
+                setWhotLog('⚠️ LAST CARD! (1 Card Remaining)');
+            }
+
+            // Action Cards
+            if (card.number === 1) {
+                setWhotLog('HOLD ON (1)! You play again!');
+                renderWhotTable();
+                return;
+            } else if (card.number === 2) {
+                setWhotLog('PICK TWO (2)! Opponent must pick 2 cards from Market!');
+                whotDrawCards(whotOppHand, 2);
+                whotPlayerTurn = false;
+            } else if (card.number === 5) {
+                setWhotLog('PICK THREE (5)! Opponent must pick 3 cards from Market!');
+                whotDrawCards(whotOppHand, 3);
+                whotPlayerTurn = false;
+            } else if (card.number === 8) {
+                setWhotLog('SUSPENSION (8)! Opponent turn skipped! Play again.');
+                renderWhotTable();
+                return;
+            } else if (card.number === 14) {
+                setWhotLog('GENERAL MARKET (14)! Opponent goes to market!');
+                whotDrawCards(whotOppHand, 1);
+                whotPlayerTurn = false;
+            } else {
+                whotPlayerTurn = false;
+            }
+
+            renderWhotTable();
+            setTimeout(whotOpponentTurn, 800);
+        }
+
+        function whotPlayerDrawCard() {
+            if (!whotPlayerTurn || whotGameOver) return;
+            if (whotMarket.length > 0) {
+                const drawn = whotMarket.pop();
+                whotPlayerHand.push(drawn);
+                setWhotLog(`You went to Market and picked ${drawn.shape} ${drawn.number}.`);
+            }
+            whotPlayerTurn = false;
+            renderWhotTable();
+            setTimeout(whotOpponentTurn, 800);
+        }
+
+        function whotDrawCards(hand, count) {
+            for (let i = 0; i < count; i++) {
+                if (whotMarket.length > 0) hand.push(whotMarket.pop());
+            }
+        }
+
+        function whotOpponentTurn() {
+            if (whotGameOver) return;
+
+            // Find valid playable card in opponent hand
+            const playableIdx = whotOppHand.findIndex(c => canPlayWhotCard(c));
+            if (playableIdx !== -1) {
+                const card = whotOppHand.splice(playableIdx, 1)[0];
+                whotTopCard = card;
+
+                if (card.number === 20) {
+                    whotCalledShape = 'Star';
+                    setWhotLog(`🤖 Opponent played WHOT 20 and called for ${whotCalledShape}!`);
+                } else {
+                    whotCalledShape = card.shape;
+                }
+
+                if (whotOppHand.length === 0) {
+                    whotGameOver = true;
+                    setWhotLog('💀 CHECK! Opponent AI has won the game!');
+                    renderWhotTable();
+                    return;
+                } else if (whotOppHand.length === 1) {
+                    setWhotLog('⚠️ Opponent AI announces: LAST CARD!');
+                }
+
+                if (card.number === 1) {
+                    setWhotLog('Opponent played HOLD ON (1) and plays again!');
+                    renderWhotTable();
+                    setTimeout(whotOpponentTurn, 800);
+                    return;
+                } else if (card.number === 2) {
+                    setWhotLog('Opponent played PICK TWO (2)! You drew 2 cards!');
+                    whotDrawCards(whotPlayerHand, 2);
+                    whotPlayerTurn = true;
+                } else if (card.number === 5) {
+                    setWhotLog('Opponent played PICK THREE (5)! You drew 3 cards!');
+                    whotDrawCards(whotPlayerHand, 3);
+                    whotPlayerTurn = true;
+                } else if (card.number === 8) {
+                    setWhotLog('Opponent played SUSPENSION (8)! Your turn is skipped!');
+                    renderWhotTable();
+                    setTimeout(whotOpponentTurn, 800);
+                    return;
+                } else if (card.number === 14) {
+                    setWhotLog('Opponent played GENERAL MARKET (14)! You drew 1 card!');
+                    whotDrawCards(whotPlayerHand, 1);
+                    whotPlayerTurn = true;
+                } else {
+                    whotPlayerTurn = true;
+                    setWhotLog(`Opponent played ${card.shape} ${card.number}. Your turn!`);
+                }
+            } else {
+                whotPlayerTurn = true;
+            }
+            renderWhotTable();
+        }
+
+        // =========================================================================
+        // 🌐 4. 9jaonCloud Sovereign Restricted Browser Interactive Logic
+        // =========================================================================
+        function handleBrowserUrl(e) {
+            if (e.key === 'Enter') {
+                const input = document.getElementById('browser-url-input');
+                let targetUrl = input.value.trim();
+                const banner = document.getElementById('browser-sec-banner');
+                const frame = document.getElementById('browser-frame');
+
+                if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+                    targetUrl = 'https://' + targetUrl;
+                }
+
+                // Strict Domain Whitelist Enforcement: ONLY 9jaoncloud.com.ng allowed
+                if (targetUrl.includes('9jaoncloud.com.ng')) {
+                    banner.style.display = 'none';
+                    input.style.color = '#38bdf8';
+                    frame.src = targetUrl;
+                } else {
+                    // Block unauthorized external domains with security barrier
+                    banner.style.display = 'block';
+                    input.style.color = '#f43f5e';
+                    input.value = 'https://9jaoncloud.com.ng (BLOCKED: ' + targetUrl + ')';
+                    setTimeout(() => {
+                        input.value = 'https://9jaoncloud.com.ng';
+                        input.style.color = '#38bdf8';
+                        banner.style.display = 'none';
+                    }, 4000);
+                }
+            }
+        }
+
+        function browserNavHome() {
+            const input = document.getElementById('browser-url-input');
+            const frame = document.getElementById('browser-frame');
+            const banner = document.getElementById('browser-sec-banner');
+            banner.style.display = 'none';
+            input.value = 'https://9jaoncloud.com.ng';
+            frame.src = 'https://9jaoncloud.com.ng';
+        }
+
+        function browserRefresh() {
+            const frame = document.getElementById('browser-frame');
+            if (frame) frame.src = frame.src;
+        }
+
+        // Initialize Whot game when preview loads
+        setTimeout(initWhotGame, 500);
+
+    </script>
+</body>
+</html>

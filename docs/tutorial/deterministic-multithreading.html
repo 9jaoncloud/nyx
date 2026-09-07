@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deterministic Multi-Threading Guide — Nyx Documentation</title>
+    <meta name="description" content="A comprehensive, beginner-friendly guide to deterministic multi-threading in Nyx. Learn how to maximize multi-core CPU speed while maintaining 100% reproducible time-travel debugging.">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="../../favicon.ico">
+    <style>
+        .concept-card {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.75rem;
+            margin: 2rem 0;
+        }
+        .analogy-box {
+            background: rgba(139, 92, 246, 0.08);
+            border-left: 4px solid #8b5cf6;
+            padding: 1.5rem;
+            border-radius: 0 10px 10px 0;
+            margin: 2rem 0;
+        }
+        .analogy-box h4 { color: #c084fc; margin-top: 0; font-size: 1.2rem; }
+        .analogy-box p { color: #e2e8f0; margin: 0; line-height: 1.75; }
+        .grid-2col {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        .grid-item {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 1.5rem;
+        }
+        .grid-item h4 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.1rem; }
+    </style>
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+
+    <main>
+        <div style="display:inline-block; padding: 0.35rem 0.85rem; border-radius: 9999px; background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.3); color: #c084fc; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; margin-bottom: 1rem;">
+            Concurrency Masterclass
+        </div>
+        <h1>Deterministic Multi-Threading in Nyx</h1>
+        <p class="lead" style="font-size: 1.15rem; color: var(--text-muted); margin-bottom: 2rem;">
+            How to run heavy parallel workloads across 16 or 64 CPU cores with maximum throughput, while guaranteeing that every bug and execution step can be replayed 100% identically.
+        </p>
+
+        <!-- Section 1: The Problem Explained Simply -->
+        <h2>1. The Big Problem with Traditional Multi-Threading</h2>
+        <p>
+            In most programming languages (such as C++, Java, and Go), multi-threading is notorious for causing <strong>Heisenbugs</strong> — bugs that happen randomly once in 10,000 runs and disappear the moment you try to debug them.
+        </p>
+        
+        <div class="analogy-box">
+            <h4>🍕 The Kitchen Analogy: Why Traditional Threads Collide</h4>
+            <p>
+                Imagine 8 chefs working in a busy restaurant kitchen, but all 8 chefs are grabbing ingredients from the <strong>exact same shared mixing bowl</strong> simultaneously without talking to each other. If Chef A adds salt while Chef B is stirring, the final recipe is chaotic and impossible to reproduce. That is how traditional shared-memory threading works.
+            </p>
+        </div>
+
+        <p>
+            In Nyx, we solve this by giving <strong>every chef their own private preparation station</strong> (Isolated Memory Regions) and having them coordinate through an <strong>ordered ticket queue</strong> (Logical Sequencing).
+        </p>
+
+        <!-- Section 2: The 4 Pillars of Deterministic Concurrency -->
+        <h2>2. How Nyx Makes Threading 100% Deterministic</h2>
+        
+        <div class="grid-2col">
+            <div class="grid-item">
+                <h4 style="color: #38bdf8;">1. Zero Shared Mutable Memory</h4>
+                <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.65;">
+                    Threads in Nyx run in separate, isolated memory bump frames. Thread 1 physically cannot overwrite Thread 2's data. Data races are mathematically eliminated.
+                </p>
+            </div>
+            <div class="grid-item">
+                <h4 style="color: #34d399;">2. Logical Sequence Ordering</h4>
+                <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.65;">
+                    Cross-thread messages are tagged with sequential tickets (Ticket #1, Ticket #2). When recording a trace, we log only the ticket arrival order for instant replay.
+                </p>
+            </div>
+            <div class="grid-item">
+                <h4 style="color: #c084fc;">3. Structured Nurseries</h4>
+                <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.65;">
+                    Parallel tasks are bounded inside explicit scopes. A parent task never finishes until all child tasks finish, preventing rogue orphan threads.
+                </p>
+            </div>
+            <div class="grid-item">
+                <h4 style="color: #fbbf24;">4. Deterministic Virtual Clocks</h4>
+                <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.65;">
+                    Parallel tasks requiring timestamps or random numbers read from a deterministic seeded virtual clock, ensuring identical simulation results across machines.
+                </p>
+            </div>
+        </div>
+
+        <!-- Section 3: Practical Code Examples -->
+        <h2>3. Hands-On Coding in Nyx</h2>
+
+        <h3>A. Parallel Processing with Structured Nurseries</h3>
+        <p>
+            Here is how you process 1,000,000 records in parallel across all CPU cores with zero data races:
+        </p>
+        <pre><code class="language-nyx"><span class="kw">import</span> std::concurrency::nursery
+<span class="kw">import</span> std::collections::List
+
+<span class="comment">// Pure processing function with zero global side-effects</span>
+<span class="kw">@pure</span>
+<span class="kw">fn</span> calculate_analytics(data_chunk: List&lt;<span class="typ">float</span>&gt;) -&gt; <span class="typ">float</span> {
+    <span class="kw">var</span> total = 0.0
+    <span class="kw">for</span> value <span class="kw">in</span> data_chunk {
+        total += value * 1.15
+    }
+    <span class="kw">return</span> total
+}
+
+<span class="kw">fn</span> main() {
+    <span class="kw">let</span> dataset = List::range(0, 1000000)
+    <span class="kw">var</span> results = List::new()
+
+    <span class="comment">// Launch structured parallel nursery across CPU cores</span>
+    nursery { |scope|
+        <span class="kw">for</span> chunk <span class="kw">in</span> dataset.chunks(8) {
+            scope.spawn(fn() {
+                <span class="comment">// Runs in thread-isolated bump region</span>
+                <span class="kw">let</span> sum = calculate_analytics(chunk)
+                scope.send_result(sum)
+            })
+        }
+    } <span class="comment">// All parallel threads merge deterministically here!</span>
+
+    println(<span class="str">"Parallel analytics successfully completed!"</span>)
+}</code></pre>
+
+        <h3>B. Isolated Actors with Ordered Channel Sequencing</h3>
+        <p>
+            For long-running background services (like financial ledgers or game servers), Nyx uses isolated Actor channels:
+        </p>
+        <pre><code class="language-nyx"><span class="kw">import</span> std::actors::Actor
+<span class="kw">import</span> std::actors::Channel
+
+<span class="typ">struct</span> TransactionMsg {
+    id: <span class="typ">int</span>,
+    account_id: <span class="typ">string</span>,
+    amount: <span class="typ">float</span>
+}
+
+<span class="comment">// Dedicated Ledger Actor with private memory</span>
+<span class="typ">actor</span> BankLedger {
+    <span class="kw">var</span> balance: <span class="typ">float</span> = 0.0
+
+    <span class="kw">fn</span> handle_deposit(msg: TransactionMsg) {
+        <span class="kw">this</span>.balance += msg.amount
+        println(<span class="str">"Processed transaction #"</span> + msg.id.to_string())
+    }
+}</code></pre>
+
+        <!-- Section 4: Time Travel Replay -->
+        <h2>4. Recording &amp; Replaying Multi-Threaded Bugs</h2>
+        <p>
+            When a multi-threaded program encounters an edge-case crash on a user's machine, Nyx can record the session with sub-1% overhead and replay it locally:
+        </p>
+        <pre><code class="language-bash"><span class="comment"># 1. Run multi-threaded program with input logging</span>
+$ nyx run server.nyx --threads 16 --record crash_session.nyxtrace
+
+<span class="comment"># 2. Replay the exact multi-threaded execution locally</span>
+$ nyx run server.nyx --replay crash_session.nyxtrace
+
+<span class="comment"># 3. Step backwards and forwards in time in the Athena Debugger</span>
+$ nyx debug server.nyx --replay crash_session.nyxtrace --visualize</code></pre>
+
+        <div style="margin-top: 3rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+            <a href="deterministic-replayability.html" class="btn-primary" style="display:inline-block; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #a855f7, #6366f1); color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">⏱️ Read Replayability Guide</a>
+            <a href="../../faq.html" style="display:inline-block; padding: 0.75rem 1.5rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">❓ Read Architecture FAQ</a>
+        </div>
+    </main>
+
+    <script src="../sidebar.js"></script>
+</body>
+</html>

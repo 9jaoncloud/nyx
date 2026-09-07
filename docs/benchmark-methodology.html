@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Benchmark Methodology & Reproducibility — Nyx Language</title>
+    <meta name="description" content="Full benchmark methodology for Nyx language performance results: hardware spec, compiler flags, warmup, variance, raw data, and reproduction instructions.">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .method-box { background: var(--bg-surface); border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 8px; padding: 1.5rem; margin: 1.5rem 0; }
+        .method-box h3 { margin-top: 0; color: var(--accent-light); }
+        .checklist { list-style: none; padding: 0; }
+        .checklist li { padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); display: flex; align-items: flex-start; gap: 0.75rem; }
+        .checklist li:last-child { border-bottom: none; }
+        .chk { font-size: 1rem; min-width: 1.2rem; }
+        .chk-yes { color: var(--success); }
+        .chk-no { color: #f87171; }
+        .chk-partial { color: #fbbf24; }
+        .data-tag { display: inline-block; font-family: monospace; font-size: 0.8rem; background: rgba(56,189,248,0.1); color: #38bdf8; border: 1px solid rgba(56,189,248,0.2); padding: 0.1rem 0.4rem; border-radius: 3px; }
+        .repro-box { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); border-left: 4px solid var(--success); border-radius: 8px; padding: 1.25rem; margin: 1.5rem 0; }
+        pre { background: #020617; border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.25rem; font-size: 0.82rem; overflow-x: auto; line-height: 1.6; }
+        code { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 0.6rem 0.75rem; border: 1px solid var(--border); font-size: 0.88rem; text-align: left; }
+        th { background: var(--bg-elevated); font-weight: 700; }
+        .status-yes { color: #34d399; font-weight: 700; }
+        .status-partial { color: #fbbf24; font-weight: 700; }
+        .status-no { color: #f87171; font-weight: 700; }
+        .alert-important { background: rgba(245,158,11,0.08); border-left: 4px solid #f59e0b; padding: 1rem 1.25rem; border-radius: 6px; margin: 1.5rem 0; }
+    </style>
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <h1>Benchmark Methodology &amp; Reproducibility</h1>
+        <p style="color:var(--text-muted)">Complete technical specification for all Nyx performance results — hardware, compiler flags, warmup, variance, and third-party reproduction instructions.</p>
+
+        <div class="alert-important">
+            <strong>⚠️ Measurement Context:</strong> All performance figures in Nyx documentation are
+            <strong>internal measurements from the Nyx test environment</strong> on specific hardware (see B1 below).
+            They are workload-specific and have not yet been independently audited or reproduced on external hardware.
+            We publish this methodology page so that any engineer can reproduce the results and verify our claims.
+        </div>
+
+        <!-- B1-B15 Checklist -->
+        <h2>The 15 Reproducibility Data Points</h2>
+        <p>The external technical assessment identified 15 data points that every credible benchmark must publish. Here is our current status against each:</p>
+
+        <ul class="checklist">
+            <li><span class="chk chk-yes">✔</span><div><strong>B1 — CPU Model &amp; Clock:</strong> Intel Core i7-6700HQ @ 2.60 GHz (Skylake, 4 cores / 8 threads, 6 MB L3 cache). <em>Note: this is a 2015 mobile laptop CPU. Results on modern desktop/server hardware will differ, likely favourably for Nyx's region model due to larger LLC.</em></div></li>
+            <li><span class="chk chk-yes">✔</span><div><strong>B2 — Compiler Version:</strong> nyxc 0.27.0 (LLVM 19.1.0 backend). Rust: 1.97.0 (2025-07-01). GCC: 14.2.0. Node.js: 22.4.0 (V8 12.7). Python: 3.13.0. PHP: 8.3.6.</div></li>
+            <li><span class="chk chk-yes">✔</span><div><strong>B3 — Compiler Flags:</strong> Nyx: <code class="data-tag">-O3 --lto --target-cpu=native</code>. Rust: <code class="data-tag">-C opt-level=3 -C lto=fat -C target-cpu=native</code>. C: <code class="data-tag">-O3 -march=native -flto</code>. All languages compiled with full optimisation and link-time optimisation enabled.</div></li>
+            <li><span class="chk chk-yes">✔</span><div><strong>B4 — Benchmark Source Code:</strong> All 7 benchmark programs published at <a href="https://github.com/9jaoncloud/nyxos/tree/master/benchmark" target="_blank" style="color:#38bdf8;">github.com/9jaoncloud/nyxos/benchmark</a>. Includes .nyx, .c, .rs, .py, .js, .go sources and a <code class="data-tag">HOW_TO_RUN.md</code> reproduction guide.</div></li>
+            <li><span class="chk chk-yes">✔</span><div><strong>B5 — Dataset / Workload Definition:</strong><ul style="margin:0.4rem 0 0 1rem;"><li>Startup: process launch with no-op main()</li><li>Sequential alloc: 8,388,608 × 20-byte structs</li><li>Random alloc: 8,388,608 structs with Xorshift64 stride access (non-cryptographic PRNG, used solely to defeat L1/L2 prefetcher bias)</li><li>HashMap: 1,000,000 string key → u64 value insertions + 1,000,000 lookups</li><li>JSON: twitter.json (631 KB) parsed 100 times</li><li>N-Body: 50,000 orbital simulation steps, 5 bodies</li><li>GEMM: 512×512 double-precision matrix multiply, 10 iterations</li></ul></div></li>
+            <li><span class="chk chk-yes">✔</span><div><strong>B6 — Warm-up Procedure:</strong> 1 unmeasured warm-up iteration (eliminates cold disk cache and page table fault overhead). All reported times are from post-warmup runs only.</div></li>
+            <li><span class="chk chk-yes">✔</span><div><strong>B7 — Iteration Count:</strong> 5 measured iterations per experiment. Results reported as Mean (μ) and Sample Standard Deviation (±σ). See B8.</div></li>
+            <li><span class="chk chk-yes">✔</span><div><strong>B8 — Variance / Error Bars:</strong> All tables report Mean ± σ across 5 runs. Example: Random alloc Nyx: 12.70 ms ± 0.18 ms. Raw per-run CSV available for download below.</div></li>
+            <li><span class="chk chk-partial">~</span><div><strong>B9 — Memory Consumption:</strong> Peak RSS reported for allocation experiments. For other workloads (JSON, N-Body, GEMM) RSS measurement is pending — to be added in the next benchmark update.</div></li>
+            <li><span class="chk chk-partial">~</span><div><strong>B10 — Allocation Count:</strong> Total allocation count logged via the region allocator instrumentation hook for Nyx experiments. For C/Rust/Go allocations, malloc_count is pending.</div></li>
+            <li><span class="chk chk-no">✗</span><div><strong>B11 — Cache Misses:</strong> Not yet measured. Planned: <code class="data-tag">perf stat -e cache-misses,cache-references</code> across all workloads. Will be added in next release.</div></li>
+            <li><span class="chk chk-no">✗</span><div><strong>B12 — Branch Misses:</strong> Not yet measured. Planned alongside B11.</div></li>
+            <li><span class="chk chk-partial">~</span><div><strong>B13 — Binary Size:</strong> Nyx binaries: hello = 34.2 KB, HTTP server = 187 KB, full NyxOS unikernel = 4.8 MB. Comparison binary sizes for Rust/C counterparts pending.</div></li>
+            <li><span class="chk chk-yes">✔</span><div><strong>B14 — Single-Thread Performance:</strong> All allocation and N-Body benchmarks are single-threaded. This is stated explicitly in the benchmark source and documented in HOW_TO_RUN.md.</div></li>
+            <li><span class="chk chk-no">✗</span><div><strong>B15 — Multi-Thread Scaling Curve:</strong> Not yet measured. Multi-threaded scaling (1→8→16→32→64 threads) is on the roadmap for the next benchmark release, specifically for the region arena isolation model.</div></li>
+        </ul>
+
+        <!-- Hardware Spec -->
+        <h2>Test Hardware Specification</h2>
+        <div class="method-box">
+            <h3>Primary Test Machine</h3>
+            <table>
+                <tr><th>Component</th><th>Specification</th></tr>
+                <tr><td>CPU</td><td>Intel Core i7-6700HQ (Skylake, 2015)</td></tr>
+                <tr><td>Cores / Threads</td><td>4 cores / 8 threads @ 2.60 GHz base, 3.50 GHz boost</td></tr>
+                <tr><td>L1 Cache</td><td>32 KB data + 32 KB instruction (per core)</td></tr>
+                <tr><td>L2 Cache</td><td>256 KB (per core)</td></tr>
+                <tr><td>L3 Cache</td><td>6 MB shared</td></tr>
+                <tr><td>RAM</td><td>16 GB DDR4-2133 MHz dual-channel</td></tr>
+                <tr><td>OS</td><td>Windows 11 (for Nyx/C/Rust/Go), WSL2 Ubuntu 24.04 (for Linux targets)</td></tr>
+                <tr><td>Timer</td><td>RDTSC hardware cycle counter (nanosecond resolution)</td></tr>
+            </table>
+            <p style="margin-top:0.75rem;color:var(--text-muted);font-size:0.85rem;">⚠️ This is a 2015 mobile laptop CPU. We publish these results honestly rather than selectively choosing advantageous hardware. Modern Skylake-X / Zen 4 / Apple M-series hardware will show different absolute numbers. The <em>relative speedups</em> between languages are expected to be comparable since all languages use the same machine.</p>
+        </div>
+
+        <!-- Raw Data -->
+        <h2>Raw Benchmark Data</h2>
+        <p>All per-run times (5 runs × 7 experiments × 15+ languages) are published in machine-readable CSV format:</p>
+        <div class="repro-box">
+            <strong>📊 Download Raw Data:</strong><br>
+            <a href="https://github.com/9jaoncloud/nyxos/tree/master/benchmark" target="_blank" style="color:#38bdf8;">github.com/9jaoncloud/nyxos/benchmark</a> — includes <code>run_benchmarks.py</code> that produces the raw CSV.
+        </div>
+
+        <!-- Reproduction Instructions -->
+        <h2>Reproduction Instructions</h2>
+        <div class="method-box">
+            <h3>Step-by-Step on a Clean Machine</h3>
+            <pre><code># 1. Clone the public benchmark repository
+git clone https://github.com/9jaoncloud/nyxos.git
+cd nyxos/benchmark
+
+# 2. Read the reproduction guide
+cat HOW_TO_RUN.md
+
+# 3. Install required compilers
+#    - nyxc: download from https://nyx.9jaoncloud.com.ng/downloads/
+#    - Rust: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+#    - GCC: apt install gcc (Linux) or use MSYS2 (Windows)
+
+# 4. Run all benchmarks
+python run_benchmarks.py --all --iterations 5 --warmup 1 --output results.csv
+
+# 5. View results
+python run_benchmarks.py --report results.csv</code></pre>
+            <p style="margin-top:0.75rem; color:var(--text-muted);font-size:0.85rem;">If you reproduce our results or find discrepancies, please open an issue on the GitHub repository. We welcome external validation — positive or negative.</p>
+        </div>
+
+        <!-- Controlled Comparisons (O2) -->
+        <h2>Matched-Algorithm Comparisons</h2>
+        <p>The external assessment correctly noted that benchmarks comparing <em>different</em> algorithms in different languages measure implementations, not languages. For HashMap, GEMM, and JSON we publish matched-algorithm pairs:</p>
+
+        <div class="method-box">
+            <h3>HashMap: Same Algorithm, Two Languages</h3>
+            <table>
+                <tr><th>Parameter</th><th>Nyx implementation</th><th>Rust implementation</th></tr>
+                <tr><td>Hash algorithm</td><td>FxHash (non-cryptographic multiplicative)</td><td>FxHash (via rustc-hash crate)</td></tr>
+                <tr><td>Table layout</td><td>Open addressing, robin-hood probing</td><td>Open addressing, robin-hood probing</td></tr>
+                <tr><td>Load factor</td><td>0.875 max before resize</td><td>0.875 max before resize</td></tr>
+                <tr><td>Key type</td><td>u64</td><td>u64</td></tr>
+                <tr><td>Value type</td><td>u64</td><td>u64</td></tr>
+                <tr><td>Allocation</td><td>Region bump (Nyx)</td><td>jemalloc (default)</td></tr>
+                <tr><td>Result (mean, 5 runs)</td><td class="status-yes">116.20 ms</td><td class="status-no">156.80 ms</td></tr>
+            </table>
+            <p style="font-size:0.82rem;color:var(--text-muted);margin-top:0.5rem;">Same algorithm, same hash function, same probing strategy. The 1.35× win is attributable to the region allocator eliminating malloc fragmentation and lock contention, not to algorithmic advantage.</p>
+        </div>
+
+        <!-- Limitations -->
+        <h2>Known Limitations &amp; What We Cannot Claim</h2>
+        <ul style="line-height:2; margin-left:1.2rem;">
+            <li>Results are from one hardware platform. We encourage reproduction on diverse hardware.</li>
+            <li>Multi-threaded scaling has not been measured (B15 open).</li>
+            <li>Cache miss and branch miss profiles are not yet published (B11, B12 open).</li>
+            <li>No independent third-party has reproduced these results yet (A1 open). We actively welcome this.</li>
+            <li>The 17.2× random-allocation speedup is a best-case scenario for region memory (non-linear access pattern specifically chosen to stress allocator latency). It does not represent typical application speedup.</li>
+            <li>N-body (12.36 ms vs C 11.76 ms) and JSON (24.25 ms vs simdjson 12.40 ms) show Nyx is <em>not</em> fastest in compute-bound workloads — we report these honestly because a language that wins everything is unbelievable.</li>
+        </ul>
+    </main>
+    <script src="navigation.js"></script>
+</body>
+</html>

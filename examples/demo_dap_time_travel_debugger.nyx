@@ -1,0 +1,54 @@
+import std.io
+import std.tooling.dap
+import std.tooling.profiler
+
+fn main() {
+    println("=================================================================")
+    println("  🐞 NYX DAP DEBUGGER & TIME-TRAVEL MEMORY PROFILER (std.tooling) ")
+    println("=================================================================")
+
+    // 1. Initialize DAP Session
+    let mut sess = dap.create_session("sess_vscode_dap_9182".to_string())
+    let sid = sess.session_id
+    let sstate = sess.state
+    println("✓ DAP Server Initialized: SessionID=" + sid + " State=" + sstate.to_string())
+
+    // 2. Set Verified Breakpoints
+    let bp1 = dap.set_breakpoint(&mut sess, "src/main.nyx".to_string(), 42)
+    let bp2 = dap.set_breakpoint(&mut sess, "src/engine.nyx".to_string(), 128)
+    println("✓ Breakpoint #1 Set: File=" + bp1.source_file + " Line=" + bp1.line.to_string() + " Verified=" + bp1.verified.to_string())
+    println("✓ Breakpoint #2 Set: File=" + bp2.source_file + " Line=" + bp2.line.to_string() + " Verified=" + bp2.verified.to_string())
+
+    // 3. Step Execution & Inspect Stack Variables
+    dap.step_next(&mut sess, 43, "process_geospatial_telemetry".to_string())
+    let cline = sess.current_line
+    let cfn = sess.current_function
+    println("✓ Stepped to Line " + cline.to_string() + " in Function @" + cfn)
+
+    let v1 = dap.create_variable("sensor_altitude".to_string(), "12450.5".to_string(), "f64".to_string())
+    let v2 = dap.create_variable("quaternion_rot".to_string(), "[0.0, 0.707, 0.0, 0.707]".to_string(), "Vec<f64>".to_string())
+    println("✓ Inspected Variable: " + v1.name + " = " + v1.value + " (" + v1.type_name + ")")
+    println("✓ Inspected Variable: " + v2.name + " = " + v2.value + " (" + v2.type_name + ")")
+
+    // 4. Time-Travel Memory Profiling
+    let mut prof = profiler.init_profiler()
+    profiler.record_allocation(&mut prof, 1, 1048576, "region_r0_matrix_buffer".to_string())
+    profiler.record_allocation(&mut prof, 2, 2097152, "region_r1_lidar_pointcloud".to_string())
+    let tot = prof.total_allocated_bytes
+    let peak = prof.peak_memory_bytes
+    println("✓ Memory Events Recorded: TotalAlloc=" + tot.to_string() + " Bytes | Peak=" + peak.to_string() + " Bytes")
+
+    // 5. Time-Travel Timeline Scrubbing
+    let snapshot = profiler.scrub_timeline(&prof, 1500000)
+    let ts = snapshot.timestamp_us
+    let foot = snapshot.memory_footprint_bytes
+    println("✓ Time-Travel Timeline Scrubbed to t=" + ts.to_string() + "us: ActiveFootprint=" + foot.to_string() + " Bytes")
+
+    // 6. Chrome Tracing JSON Export
+    let trace_json = profiler.export_trace_json(&prof)
+    println("✓ Perfetto/Chrome Tracing JSON Export Generated: " + trace_json)
+
+    println("=================================================================")
+    println("  ✓ DAP ENGINE & TIME-TRAVEL MEMORY PROFILER COMPLETE - ALL OK    ")
+    println("=================================================================")
+}

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Tutorial — Nyx Docs</title><link rel="stylesheet" href="../style.css"></head>
+<body><button id="mobile-toggle" class="mobile-toggle">&#9776;</button><nav id="sidebar"></nav>
+<main><h1>Getting Started Tutorial</h1>
+<p>Build your first Nyx application step by step.</p>
+<h2>Step 1: Project Initialization</h2>
+<pre><code>nyx init my-first-app
+cd my-first-app</code></pre>
+<h2>Step 2: A Web Server</h2>
+<pre><code>import std.http
+
+fn main() {
+    let router = http.new_router()
+    router.route(http.GET, "/", |req| {
+        http.Response{ status: 200, body: http.Body.Text("Hello!") }
+    })
+    http.serve(":8080", router.handler()).unwrap()
+}</code></pre>
+<h2>Step 3: Build for Different Targets</h2>
+<pre><code>nyx build              # native desktop binary
+nyx build --target wasm  # web browser
+nyx build --target ios   # iPhone app</code></pre>
+<p><a href="../tutorial/building-a-web-app.html">Next: Building a Web App &rarr;</a></p></main>
+<script src="../navigation.js"></script>    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body></html>

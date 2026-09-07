@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Standard & Domain Library — Nyx Docs</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        .tier-panel { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; }
+        .tier-panel.tier1 { border-left: 4px solid #38bdf8; }
+        .tier-panel.tier2 { border-left: 4px solid #10b981; }
+        .tag-badge { background: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-family: monospace; }
+        .tag-tier2 { background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-family: monospace; }
+        table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.95rem; }
+        th, td { padding: 0.75rem 1rem; border: 1px solid var(--border); text-align: left; }
+        th { background: rgba(0,0,0,0.2); color: var(--accent-light); }
+        .nypm-cmd { background: #0f172a; color: #34d399; padding: 0.2rem 0.5rem; border-radius: 4px; font-family: monospace; font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <h1>Nyx 2-Tier Standard Library Architecture</h1>
+        <p style="color:var(--text-muted)">A modular, high-velocity standard library combining zero-dependency embedded core primitives with independently versioned NYPM domain packages.</p>
+
+        <!-- Tier 1 -->
+        <div class="tier-panel tier1">
+            <h2 style="margin-top:0; color:#38bdf8;">📦 Tier 1: Core Standard Library (<code>std.core</code>)</h2>
+            <p>Directly embedded in the compiler binary for zero-dependency baseline needs. Guaranteed to be ultra-hardened, self-contained, and available out of the box:</p>
+
+            <table>
+                <thead>
+                    <tr><th>Module</th><th>Namespace</th><th>Description</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>std.core.arena</code></td><td><span class="tag-badge">std.core.arena</span></td><td>$O(1)$ stack bump region arenas and bulk deallocation.</td></tr>
+                    <tr><td><code>std.core.arc</code></td><td><span class="tag-badge">std.core.arc</span></td><td>Thread-safe atomic and local reference counting pointers.</td></tr>
+                    <tr><td><code>std.core.strict</code></td><td><span class="tag-badge">std.core.strict</span></td><td><code>@strict</code>, <code>@must_region</code>, and <code>--warn-escape</code> diagnostics.</td></tr>
+                    <tr><td><code>std.core.io</code></td><td><span class="tag-badge">std.core.io</span></td><td>Standard input/output, formatted console streaming, and descriptors.</td></tr>
+                    <tr><td><code>std.core.async</code></td><td><span class="tag-badge">std.core.async</span></td><td>Cooperative event loop, lightweight futures, and thread channels.</td></tr>
+                    <tr><td><code>std.core.crypto</code></td><td><span class="tag-badge">std.core.crypto</span></td><td>Ed25519 signatures, ChaCha20-Poly1305 AEAD, and BLAKE3 hashing.</td></tr>
+                    <tr><td><code>std.core.json</code></td><td><span class="tag-badge">std.core.json</span></td><td>Zero-alloc SIMD-accelerated JSON parser (1.48 GB/s).</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Tier 2 -->
+        <div class="tier-panel tier2">
+            <h2 style="margin-top:0; color:#10b981;">🌐 Tier 2: Modular Domain Packages (<code>@nyx/*</code> via NYPM)</h2>
+            <p>Specialized enterprise and scientific domain packages modularized to prevent compiler bloat and versioned independently via <code>nypm</code>:</p>
+
+            <table>
+                <thead>
+                    <tr><th>Package Name</th><th>Install Command</th><th>Domain Capabilities</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong><code>@nyx/ui</code></strong></td>
+                        <td><code class="nypm-cmd">nypm add @nyx/ui</code></td>
+                        <td>Material Design 3 tokens, Skia/Vulkan 120 FPS hardware-accelerated canvas.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><code>@nyx/dsp</code></strong></td>
+                        <td><code class="nypm-cmd">nypm add @nyx/dsp</code></td>
+                        <td>Radix-2 Cooley-Tukey FFT audio analysis, real-time waveform filters (&lt; 0.24 ms).</td>
+                    </tr>
+                    <tr>
+                        <td><strong><code>@nyx/geo</code></strong></td>
+                        <td><code class="nypm-cmd">nypm add @nyx/geo</code></td>
+                        <td>Enterprise GIS raster/vector engine, R-Tree spatial indexing, Uber H3 hex grids.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><code>@nyx/tensor</code></strong></td>
+                        <td><code class="nypm-cmd">nypm add @nyx/tensor</code></td>
+                        <td>Hardware NPU/GPU quantized tensor kernels, INT8/FP16 matrix multiplication.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><code>@nyx/med</code></strong></td>
+                        <td><code class="nypm-cmd">nypm add @nyx/med</code></td>
+                        <td>Pan-Tompkins QRS cardiology, HIPAA DICOM de-identification, FHIR, and genomics.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><code>@nyx/robotics</code></strong></td>
+                        <td><code class="nypm-cmd">nypm add @nyx/robotics</code></td>
+                        <td>Forward/inverse kinematics solvers, trajectory planning, real-time actuation.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+    <script src="../navigation.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

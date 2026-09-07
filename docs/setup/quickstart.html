@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Start — Nyx Material Design 3 GUI Studio</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <h1>Quick Start: 10-Minute GUI App</h1>
+
+        <p>Build and run your first 120 FPS cross-platform Material Design 3 application with Nyx in under 10 minutes.</p>
+
+        <h2>1. Create a Project</h2>
+<pre><code>nyx init my_gui_app
+cd my_gui_app</code></pre>
+
+        <p>This initializes a standard Nyx workspace:</p>
+<pre><code>my_gui_app/
+  nyx.pkg          # Package manifest &amp; target dependencies
+  src/
+    main.nyx       # Material 3 entry point
+  tests/           # Integration tests</code></pre>
+
+        <h2>2. Write a Material 3 UI App</h2>
+        <p>Open <code>src/main.nyx</code> and paste the following production GUI code:</p>
+
+<pre><code>module main
+
+import std.ui.*
+
+pub fn main() {
+    // 1. Initialize ThemeProvider (Light / Dark mode runtime toggle)
+    let mut theme = ThemeProvider.new(true)
+
+    // 2. Initialize 120 FPS Hardware Window Context
+    let win = Window.new(1280, 800, "Nyx MD3 Interactive Studio")
+
+    while !win.should_close() {
+        win.poll_events()
+        let ctx = win.canvas()
+
+        // Layout Structure using P0 Widgets (Padding, SizedBox, Center, Expanded)
+        let pad = Padding::all(24.0)
+        let box = SizedBox.new(320.0, 180.0)
+
+        ctx.clear(theme.background_color)
+        ctx.draw_rounded_rect(30.0, 40.0, box.width, box.height, 16.0, theme.surface_color)
+        ctx.draw_text("Nyx Material 3 Studio", 50.0, 80.0, 20.0, theme.text_color)
+
+        // Visual Debug Overlay
+        debugDumpApp()
+
+        win.swap_buffers()
+    }
+}</code></pre>
+
+        <h2>3. Run Natively or Target Web / Mobile</h2>
+<pre><code># 1. Compile &amp; Run Native Desktop GUI (120 FPS)
+nyx run
+
+# 2. Target WebAssembly HTML5 Canvas
+nyx build --wasm
+# Open http://localhost/nyx/web-runtime/index.html
+
+# 3. Target Mobile APK / XCFramework
+nyx build --target=android
+nyx build --target=ios</code></pre>
+
+        <h2>Live Interactive Demo</h2>
+        <p>Test the interactive 120 FPS Canvas Studio in your browser right now:</p>
+        <p><a href="../../web-runtime/index.html" class="btn btn-primary" target="_blank">Launch WebAssembly Studio Demo &rarr;</a></p>
+
+    </main>
+    <script src="../navigation.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

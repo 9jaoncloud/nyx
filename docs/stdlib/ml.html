@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>std.ml — AI & Tensor ML Engine — Nyx Docs</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <h1>std.ml — Universal AI Model Hub & SIMD Tensor Engine</h1>
+        <p class="lead">Universal client connectors for frontier AI models (OpenAI GPT-4o, Anthropic Claude 3.5, Google Gemini 2.0, DeepSeek R1, Ollama) and high-performance AVX2/SIMD tensor math.</p>
+
+        <h2>1. Universal AI Model Client</h2>
+        <p>Nyx provides a unified interface across all major LLM providers with SSE streaming and tool calling:</p>
+<pre><code>import std.ml.ai_model
+import std.io
+
+pub fn main() {
+    // 1. Initialize frontier model clients
+    let gpt4 = ai_model.create_openai_client("gpt-4o", "sk-proj-...")
+    let claude = ai_model.create_anthropic_client("claude-3-5-sonnet-20241022", "sk-ant-...")
+    let gemini = ai_model.create_gemini_client("gemini-2.0-flash", "AIzaSy...")
+    let deepseek = ai_model.create_deepseek_client("deepseek-reasoner", "sk-...")
+    let local_llm = ai_model.create_ollama_client("http://localhost:11434", "llama3.3:70b")
+
+    // 2. Multi-turn chat completion
+    let mut messages = Vec.new()
+    messages.push(ai_model.ChatMessage {
+        role: "system".to_string(),
+        content: "You are an expert autonomous systems engineer.".to_string(),
+    })
+    messages.push(ai_model.ChatMessage {
+        role: "user".to_string(),
+        content: "Analyze geospatial risk for sensor cluster alpha.".to_string(),
+    })
+
+    let response = ai_model.chat_complete(gpt4, messages, 0.7)
+    std.io.println("AI Assistant Reply: " + response)
+}</code></pre>
+
+        <h2>2. High-Performance AVX2 SIMD Tensor Operations</h2>
+        <p>Direct C runtime bindings (<code>rt_ml.h</code>) deliver cache-blocked matrix multiplication, RMSNorm, and SwiGLU activations:</p>
+<pre><code>import std.ml
+import std.vec
+
+pub fn main() {
+    // Cache-blocked AVX2 GEMM matrix multiplication
+    let a = [1.0, 2.0, 3.0, 4.0]
+    let b = [5.0, 6.0, 7.0, 8.0]
+    let c = ml.simd_gemm(a, b, 2, 2, 2)
+
+    // Vector Cosine Similarity Search for RAG Embeddings
+    let query_embedding = [0.12, 0.88, 0.45, 0.02]
+    let doc_embedding   = [0.12, 0.88, 0.45, 0.02]
+    let score = ml.cosine_similarity(query_embedding, doc_embedding)
+    std.io.println("Similarity Score: " + score.to_string()) // 1.000000
+}</code></pre>
+
+        <h2>3. Function Reference</h2>
+        <table>
+            <tr><th>Function</th><th>Signature</th><th>Description</th></tr>
+            <tr><td><code>create_openai_client</code></td><td><code>(model: String, key: String) -> AiClient</code></td><td>Initializes OpenAI client with Bearer token authentication</td></tr>
+            <tr><td><code>create_anthropic_client</code></td><td><code>(model: String, key: String) -> AiClient</code></td><td>Initializes Anthropic client with x-api-key headers</td></tr>
+            <tr><td><code>create_gemini_client</code></td><td><code>(model: String, key: String) -> AiClient</code></td><td>Initializes Google Gemini client</td></tr>
+            <tr><td><code>create_deepseek_client</code></td><td><code>(model: String, key: String) -> AiClient</code></td><td>Initializes DeepSeek Reasoner/Chat client</td></tr>
+            <tr><td><code>create_ollama_client</code></td><td><code>(endpoint: String, model: String) -> AiClient</code></td><td>Initializes local Ollama server connector</td></tr>
+            <tr><td><code>chat_complete</code></td><td><code>(client: AiClient, msgs: Vec, temp: f64) -> String</code></td><td>Executes multi-turn inference request</td></tr>
+            <tr><td><code>simd_gemm</code></td><td><code>(a: [f64], b: [f64], m: i32, k: i32, n: i32) -> [f64]</code></td><td>AVX2/NEON hardware accelerated matrix multiplication</td></tr>
+            <tr><td><code>cosine_similarity</code></td><td><code>(a: [f64], b: [f64]) -> f64</code></td><td>Calculates cosine similarity between embedding vectors</td></tr>
+        </table>
+
+        <div class="next-prev-links">
+            <a href="ui.html">&larr; std.ui</a>
+            <a href="robotics.html">std.robotics &rarr;</a>
+        </div>
+    </main>
+    <script src="../navigation.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

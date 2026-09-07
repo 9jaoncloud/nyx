@@ -1,0 +1,201 @@
+import std.ui
+
+fn main() {
+    println("=== Nyx Google Material Design 3 Interactive Studio ===")
+    println("Initializing Material 3 Engine and UI components...")
+
+    let theme = ui.MaterialTheme.dark()
+    let renderer = ui.MaterialRenderer.new(theme)
+
+    let mut window = ui.Window.new(1024, 720, "Nyx Material 3 Interactive Studio".to_string())
+    let mut canvas = window.canvas()
+
+    // Clear background
+    canvas.fill(&theme.background)
+
+    // 1. Top App Bar
+    let app_bar = ui.TopAppBarWidget {
+        title: "Material 3 Interactive Component Studio".to_string(),
+        subtitle: "Google MD3 Standard Design Tokens & Controls".to_string(),
+        width: 1024.0,
+    }
+    renderer.draw_top_app_bar(&mut canvas, &app_bar, 0.0, 0.0)
+
+    // 2. Left Form Card (Interactive Controls)
+    let left_card = ui.CardWidget {
+        title: "System Configuration Controls".to_string(),
+        subtitle: "Interactive switches, sliders, and form components".to_string(),
+        variant: ui.CardVariant.Elevated,
+        width: 480.0,
+        height: 600.0,
+        elevation: 2.0,
+    }
+    renderer.draw_card(&mut canvas, &left_card, 24.0, 88.0)
+
+    // Text Field
+    let tf = ui.TextFieldWidget {
+        text: "node-us-east-cluster-04".to_string(),
+        label: "Target Cluster Host".to_string(),
+        is_focused: true,
+        width: 432.0,
+        height: 56.0,
+    }
+    renderer.draw_text_field(&mut canvas, &tf, 48.0, 160.0)
+
+    // Switches
+    let sw1 = ui.SwitchWidget { is_on: true, width: 52.0, height: 32.0 }
+    renderer.draw_switch(&mut canvas, &sw1, 48.0, 240.0)
+    let sw1_txt = ui.TextWidget {
+        text: "Autonomous Dynamic Load Balancing".to_string(),
+        font_size: 14.0,
+        color: theme.on_surface,
+    }
+    renderer.draw_text(&mut canvas, &sw1_txt, 112.0, 246.0)
+
+    let sw2 = ui.SwitchWidget { is_on: false, width: 52.0, height: 32.0 }
+    renderer.draw_switch(&mut canvas, &sw2, 48.0, 290.0)
+    let sw2_txt = ui.TextWidget {
+        text: "Low-latency Fast-Path Profiler".to_string(),
+        font_size: 14.0,
+        color: theme.on_surface,
+    }
+    renderer.draw_text(&mut canvas, &sw2_txt, 112.0, 296.0)
+
+    // Checkboxes
+    let cb1 = ui.CheckboxWidget {
+        is_checked: true,
+        label: "Enable SIMD Vectorized Parsing".to_string(),
+        size: 20.0,
+    }
+    renderer.draw_checkbox(&mut canvas, &cb1, 48.0, 345.0)
+
+    let cb2 = ui.CheckboxWidget {
+        is_checked: true,
+        label: "Zero-copy Region Memory Reclamation".to_string(),
+        size: 20.0,
+    }
+    renderer.draw_checkbox(&mut canvas, &cb2, 48.0, 385.0)
+
+    let cb3 = ui.CheckboxWidget {
+        is_checked: false,
+        label: "Verbose Hardware Interrupt Logging".to_string(),
+        size: 20.0,
+    }
+    renderer.draw_checkbox(&mut canvas, &cb3, 48.0, 425.0)
+
+    // Sliders
+    let sl1_label = ui.TextWidget {
+        text: "Memory Quota Pressure: 82%".to_string(),
+        font_size: 14.0,
+        color: theme.on_surface,
+    }
+    renderer.draw_text(&mut canvas, &sl1_label, 48.0, 470.0)
+    let sl1 = ui.SliderWidget { value: 0.82, width: 432.0, height: 16.0 }
+    renderer.draw_slider(&mut canvas, &sl1, 48.0, 495.0)
+
+    let sl2_label = ui.TextWidget {
+        text: "Worker Thread Affinity Rate: 45%".to_string(),
+        font_size: 14.0,
+        color: theme.on_surface,
+    }
+    renderer.draw_text(&mut canvas, &sl2_label, 48.0, 530.0)
+    let sl2 = ui.SliderWidget { value: 0.45, width: 432.0, height: 16.0 }
+    renderer.draw_slider(&mut canvas, &sl2, 48.0, 555.0)
+
+    // Action Buttons
+    let btn_save = ui.ButtonWidget {
+        label: "Save Settings".to_string(),
+        variant: ui.ButtonVariant.Filled,
+        width: 160.0,
+        height: 40.0,
+    }
+    renderer.draw_button(&mut canvas, &btn_save, 48.0, 615.0)
+
+    let btn_discard = ui.ButtonWidget {
+        label: "Discard Changes".to_string(),
+        variant: ui.ButtonVariant.Outlined,
+        width: 160.0,
+        height: 40.0,
+    }
+    renderer.draw_button(&mut canvas, &btn_discard, 220.0, 615.0)
+
+    // 3. Right Status & Telemetry Card
+    let right_card = ui.CardWidget {
+        title: "Live Runtime Telemetry".to_string(),
+        subtitle: "Real-time thread & buffer metrics".to_string(),
+        variant: ui.CardVariant.Outlined,
+        width: 480.0,
+        height: 600.0,
+        elevation: 0.0,
+    }
+    renderer.draw_card(&mut canvas, &right_card, 520.0, 88.0)
+
+    // Badges on Right Card
+    let badge_opt = ui.BadgeWidget {
+        text: "ACTIVE 240Hz".to_string(),
+        bg_color: ui.Color.hex(0xFF1B5E20),
+        text_color: ui.Color.hex(0xFFC8E6C9),
+    }
+    renderer.draw_badge(&mut canvas, &badge_opt, 840.0, 100.0)
+
+    // Progress Bar 1
+    let pb1_label = ui.TextWidget {
+        text: "Heap Buffer Utilization (68%)".to_string(),
+        font_size: 14.0,
+        color: theme.on_surface,
+    }
+    renderer.draw_text(&mut canvas, &pb1_label, 544.0, 160.0)
+    let pb1 = ui.ProgressBarWidget { progress: 0.68, width: 432.0, height: 8.0 }
+    renderer.draw_progress_bar(&mut canvas, &pb1, 544.0, 185.0)
+
+    // Progress Bar 2
+    let pb2_label = ui.TextWidget {
+        text: "Async Nursery Task Saturation (91%)".to_string(),
+        font_size: 14.0,
+        color: theme.on_surface,
+    }
+    renderer.draw_text(&mut canvas, &pb2_label, 544.0, 220.0)
+    let pb2 = ui.ProgressBarWidget { progress: 0.91, width: 432.0, height: 8.0 }
+    renderer.draw_progress_bar(&mut canvas, &pb2, 544.0, 245.0)
+
+    // Progress Bar 3
+    let pb3_label = ui.TextWidget {
+        text: "SIMD Pipeline Vector Bandwidth (34%)".to_string(),
+        font_size: 14.0,
+        color: theme.on_surface,
+    }
+    renderer.draw_text(&mut canvas, &pb3_label, 544.0, 280.0)
+    let pb3 = ui.ProgressBarWidget { progress: 0.34, width: 432.0, height: 8.0 }
+    renderer.draw_progress_bar(&mut canvas, &pb3, 544.0, 305.0)
+
+    // Additional Component Card (Elevated Info Box)
+    let sub_card = ui.CardWidget {
+        title: "Autonomous Nursery Worker".to_string(),
+        subtitle: "32 nursery threads responding to lock-free channels".to_string(),
+        variant: ui.CardVariant.Filled,
+        width: 432.0,
+        height: 140.0,
+        elevation: 0.0,
+    }
+    renderer.draw_card(&mut canvas, &sub_card, 544.0, 360.0)
+
+    let btn_action = ui.ButtonWidget {
+        label: "Inspect Thread Dumps".to_string(),
+        variant: ui.ButtonVariant.Tonal,
+        width: 200.0,
+        height: 38.0,
+    }
+    renderer.draw_button(&mut canvas, &btn_action, 560.0, 440.0)
+
+    // Input state verification
+    let mx = window.mouse_x()
+    let my = window.mouse_y()
+    let mdown = window.is_mouse_down()
+    println("Window input state initialized. Mouse: (x, y), is_down")
+
+    // Swap buffer to screen
+    window.swap_buffers()
+    window.poll_events()
+
+    println("Material 3 Interactive Studio rendered successfully with all form widgets.")
+}

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Types & Data — Nyx Documentation</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        .code-panel { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 1.25rem; margin: 1.25rem 0; overflow-x: auto; }
+        .strict-box { background: rgba(16, 185, 129, 0.08); border-left: 4px solid #10b981; border-radius: 0 8px 8px 0; padding: 1.25rem; margin: 1.5rem 0; }
+        table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; }
+        th, td { padding: 0.75rem 1rem; border: 1px solid var(--border); text-align: left; }
+        th { background: var(--bg-surface); color: var(--accent-light); }
+    </style>
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <h1>Types, Data Structures &amp; Gradual Soundness</h1>
+        <p style="color:var(--text-muted)">Statically unboxed machine types, algebraic sum types, and zero-cost boundary gradual typing.</p>
+
+        <h2>1. Primitive Types</h2>
+        <table>
+            <tr><th>Type</th><th>Size</th><th>Description</th><th>Example</th></tr>
+            <tr><td><code>int</code> / <code>i64</code></td><td>64-bit</td><td>Signed integer (standard register size)</td><td><code>42</code></td></tr>
+            <tr><td><code>f64</code> / <code>float</code></td><td>64-bit</td><td>IEEE-754 double precision float</td><td><code>3.14159</code></td></tr>
+            <tr><td><code>f32</code></td><td>32-bit</td><td>Single precision floating point (GPU/SIMD)</td><td><code>1.0f</code></td></tr>
+            <tr><td><code>bool</code></td><td>8-bit</td><td>Boolean true/false</td><td><code>true</code></td></tr>
+            <tr><td><code>string</code></td><td>16-byte</td><td>UTF-8 pointer + length string slice</td><td><code>"hello, world"</code></td></tr>
+            <tr><td><code>char</code></td><td>32-bit</td><td>Unicode scalar value</td><td><code>'A'</code></td></tr>
+        </table>
+
+        <h2>2. Compound Types &amp; Structs</h2>
+<pre class="code-panel"><code>struct Vector3 {
+    x: f32,
+    y: f32,
+    z: f32,
+}
+
+impl Vector3 {
+    pub fn dot(self: &Vector3, other: &Vector3) -> f32 {
+        (self.x * other.x) + (self.y * other.y) + (self.z * other.z)
+    }
+}</code></pre>
+
+        <h2>3. Algebraic Enums &amp; Pattern Matching</h2>
+<pre class="code-panel"><code>enum NetworkPacket {
+    Handshake { version: int },
+    Data { payload: string, seq: int },
+    Disconnect,
+}
+
+fn handle_packet(pkt: NetworkPacket) {
+    match pkt {
+        NetworkPacket.Handshake{ version } => println("Connecting with protocol v" + string(version)),
+        NetworkPacket.Data{ payload, seq } => println("Packet #" + string(seq) + ": " + payload),
+        NetworkPacket.Disconnect => println("Disconnected cleanly."),
+    }
+}</code></pre>
+
+        <h2>4. Zero-Cost Gradual Typing &amp; Hard Boundaries (<code>@strict</code>)</h2>
+        <p>Nyx combines the developer velocity of dynamic prototyping with the raw execution speed of bare-metal C via <strong>sound gradual typing</strong>:</p>
+
+        <div class="strict-box">
+            <strong>⚡ The Zero-Cost Hard-Boundary Guarantee:</strong>
+            <p>Unlike languages that incur boxing/unboxing overhead on every type transition, Nyx strictly isolates dynamic types. When a function is annotated with <code>@strict</code> or <code>@unboxed</code>, the compiler guarantees:</p>
+            <ul>
+                <li><strong>Zero Boxing Overhead:</strong> Types compile to raw register unboxed values with no heap wrapper.</li>
+                <li><strong>SIMD Loop Vectorization:</strong> Inner loops compile directly to AVX2/NEON instructions.</li>
+                <li><strong>Static Contract Verification:</strong> Dynamic inputs crossing into a <code>@strict</code> boundary are checked once at the boundary gate with zero subsequent runtime checks.</li>
+            </ul>
+        </div>
+
+<pre class="code-panel"><code>import std.core.*;
+
+// High-level dynamic handler (e.g. rapid JSON ingestion)
+fn handle_request(raw_payload: any) {
+    // Dynamic boundary check happens ONCE here:
+    let tensor_data: [f32; 1024] = raw_payload.read_floats();
+    
+    // Dispatches to 100% unboxed, pure SIMD kernel:
+    compute_heavy_simd(&tensor_data);
+}
+
+@strict
+fn compute_heavy_simd(data: &[f32; 1024]) -> f32 {
+    let mut sum: f32 = 0.0;
+    for i in 0..1024 {
+        sum = sum + data[i];  // Compiles to pure AVX2 unboxed machine code
+    }
+    sum
+}</code></pre>
+    </main>
+    <script src="../navigation.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

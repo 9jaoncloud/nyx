@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLVM 18 Whole-Program LTO & PGO — Nyx Documentation</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <h1>LLVM 18 Whole-Program LTO & Profile-Guided Optimization (PGO)</h1>
+        <p class="lead">How Nyx achieves maximum native throughput through whole-program Link-Time Optimization (LTO), auto-vectorization, and two-stage Profile-Guided Optimization (PGO).</p>
+
+        <h2>1. Whole-Program Link-Time Optimization (LTO)</h2>
+        <p>In traditional separate compilation, compilers optimize each source file in isolation. Cross-module calls and region allocations cannot be inlined or elided. Nyx's LLVM 18 backend emits modular bitcode and executes whole-program analysis at link time:</p>
+
+        <pre><code>Module A (.nyx) ──┐
+Module B (.nyx) ──┼──➔ LLVM Bitcode (.bc) ──➔ LTO Pass Pipeline ──➔ Super-Optimized Binary
+Stdlib (.nyx)   ──┘   (Cross-Module Inlining & Escape Pruning)</code></pre>
+
+        <h3>LTO Optimizations:</h3>
+        <ul>
+            <li><strong>Cross-Module Region Inlining:</strong> If a function in module $B$ returns an object allocated in a local region to module $A$, the LTO pass detects the caller's lifespan and converts heap allocations directly into stack bump allocations.</li>
+            <li><strong>Whole-Program Dead Code Elimination (DCE):</strong> Eliminates unused standard library functions across the entire dependency graph, producing ultra-compact native binaries.</li>
+        </ul>
+
+        <h2>2. Auto-Vectorization & Target SIMD Dispatch</h2>
+        <p>The backend automatically vectorizes tight loops and tensor operations using the LLVM Loop and SLP Vectorizers:</p>
+<pre><code>import std.tooling.llvm
+
+let a: [f64] = [1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5]
+let b: [f64] = [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
+
+// Lowered to 4-wide AVX2 256-bit SIMD instructions
+let dot = llvm.simd_vector_dot(a, b, 8)</code></pre>
+
+        <h2>3. Profile-Guided Optimization (PGO)</h2>
+        <p>PGO bridges compile-time optimizations with actual production runtime behavior:</p>
+
+        <ol>
+            <li><strong>Stage 1 (Instrumentation):</strong> Compile binary with lightweight execution counters:
+                <pre><code>nyxc src/main.nyx --pgo-generate -o bin/app_instrumented.exe</code></pre>
+            </li>
+            <li><strong>Stage 2 (Runtime Profiling):</strong> Run typical production workloads to generate <code>default.profdata</code>:
+                <pre><code>./bin/app_instrumented.exe --benchmark-workload</code></pre>
+            </li>
+            <li><strong>Stage 3 (Optimized Recompilation):</strong> Feed profile data back to LLVM to reorder basic blocks, bias branches, and optimize instruction cache (I-Cache) layout:
+                <pre><code>nyxc src/main.nyx --pgo-use=default.profdata -O3 -o bin/app_optimized.exe</code></pre>
+            </li>
+        </ol>
+
+        <div class="next-prev-links">
+            <a href="runtime-engine.html">&larr; Runtime Engine</a>
+            <a href="dap-profiler.html">DAP & Time-Travel Profiler &rarr;</a>
+        </div>
+    </main>
+    <script src="../navigation.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

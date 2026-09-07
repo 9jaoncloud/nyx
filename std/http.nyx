@@ -1,0 +1,659 @@
+module http
+
+import prelude.*
+
+extern "C" {
+    fn nyx_tcp_connect(host: *const u8, port: i32) -> i32
+    fn nyx_tcp_send(fd: i32, data: *const u8, len: u64) -> i64
+    fn nyx_tcp_recv(fd: i32, buf: *mut u8, len: u64) -> i64
+    fn nyx_tcp_close(fd: i32)
+    fn nyx_tcp_listen(host: *const u8, port: i32) -> i32
+    fn nyx_tcp_accept(listen_fd: i32) -> i32
+    fn nyx_http_parse_status(line: String) -> i32
+    fn nyx_sleep_ms(ms: i32)
+}
+
+pub enum Method {
+    GET,
+    POST,
+    PUT,
+    DELETE,
+    HEAD,
+    PATCH,
+    OPTIONS,
+}
+
+impl Method {
+    pub fn to_string(self: &Method) -> String {
+        match self {
+            Method.GET => "GET",
+            Method.POST => "POST",
+            Method.PUT => "PUT",
+            Method.DELETE => "DELETE",
+            Method.HEAD => "HEAD",
+            Method.PATCH => "PATCH",
+            Method.OPTIONS => "OPTIONS",
+        }
+    }
+}
+
+pub struct Request {
+    pub method: Method,
+    pub url: String,
+    pub headers: Map<String, String>,
+    pub body: Option<Body>,
+    pub params: Map<String, String>,
+    pub query_params: Map<String, String>,
+}
+
+impl Request {
+    pub fn param(&self, name: String) -> String {
+        match self.params.get(name) {
+            Option.Some(val) => val.clone(),
+            Option.None => "".to_string(),
+        }
+    }
+
+    pub fn query(&self, key: String, default_val: String) -> String {
+        match self.query_params.get(key) {
+            Option.Some(val) => val.clone(),
+            Option.None => default_val,
+        }
+    }
+
+    pub fn header(&self, name: String) -> Option<String> {
+        self.headers.get(name)
+    }
+
+    pub fn bearer_token(&self) -> Option<String> {
+        match self.headers.get("Authorization".to_string()) {
+            Option.Some(auth) => {
+                if auth.starts_with("Bearer ") {
+                    Option.Some(auth.slice(7, auth.len()))
+                } else {
+                    Option.None
+                }
+            }
+            Option.None => Option.None,
+        }
+    }
+}
+
+pub struct Response {
+    pub status: Int,
+    pub headers: Map<String, String>,
+    pub body: Body,
+}
+
+pub enum Body {
+    Empty,
+    Text(String),
+    Json(String),
+    Bytes(Vec<u8>),
+}
+
+impl Body {
+    pub fn to_string(self: &Body) -> String {
+        match self {
+            Body.Empty => "",
+            Body.Text(s) => s.clone(),
+            Body.Json(s) => s.clone(),
+            Body.Bytes(_) => "<binary>",
+        }
+    }
+
+    pub fn is_empty(self: &Body) -> Bool {
+        match self {
+            Body.Empty => true,
+            _ => false,
+        }
+    }
+}
+
+pub enum HttpError {
+    Connection(String),
+    Timeout,
+    StatusCode(Int, String),
+    InvalidUrl(String),
+    IoError(String),
+}
+
+impl HttpError {
+    pub fn to_string(self: &HttpError) -> String {
+        match self {
+            HttpError.Connection(msg) => "Connection error: " + msg.clone(),
+            HttpError.Timeout => "Request timed out",
+            HttpError.StatusCode(code, msg) => "HTTP " + code.to_string() + ": " + msg.clone(),
+            HttpError.InvalidUrl(url) => "Invalid URL: " + url.clone(),
+            HttpError.IoError(msg) => "I/O error: " + msg.clone(),
+        }
+    }
+}
+
+pub struct UrlParts {
+    pub host: String,
+    pub port: i32,
+    pub path: String,
+    pub use_tls: Bool,
+}
+
+pub fn parse_url(url: String) -> Result<UrlParts, HttpError> {
+    let mut host = String.new()
+    let mut path = "/"
+    let mut port = 80
+    let mut use_tls = false
+
+    let rest = if url.starts_with("https://") {
+        use_tls = true
+        port = 443
+        url.slice(8, url.len())
+    } else if url.starts_with("http://") {
+        url.slice(7, url.len())
+    } else {
+        url.clone()
+    }
+
+    let slash_pos = rest.find("/")
+    if slash_pos >= 0 {
+        host = rest.slice(0, slash_pos as u64)
+        path = rest.slice(slash_pos as u64, rest.len())
+    } else {
+        host = rest.clone()
+    }
+
+    let colon_pos = host.find(":")
+    if colon_pos >= 0 {
+        let port_str = host.slice(colon_pos as u64 + 1, host.len())
+        port = port_str.parse_int().unwrap_or(port)
+        host = host.slice(0, colon_pos as u64)
+    }
+
+    Result.Ok(UrlParts { host, port, path, use_tls })
+}
+
+pub struct Client {
+    timeout_ms: i32,
+}
+
+pub fn new_client() -> Client {
+    Client { timeout_ms: 30000 }
+}
+
+pub fn new_client_with_timeout(timeout_ms: i32) -> Client {
+    Client { timeout_ms }
+}
+
+impl Client {
+    pub fn get(self: &Client, url: String) -> Result<Response, HttpError> {
+        let req = Request {
+            method: Method.GET,
+            url: url.clone(),
+            headers: Map.new(),
+            body: Option.None,
+        }
+        self.send(req)
+    }
+
+    pub fn get_with_headers(self: &Client, url: String, headers: Map<String, String>) -> Result<Response, HttpError> {
+        let req = Request {
+            method: Method.GET,
+            url,
+            headers,
+            body: Option.None,
+        }
+        self.send(req)
+    }
+
+    pub fn post(self: &Client, url: String, body: String) -> Result<Response, HttpError> {
+        let mut headers = Map.new()
+        headers.insert("Content-Type".to_string(), "application/json".to_string())
+        let req = Request {
+            method: Method.POST,
+            url,
+            headers,
+            body: Option.Some(Body.Text(body)),
+        }
+        self.send(req)
+    }
+
+    pub fn post_json(self: &Client, url: String, json: String) -> Result<Response, HttpError> {
+        let mut headers = Map.new()
+        headers.insert("Content-Type".to_string(), "application/json".to_string())
+        let req = Request {
+            method: Method.POST,
+            url,
+            headers,
+            body: Option.Some(Body.Json(json)),
+        }
+        self.send(req)
+    }
+
+    pub fn put(self: &Client, url: String, body: String) -> Result<Response, HttpError> {
+        let mut headers = Map.new()
+        headers.insert("Content-Type".to_string(), "application/json".to_string())
+        let req = Request {
+            method: Method.PUT,
+            url,
+            headers,
+            body: Option.Some(Body.Text(body)),
+        }
+        self.send(req)
+    }
+
+    pub fn delete(self: &Client, url: String) -> Result<Response, HttpError> {
+        let req = Request {
+            method: Method.DELETE,
+            url,
+            headers: Map.new(),
+            body: Option.None,
+        }
+        self.send(req)
+    }
+
+    pub fn send(self: &Client, req: Request) -> Result<Response, HttpError> {
+        let url_parts = parse_url(req.url.clone())?
+
+        let fd = nyx_tcp_connect(url_parts.host.as_ptr(), url_parts.port)
+        if fd < 0 {
+            return Result.Err(HttpError.Connection("Failed to connect to " + url_parts.host + ":" + url_parts.port.to_string()))
+        }
+
+        let mut req_str = req.method.to_string() + " " + url_parts.path + " HTTP/1.1\r\n"
+        req_str = req_str + "Host: " + url_parts.host + "\r\n"
+        req_str = req_str + "Connection: close\r\n"
+
+        for (key, value) in req.headers.iter() {
+            req_str = req_str + key + ": " + value + "\r\n"
+        }
+
+        match req.body {
+            Option.Some(ref b) => {
+                let body_bytes = match b {
+                    Body.Text(s) => s.as_bytes(),
+                    Body.Json(s) => s.as_bytes(),
+                    Body.Bytes(v) => v.clone(),
+                    Body.Empty => Vec.new(),
+                }
+                req_str = req_str + "Content-Length: " + body_bytes.len().to_string() + "\r\n"
+                req_str = req_str + "\r\n"
+                nyx_tcp_send(fd, req_str.as_ptr(), req_str.len() as u64)
+                if body_bytes.len() > 0 {
+                    nyx_tcp_send(fd, body_bytes.as_ptr(), body_bytes.len() as u64)
+                }
+            }
+            Option.None => {
+                req_str = req_str + "\r\n"
+                nyx_tcp_send(fd, req_str.as_ptr(), req_str.len() as u64)
+            }
+        }
+
+        let mut resp_buf = [0u8; 65536]
+        let total_read = nyx_tcp_recv(fd, &mut resp_buf[0], 65536)
+        nyx_tcp_close(fd)
+
+        if total_read <= 0 {
+            return Result.Err(HttpError.IoError("No response received"))
+        }
+
+        let resp_str = String.from_utf8(resp_buf[0..total_read as u64])
+        parse_http_response(resp_str)
+    }
+}
+
+fn parse_http_response(raw: String) -> Result<Response, HttpError> {
+    let lines = raw.split("\r\n")
+    if lines.len() < 1 {
+        return Result.Err(HttpError.IoError("Empty response"))
+    }
+
+    let status_line = lines[0]
+    let space_pos = status_line.find(" ")
+    if space_pos < 0 {
+        return Result.Err(HttpError.IoError("Invalid status line"))
+    }
+
+    let status_str = status_line.slice(space_pos as u64 + 1, status_line.find_from(" ", space_pos as u64 + 1))
+    let status = status_str.parse_int().unwrap_or(0)
+
+    let mut headers = Map.new()
+    let mut body_start = 0
+    for i in 1..lines.len() {
+        let line = lines[i]
+        if line.len() == 0 {
+            body_start = i + 1
+            break
+        }
+        let colon = line.find(":")
+        if colon >= 0 {
+            let key = line.slice(0, colon as u64)
+            let value = line.slice(colon as u64 + 2, line.len())
+            headers.insert(key, value)
+        }
+    }
+
+    let mut body_str = String.new()
+    for i in body_start..lines.len() {
+        if body_str.len() > 0 { body_str = body_str + "\r\n" }
+        body_str = body_str + lines[i]
+    }
+
+    let body = if body_str.len() > 0 {
+        Body.Text(body_str)
+    } else {
+        Body.Empty
+    }
+
+    Result.Ok(Response { status, headers, body })
+}
+
+pub struct Router {
+    routes: Vec<(Method, String, fn(Request) -> Response)>,
+}
+
+pub fn new_router() -> Router {
+    Router { routes: Vec.new() }
+}
+
+impl Router {
+    pub fn route(self: &mut Router, method: Method, path: String, handler: fn(Request) -> Response) {
+        self.routes.push((method, path, handler))
+    }
+
+    pub fn get(self: &mut Router, path: String, handler: fn(Request) -> Response) {
+        self.route(Method.GET, path, handler)
+    }
+
+    pub fn post(self: &mut Router, path: String, handler: fn(Request) -> Response) {
+        self.route(Method.POST, path, handler)
+    }
+
+    pub fn put(self: &mut Router, path: String, handler: fn(Request) -> Response) {
+        self.route(Method.PUT, path, handler)
+    }
+
+    pub fn delete(self: &mut Router, path: String, handler: fn(Request) -> Response) {
+        self.route(Method.DELETE, path, handler)
+    }
+}
+
+pub fn serve(addr: String, router: Router) {
+    let listener_fd = nyx_tcp_listen(addr.as_ptr(), 80)
+    if listener_fd < 0 {
+        std.io.eprintln("Failed to bind to " + addr)
+        return
+    }
+
+    std.io.println("Server listening on " + addr)
+
+    loop {
+        let client_fd = nyx_tcp_accept(listener_fd)
+        if client_fd < 0 { continue }
+
+        let mut buf = [0u8; 8192]
+        let n = nyx_tcp_recv(client_fd, &mut buf[0], 8192)
+        if n <= 0 {
+            nyx_tcp_close(client_fd)
+            continue
+        }
+
+        let request_str = String.from_utf8(buf[0..n as u64])
+        let request = parse_http_request(request_str)
+
+        match request {
+            Option.Some(req) => {
+                let mut response = Response {
+                    status: 404,
+                    headers: Map.new(),
+                    body: Body.Text("Not Found"),
+                }
+
+                for (method, path, handler) in router.routes.iter() {
+                    if *method == req.method && *path == req.url {
+                        response = handler(req)
+                        break
+                    }
+                }
+
+                let resp_str = "HTTP/1.1 " + response.status.to_string() + " OK\r\nContent-Length: " + response.body.to_string().len().to_string() + "\r\n\r\n" + response.body.to_string()
+                nyx_tcp_send(client_fd, resp_str.as_ptr(), resp_str.len() as u64)
+            }
+            Option.None => {
+                let resp = "HTTP/1.1 400 Bad Request\r\nContent-Length: 15\r\n\r\nBad Request"
+                nyx_tcp_send(client_fd, resp.as_ptr(), resp.len() as u64)
+            }
+        }
+
+        nyx_tcp_close(client_fd)
+    }
+}
+
+fn parse_http_request(raw: String) -> Option<Request> {
+    let lines = raw.split("\r\n")
+    if lines.len() < 1 { return Option.None }
+
+    let request_line = lines[0]
+    let parts = request_line.split(" ")
+    if parts.len() < 2 { return Option.None }
+
+    let method = match parts[0] {
+        "GET" => Method.GET,
+        "POST" => Method.POST,
+        "PUT" => Method.PUT,
+        "DELETE" => Method.DELETE,
+        "HEAD" => Method.HEAD,
+        "PATCH" => Method.PATCH,
+        _ => Method.GET,
+    }
+
+    let mut headers = Map.new()
+    for i in 1..lines.len() {
+        let line = lines[i]
+        if line.len() == 0 { break }
+        let colon = line.find(":")
+        if colon >= 0 {
+            let key = line.slice(0, colon as u64)
+            let value = line.slice(colon as u64 + 2, line.len())
+            headers.insert(key, value)
+        }
+    }
+
+    let raw_url = parts[1].to_string()
+    let mut clean_url = raw_url.clone()
+    let mut query_params = Map.new()
+
+    let qmark = raw_url.find("?")
+    if qmark >= 0 {
+        clean_url = raw_url.slice(0, qmark as u64)
+        let query_str = raw_url.slice(qmark as u64 + 1, raw_url.len())
+        let pairs = query_str.split("&")
+        let mut p: usize = 0
+        while p < pairs.len() {
+            let pair = pairs[p]
+            let eq = pair.find("=")
+            if eq >= 0 {
+                let k = pair.slice(0, eq as u64)
+                let v = pair.slice(eq as u64 + 1, pair.len())
+                query_params.insert(k, v)
+            }
+            p = p + 1
+        }
+    }
+
+    Option.Some(Request {
+        method,
+        url: clean_url,
+        headers,
+        body: Option.None,
+        params: Map.new(),
+        query_params,
+    })
+}
+
+/* ── High-Level Production HTTP Server, Parameterized Router & Middleware ── */
+
+pub struct RouteEntry {
+    pub method: Method,
+    pub path_pattern: String,
+    pub handler_name: String,
+}
+
+pub struct Middleware {
+    pub name: String,
+    pub active: Bool,
+}
+
+pub struct Router {
+    pub routes: Vec<RouteEntry>,
+    pub middlewares: Vec<Middleware>,
+    pub cors_enabled: Bool,
+    pub prefix: String,
+}
+
+impl Router {
+    pub fn new() -> Router {
+        Router {
+            routes: Vec.new(),
+            middlewares: Vec.new(),
+            cors_enabled: true,
+            prefix: "".to_string(),
+        }
+    }
+
+    pub fn with_prefix(prefix: String) -> Router {
+        Router {
+            routes: Vec.new(),
+            middlewares: Vec.new(),
+            cors_enabled: true,
+            prefix,
+        }
+    }
+
+    pub fn use_middleware(mut self, name: String) -> Router {
+        self.middlewares.push(Middleware { name, active: true });
+        self
+    }
+
+    pub fn get(mut self, path: String, handler_name: String) -> Router {
+        let full_path = self.prefix.clone() + path;
+        self.routes.push(RouteEntry {
+            method: Method.GET,
+            path_pattern: full_path,
+            handler_name,
+        });
+        self
+    }
+
+    pub fn post(mut self, path: String, handler_name: String) -> Router {
+        let full_path = self.prefix.clone() + path;
+        self.routes.push(RouteEntry {
+            method: Method.POST,
+            path_pattern: full_path,
+            handler_name,
+        });
+        self
+    }
+
+    pub fn put(mut self, path: String, handler_name: String) -> Router {
+        let full_path = self.prefix.clone() + path;
+        self.routes.push(RouteEntry {
+            method: Method.PUT,
+            path_pattern: full_path,
+            handler_name,
+        });
+        self
+    }
+
+    pub fn delete(mut self, path: String, handler_name: String) -> Router {
+        let full_path = self.prefix.clone() + path;
+        self.routes.push(RouteEntry {
+            method: Method.DELETE,
+            path_pattern: full_path,
+            handler_name,
+        });
+        self
+    }
+
+    pub fn match_route(&self, method: &Method, request_path: String) -> Option<Map<String, String>> {
+        let mut r: usize = 0;
+        while r < self.routes.len() {
+            let entry = &self.routes[r];
+            if entry.method.to_string() == method.to_string() {
+                let matched = match_path_pattern(entry.path_pattern.clone(), request_path.clone());
+                match matched {
+                    Option.Some(params) => return Option.Some(params),
+                    Option.None => {}
+                }
+            }
+            r = r + 1;
+        }
+        Option.None
+    }
+}
+
+fn match_path_pattern(pattern: String, actual: String) -> Option<Map<String, String>> {
+    let pat_parts = pattern.split("/");
+    let act_parts = actual.split("/");
+
+    if pat_parts.len() != act_parts.len() {
+        return Option.None;
+    }
+
+    let mut params = Map.new();
+    let mut i: usize = 0;
+    while i < pat_parts.len() {
+        let p = pat_parts[i];
+        let a = act_parts[i];
+        if p.starts_with(":") {
+            let param_name = p.slice(1, p.len());
+            params.insert(param_name, a);
+        } else if p != a {
+            return Option.None;
+        }
+        i = i + 1;
+    }
+
+    Option.Some(params)
+}
+
+pub fn json_response(status: Int, json_str: String) -> Response {
+    let mut headers = Map.new()
+    headers.insert("Content-Type".to_string(), "application/json".to_string())
+    headers.insert("Access-Control-Allow-Origin".to_string(), "*".to_string())
+    Response {
+        status,
+        headers,
+        body: Body.Json(json_str),
+    }
+}
+
+pub fn html_response(status: Int, html_str: String) -> Response {
+    let mut headers = Map.new()
+    headers.insert("Content-Type".to_string(), "text/html; charset=utf-8".to_string())
+    Response {
+        status,
+        headers,
+        body: Body.Text(html_str),
+    }
+}
+
+pub fn text_response(status: Int, text: String) -> Response {
+    let mut headers = Map.new()
+    headers.insert("Content-Type".to_string(), "text/plain; charset=utf-8".to_string())
+    Response {
+        status,
+        headers,
+        body: Body.Text(text),
+    }
+}
+
+pub fn redirect_response(location: String) -> Response {
+    let mut headers = Map.new()
+    headers.insert("Location".to_string(), location)
+    Response {
+        status: 302,
+        headers,
+        body: Body.Empty,
+    }
+}
+
+

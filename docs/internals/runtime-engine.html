@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Runtime Engine — Nyx Documentation</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <h1>Nyx Native Runtime Engine</h1>
+        <p class="lead">Deep dive into the architecture of the Nyx native runtime: memory arenas, cooperative green threads, async event loop, and specialized domain engines.</p>
+
+        <h2>1. Runtime Subsystem Architecture</h2>
+        <p>The Nyx runtime is a lightweight, zero-dependency C99/Native foundation linked directly into compiled Nyx executables:</p>
+
+        <pre><code>┌───────────────────────────────────────────────────────────┐
+│                      Nyx Application                      │
+├───────────────────────────────────────────────────────────┤
+│            Standard Library & Domain Engines              │
+│  (std.gis, std.cloud, std.ml, std.sec, std.ui, std.audio) │
+├───────────────────────────────────────────────────────────┤
+│               Core Runtime Subsystems (rt_*)              │
+│  ┌─────────────┐ ┌──────────────┐ ┌────────────────────┐  │
+│  │  rt_arena   │ │   rt_async   │ │   rt_concurrency   │  │
+│  │ (Bump Alloc)│ │ (Event Loop) │ │ (M:N Work Stealing)│  │
+│  └─────────────┘ └──────────────┘ └────────────────────┘  │
+│  ┌─────────────┐ ┌──────────────┐ ┌────────────────────┐  │
+│  │  rt_string  │ │    rt_vec    │ │      rt_simd       │  │
+│  │ (Zero-Copy) │ │ (Growable)   │ │ (AVX2/NEON Tensor) │  │
+│  └─────────────┘ └──────────────┘ └────────────────────┘  │
+├───────────────────────────────────────────────────────────┤
+│           OS Kernel & Hardware Interfaces                 │
+│      (Win32 / POSIX / Vulkan / Metal / WebAssembly)       │
+└───────────────────────────────────────────────────────────┘</code></pre>
+
+        <h2>2. Core Runtime Headers & Subsystems</h2>
+        <table>
+            <tr><th>Subsystem</th><th>Header</th><th>Key Responsibilities</th></tr>
+            <tr><td><strong>Arena Allocator</strong></td><td><code>rt_arena.h</code></td><td>Bump-pointer allocation with $O(1)$ bulk region resets and alignment enforcement</td></tr>
+            <tr><td><strong>String Engine</strong></td><td><code>rt_string.h</code></td><td>UTF-8 safety, substring slicing without copy, SSO (Small String Optimization)</td></tr>
+            <tr><td><strong>Vector Engine</strong></td><td><code>rt_vec.h</code></td><td>Dynamically resizing contiguous arrays with geometric growth factor (1.5x)</td></tr>
+            <tr><td><strong>Async Scheduler</strong></td><td><code>rt_async.h</code></td><td>Non-blocking I/O event demultiplexer (epoll / kqueue / IOCP) and timers</td></tr>
+            <tr><td><strong>Thread Pool</strong></td><td><code>rt_concurrency.h</code></td><td>M:N work-stealing scheduler with Chase-Lev lock-free deques</td></tr>
+            <tr><td><strong>GIS Spatial</strong></td><td><code>rt_gis.h</code></td><td>Haversine geodesics, Web Mercator projection, Horn's hillshading, Ray-cast PIP</td></tr>
+            <tr><td><strong>Cloud Storage</strong></td><td><code>rt_cloud.h</code></td><td>AWS SigV4 HMAC-SHA256, Azure SharedKey, gRPC/Connect framing, Circuit Breakers</td></tr>
+            <tr><td><strong>SIMD & AI Model</strong></td><td><code>rt_ml.h</code> / <code>rt_ai_model.h</code></td><td>AVX2/NEON GEMM, RMSNorm, SwiGLU, OpenAI/Gemini/Claude SSE token stream parser</td></tr>
+            <tr><td><strong>Robotics Kinematics</strong></td><td><code>rt_robotics.h</code></td><td>6-DOF DH parameter Forward Kinematics, Quintic trajectories, PID controller</td></tr>
+            <tr><td><strong>Blockchain Engine</strong></td><td><code>rt_chain.h</code></td><td>Merkle tree proofs, SHA-256 block mining, 3-phase PBFT consensus state machine</td></tr>
+            <tr><td><strong>Audio DSP</strong></td><td><code>rt_audio.h</code></td><td>16 kHz low-latency PortAudio stream, Radix-2 FFT, Mel filterbanks for Whisper AI</td></tr>
+        </table>
+
+        <h2>3. Zero-Allocation Cooperative Event Loop</h2>
+        <p>Nyx tasks run as stackless coroutines. When an async operation blocks on network I/O or disk, the runtime suspends the state machine and yields control back to the worker thread:</p>
+<pre><code>// Pseudocode of worker thread loop
+void rt_worker_loop(rt_worker_t* worker) {
+    while (worker->running) {
+        rt_task_t* task = rt_deque_pop_bottom(&worker->local_queue);
+        if (!task) {
+            task = rt_steal_from_peers(worker);
+        }
+        if (task) {
+            task->poll_fn(task->context);
+        } else {
+            rt_epoll_wait_for_io(&worker->poller, 10 /* ms */);
+        }
+    }
+}</code></pre>
+
+        <div class="next-prev-links">
+            <a href="mlir-dialects.html">&larr; MLIR Dialects</a>
+            <a href="tooling-debugging.html">Tooling & Debugging &rarr;</a>
+        </div>
+    </main>
+    <script src="../navigation.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

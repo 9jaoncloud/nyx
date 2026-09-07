@@ -1,0 +1,589 @@
+module json
+
+pub enum Value {
+    Null,
+    Bool(Bool),
+    Number(f64),
+    String(String),
+    Array(Vec<Value>),
+    Object(Map<String, Value>),
+}
+
+impl Value {
+    pub fn is_null(self: &Value) -> Bool {
+        match self {
+            Value.Null => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_bool(self: &Value) -> Bool {
+        match self {
+            Value.Bool(_) => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_number(self: &Value) -> Bool {
+        match self {
+            Value.Number(_) => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_string(self: &Value) -> Bool {
+        match self {
+            Value.String(_) => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_array(self: &Value) -> Bool {
+        match self {
+            Value.Array(_) => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_object(self: &Value) -> Bool {
+        match self {
+            Value.Object(_) => true,
+            _ => false,
+        }
+    }
+
+    pub fn as_bool(self: &Value) -> Option<Bool> {
+        match self {
+            Value.Bool(b) => Option.Some(*b),
+            _ => Option.None,
+        }
+    }
+
+    pub fn as_number(self: &Value) -> Option<f64> {
+        match self {
+            Value.Number(n) => Option.Some(*n),
+            _ => Option.None,
+        }
+    }
+
+    pub fn as_string(self: &Value) -> Option<String> {
+        match self {
+            Value.String(s) => Option.Some(s.clone()),
+            _ => Option.None,
+        }
+    }
+
+    pub fn as_array(self: &Value) -> Option<Vec<Value>> {
+        match self {
+            Value.Array(arr) => Option.Some(arr.clone()),
+            _ => Option.None,
+        }
+    }
+
+    pub fn as_object(self: &Value) -> Option<Map<String, Value>> {
+        match self {
+            Value.Object(obj) => Option.Some(obj.clone()),
+            _ => Option.None,
+        }
+    }
+
+    pub fn get(self: &Value, key: String) -> Option<&Value> {
+        match self {
+            Value.Object(obj) => obj.get(key),
+            _ => Option.None,
+        }
+    }
+
+    pub fn get_int(self: &Value, key: String) -> Option<i64> {
+        match self.get(key) {
+            Option.Some(v) => match v {
+                Value.Number(n) => Option.Some(*n as i64),
+                _ => Option.None,
+            },
+            Option.None => Option.None,
+        }
+    }
+
+    pub fn get_string(self: &Value, key: String) -> Option<String> {
+        match self.get(key) {
+            Option.Some(v) => v.as_string(),
+            Option.None => Option.None,
+        }
+    }
+
+    pub fn index(self: &Value, i: u64) -> Option<&Value> {
+        match self {
+            Value.Array(arr) => arr.get(i),
+            _ => Option.None,
+        }
+    }
+
+    pub fn len(self: &Value) -> u64 {
+        match self {
+            Value.Array(arr) => arr.len(),
+            Value.Object(obj) => obj.len(),
+            _ => 0,
+        }
+    }
+}
+
+pub struct JsonError {
+    pub message: String,
+    pub position: u64,
+    pub line: u64,
+    pub column: u64,
+}
+
+impl JsonError {
+    pub fn to_string(self: &JsonError) -> String {
+        "JSON error at line " + self.line.to_string() + ", col " + self.column.to_string() + ": " + self.message.clone()
+    }
+}
+
+struct JsonParser {
+    source: String,
+    pos: u64,
+    line: u64,
+    column: u64,
+}
+
+impl JsonParser {
+    pub fn new(source: String) -> JsonParser {
+        JsonParser { source, pos: 0, line: 1, column: 1 }
+    }
+
+    pub fn parse(mut self: &JsonParser) -> Result<Value, JsonError> {
+        self.skip_whitespace()
+        let result = self.parse_value()?
+        self.skip_whitespace()
+        if self.pos < self.source.len() {
+            Result.Err(JsonError { message: "Unexpected trailing characters".to_string(), position: self.pos, line: self.line, column: self.column })
+        } else {
+            Result.Ok(result)
+        }
+    }
+
+    fn parse_value(mut self: &JsonParser) -> Result<Value, JsonError> {
+        self.skip_whitespace()
+        let ch = self.peek()
+
+        if ch == 'n' {
+            return self.parse_null()
+        }
+        if ch == 't' || ch == 'f' {
+            return self.parse_bool()
+        }
+        if ch == '"' {
+            return self.parse_string_value()
+        }
+        if ch == '[' {
+            return self.parse_array()
+        }
+        if ch == '{' {
+            return self.parse_object()
+        }
+        if ch == '-' || (ch >= '0' && ch <= '9') {
+            return self.parse_number()
+        }
+
+        Result.Err(JsonError { message: "Unexpected character: ".to_string() + String.from_char(ch), position: self.pos, line: self.line, column: self.column })
+    }
+
+    fn parse_null(mut self: &JsonParser) -> Result<Value, JsonError> {
+        if self.consume("null") {
+            Result.Ok(Value.Null)
+        } else {
+            Result.Err(JsonError { message: "Expected 'null'".to_string(), position: self.pos, line: self.line, column: self.column })
+        }
+    }
+
+    fn parse_bool(mut self: &JsonParser) -> Result<Value, JsonError> {
+        if self.peek() == 't' {
+            if self.consume("true") {
+                return Result.Ok(Value.Bool(true))
+            }
+        }
+        if self.peek() == 'f' {
+            if self.consume("false") {
+                return Result.Ok(Value.Bool(false))
+            }
+        }
+        Result.Err(JsonError { message: "Expected 'true' or 'false'".to_string(), position: self.pos, line: self.line, column: self.column })
+    }
+
+    fn parse_string_value(mut self: &JsonParser) -> Result<Value, JsonError> {
+        let s = self.parse_raw_string()?
+        Result.Ok(Value.String(s))
+    }
+
+    fn parse_raw_string(mut self: &JsonParser) -> Result<String, JsonError> {
+        if self.peek() != '"' {
+            return Result.Err(JsonError { message: "Expected '\"'".to_string(), position: self.pos, line: self.line, column: self.column })
+        }
+        self.advance()
+        let mut result = String.new()
+
+        loop {
+            let ch = self.peek()
+            if ch == '\0' {
+                return Result.Err(JsonError { message: "Unterminated string".to_string(), position: self.pos, line: self.line, column: self.column })
+            }
+            if ch == '"' {
+                self.advance()
+                return Result.Ok(result)
+            }
+            if ch == '\\' {
+                self.advance()
+                let esc = self.peek()
+                self.advance()
+                match esc {
+                    '"' => result = result + "\"",
+                    '\\' => result = result + "\\",
+                    '/' => result = result + "/",
+                    'n' => result = result + "\n",
+                    't' => result = result + "\t",
+                    'r' => result = result + "\r",
+                    'b' => result = result + "\x08",
+                    'f' => result = result + "\x0C",
+                    'u' => {
+                        let hex1 = self.parse_hex_digit()?
+                        let hex2 = self.parse_hex_digit()?
+                        let hex3 = self.parse_hex_digit()?
+                        let hex4 = self.parse_hex_digit()?
+                        let codepoint = (hex1 << 12) | (hex2 << 8) | (hex3 << 4) | hex4
+                        result = result + String.from_codepoint(codepoint)
+                    }
+                    _ => {
+                        return Result.Err(JsonError { message: "Invalid escape character".to_string(), position: self.pos, line: self.line, column: self.column })
+                    }
+                }
+            } else {
+                self.advance()
+                result = result + String.from_char(ch)
+            }
+        }
+    }
+
+    fn parse_hex_digit(mut self: &JsonParser) -> Result<u32, JsonError> {
+        let ch = self.peek()
+        self.advance()
+        if ch >= '0' && ch <= '9' {
+            Result.Ok((ch as u32) - ('0' as u32))
+        } else if ch >= 'a' && ch <= 'f' {
+            Result.Ok((ch as u32) - ('a' as u32) + 10)
+        } else if ch >= 'A' && ch <= 'F' {
+            Result.Ok((ch as u32) - ('A' as u32) + 10)
+        } else {
+            Result.Err(JsonError { message: "Invalid hex digit".to_string(), position: self.pos, line: self.line, column: self.column })
+        }
+    }
+
+    fn parse_number(mut self: &JsonParser) -> Result<Value, JsonError> {
+        let start = self.pos
+        let mut is_float = false
+
+        if self.peek() == '-' {
+            self.advance()
+        }
+
+        while self.peek() >= '0' && self.peek() <= '9' {
+            self.advance()
+        }
+
+        if self.peek() == '.' {
+            is_float = true
+            self.advance()
+            while self.peek() >= '0' && self.peek() <= '9' {
+                self.advance()
+            }
+        }
+
+        if self.peek() == 'e' || self.peek() == 'E' {
+            is_float = true
+            self.advance()
+            if self.peek() == '+' || self.peek() == '-' {
+                self.advance()
+            }
+            while self.peek() >= '0' && self.peek() <= '9' {
+                self.advance()
+            }
+        }
+
+        let num_str = self.source.slice(start, self.pos)
+        if is_float {
+            match num_str.parse_float() {
+                Option.Some(n) => Result.Ok(Value.Number(n)),
+                Option.None => Result.Err(JsonError { message: "Invalid number".to_string(), position: start, line: self.line, column: self.column }),
+            }
+        } else {
+            match num_str.parse_int() {
+                Option.Some(n) => Result.Ok(Value.Number(n as f64)),
+                Option.None => Result.Err(JsonError { message: "Invalid number".to_string(), position: start, line: self.line, column: self.column }),
+            }
+        }
+    }
+
+    fn parse_array(mut self: &JsonParser) -> Result<Value, JsonError> {
+        self.advance()
+        let mut elements = Vec.new()
+
+        self.skip_whitespace()
+        if self.peek() == ']' {
+            self.advance()
+            return Result.Ok(Value.Array(elements))
+        }
+
+        loop {
+            let value = self.parse_value()?
+            elements.push(value)
+
+            self.skip_whitespace()
+            if self.peek() == ',' {
+                self.advance()
+                self.skip_whitespace()
+            } else if self.peek() == ']' {
+                self.advance()
+                return Result.Ok(Value.Array(elements))
+            } else {
+                return Result.Err(JsonError { message: "Expected ',' or ']'".to_string(), position: self.pos, line: self.line, column: self.column })
+            }
+        }
+    }
+
+    fn parse_object(mut self: &JsonParser) -> Result<Value, JsonError> {
+        self.advance()
+        let mut map = Map.new()
+
+        self.skip_whitespace()
+        if self.peek() == '}' {
+            self.advance()
+            return Result.Ok(Value.Object(map))
+        }
+
+        loop {
+            self.skip_whitespace()
+            let key = self.parse_raw_string()?
+
+            self.skip_whitespace()
+            if self.peek() != ':' {
+                return Result.Err(JsonError { message: "Expected ':'".to_string(), position: self.pos, line: self.line, column: self.column })
+            }
+            self.advance()
+            self.skip_whitespace()
+
+            let value = self.parse_value()?
+            map.insert(key, value)
+
+            self.skip_whitespace()
+            if self.peek() == ',' {
+                self.advance()
+            } else if self.peek() == '}' {
+                self.advance()
+                return Result.Ok(Value.Object(map))
+            } else {
+                return Result.Err(JsonError { message: "Expected ',' or '}'".to_string(), position: self.pos, line: self.line, column: self.column })
+            }
+        }
+    }
+
+    fn skip_whitespace(mut self: &JsonParser) {
+        while self.pos < self.source.len() {
+            let ch = self.peek()
+            if ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' {
+                self.advance()
+            } else {
+                break
+            }
+        }
+    }
+
+    fn peek(self: &JsonParser) -> Char {
+        if self.pos < self.source.len() {
+            self.source.char_at(self.pos)
+        } else {
+            '\0'
+        }
+    }
+
+    fn advance(mut self: &JsonParser) {
+        if self.pos < self.source.len() {
+            let ch = self.peek()
+            if ch == '\n' {
+                self.line = self.line + 1
+                self.column = 1
+            } else {
+                self.column = self.column + 1
+            }
+            self.pos = self.pos + 1
+        }
+    }
+
+    fn consume(mut self: &JsonParser, expected: String) -> Bool {
+        for ch in expected.chars() {
+            if self.peek() != ch {
+                return false
+            }
+            self.advance()
+        }
+        true
+    }
+}
+
+pub fn parse(input: String) -> Result<Value, JsonError> {
+    let parser = JsonParser.new(input)
+    parser.parse()
+}
+
+pub fn stringify(value: &Value) -> String {
+    match value {
+        Value.Null => "null",
+        Value.Bool(b) => if *b { "true" } else { "false" },
+        Value.Number(n) => {
+            if *n == (*n as i64) as f64 {
+                (*n as i64).to_string()
+            } else {
+                n.to_string()
+            }
+        },
+        Value.String(s) => "\"" + escape_string(s.clone()) + "\"",
+        Value.Array(items) => {
+            let mut out = "["
+            for i in 0..items.len() {
+                if i > 0 { out = out + "," }
+                out = out + stringify(items.get(i).unwrap())
+            }
+            out + "]"
+        }
+        Value.Object(fields) => {
+            let mut out = "{"
+            let mut first = true
+            for (key, value) in fields.iter() {
+                if !first { out = out + "," }
+                first = false
+                out = out + "\"" + key.clone() + "\":" + stringify(value)
+            }
+            out + "}"
+        }
+    }
+}
+
+fn escape_string(s: String) -> String {
+    let mut result = String.new()
+    for ch in s.chars() {
+        match ch {
+            '"' => result = result + "\\\"",
+            '\\' => result = result + "\\\\",
+            '\n' => result = result + "\\n",
+            '\t' => result = result + "\\t",
+            '\r' => result = result + "\\r",
+            '\x08' => result = result + "\\b",
+            '\x0C' => result = result + "\\f",
+            c => {
+                if (c as u32) < 0x20 {
+                    let hex = (c as u32).to_hex()
+                    result = result + "\\u0000".slice(0, 6 - hex.len()) + hex
+                } else {
+                    result = result + String.from_char(c)
+                }
+            }
+        }
+    }
+    result
+}
+
+pub fn pretty(value: &Value) -> String {
+    pretty_indent(value, 0)
+}
+
+fn pretty_indent(value: &Value, indent: u64) -> String {
+    let pad = "    ".repeat(indent)
+    let pad1 = "    ".repeat(indent + 1)
+    match value {
+        Value.Null => "null",
+        Value.Bool(b) => if *b { "true" } else { "false" },
+        Value.Number(n) => n.to_string(),
+        Value.String(s) => "\"" + s.clone() + "\"",
+        Value.Array(items) => {
+            if items.len() == 0 { return "[]".to_string() }
+            let mut out = "[\n"
+            for i in 0..items.len() {
+                out = out + pad1 + pretty_indent(items.get(i).unwrap(), indent + 1)
+                if i < items.len() - 1 { out = out + "," }
+                out = out + "\n"
+            }
+            out + pad + "]"
+        }
+        Value.Object(fields) => {
+            if fields.len() == 0 { return "{}".to_string() }
+            let mut out = "{\n"
+            let mut first = true
+            for (key, value) in fields.iter() {
+                if !first { out = out + ",\n" }
+                first = false
+                out = out + pad1 + "\"" + key.clone() + "\": " + pretty_indent(value, indent + 1)
+            }
+            out + "\n" + pad + "}"
+        }
+    }
+}
+
+pub fn merge(base: &Value, overlay: &Value) -> Value {
+    match base {
+        Value.Object(base_map) => {
+            match overlay {
+                Value.Object(overlay_map) => {
+                    let mut result = Map.new()
+                    for (key, value) in base_map.iter() {
+                        result.insert(key.clone(), value.clone())
+                    }
+                    for (key, value) in overlay_map.iter() {
+                        result.insert(key.clone(), value.clone())
+                    }
+                    Value.Object(result)
+                }
+                _ => overlay.clone(),
+            }
+        }
+        _ => overlay.clone(),
+    }
+}
+
+pub fn deep_equal(a: &Value, b: &Value) -> Bool {
+    match a {
+        Value.Null => match b { Value.Null => true, _ => false },
+        Value.Bool(x) => match b { Value.Bool(y) => *x == *y, _ => false },
+        Value.Number(x) => match b { Value.Number(y) => *x == *y, _ => false },
+        Value.String(x) => match b { Value.String(y) => *x == *y, _ => false },
+        Value.Array(a_arr) => {
+            match b {
+                Value.Array(b_arr) => {
+                    if a_arr.len() != b_arr.len() { return false }
+                    for i in 0..a_arr.len() {
+                        if !deep_equal(a_arr.get(i).unwrap(), b_arr.get(i).unwrap()) {
+                            return false
+                        }
+                    }
+                    true
+                }
+                _ => false,
+            }
+        }
+        Value.Object(a_obj) => {
+            match b {
+                Value.Object(b_obj) => {
+                    if a_obj.len() != b_obj.len() { return false }
+                    for (key, val) in a_obj.iter() {
+                        match b_obj.get(key.clone()) {
+                            Option.Some(b_val) => {
+                                if !deep_equal(val, b_val) { return false }
+                            }
+                            Option.None => return false,
+                        }
+                    }
+                    true
+                }
+                _ => false,
+            }
+        }
+    }
+}

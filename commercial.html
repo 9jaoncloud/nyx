@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commercial Enterprise &amp; Sovereign Solutions — Nyx Systems</title>
+    <meta name="description" content="Proprietary commercial infrastructure suites for Defense, Healthcare & Radiology PACS, High-Frequency Fintech, Critical Energy Grids, and Enterprise Sovereign AI.">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" href="docs/favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/9jaoncloud-waffle.css">
+    <style>
+        :root {
+            --bg: #030612;
+            --surface: rgba(15, 23, 42, 0.75);
+            --surface-hover: rgba(30, 41, 59, 0.85);
+            --border: rgba(255, 255, 255, 0.1);
+            --border-glow: rgba(139, 92, 246, 0.4);
+            --primary: #8b5cf6;
+            --emerald: #10b981;
+            --cyan: #38bdf8;
+            --amber: #f59e0b;
+            --rose: #f43f5e;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --card-radius: 16px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.18) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.15) 0px, transparent 50%),
+                radial-gradient(at 50% 100%, rgba(56, 189, 248, 0.12) 0px, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        /* Glassmorphism */
+        .glass-panel {
+            background: var(--surface);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--border);
+            border-radius: var(--card-radius);
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.45);
+        }
+
+        /* Top Announcement Bar */
+        .announcement-bar {
+            background: linear-gradient(90deg, #7c3aed, #0284c7, #059669);
+            color: #ffffff;
+            text-align: center;
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        /* Navigation */
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.65rem 2rem;
+            background: rgba(7, 9, 19, 0.88);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: #fff;
+            font-weight: 800;
+            font-size: 1.25rem;
+        }
+        .nav-links { display: flex; gap: 0.75rem; align-items: center; }
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            padding: 0.4rem 0.75rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .nav-links a:hover, .nav-links a.active { color: #fff; background: rgba(255, 255, 255, 0.08); }
+        .nav-btn {
+            background: linear-gradient(135deg, #10b981, #059669) !important;
+            color: #fff !important;
+            font-weight: 700 !important;
+            box-shadow: 0 0 14px rgba(16, 185, 129, 0.4);
+        }
+
+        /* Hero */
+        .hero {
+            max-width: 1200px;
+            margin: 3.5rem auto 3rem;
+            padding: 0 2rem;
+            text-align: center;
+        }
+        .badge-comm {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 1.2rem;
+            border-radius: 9999px;
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            color: #34d399;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+        .hero h1 {
+            font-size: 3.6rem;
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -0.03em;
+            margin-bottom: 1.25rem;
+        }
+        .hero h1 span.gradient {
+            background: linear-gradient(135deg, #34d399, #38bdf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero p.lead {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            max-width: 840px;
+            margin: 0 auto 2.5rem;
+        }
+
+        /* Filter Tabs */
+        .filter-bar {
+            display: flex;
+            justify-content: center;
+            gap: 0.65rem;
+            flex-wrap: wrap;
+            margin-bottom: 3.5rem;
+        }
+        .filter-pill {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: var(--text-muted);
+            padding: 0.55rem 1.2rem;
+            border-radius: 9999px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-pill:hover, .filter-pill.active {
+            background: rgba(139, 92, 246, 0.25);
+            border-color: #8b5cf6;
+            color: #fff;
+            box-shadow: 0 0 16px rgba(139, 92, 246, 0.3);
+        }
+
+        /* Product Cards Grid */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+            gap: 2rem;
+            max-width: 1240px;
+            margin: 0 auto 5rem;
+            padding: 0 2rem;
+        }
+        .product-card {
+            padding: 2.25rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+            position: relative;
+            overflow: hidden;
+        }
+        .product-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--border-glow);
+            box-shadow: 0 14px 45px rgba(139, 92, 246, 0.2);
+        }
+        .card-tag {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 0.3rem 0.75rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .tag-defense { background: rgba(139, 92, 246, 0.2); color: #c084fc; border: 1px solid rgba(139, 92, 246, 0.4); }
+        .tag-medical { background: rgba(244, 63, 94, 0.2); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.4); }
+        .tag-fintech { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); }
+        .tag-energy { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
+        .tag-ai { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+
+        .product-card h3 { font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 0.65rem; }
+        .product-card p { font-size: 0.95rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 1.5rem; }
+
+        .feature-list {
+            list-style: none;
+            margin-bottom: 2rem;
+            font-size: 0.88rem;
+            color: #cbd5e1;
+        }
+        .feature-list li {
+            margin-bottom: 0.6rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .feature-list li::before {
+            content: "✓";
+            color: #10b981;
+            font-weight: 800;
+        }
+
+        .pricing-box {
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .price-label { font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; }
+        .price-val { font-size: 1.35rem; font-weight: 800; color: #fff; }
+
+        .btn-inquire {
+            background: linear-gradient(135deg, #10b981, #0284c7);
+            color: #fff;
+            text-align: center;
+            padding: 0.85rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 700;
+            text-decoration: none;
+            display: block;
+            box-shadow: 0 4px 18px rgba(16, 185, 129, 0.3);
+            transition: all 0.2s;
+        }
+        .btn-inquire:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(16, 185, 129, 0.45);
+        }
+
+        /* Guarantee Banner */
+        .guarantee-section {
+            max-width: 1200px;
+            margin: 0 auto 6rem;
+            padding: 3rem;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(16, 185, 129, 0.08));
+            border: 1px solid rgba(139, 92, 246, 0.35);
+            border-radius: 20px;
+            text-align: center;
+        }
+        .guarantee-section h2 { font-size: 2.2rem; font-weight: 800; margin-bottom: 1rem; }
+        .guarantee-section p { font-size: 1.05rem; color: var(--text-muted); max-width: 750px; margin: 0 auto 2rem; }
+
+        footer {
+            background: rgba(4, 6, 14, 0.95);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 4rem 2rem 2.5rem;
+        }
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto 3rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Announcement Bar -->
+    <div class="announcement-bar">
+        🏛️ Enterprise Sovereign Commercial Inquiries: <strong>admin@9jaoncloud.com.ng</strong> | Proprietary On-Premises &amp; Air-Gapped Deployments
+    </div>
+
+    <!-- Navigation -->
+    <nav>
+        <a href="index.html" class="brand-logo">
+            <div style="width:34px; height:34px; border-radius:9px; background:linear-gradient(135deg, #8b5cf6, #10b981); display:flex; align-items:center; justify-content:center; font-size:1.1rem; box-shadow:0 0 12px rgba(16,185,129,0.4);">💼</div>
+            <span>Nyx <span style="font-size:0.75rem; color:#34d399; font-weight:700; text-transform:uppercase; letter-spacing:0.06em;">Commercial</span></span>
+        </a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="about.html">About</a>
+            <a href="sovereign-hud.html">Sovereign HUD</a>
+            <a href="commercial.html" class="active">💼 Commercial Suites</a>
+            <a href="packages.html">Public Packages</a>
+            <a href="docs/index.html">Docs</a>
+            <a href="mailto:admin@9jaoncloud.com.ng?subject=Nyx%20Commercial%20Inquiry" class="nav-btn">Contact Sales &rarr;</a>
+            <div id="nineja-app-switcher"></div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero">
+        <div class="badge-comm">
+            <span>🛡️ Sovereign Enterprise &amp; Defense Portfolios</span>
+        </div>
+        <h1>Proprietary Sovereign Infrastructure &amp; <br><span class="gradient">Mission-Critical Industry Suites</span></h1>
+        <p class="lead">
+            High-integrity, zero-garbage-collection software suites for organizations where latency jitter, quantum vulnerability, and foreign cloud dependence are unacceptable risks. Available via enterprise commercial licensing and on-premises air-gapped deployment.
+        </p>
+
+        <!-- Category Filters -->
+        <div class="filter-bar">
+            <button class="filter-pill active" onclick="filterCategory('all', this)">All Commercial Suites (5)</button>
+            <button class="filter-pill" onclick="filterCategory('defense', this)">🛡️ Defense &amp; Mesh Comms</button>
+            <button class="filter-pill" onclick="filterCategory('medical', this)">🏥 Healthcare &amp; Radiology PACS</button>
+            <button class="filter-pill" onclick="filterCategory('fintech', this)">🏦 High-Frequency Fintech</button>
+            <button class="filter-pill" onclick="filterCategory('energy', this)">⚡ Energy &amp; SCADA Grid</button>
+            <button class="filter-pill" onclick="filterCategory('ai', this)">🧠 Sovereign AI &amp; Vectors</button>
+        </div>
+    </header>
+
+    <!-- Commercial Product Cards -->
+    <div class="products-grid" id="productGrid">
+        
+        <!-- 1. Defense & Mesh -->
+        <div class="product-card glass-panel" data-cat="defense">
+            <div>
+                <span class="card-tag tag-defense">Defense &amp; Government</span>
+                <h3>Nyx Aegis Sovereign Defense Grid</h3>
+                <p>In-kernel zero-trust mesh networking with NIST FIPS 203 ML-KEM-768 post-quantum key agreement, sub-0.12ms line-rate ChaCha20-Poly1305 encryption, and automatic 3GPP Rel-18 satellite fallback.</p>
+                
+                <ul class="feature-list">
+                    <li>NIST FIPS 203 ML-KEM-768 Lattice Cryptography</li>
+                    <li>0.12ms Wire Latency (Sub-microsecond In-Kernel)</li>
+                    <li>3GPP Rel-18 Satellite NTN + RFC 9171 DTN Fallback</li>
+                    <li>100M+ pps Wire Rate DDoS &amp; JA4 Threat Scrubber</li>
+                    <li>Air-Gapped TPM 2.0 / HSM Hardware Enclave Binding</li>
+                </ul>
+            </div>
+            <div>
+                <div class="pricing-box">
+                    <span class="price-label">Deployment License</span>
+                    <span class="price-val">Custom RFP</span>
+                </div>
+                <a href="mailto:admin@9jaoncloud.com.ng?subject=Inquiry:%20Nyx%20Aegis%20Defense%20Grid%20RFP" class="btn-inquire">Submit Defense RFP &rarr;</a>
+            </div>
+        </div>
+
+        <!-- 2. Healthcare & Radiology -->
+        <div class="product-card glass-panel" data-cat="medical">
+            <div>
+                <span class="card-tag tag-medical">Healthcare &amp; Life Sciences</span>
+                <h3>NyxHealth &amp; Radiology PACS Engine</h3>
+                <p>Medical-grade imaging and EHR infrastructure. Native DICOM 3.0 volumetric rendering, 120 FPS multi-planar CT/MRI reconstruction, and zero-GC telemetry for surgical and ICU monitors.</p>
+                
+                <ul class="feature-list">
+                    <li>Native DICOM 3.0 &amp; HL7 FHIR v4 Protocol Streaming</li>
+                    <li>120 FPS 3D Multi-Planar Volumetric Reconstruction</li>
+                    <li>Zero-GC Real-Time Surgical &amp; Telemetry Pipelines</li>
+                    <li>HIPAA &amp; GDPR Hardware Biometric Enclave Protection</li>
+                    <li>Offline Hospital LAN &amp; Cloud Hybrid PACS Sync</li>
+                </ul>
+            </div>
+            <div>
+                <div class="pricing-box">
+                    <span class="price-label">Hospital Cluster</span>
+                    <span class="price-val">$3,500 <small style="font-size:0.8rem; color:#94a3b8;">/ mo</small></span>
+                </div>
+                <a href="mailto:admin@9jaoncloud.com.ng?subject=Inquiry:%20NyxHealth%20PACS%20License" class="btn-inquire">Deploy Radiology PACS &rarr;</a>
+            </div>
+        </div>
+
+        <!-- 3. Fintech & HFT -->
+        <div class="product-card glass-panel" data-cat="fintech">
+            <div>
+                <span class="card-tag tag-fintech">Banking &amp; High-Frequency Finance</span>
+                <h3>Nyx TradeEngine &amp; Institutional Hub</h3>
+                <p>42ns deterministic order matching engine with exact 128-bit fixed-point math, zero floating-point drift, and automated ISO-20022 `pacs.008` inter-agency wire settlement generation.</p>
+                
+                <ul class="feature-list">
+                    <li>42ns Crossing Limit Order Ingress Matching SLA</li>
+                    <li>Exact 128-Bit Fixed-Point Math (0.00 Float Error)</li>
+                    <li>Native ISO-20022 pacs.008 Transaction Ledger Engine</li>
+                    <li>Lock-Free SPSC Ring Buffers (Zero Heap Allocations)</li>
+                    <li>FIX 5.0 SP2, ITCH 5.0 &amp; OUCH Protocol Gateways</li>
+                </ul>
+            </div>
+            <div>
+                <div class="pricing-box">
+                    <span class="price-label">Institutional License</span>
+                    <span class="price-val">$2,500 <small style="font-size:0.8rem; color:#94a3b8;">/ mo</small></span>
+                </div>
+                <a href="mailto:admin@9jaoncloud.com.ng?subject=Inquiry:%20TradeEngine%20Fintech%20License" class="btn-inquire">Deploy TradeEngine &rarr;</a>
+            </div>
+        </div>
+
+        <!-- 4. Energy & SCADA Grid -->
+        <div class="product-card glass-panel" data-cat="energy">
+            <div>
+                <span class="card-tag tag-energy">Critical Energy &amp; Utilities</span>
+                <h3>Nyx GridShield &amp; SCADA Controller</h3>
+                <p>Industrial cyber-defense and sensor telemetry for national power grids, hydroelectric dams, and oil pipelines. Direct silicon firmware with microsecond Modbus/DNP3 execution.</p>
+                
+                <ul class="feature-list">
+                    <li>Microsecond IEC 61850, Modbus TCP &amp; DNP3 Drivers</li>
+                    <li>Direct 16 KB SRAM Microcontroller Firmware Execution</li>
+                    <li>Air-Gapped Substation Cyberwarfare Air-Lock Shield</li>
+                    <li>Real-Time Frequency Stability Telemetry (50.00 Hz)</li>
+                    <li>Zero-GC Predictable Industrial Safety Loop Guarantees</li>
+                </ul>
+            </div>
+            <div>
+                <div class="pricing-box">
+                    <span class="price-label">Infrastructure Tier</span>
+                    <span class="price-val">$5,000 <small style="font-size:0.8rem; color:#94a3b8;">/ mo</small></span>
+                </div>
+                <a href="mailto:admin@9jaoncloud.com.ng?subject=Inquiry:%20GridShield%20SCADA%20License" class="btn-inquire">Deploy GridShield &rarr;</a>
+            </div>
+        </div>
+
+        <!-- 5. Sovereign AI & Vectors -->
+        <div class="product-card glass-panel" data-cat="ai">
+            <div>
+                <span class="card-tag tag-ai">Enterprise Sovereign AI</span>
+                <h3>Nyx Cognitive AI &amp; VectorDB Appliance</h3>
+                <p>On-premises high-dimensional vector search with AVX-512 SIMD cosine scoring (&lt;380 µs / 0.38 ms), Ebbinghaus cognitive threat decay, and OpenAI-compatible <code>/v1/chat/completions</code> API bridge.</p>
+                
+                <ul class="feature-list">
+                    <li>SIMD AVX-512 Normalized Dot-Product Cosine Search</li>
+                    <li>Sub-380µs High-Dimensional Nearest-Neighbor Latency</li>
+                    <li>NyxMem Epistemic State &amp; Dynamic Ebbinghaus Decay</li>
+                    <li>OpenAI /v1/chat/completions &amp; /v1/models Native Bridge</li>
+                    <li>100% On-Premises Air-Gapped Zero-Telemetry Execution</li>
+                </ul>
+            </div>
+            <div>
+                <div class="pricing-box">
+                    <span class="price-label">Cluster Appliance</span>
+                    <span class="price-val">$2,000 <small style="font-size:0.8rem; color:#94a3b8;">/ mo</small></span>
+                </div>
+                <a href="mailto:admin@9jaoncloud.com.ng?subject=Inquiry:%20Sovereign%20AI%20Appliance%20License" class="btn-inquire">Deploy AI Appliance &rarr;</a>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Guarantee & Security Escrow Section -->
+    <section class="guarantee-section">
+        <h2>🔒 Commercial Security &amp; Source Escrow Guarantee</h2>
+        <p>Every commercial license is backed by strict enterprise Service Level Agreements (SLAs), source code escrow options, dedicated on-site deployment engineers, and 24/7 sovereign mission-critical support.</p>
+        <div style="display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap;">
+            <a href="mailto:admin@9jaoncloud.com.ng?subject=Schedule%20Executive%20Technical%20Briefing" class="btn-inquire" style="padding: 0.95rem 2.2rem; font-size: 1.05rem;">📅 Schedule Executive Technical Briefing</a>
+            <a href="sovereign-hud.html" style="padding: 0.95rem 2.2rem; font-size: 1.05rem; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color:#fff; border-radius:10px; text-decoration:none; font-weight:700;">🛰️ Explore Sovereign HUD &rarr;</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-grid">
+            <div>
+                <h4 style="color:#fff; margin-bottom:0.75rem;">Nyx Sovereign Systems</h4>
+                <p style="color:#94a3b8; font-size:0.88rem;">Engineered by Simeon Bala at 9jaonCloud. Delivering deterministic systems computing for national defense, high finance, and enterprise infrastructure.</p>
+            </div>
+            <div>
+                <h5 style="color:#fff; margin-bottom:0.75rem;">Commercial Suites</h5>
+                <p style="color:#94a3b8; font-size:0.85rem; line-height:1.8;">
+                    • Nyx Aegis Defense Grid<br>
+                    • NyxHealth Radiology PACS<br>
+                    • TradeEngine 42ns Hub<br>
+                    • GridShield SCADA Controller<br>
+                    • Sovereign AI &amp; VectorDB
+                </p>
+            </div>
+            <div>
+                <h5 style="color:#fff; margin-bottom:0.75rem;">Enterprise Sales</h5>
+                <p style="color:#94a3b8; font-size:0.85rem; line-height:1.8;">
+                    Email: admin@9jaoncloud.com.ng<br>
+                    HQ: Abuja, Nigeria / Global Relays<br>
+                    Portal: nyx.9jaoncloud.com.ng
+                </p>
+            </div>
+        </div>
+        <div style="text-align:center; color:#64748b; font-size:0.8rem; border-top:1px solid rgba(255,255,255,0.06); padding-top:1.5rem;">
+            &copy; 2026 9jaonCloud Engineering. All Commercial Rights Reserved.
+        </div>
+    </footer>
+
+    <script>
+    function filterCategory(cat, btn) {
+        document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+
+        const cards = document.querySelectorAll('.product-card');
+        cards.forEach(card => {
+            if (cat === 'all' || card.getAttribute('data-cat') === cat) {
+                card.style.display = 'flex';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+    </script>
+</body>
+</html>

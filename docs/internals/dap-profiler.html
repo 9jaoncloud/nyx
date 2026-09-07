@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DAP Debugger & Time-Travel Profiler — Nyx Docs</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <h1>Debug Adapter Protocol (DAP) & Time-Travel Memory Profiler</h1>
+        <p class="lead">Interactive IDE debugging, live breakpoint step-through, and zero-overhead time-travel memory profiling for the Nyx programming language.</p>
+
+        <h2>1. Debug Adapter Protocol (DAP) Architecture</h2>
+        <p>Nyx provides a native DAP server engine (<code>nyxc/dap_server.nyx</code> & <code>rt_dap.h</code>) communicating with VS Code, Cursor, and DAP-compliant IDEs over JSON-RPC 2.0:</p>
+
+        <pre><code>VS Code / IDE ◄── JSON-RPC (DAP Protocol) ──► Nyx DAP Server Engine
+                                                      │
+                                                      ├── Breakpoint Traps
+                                                      ├── Stack Frame Unwinding
+                                                      └── Variable Scope Inspection</code></pre>
+
+        <h3>Supported DAP Requests:</h3>
+        <table>
+            <tr><th>Command</th><th>Direction</th><th>Description</th></tr>
+            <tr><td><code>initialize</code></td><td>Client ➔ Server</td><td>Negotiates debugger capabilities and client configuration</td></tr>
+            <tr><td><code>setBreakpoints</code></td><td>Client ➔ Server</td><td>Registers line and conditional breakpoints in source files</td></tr>
+            <tr><td><code>stackTrace</code></td><td>Client ➔ Server</td><td>Returns call stack frames, source paths, and line numbers</td></tr>
+            <tr><td><code>variables</code></td><td>Client ➔ Server</td><td>Inspects local variables, nominal struct fields, and enums</td></tr>
+            <tr><td><code>next / stepIn</code></td><td>Client ➔ Server</td><td>Steps execution forward by line or into function call</td></tr>
+        </table>
+
+        <h2>2. Time-Travel Memory Profiling</h2>
+        <p>The Nyx runtime includes a high-precision, zero-overhead memory event recorder (<code>rt_profiler.h</code> & <code>std.tooling.profiler</code>) that logs every region creation, bump allocation, and bulk arena reset:</p>
+
+<pre><code>import std.tooling.profiler
+
+let mut prof = profiler.init_profiler()
+profiler.record_allocation(&mut prof, 1, 1048576, "matrix_buffer".to_string())
+
+// Scrub timeline back to timestamp t = 1.5s
+let snapshot = profiler.scrub_timeline(&prof, 1500000)
+std.io.println("Memory Footprint at t=1.5s: " + snapshot.memory_footprint_bytes.to_string() + " Bytes")</code></pre>
+
+        <h2>3. Visual Perfetto / Chrome Tracing Export</h2>
+        <p>Export memory events directly into standard Chrome Tracing JSON format for interactive visual inspection in <code>chrome://tracing</code> or <a href="https://ui.perfetto.dev" target="_blank">ui.perfetto.dev</a>:</p>
+<pre><code>let trace_json = profiler.export_trace_json(&prof)
+// Output: {"traceEvents":[{"name":"rt_arena_alloc","ph":"X","ts":1000,"dur":50,"args":{"bytes":3145728}}]}</code></pre>
+
+        <div class="next-prev-links">
+            <a href="llvm-lto-pgo.html">&larr; LLVM 18 LTO & PGO</a>
+            <a href="tooling-debugging.html">Tooling & Debugging &rarr;</a>
+        </div>
+    </main>
+    <script src="../navigation.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

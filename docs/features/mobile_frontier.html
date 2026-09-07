@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nyx Mobile Frontier Architecture: On-Device SLM, Post-Quantum Enclaves & Tri-Fold Compositing</title>
+    <meta name="description" content="Comprehensive systems documentation for Nyx Mobile Frontier technologies: Zero-copy on-device SLM NPU scheduling, NIST FIPS 203 ML-KEM-768 quantum enclaves, and sub-1.5ms multi-stage tri-fold screen compositing.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="../../favicon.ico">
+    
+    <style>
+        :root {
+            --bg: #040612;
+            --surface: rgba(15, 23, 42, 0.85);
+            --border: rgba(255, 255, 255, 0.12);
+            --primary: #8b5cf6;
+            --cyan: #38bdf8;
+            --emerald: #10b981;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            display: block !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.2) 0px, transparent 50%),
+                radial-gradient(at 100% 30%, rgba(56, 189, 248, 0.15) 0px, transparent 50%),
+                radial-gradient(at 50% 90%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+
+        .top-nav {
+            background: rgba(6, 8, 19, 0.94);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .top-nav a { color: var(--text-muted); text-decoration: none; font-size: 0.88rem; font-weight: 600; transition: color 0.2s; }
+        .top-nav a:hover { color: #fff; }
+
+        .hero { text-align: center; margin-bottom: 4rem; }
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.35rem 0.95rem;
+            border-radius: 9999px;
+            background: rgba(56, 189, 248, 0.18);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            color: #38bdf8;
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 1.25rem;
+        }
+        .hero h1 { font-size: 3rem; font-weight: 800; line-height: 1.15; margin-bottom: 1rem; }
+        .hero h1 span {
+            background: linear-gradient(135deg, #38bdf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .doc-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2.5rem;
+            margin-bottom: 2.5rem;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+        }
+        .doc-section h2 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .doc-section h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #38bdf8;
+            margin: 1.75rem 0 0.5rem;
+        }
+
+        .api-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.25rem 0;
+            font-size: 0.9rem;
+        }
+        .api-table th, .api-table td {
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            text-align: left;
+        }
+        .api-table th {
+            background: rgba(255,255,255,0.04);
+            color: #fff;
+            font-weight: 700;
+        }
+
+        pre {
+            background: #020617;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.25rem;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88rem;
+            color: #38bdf8;
+            line-height: 1.5;
+            margin: 1rem 0 1.5rem;
+        }
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            color: #c084fc;
+            background: rgba(139, 92, 246, 0.15);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+        }
+
+        .highlight-box {
+            background: rgba(56, 189, 248, 0.08);
+            border-left: 4px solid #38bdf8;
+            padding: 1rem 1.25rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1.25rem 0;
+            color: #cbd5e1;
+            font-size: 0.92rem;
+        }
+        @media (max-width: 768px) {
+            .container { padding: 1.5rem 1rem 4rem; }
+            .hero h1 { font-size: 2.1rem; }
+            .doc-section { padding: 1.5rem 1.25rem; }
+            .top-nav { flex-direction: column; gap: 0.75rem; padding: 1rem; align-items: flex-start; }
+            .top-nav > div { flex-wrap: wrap; gap: 0.75rem; }
+            .api-table { display: block; overflow-x: auto; }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-nav">
+        <a href="../../index.html" style="color: #fff; font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span>🌙</span> Nyx Global Documentation
+        </a>
+        <div style="display: flex; gap: 1.5rem;">
+            <a href="../../mobile.html">📱 Mobile Overview</a>
+            <a href="../../mobile.html#mobile-roadmap">🗺️ Mobile Roadmap</a>
+            <a href="../../mobile-preview.html">📲 Simulator &amp; Hologram</a>
+            <a href="../learn/index.html">🎓 Academy Track 2</a>
+            <a href="../index.html">📑 All Docs</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="hero">
+            <div class="hero-badge">⚡ Official Systems Architecture Specification</div>
+            <h1>Nyx Mobile <span>Frontier Architecture &amp; Modules</span></h1>
+            <p style="color: var(--text-muted); max-width: 800px; margin: 0 auto; font-size: 1.1rem;">
+                Detailed architectural guide, memory model specifications, and API documentation for Nyx's on-device SLM scheduling, NIST post-quantum enclaves, and multi-stage tri-fold compositing.
+            </p>
+        </div>
+
+        <!-- Section 1: Overview & Research Alignment -->
+        <section class="doc-section">
+            <h2><span>🔬</span> The Systems Research Paradigm (2025–2027)</h2>
+            <p>
+                Mobile operating systems are undergoing their most dramatic hardware transition in twenty years. Flagship smartphones now host high-throughput Neural Processing Units (NPUs), hardware security enclaves capable of lattice mathematics, and multi-hinge flexible OLED screens that morph across 3 distinct physical aspect ratios.
+            </p>
+            <p>
+                Legacy mobile operating systems (Android and iOS) carry massive architectural technical debt: garbage-collected execution runtimes that pause CPU threads, multi-gigabyte DRAM weight copies when loading on-device models, vulnerability to post-quantum "Harvest Now, Decrypt Later" intercepts, and stuttering window managers that rebuild widget trees upon screen folding.
+            </p>
+            <div class="highlight-box">
+                <strong>The Nyx Systems Advantage:</strong> By decoupling user interfaces and logic from garbage collectors and binding directly to native Vulkan/Metal display planes and physical hardware arenas, Nyx achieves 0.00ms GC pauses, sub-1.5ms tri-fold layout reflow, and sub-millisecond post-quantum session synthesis.
+            </div>
+        </section>
+
+        <!-- Section 2: On-Device SLM & NPU Module -->
+        <section class="doc-section">
+            <h2><span>🧠</span> Module 1: <code>std.mobile.npu_slm</code> (Zero-Copy SLM Scheduling)</h2>
+            <p>
+                The <code>npu_slm</code> module implements zero-copy unified tensor weight scheduling for 1.5B to 3.8B parameter Small Language Models (SLMs). Instead of copying quantized weights between CPU DRAM and NPU device memory, Nyx maps model weights directly into a physical memory arena (<code>0x80000000</code>).
+            </p>
+
+            <h3>Core Data Structures &amp; Enums</h3>
+            <pre><code>public enum TensorPrecision {
+    FP16,
+    INT8,
+    INT4_AWQ // 4-bit Activation-aware Weight Quantization (sub-2GB memory footprint)
+}
+
+public struct ModelMetadata {
+    public name: string,
+    public parameter_count_billions: f32, // e.g. 1.5B
+    public context_window_tokens: i32,
+    public precision: TensorPrecision,
+    public weight_bytes: u64
+}
+
+public struct NPUExecutionPlan {
+    public layers_on_npu: i32,
+    public layers_on_gpu: i32,
+    public layers_on_cpu: i32,
+    public peak_memory_mb: f32,
+    public estimated_tok_per_sec: f32
+}</code></pre>
+
+            <h3>Production Code Example</h3>
+            <pre><code>import std.mobile.npu_slm
+
+fn main() {
+    let model = ModelMetadata {
+        name: "Nyx-Bifrost-1.5B-Instruct",
+        parameter_count_billions: 1.5,
+        context_window_tokens: 4096,
+        precision: TensorPrecision::INT4_AWQ,
+        weight_bytes: 850000000
+    };
+
+    let engine = MobileNPUEngine.new(model);
+
+    // Dynamic layer co-scheduling based on battery and thermal telemetry
+    let plan = engine.schedule_heterogeneous_layers(90, 0);
+    println("NPU GEMM Layers: " + plan.layers_on_npu.to_string());
+    println("GPU FlashAttention Layers: " + plan.layers_on_gpu.to_string());
+    println("Throughput: " + plan.estimated_tok_per_sec.to_string() + " tokens/sec");
+
+    // Streaming token generation with 0.00ms GC pause
+    let answer = engine.infer_tokens("Analyze encrypted edge packet", 64);
+    println("Result: " + answer);
+}</code></pre>
+        </section>
+
+        <!-- Section 3: Post-Quantum Enclave Module -->
+        <section class="doc-section">
+            <h2><span>🛡️</span> Module 2: <code>std.mobile.pqc_enclave</code> (NIST FIPS 203 Quantum Shield)</h2>
+            <p>
+                In August 2024, NIST officially standardized <strong>FIPS 203 (ML-KEM / CRYSTALS-Kyber)</strong>. State actors are currently intercepting and storing encrypted mobile traffic in "Harvest Now, Decrypt Later" (HNDL) pipelines. The <code>pqc_enclave</code> module implements a hybrid key exchange combining classical <strong>X25519</strong> with <strong>ML-KEM-768</strong> inside hardware secure elements.
+            </p>
+
+            <h3>Key Security API Specifications</h3>
+            <table class="api-table">
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>Arguments</th>
+                        <th>Return Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>generate_hybrid_handshake()</code></td>
+                        <td>None</td>
+                        <td><code>HybridPQCKeyExchange</code></td>
+                        <td>Synthesizes 1,184-byte ML-KEM-768 lattice vectors + X25519 curve key with TPM 2.0 PCR attestation quote.</td>
+                    </tr>
+                    <tr>
+                        <td><code>encapsulate_and_derive()</code></td>
+                        <td><code>peer: HybridPQCKeyExchange</code></td>
+                        <td><code>EstablishedSharedSecret</code></td>
+                        <td>Fuses classical and post-quantum secrets via HKDF-SHA3-512 into a 256-bit ChaCha20 session key in <strong>0.84ms</strong>.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Production Code Example</h3>
+            <pre><code>import std.mobile.pqc_enclave
+
+fn main() {
+    let enclave = MobilePQCEnclave.new("SE050_SECURE_ENCLAVE_NODE_A");
+    
+    // 1. Generate local hybrid handshake
+    let local_keys = enclave.generate_hybrid_handshake();
+    
+    // 2. Derive shared quantum-safe symmetric key
+    let secret = enclave.encapsulate_and_derive(local_keys);
+    println("ChaCha20 Session Key: " + secret.shared_key_chacha20);
+    println("Quantum Resistant: " + secret.is_quantum_resistant.to_string());
+    println("Derivation Latency: " + secret.key_derivation_ms.to_string() + " ms");
+}</code></pre>
+        </section>
+
+        <!-- Section 4: Tri-Fold Screen Compositor -->
+        <section class="doc-section">
+            <h2><span>📐</span> Module 3: <code>std.mobile.trifold</code> (Multi-Stage 10.2" Screen Compositor)</h2>
+            <p>
+                Tri-fold and rollable mobile devices (e.g. Huawei Mate XT) transition across three distinct physical hardware canvases: Single Screen (6.4" portrait), Dual Screen (7.9" book canvas), and Triple Screen (10.2" 3K tablet). <code>std.mobile.trifold</code> processes physical dual-hinge sensors at 120 FPS and executes hardware scanout reflow in <strong>1.45 milliseconds</strong> without restarting the application context.
+            </p>
+
+            <h3>FoldStage State Transitions</h3>
+            <pre><code>public enum FoldStage {
+    SingleScreen, // 6.4-inch portrait phone (1080x2400)
+    DualScreen,   // 7.9-inch book-style canvas (2160x2400)
+    TripleScreen  // 10.2-inch expansive 3K tablet canvas (3184x2232)
+}</code></pre>
+
+            <h3>Production Code Example</h3>
+            <pre><code>import std.mobile.trifold
+
+fn main() {
+    let compositor = TriFoldCompositor.new();
+
+    // Physical sensor updates dispatched from display controller at 120 FPS
+    let single = compositor.update_hinge_sensors(0.0, 0.0);
+    println("Single Phone: " + single.active_slot_ratio + " (Reflow: " + single.composition_ms.to_string() + "ms)");
+
+    let dual = compositor.update_hinge_sensors(160.0, 0.0);
+    println("Dual Screen: " + dual.active_slot_ratio + " (Reflow: " + dual.composition_ms.to_string() + "ms)");
+
+    let triple = compositor.update_hinge_sensors(170.0, 165.0);
+    println("Triple Screen: " + triple.active_slot_ratio + " (Reflow: " + triple.composition_ms.to_string() + "ms)");
+}</code></pre>
+        </section>
+
+        <!-- Section 5: Cross-Reference & Learning -->
+        <section class="doc-section" style="text-align: center;">
+            <h2><span>🎓</span> Learn by Doing: Interactive Simulator &amp; Academy</h2>
+            <p style="color: var(--text-muted); max-width: 700px; margin: 0 auto 1.5rem;">
+                Test these modules right inside your browser using our WebAssembly dual-device cyber stage or complete the official Mobile App Developer Certification Track.
+            </p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="../../mobile-preview.html" class="btn-cta btn-primary" style="padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #8b5cf6, #38bdf8); color: #fff; text-decoration: none; border-radius: 8px; font-weight: bold;">
+                    📲 Launch Interactive Mobile Simulator
+                </a>
+                <a href="../learn/index.html" class="btn-cta btn-secondary" style="padding: 0.75rem 1.5rem; background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: #fff; text-decoration: none; border-radius: 8px; font-weight: bold;">
+                    🎓 Take Academy Track 2 (Lessons 2.1 – 2.14)
+                </a>
+            </div>
+        </section>
+    </div>
+</body>
+</html>

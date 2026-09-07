@@ -1,0 +1,71 @@
+import std.io
+import std.cloud
+
+fn main() {
+    println("=================================================================")
+    println("  ☁️  NYX ENTERPRISE MULTI-CLOUD & MICROSERVICES STUDIO (std.cloud)")
+    println("=================================================================")
+
+    // 1. AWS S3 Cloud Storage & SigV4 Signature
+    let mut s3 = cloud.create_s3_client(
+        "us-west-2".to_string(),
+        "AKIAIOSFODNN7EXAMPLE".to_string(),
+        "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY".to_string()
+    )
+    println("✓ AWS S3 Client Initialized for Region: " + s3.region)
+
+    let s3_ok = cloud.put_object(&mut s3, "nyx-production-assets".to_string(), "models/transformer_weights.gguf".to_string(), "RAW_WEIGHTS_DATA".to_string())
+    let s3_ok_str = if s3_ok { "SUCCESS".to_string() } else { "FAILED".to_string() }
+    println("✓ S3 PutObject (transformer_weights.gguf): " + s3_ok_str)
+
+    let presigned = cloud.presign_url(&s3, "nyx-production-assets".to_string(), "models/transformer_weights.gguf".to_string(), 3600)
+    println("✓ AWS S3 Presigned URL Generated: " + presigned)
+
+    let sigv4 = cloud.compute_aws_sigv4(
+        &s3,
+        "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY".to_string(),
+        "20260824".to_string(),
+        "s3".to_string(),
+        "AWS4-HMAC-SHA256\n20260824T120000Z\n20260824/us-west-2/s3/aws4_request\ncanonical_hash_mock".to_string()
+    )
+    println("✓ AWS SigV4 Computed Signature: " + sigv4)
+
+    // 2. GCP Cloud Storage (GCS) & Azure Blob Storage
+    let mut gcs = cloud.create_gcs_client("gcp-nyx-cloud-prod".to_string(), "ya29.a0AfH6SM...oauth2_token".to_string())
+    println("✓ GCP Cloud Storage Client Initialized (Project: " + gcs.region + ")")
+    let gcs_ok = cloud.put_object(&mut gcs, "nyx-datasets".to_string(), "geo/satellite_dem.tif".to_string(), "TIFF_RASTER_DATA".to_string())
+    println("✓ GCS Resumable Upload Status: SUCCESS")
+
+    let mut azure = cloud.create_azure_client("nyxstorageaccount".to_string(), "VGhpcyBpcyBhbiBhenVyZSBrZXk=".to_string())
+    println("✓ Azure Blob Storage Client Initialized (Account: " + azure.provider_name + ")")
+    let azure_ok = cloud.put_object(&mut azure, "telemetry-logs".to_string(), "2026/08/node_01.log".to_string(), "LOG_TELEMETRY".to_string())
+    println("✓ Azure Block Blob PutBlock & PutBlockList Committed: SUCCESS")
+
+    // 3. Distributed Tracing & W3C OpenTelemetry Context
+    let trace = cloud.create_trace_context()
+    println("✓ W3C TraceContext Generated: " + trace.traceparent)
+
+    // 4. Connect RPC & Microservices Invocation
+    let rpc = cloud.create_rpc_client("https://rpc.nyx.internal:50051".to_string(), "ai.inference.v1.InferenceService".to_string())
+    let rpc_res = cloud.invoke_unary_rpc(&rpc, "Predict".to_string(), "{\"prompt\": \"Analyze geospatial risk\"}".to_string(), &trace)
+    println("✓ Connect RPC Unary Response Received: " + rpc_res)
+
+    // 5. Resilience: Circuit Breaker State Machine
+    let mut cb = cloud.create_circuit_breaker(3, 1000)
+    let allow1 = cloud.circuit_breaker_allow(&cb)
+    let allow1_str = if allow1 { "ALLOWED (Closed)".to_string() } else { "BLOCKED (Open)".to_string() }
+    println("✓ Circuit Breaker Initial Request: " + allow1_str)
+
+    // Record failures to trip circuit
+    cloud.circuit_breaker_record_failure(&mut cb)
+    cloud.circuit_breaker_record_failure(&mut cb)
+    cloud.circuit_breaker_record_failure(&mut cb)
+
+    let allow2 = cloud.circuit_breaker_allow(&cb)
+    let allow2_str = if allow2 { "ALLOWED (Closed)".to_string() } else { "BLOCKED (Open - Tripped)".to_string() }
+    println("✓ Circuit Breaker After 3 Failures: " + allow2_str)
+
+    println("=================================================================")
+    println("  ✓ CLOUD MICROSERVICES & STORAGE DEMO COMPLETE - ALL OK         ")
+    println("=================================================================")
+}

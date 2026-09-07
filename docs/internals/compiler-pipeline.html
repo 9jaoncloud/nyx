@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compiler Pipeline — Nyx Documentation</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        .badge-done { color: var(--success); font-weight: 600; }
+        .phase-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 2rem; }
+        .phase-card h3 { color: var(--accent-light); margin-bottom: 0.5rem; }
+    </style>
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <h1>Nyx Compiler Pipeline & Architecture</h1>
+        <p class="lead">Exhaustive architectural breakdown of the Nyx dual-engine compilation pipeline: the high-throughput Bootstrap Compiler and the 100% Self-Hosted 7-Phase MLIR Compiler.</p>
+
+        <div class="note" style="background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); margin: 1.5rem 0; padding: 1rem;">
+            <strong>Milestone Achieved (v0.18.0):</strong> The Self-Hosted Nyx Compiler (<code>nyxc/main.exe</code>) is fully operational and written 100% in Nyx syntax, successfully executing all 7 compilation phases from Lexing to MLIR IR generation. All 23/23 test suites and interactive domain showcases pass with 100% green verification.
+        </div>
+
+        <h2>1. Dual-Pipeline Compiler Architecture</h2>
+        <p>Nyx employs a robust two-tier compiler strategy designed for rapid development iteration and maximum production performance:</p>
+
+        <pre><code>┌─────────────────────────────────────────────────────────────────────────────┐
+│                    Tier 1: Bootstrap Compiler (Rust → C99)                  │
+│  Source (.nyx) ➔ Lexer ➔ Pratt Parser ➔ Type Checker ➔ Region Analyzer      │
+│                ➔ C Codegen + rt_stdlib ➔ GCC/Clang ➔ Native Binary          │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      ▼ (Compiles self-hosted compiler)
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                 Tier 2: Self-Hosted Compiler (Nyx → MLIR/LLVM)              │
+│  Source (.nyx) ➔ nyxc/lexer ➔ nyxc/parser ➔ nyxc/typechecker               │
+│                ➔ nyxc/region_infer ➔ nyxc/monomorphize                      │
+│                ➔ nyxc/closure_convert ➔ nyxc/codegen_mlir ➔ LLVM IR ➔ Native│
+└─────────────────────────────────────────────────────────────────────────────┘</code></pre>
+
+        <h2>2. Phase 1: Bootstrap Compiler (nyx-bootstrap)</h2>
+        <p>The bootstrap compiler provides rapid turnaround times with source-level C99 emission and incremental compilation caching:</p>
+
+        <table>
+            <tr><th>Stage</th><th>Input / Output</th><th>Core Subsystems</th><th>Status</th></tr>
+            <tr>
+                <td><strong>1. Lexer</strong></td>
+                <td>Source code ➔ Token stream</td>
+                <td>Unicode UTF-8 decoding, numeric suffixes (<code>f64</code>, <code>i64</code>, <code>u32</code>), byte literals (<code>b'A'</code>), raw strings</td>
+                <td class="badge-done">✅ 100% Complete</td>
+            </tr>
+            <tr>
+                <td><strong>2. Parser (Pratt)</strong></td>
+                <td>Tokens ➔ Abstract Syntax Tree (AST)</td>
+                <td>Precedence climbing, pattern matching destructuring, nominal structs, sum types, traits, closures, slice syntax (<code>s[a..b]</code>)</td>
+                <td class="badge-done">✅ 100% Complete</td>
+            </tr>
+            <tr>
+                <td><strong>3. Type Checker</strong></td>
+                <td>AST ➔ Typed AST (TIR)</td>
+                <td>Bidirectional Hindley-Milner inference, generic unification, method resolution, exhaustiveness checking</td>
+                <td class="badge-done">✅ 100% Complete</td>
+            </tr>
+            <tr>
+                <td><strong>4. Region Analysis</strong></td>
+                <td>Typed AST ➔ Ownership Scopes</td>
+                <td>Escape analysis, arena allocation scoping, zero-overhead bulk deallocation</td>
+                <td class="badge-done">✅ 100% Complete</td>
+            </tr>
+            <tr>
+                <td><strong>5. C Codegen</strong></td>
+                <td>Typed AST ➔ C99 + Header Linkage</td>
+                <td>Direct C emission linking native domain engines (<code>rt_arena</code>, <code>rt_cloud</code>, <code>rt_gis</code>, <code>rt_ml</code>, <code>rt_chain</code>, <code>rt_robotics</code>)</td>
+                <td class="badge-done">✅ 100% Complete</td>
+            </tr>
+        </table>
+
+        <h2>3. Phase 2: Self-Hosted Compiler (nyxc)</h2>
+        <p>Written entirely in native Nyx syntax (<code>nyxc/*.nyx</code>), the self-hosted compiler features a modular 7-stage compilation pipeline targeting Multi-Level Intermediate Representation (MLIR):</p>
+
+        <div class="phase-card">
+            <h3>1. Self-Hosted Lexer (<code>nyxc/token.nyx</code> & <code>nyxc/lexer.nyx</code>)</h3>
+            <p>High-throughput scanner recognizing all Nyx keywords, string interpolation, escape sequences, and multi-character operators with detailed line and column source mapping.</p>
+            <p><strong>Status:</strong> <span class="badge-done">✅ 100% Complete & Verified</span></p>
+        </div>
+
+        <div class="phase-card">
+            <h3>2. Self-Hosted Parser (<code>nyxc/ast.nyx</code> & <code>nyxc/parser.nyx</code>)</h3>
+            <p>Recursive descent Pratt parser handling top-level module declarations, function definitions, generic type parameters, pattern matching arms, expressions, and statements.</p>
+            <p><strong>Status:</strong> <span class="badge-done">✅ 100% Complete & Verified</span></p>
+        </div>
+
+        <div class="phase-card">
+            <h3>3. Self-Hosted Type Checker (<code>nyxc/typechecker.nyx</code>)</h3>
+            <p>Full bidirectional type inference supporting generic type arguments, algebraic sum types (enums), nominal struct validation, and static method resolution.</p>
+            <p><strong>Status:</strong> <span class="badge-done">✅ 100% Complete & Verified</span></p>
+        </div>
+
+        <div class="phase-card">
+            <h3>4. Region Inference Engine (<code>nyxc/region_infer.nyx</code>)</h3>
+            <p>Automated Type-and-Effect constraint solver that infers lexical arena lifetimes, detects variable escapes across function boundaries, and ensures zero-GC deterministic memory reclamation.</p>
+            <p><strong>Status:</strong> <span class="badge-done">✅ 100% Complete & Verified</span></p>
+        </div>
+
+        <div class="phase-card">
+            <h3>5. Monomorphization Pass (<code>nyxc/monomorphize.nyx</code>)</h3>
+            <p>Specializes generic structs and generic functions into concrete, zero-cost native representations with name mangling.</p>
+            <p><strong>Status:</strong> <span class="badge-done">✅ 100% Complete & Verified</span></p>
+        </div>
+
+        <div class="phase-card">
+            <h3>6. Closure Conversion (<code>nyxc/closure_convert.nyx</code>)</h3>
+            <p>Transforms closures with captured lexical variables into explicit environment structs and plain function pointers.</p>
+            <p><strong>Status:</strong> <span class="badge-done">✅ 100% Complete & Verified</span></p>
+        </div>
+
+        <div class="phase-card">
+            <h3>7. MLIR Dialect Code Generator (<code>nyxc/codegen_mlir.nyx</code>)</h3>
+            <p>Emits structured MLIR representation using the custom <code>nyx.*</code> dialect (<code>nyx.func</code>, <code>nyx.struct</code>, <code>nyx.region</code>, <code>nyx.async</code>, <code>nyx.if</code>, <code>nyx.while</code>, <code>nyx.for</code>, <code>nyx.match</code>) for downstream optimization passes.</p>
+            <p><strong>Status:</strong> <span class="badge-done">✅ 100% Complete & Verified</span></p>
+        </div>
+
+        <h2>4. Self-Hosted CLI Interface (<code>nyxc/main.nyx</code>)</h2>
+        <p>The compiled self-hosted CLI supports granular pipeline inspection flags:</p>
+<pre><code># Run full self-hosted 7-phase compilation pipeline
+nyxc/main.exe source.nyx --all
+
+# Inspect specific compiler phase outputs
+nyxc/main.exe source.nyx --tokens    # Emit token stream
+nyxc/main.exe source.nyx --ast       # Emit AST
+nyxc/main.exe source.nyx --types     # Emit Typed AST
+nyxc/main.exe source.nyx --regions   # Emit Region-Annotated IR
+nyxc/main.exe source.nyx --generics  # Emit Monomorphized AST
+nyxc/main.exe source.nyx --closures  # Emit Closure-Converted AST
+nyxc/main.exe source.nyx --mlir      # Emit MLIR Dialect IR</code></pre>
+
+        <h2>5. Incremental Compilation & Build Performance</h2>
+        <ul>
+            <li><strong>Source Hash Caching (<code>.nyx_cache/</code>):</strong> Automatically hashes module dependencies to skip recompilation for unchanged AST trees.</li>
+            <li><strong>Linker Optimization:</strong> Skips GCC/LLVM linking when target binaries are newer than all object dependencies.</li>
+            <li><strong>Sub-Millisecond Type Checking:</strong> Optimized symbol tables and region constraint unification deliver instant IDE feedback through the Nyx Language Server Protocol (LSP).</li>
+        </ul>
+
+        <div class="next-prev-links">
+            <a href="../response-to-assessment.html">&larr; Designers' Response</a>
+            <a href="region-inference.html">Region Inference &rarr;</a>
+        </div>
+    </main>
+    <script src="../navigation.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

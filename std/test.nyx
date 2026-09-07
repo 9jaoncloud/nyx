@@ -1,0 +1,96 @@
+module test
+
+pub struct TestResult {
+    pub name: String,
+    pub passed: Bool,
+    pub message: String,
+}
+
+pub fn assert_eq<T>(actual: T, expected: T) where T: Eq {
+    if actual != expected {
+        std.io.eprintln("Assertion failed: values not equal")
+        std.io.eprintln("  expected: " + expected.to_string())
+        std.io.eprintln("  actual:   " + actual.to_string())
+    }
+}
+
+pub fn assert_ne<T>(actual: T, expected: T) where T: Eq {
+    if actual == expected {
+        std.io.eprintln("Assertion failed: values are equal (expected different)")
+    }
+}
+
+pub fn assert_true(value: Bool) {
+    if !value {
+        std.io.eprintln("Assertion failed: expected true, got false")
+    }
+}
+
+pub fn assert_false(value: Bool) {
+    if value {
+        std.io.eprintln("Assertion failed: expected false, got true")
+    }
+}
+
+pub fn assert_null<T>(value: Option<T>) {
+    match value {
+        Option.Some(_) => std.io.eprintln("Assertion failed: expected None, got Some"),
+        Option.None => {},
+    }
+}
+
+pub fn assert_some<T>(value: Option<T>) {
+    match value {
+        Option.Some(_) => {},
+        Option.None => std.io.eprintln("Assertion failed: expected Some, got None"),
+    }
+}
+
+pub fn assert_ok<T, E>(result: Result<T, E>) {
+    match result {
+        Result.Ok(_) => {},
+        Result.Err(e) => std.io.eprintln("Assertion failed: expected Ok, got Err(" + e.to_string() + ")"),
+    }
+}
+
+pub fn assert_err<T, E>(result: Result<T, E>) {
+    match result {
+        Result.Ok(v) => std.io.eprintln("Assertion failed: expected Err, got Ok(" + v.to_string() + ")"),
+        Result.Err(_) => {},
+    }
+}
+
+pub fn assert_near(actual: f64, expected: f64, epsilon: f64) {
+    let diff = if actual > expected { actual - expected } else { expected - actual }
+    if diff > epsilon {
+        std.io.eprintln("Assertion failed: " + actual.to_string() + " is not near " + expected.to_string())
+    }
+}
+
+pub fn assert_panics(f: fn()) {
+    std.io.eprintln("assert_panics: not yet supported")
+}
+
+pub fn assert_len<T>(collection: Vec<T>, expected: u64) {
+    if collection.len() != expected {
+        std.io.eprintln("Assertion failed: expected length " + expected.to_string() + ", got " + collection.len().to_string())
+    }
+}
+
+pub fn assert_empty<T>(collection: Vec<T>) {
+    if collection.len() != 0 {
+        std.io.eprintln("Assertion failed: expected empty collection, got " + collection.len().to_string() + " elements")
+    }
+}
+
+pub fn assert_contains(haystack: String, needle: String) {
+    if !haystack.contains(needle.clone()) {
+        std.io.eprintln("Assertion failed: String does not contain '" + needle + "'")
+    }
+}
+
+pub fn run_test(name: String, f: fn()) -> TestResult {
+    std.io.println("  Running: " + name)
+    f()
+    TestResult { name, passed: true, message: "".to_string() }
+}

@@ -1,0 +1,404 @@
+module string
+
+extern "C" {
+    fn strlen(s: *const u8) -> u64
+    fn strcmp(a: *const u8, b: *const u8) -> i32
+    fn strstr(haystack: *const u8, needle: *const u8) -> *const u8
+    fn strcpy(dst: *mut u8, src: *const u8) -> *mut u8
+    fn strcat(dst: *mut u8, src: *const u8) -> *mut u8
+    fn strtol(s: *const u8, end: *mut *mut u8, base: i32) -> i64
+    fn strtod(s: *const u8, end: *mut *mut u8) -> f64
+    fn memcpy(dst: *mut u8, src: *const u8, n: u64) -> *mut u8
+    fn malloc(size: u64) -> *mut u8
+    fn free(ptr: *mut u8)
+    fn toupper(c: i32) -> i32
+    fn tolower(c: i32) -> i32
+    fn isdigit(c: i32) -> i32
+    fn isalpha(c: i32) -> i32
+    fn isalnum(c: i32) -> i32
+    fn isspace(c: i32) -> i32
+}
+
+pub fn new() -> String { "".to_string() }
+pub fn from(s: &str) -> String { s.to_string() }
+pub fn len(s: String) -> Int { unsafe { strlen(s.as_ptr()) as Int } }
+pub fn is_empty(s: String) -> Bool { len(s) == 0 }
+
+pub fn contains(s: String, substr: String) -> Bool {
+    unsafe { strstr(s.as_ptr(), substr.as_ptr()) != null }
+}
+
+pub fn starts_with(s: String, prefix: String) -> Bool {
+    if len(prefix) > len(s) { return false }
+    contains(s.slice(0, len(prefix)), prefix)
+}
+
+pub fn ends_with(s: String, suffix: String) -> Bool {
+    let sl = len(s)
+    let suffix_len = len(suffix)
+    if suffix_len > sl { return false }
+    contains(s.slice(sl - suffix_len, sl), suffix)
+}
+
+pub fn find(s: String, substr: String) -> Option<Int> {
+    let idx = find_index(s, substr)
+    if idx == -1 { Option.None } else { Option.Some(idx) }
+}
+
+pub fn rfind(s: String, substr: String) -> Option<Int> {
+    let sl = len(s)
+    let sub_len = len(substr)
+    if sub_len > sl { return Option.None }
+    let mut i = sl - sub_len
+    while i >= 0 {
+        if slice(s, i, i + sub_len) == substr { return Option.Some(i) }
+        i = i - 1
+    }
+    Option.None
+}
+
+pub fn count(s: String, substr: String) -> Int {
+    let mut result = 0
+    let mut pos = 0
+    let sl = len(s)
+    let sub_len = len(substr)
+    while pos + sub_len <= sl {
+        if slice(s, pos, pos + sub_len) == substr {
+            result = result + 1
+            pos = pos + sub_len
+        } else {
+            pos = pos + 1
+        }
+    }
+    result
+}
+
+pub fn repeat(s: String, n: Int) -> String {
+    let mut result = ""
+    let mut i = 0
+    while i < n {
+        result = result + s.clone()
+        i = i + 1
+    }
+    result
+}
+
+pub fn reverse(s: String) -> String {
+    let sl = len(s)
+    let mut result = ""
+    let mut i = sl
+    while i > 0 {
+        i = i - 1
+        result = result + char_at(s, i)
+    }
+    result
+}
+
+pub fn lines(s: String) -> Vec<String> {
+    split(s, "\n".to_string())
+}
+
+pub fn words(s: String) -> Vec<String> {
+    split(trim(s), " ".to_string())
+}
+
+pub fn capitalize(s: String) -> String {
+    if len(s) == 0 { return s }
+    let first = char_at(s, 0)
+    let upper_first = if first >= 'a' && first <= 'z' { (first as Int - 32) as Char } else { first }
+    String.from_char(upper_first) + slice(s, 1, len(s))
+}
+
+pub fn swapcase(s: String) -> String {
+    let sl = len(s)
+    let mut result = ""
+    for i in 0..sl {
+        let c = char_at(s, i)
+        if c >= 'a' && c <= 'z' {
+            result = result + ((c as Int - 32) as Char)
+        } else if c >= 'A' && c <= 'Z' {
+            result = result + ((c as Int + 32) as Char)
+        } else {
+            result = result + c
+        }
+    }
+    result
+}
+
+pub fn pad_left(s: String, width: Int, pad: Char) -> String {
+    let sl = len(s)
+    if sl >= width { return s }
+    repeat(String.from_char(pad), width - sl) + s
+}
+
+pub fn pad_right(s: String, width: Int, pad: Char) -> String {
+    let sl = len(s)
+    if sl >= width { return s }
+    s + repeat(String.from_char(pad), width - sl)
+}
+
+pub fn is_alpha(s: String) -> Bool {
+    let sl = len(s)
+    if sl == 0 { return false }
+    for i in 0..sl {
+        let c = char_at(s, i)
+        if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) { return false }
+    }
+    true
+}
+
+pub fn is_digit(s: String) -> Bool {
+    let sl = len(s)
+    if sl == 0 { return false }
+    for i in 0..sl {
+        let c = char_at(s, i)
+        if c < '0' || c > '9' { return false }
+    }
+    true
+}
+
+pub fn is_alnum(s: String) -> Bool {
+    let sl = len(s)
+    if sl == 0 { return false }
+    for i in 0..sl {
+        let c = char_at(s, i)
+        if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) { return false }
+    }
+    true
+}
+
+pub fn is_lower(s: String) -> Bool {
+    let sl = len(s)
+    if sl == 0 { return false }
+    for i in 0..sl {
+        let c = char_at(s, i)
+        if !(c >= 'a' && c <= 'z') { return false }
+    }
+    true
+}
+
+pub fn is_upper(s: String) -> Bool {
+    let sl = len(s)
+    if sl == 0 { return false }
+    for i in 0..sl {
+        let c = char_at(s, i)
+        if !(c >= 'A' && c <= 'Z') { return false }
+    }
+    true
+}
+
+pub fn is_whitespace(s: String) -> Bool {
+    let sl = len(s)
+    if sl == 0 { return false }
+    for i in 0..sl {
+        let c = char_at(s, i)
+        if !is_space(c) { return false }
+    }
+    true
+}
+
+pub fn from_char(c: Char) -> String {
+    let mut result = ""
+    result = result + c
+    result
+}
+
+pub fn from_chars(chars: Vec<Char>) -> String {
+    let mut result = ""
+    for c in chars {
+        result = result + c
+    }
+    result
+}
+
+pub fn new() -> String { "".to_string() }
+pub fn from(s: &str) -> String { s.to_string() }
+pub fn len(s: String) -> Int { unsafe { strlen(s.as_ptr()) as Int } }
+pub fn is_empty(s: String) -> Bool { len(s) == 0 }
+
+pub fn contains(s: String, substr: String) -> Bool {
+    unsafe { strstr(s.as_ptr(), substr.as_ptr()) != null }
+}
+
+pub fn starts_with(s: String, prefix: String) -> Bool {
+    if len(prefix) > len(s) { return false }
+    contains(s.slice(0, len(prefix)), prefix)
+}
+
+pub fn ends_with(s: String, suffix: String) -> Bool {
+    let sl = len(s)
+    let suffix_len = len(suffix)
+    if suffix_len > sl { return false }
+    contains(s.slice(sl - suffix_len, sl), suffix)
+}
+
+pub fn split(s: String, delim: String) -> Vec<String> {
+    let mut result = Vec.new()
+    let delim_len = len(delim)
+    if delim_len == 0 {
+        result.push(s)
+        return result
+    }
+    let mut start = 0
+    let sl = len(s)
+    while start < sl {
+        let rest = s.slice(start, sl)
+        if contains(rest, delim) {
+            let pos = find_index(rest, delim)
+            result.push(s.slice(start, start + pos))
+            start = start + pos + delim_len
+        } else {
+            result.push(s.slice(start, sl))
+            break
+        }
+    }
+    result
+}
+
+pub fn replace(s: String, from: String, to: String) -> String {
+    let parts = split(s, from)
+    join(parts, to)
+}
+
+pub fn join(parts: Vec<String>, sep: String) -> String {
+    let mut result = ""
+    for i in 0..parts.len() {
+        if i > 0 { result = result + sep }
+        result = result + parts.get(i).unwrap()
+    }
+    result
+}
+
+pub fn trim(s: String) -> String {
+    let sl = len(s)
+    let mut start = 0
+    while start < sl && is_space(char_at(s, start)) {
+        start = start + 1
+    }
+    let mut end = sl
+    while end > start && is_space(char_at(s, end - 1)) {
+        end = end - 1
+    }
+    s.slice(start, end)
+}
+
+pub fn to_lower(s: String) -> String {
+    let sl = len(s)
+    let mut result = ""
+    for i in 0..sl {
+        let c = char_at(s, i)
+        if c >= 'A' && c <= 'Z' {
+            result = result + (c as Int + 32) as Char
+        } else {
+            result = result + c
+        }
+    }
+    result
+}
+
+pub fn to_upper(s: String) -> String {
+    let sl = len(s)
+    let mut result = ""
+    for i in 0..sl {
+        let c = char_at(s, i)
+        if c >= 'a' && c <= 'z' {
+            result = result + (c as Int - 32) as Char
+        } else {
+            result = result + c
+        }
+    }
+    result
+}
+
+pub fn parse_int(s: String) -> Option<Int> {
+    let trimmed = trim(s)
+    if is_empty(trimmed) { return Option.None }
+    unsafe {
+        let mut end: *mut u8 = null
+        let val = strtol(trimmed.as_ptr(), &mut end, 10)
+        if end == trimmed.as_ptr() { Option.None }
+        else { Option.Some(val as Int) }
+    }
+}
+
+pub fn parse_float(s: String) -> Option<Float> {
+    let trimmed = trim(s)
+    if is_empty(trimmed) { return Option.None }
+    unsafe {
+        let mut end: *mut u8 = null
+        let val = strtod(trimmed.as_ptr(), &mut end)
+        if end == trimmed.as_ptr() { Option.None }
+        else { Option.Some(val) }
+    }
+}
+
+pub fn to_string_int(n: Int) -> String {
+    if n == 0 { return "0" }
+    let mut result = ""
+    let mut val = n
+    let negative = val < 0
+    if negative { val = -val }
+    while val > 0 {
+        let digit = (val % 10) as Char
+        result = (digit + '0') + result
+        val = val / 10
+    }
+    if negative { "-" + result } else { result }
+}
+
+pub fn to_string_float(f: Float) -> String {
+    if f == 0.0 { return "0.0" }
+    let int_part = f as Int
+    to_string_int(int_part) + "." + to_string_int(((f - int_part as Float) * 1000.0) as Int)
+}
+
+pub fn char_at(s: String, index: Int) -> Char {
+    unsafe { *s.as_ptr().add(index as usize) as Char }
+}
+
+pub fn slice(s: String, start: Int, end: Int) -> String {
+    let len = end - start
+    if len <= 0 { return "" }
+    unsafe {
+        let buf = malloc(len as u64 + 1)
+        memcpy(buf, s.as_ptr().add(start as usize), len as u64)
+        *buf.add(len as usize) = 0
+        buf as String
+    }
+}
+
+fn find_index(haystack: String, needle: String) -> Int {
+    let hl = len(haystack)
+    let nl = len(needle)
+    for i in 0..(hl - nl + 1) {
+        if slice(haystack, i, i + nl) == needle {
+            return i
+        }
+    }
+    -1
+}
+
+fn is_space(c: Char) -> Bool {
+    c == ' ' || c == '\t' || c == '\n' || c == '\r'
+}
+
+pub fn format(fmt: String, args: Vec<String>) -> String {
+    let mut result = ""
+    let mut arg_idx = 0
+    let fl = len(fmt)
+    let mut i = 0
+    while i < fl {
+        let c = char_at(fmt, i)
+        if c == '{' && i + 1 < fl && char_at(fmt, i + 1) == '}' {
+            if arg_idx < args.len() {
+                result = result + args.get(arg_idx).unwrap()
+                arg_idx = arg_idx + 1
+            }
+            i = i + 2
+        } else {
+            result = result + c
+            i = i + 1
+        }
+    }
+    result
+}

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>std.gis (Geospatial Spatial Engine & GeoAI Memory) — Nyx Docs</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <h1>std.gis — Geospatial Spatial Engine & GeoAI Memory</h1>
+        <p style="color:var(--text-muted)">OGC-compliant geospatial processing, Coordinate Reference System (CRS) transformations, spatial envelopes, hillshading, and TencentDB-inspired Spatial Agent Memory Store.</p>
+
+        <div class="note" style="background: rgba(124, 58, 237, 0.1); border-left: 3px solid var(--accent); margin: 1.5rem 0;">
+            <strong>Module Namespace:</strong> <code>import std.gis.geo</code> | <code>import std.gis.spatial</code> | <code>import std.gis.memory</code>
+        </div>
+
+        <h2>Overview</h2>
+        <p>The <code>std.gis</code> module provides exhaustive enterprise-grade spatial analysis capabilities, enabling developers to build robust desktop and enterprise GIS applications (comparable in feature scope to ArcGIS and QGIS). It includes geodesic distance calculations, Web Mercator CRS projections, ray-casting point-in-polygon containment, spatial grid indexing, elevation raster hillshading, and a location-indexed Spatial Agent Memory Store for GeoAI applications.</p>
+
+        <h2>Sub-Modules & API Reference</h2>
+
+        <h3>1. <code>std.gis.geo</code> (Geodesic Core & Geometry)</h3>
+        <table>
+            <tr><th>Struct / Function</th><th>Description</th></tr>
+            <tr><td><code>struct Point</code></td><td>Represents a 3D geographic point with <code>lat</code>, <code>lon</code>, and elevation <code>z</code>.</td></tr>
+            <tr><td><code>struct WebMercatorPoint</code></td><td>Represents projected planar coordinates <code>x</code>, <code>y</code> in EPSG:3857.</td></tr>
+            <tr><td><code>fn create_point(lat: f64, lon: f64) -> Point</code></td><td>Constructs a new WGS84 point.</td></tr>
+            <tr><td><code>fn distance_km(p1: &Point, p2: &Point) -> f64</code></td><td>Computes WGS84 geodesic distance using the Haversine formula.</td></tr>
+            <tr><td><code>fn to_web_mercator(pt: &Point) -> WebMercatorPoint</code></td><td>Forward projects EPSG:4326 (WGS84) to EPSG:3857 (Web Mercator).</td></tr>
+            <tr><td><code>fn to_wgs84(merc: &WebMercatorPoint) -> Point</code></td><td>Inverse projects EPSG:3857 back to EPSG:4326 WGS84.</td></tr>
+            <tr><td><code>fn create_polygon(min_lat: f64, max_lat: f64, min_lon: f64, max_lon: f64) -> Polygon</code></td><td>Defines a polygon bounding geometry.</td></tr>
+            <tr><td><code>fn point_in_polygon(poly: &Polygon, pt: &Point) -> bool</code></td><td>Ray-casting spatial intersection test checking if point falls inside polygon bounds.</td></tr>
+            <tr><td><code>fn calculate_hillshade(dz_dx: f64, dz_dy: f64) -> f64</code></td><td>Calculates terrain surface hillshade illumination value (315° azimuth, 45° altitude).</td></tr>
+        </table>
+
+        <h3>2. <code>std.gis.spatial</code> (Spatial Indexing & Grid Acceleration)</h3>
+        <table>
+            <tr><th>Struct / Function</th><th>Description</th></tr>
+            <tr><td><code>struct SpatialGridIndex</code></td><td>Grid index dividing bounding space into degree-based cell buckets.</td></tr>
+            <tr><td><code>fn get_cell_key(self: &SpatialGridIndex, lat: f64, lon: f64) -> String</code></td><td>Generates spatial grid key string for fast O(1) cell lookup.</td></tr>
+            <tr><td><code>struct RasterElevationGrid</code></td><td>Digital Elevation Model (DEM) raster grid metadata container.</td></tr>
+        </table>
+
+        <h3>3. <code>std.gis.memory</code> (Spatial Agent Memory Store — GeoAI)</h3>
+        <table>
+            <tr><th>Struct / Function</th><th>Description</th></tr>
+            <tr><td><code>struct SpatialMemoryEntity</code></td><td>Memory record binding <code>agent_id</code>, location <code>Point</code>, category, content, and timestamp.</td></tr>
+            <tr><td><code>struct SpatialAgentMemoryStore</code></td><td>Container for agent memory logs with spatio-temporal query support.</td></tr>
+            <tr><td><code>fn insert_memory(store: &mut SpatialAgentMemoryStore, mem: SpatialMemoryEntity)</code></td><td>Appends a spatial memory entity to the agent store.</td></tr>
+            <tr><td><code>fn recall_nearby_memories(store: &SpatialAgentMemoryStore, pos: &Point, radius_km: f64) -> Vec&lt;SpatialMemoryEntity&gt;</code></td><td>Queries and returns all agent memories within specified radius in km.</td></tr>
+        </table>
+
+        <h2>Code Example</h2>
+        <pre><code>import std.io
+import std.gis.geo
+import std.gis.memory
+
+fn main() {
+    // 1. Calculate Geodesic Distance
+    let sf = geo.create_point(37.7749, -122.4194)
+    let la = geo.create_point(34.0522, -118.2437)
+    let dist = geo.distance_km(&sf, &la)
+    println("Geodesic Distance SF -> LA: " + dist.to_string() + " km")
+
+    // 2. Forward CRS Projection
+    let merc = geo.to_web_mercator(&sf)
+    println("EPSG:3857 Mercator X: " + merc.x.to_string() + " Y: " + merc.y.to_string())
+
+    // 3. GeoAI Agent Spatial Memory Recall
+    let mut store = memory.SpatialAgentMemoryStore.new("DroneAgent_01".to_string())
+    let mem = memory.SpatialMemoryEntity.new(
+        "MEM-101".to_string(), "AgentAlpha".to_string(),
+        37.7749, -122.4194, "ThermalScan".to_string(), "Heat signature detected".to_string(), 1700000000
+    )
+    store.insert_memory(mem)
+}</code></pre>
+    </main>
+    <script src="../navigation.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nyx vs C & C++ — Zero-GC Determinism with 100% Memory Safety</title>
+    <meta name="description" content="Technical comparison between Nyx and C/C++: Delivering C-level throughput and zero-GC determinism while mathematically eliminating memory corruption vulnerabilities.">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+            <a href="index.html" style="color: var(--accent-light); text-decoration: none; font-size: 0.85rem;">&larr; Comparisons Hub</a>
+            <span style="color: var(--text-muted); font-size: 0.85rem;">/</span>
+            <span style="color: #60a5fa; font-size: 0.85rem; font-weight: 600;">C / C++ Comparison</span>
+        </div>
+
+        <h1>Nyx vs C &amp; C++</h1>
+        <p class="lead">Delivering the Bare-Metal Velocity and Zero-GC Predictability of C/C++ while Eliminating 70% of Historical Memory Vulnerabilities.</p>
+
+        <h2>1. The 70% Vulnerability Problem</h2>
+        <p>
+            For fifty years, C and C++ have powered operating system kernels, game engines, and low-latency financial systems due to their <strong>deterministic $O(1)$ allocation, low memory footprint, and zero garbage collection pauses</strong>.
+        </p>
+        <p>
+            However, manual pointer management has a catastrophic safety cost: industry security reports from both <strong>Microsoft Security Response Center (MSRC)</strong> and the <strong>Google Chromium Team</strong> consistently show that <strong>~70% of all critical CVE security vulnerabilities</strong> are memory safety violations (use-after-free, double-free, null dereference, buffer overflows).
+        </p>
+
+        <div class="card" style="margin: 1.5rem 0; border-color: rgba(96, 165, 250, 0.4);">
+            <h3 style="color: #60a5fa;">The Nyx Objective:</h3>
+            <p style="color: var(--text-primary); font-size: 1.05rem;">
+                Keep the raw bare-metal execution speed, direct C FFI compatibility, and zero-GC determinism of C/C++ — while providing <strong>100% mathematical spatial and temporal memory safety</strong> through static region inference.
+            </p>
+        </div>
+
+        <h2>2. Technical Comparison Matrix</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Dimension</th>
+                    <th>C / C++ (C++20/23)</th>
+                    <th>Nyx Systems Language</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Spatial Safety (Bounds)</strong></td>
+                    <td style="color:var(--error)">Manual (Buffer overflows possible)</td>
+                    <td style="color:var(--success)">100% Compile-Time + Safe Slices</td>
+                </tr>
+                <tr>
+                    <td><strong>Temporal Safety</strong></td>
+                    <td style="color:var(--error)">Unsafe (Use-after-free, double-free)</td>
+                    <td style="color:var(--success)">100% Sound (Static Region Inference)</td>
+                </tr>
+                <tr>
+                    <td><strong>GC Pause Latency</strong></td>
+                    <td style="color:var(--success)">0.00 ms (Deterministic)</td>
+                    <td style="color:var(--success)">0.00 ms (Deterministic)</td>
+                </tr>
+                <tr>
+                    <td><strong>Allocation Speed</strong></td>
+                    <td>Heap <code>malloc</code> (~20-50 CPU cycles)</td>
+                    <td style="color:var(--success)">Stack bump pointer ($1\text{--}2$ CPU cycles)</td>
+                </tr>
+                <tr>
+                    <td><strong>Header Compilation / Build Times</strong></td>
+                    <td style="color:var(--error)">Slow (Header inclusion explosion)</td>
+                    <td style="color:var(--success)">Instant (Clean modular package system)</td>
+                </tr>
+                <tr>
+                    <td><strong>Concurrency Safety</strong></td>
+                    <td style="color:var(--error)">Undefined behavior on data races</td>
+                    <td style="color:var(--success)">Structured Nurseries &amp; Thread-Safe Regions</td>
+                </tr>
+                <tr>
+                    <td><strong>C Interoperability</strong></td>
+                    <td style="color:var(--success)">Native C ABI</td>
+                    <td style="color:var(--success)">Zero-overhead direct C FFI binding</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>3. Side-by-Side Code Example: High-Throughput Packet Processing</h2>
+
+        <div class="card" style="margin-bottom: 1.5rem;">
+            <h4 style="color: #60a5fa; margin-bottom: 0.5rem;">C++ (Manual Memory &amp; Dangling Pointer Risk)</h4>
+<pre><code>// C++: High risk of use-after-free if pointer outlives packet lifecycle
+struct Packet {
+    uint8_t* payload;
+    size_t length;
+};
+
+void process_stream(const uint8_t* raw_data, size_t len) {
+    Packet* p = (Packet*)malloc(sizeof(Packet));
+    p-&gt;payload = (uint8_t*)malloc(len);
+    memcpy(p-&gt;payload, raw_data, len);
+    
+    // If developer forgets free() -> Memory Leak!
+    // If developer frees early -> Use-After-Free CVE!
+    free(p-&gt;payload);
+    free(p);
+}</code></pre>
+        </div>
+
+        <div class="card">
+            <h4 style="color: #a855f7; margin-bottom: 0.5rem;">Nyx (100% Safe Region Bump Frame)</h4>
+<pre><code>// Nyx: Statically inferred region frame. 0.00ms GC, zero manual free.
+struct Packet {
+    payload: &amp;[u8]
+}
+
+fn process_stream(raw_data: &amp;[u8]) {
+    // Slice and packet placed in local region bump frame
+    let packet = Packet { payload: raw_data }
+    
+    // Inspect, parse, and validate safely with bounds checking
+    if packet.payload.len() &gt;= 4 {
+        let magic = packet.payload[0..4]
+        // ...
+    }
+} // Region bump frame resets in 1 CPU cycle automatically!</code></pre>
+        </div>
+
+        <h2>4. When to Use Nyx vs C/C++</h2>
+        <div class="card">
+            <p>
+                Continue using <strong>C/C++</strong> when maintaining entrenched legacy codebases with decades of existing C++ dependencies. Choose <strong>Nyx</strong> for new greenfield sovereign systems, embedded engines, high-frequency servers, and security-critical infrastructure where you require C-level throughput without the persistent threat of memory safety CVEs.
+            </p>
+        </div>
+
+        <div class="next-prev-links" style="margin-top: 3rem;">
+            <a href="nyx-vs-cyclone.html">&larr; Nyx vs Cyclone</a>
+            <a href="nyx-vs-go-java.html">Nyx vs Go &amp; Java &rarr;</a>
+        </div>
+    </main>
+
+    <script src="../navigation.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>
