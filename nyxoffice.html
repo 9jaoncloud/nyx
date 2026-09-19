@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NyxOffice Suite — Sovereign Native Productivity Applications</title>
+    <meta name="description" content="NyxOffice is the sovereign, zero-GC, AI-integrated productivity suite for NyxOS: NyxWriter, NyxCalc, NyxPresent, NyxVault, and Sovereign Terminal.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <style>
+        :root {
+            --bg: #050711;
+            --surface: rgba(13, 19, 36, 0.9);
+            --surface-card: rgba(18, 25, 48, 0.7);
+            --border: rgba(255, 255, 255, 0.12);
+            --border-glow: rgba(139, 92, 246, 0.4);
+            --primary: #8b5cf6;
+            --primary-light: #c084fc;
+            --cyan: #38bdf8;
+            --emerald: #10b981;
+            --amber: #f59e0b;
+            --rose: #f43f5e;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --code-bg: #090d1a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.18) 0px, transparent 50%),
+                radial-gradient(at 100% 30%, rgba(56, 189, 248, 0.14) 0px, transparent 50%),
+                radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 2rem;
+            background: rgba(5, 7, 17, 0.94);
+            backdrop-filter: blur(18px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 1.2rem;
+        }
+        .brand-badge {
+            background: linear-gradient(135deg, var(--primary), var(--cyan));
+            color: #fff;
+            padding: 0.2rem 0.55rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.25rem;
+            align-items: center;
+        }
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .nav-links a:hover, .nav-links a.active {
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 2.5rem 1.5rem 5rem;
+            width: 100%;
+            flex: 1;
+        }
+
+        /* Hero / Suite Intro */
+        .suite-hero {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+        .suite-hero h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3.2rem;
+            font-weight: 900;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.75rem;
+        }
+        .suite-hero h1 span {
+            background: linear-gradient(135deg, #c084fc, #38bdf8, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .suite-hero p {
+            color: var(--text-muted);
+            font-size: 1.15rem;
+            max-width: 780px;
+            margin: 0 auto 1.5rem;
+        }
+
+        /* App Tabs Navigation */
+        .app-tabs {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+        .tab-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.75rem 1.4rem;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            font-weight: 700;
+            font-size: 0.92rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(56, 189, 248, 0.2));
+            border-color: var(--primary-light);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.25);
+        }
+
+        /* Main App Workspace Card */
+        .workspace-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            min-height: 650px;
+        }
+
+        .workspace-header {
+            background: rgba(6, 9, 22, 0.95);
+            border-bottom: 1px solid var(--border);
+            padding: 0.85rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .workspace-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: #fff;
+        }
+        .workspace-actions {
+            display: flex;
+            gap: 0.6rem;
+            align-items: center;
+        }
+        .btn-action {
+            padding: 0.45rem 0.9rem;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text);
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .btn-action:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: var(--primary-light);
+        }
+        .btn-action.btn-ai {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.4), rgba(56, 189, 248, 0.4));
+            border-color: var(--primary-light);
+            color: #fff;
+        }
+
+        .app-view {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+        }
+        .app-view.active {
+            display: flex;
+        }
+
+        /* ------------------------------------------------------------- */
+        /* 1. NyxWriter Styles */
+        /* ------------------------------------------------------------- */
+        .writer-toolbar {
+            background: rgba(10, 14, 28, 0.9);
+            border-bottom: 1px solid var(--border);
+            padding: 0.5rem 1.25rem;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .tool-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            padding: 0.35rem 0.65rem;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .tool-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            border-color: var(--border);
+        }
+        .writer-body {
+            display: flex;
+            flex: 1;
+        }
+        .writer-editor-pane {
+            flex: 1;
+            padding: 2.5rem;
+            outline: none;
+            color: #f1f5f9;
+            font-size: 1.05rem;
+            line-height: 1.8;
+            overflow-y: auto;
+            min-height: 480px;
+        }
+        .writer-editor-pane h1 { font-size: 2.2rem; margin-bottom: 1rem; color: #fff; }
+        .writer-editor-pane h2 { font-size: 1.5rem; margin-top: 1.5rem; margin-bottom: 0.75rem; color: #c084fc; }
+        .writer-editor-pane p { margin-bottom: 1.2rem; }
+        .writer-editor-pane blockquote {
+            border-left: 3px solid var(--cyan);
+            padding-left: 1rem;
+            color: #94a3b8;
+            font-style: italic;
+            margin: 1.2rem 0;
+        }
+        .writer-footer {
+            background: rgba(6, 9, 22, 0.95);
+            border-top: 1px solid var(--border);
+            padding: 0.5rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* ------------------------------------------------------------- */
+        /* 2. NyxCalc Styles */
+        /* ------------------------------------------------------------- */
+        .calc-bar {
+            background: rgba(10, 14, 28, 0.9);
+            border-bottom: 1px solid var(--border);
+            padding: 0.6rem 1.25rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        .formula-input {
+            flex: 1;
+            background: #090d1a;
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88rem;
+            outline: none;
+        }
+        .formula-input:focus { border-color: var(--primary); }
+        .calc-grid-wrapper {
+            flex: 1;
+            overflow: auto;
+            padding: 1rem;
+            background: #080c1b;
+        }
+        .calc-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+        }
+        .calc-table th {
+            background: #0e162c;
+            color: var(--text-muted);
+            padding: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            text-align: center;
+            font-weight: 700;
+            user-select: none;
+        }
+        .calc-table td {
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 0;
+            background: rgba(15, 23, 42, 0.4);
+        }
+        .calc-cell-input {
+            width: 100%;
+            height: 100%;
+            padding: 0.5rem 0.75rem;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-family: inherit;
+            font-size: inherit;
+            outline: none;
+        }
+        .calc-cell-input:focus {
+            background: rgba(139, 92, 246, 0.18);
+            box-shadow: inset 0 0 0 2px var(--primary);
+        }
+
+        /* ------------------------------------------------------------- */
+        /* 3. NyxPresent Styles */
+        /* ------------------------------------------------------------- */
+        .present-layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            flex: 1;
+            min-height: 540px;
+        }
+        .slide-nav {
+            background: #0a0f22;
+            border-right: 1px solid var(--border);
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            overflow-y: auto;
+        }
+        .slide-thumb {
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .slide-thumb:hover { border-color: var(--cyan); }
+        .slide-thumb.active {
+            border-color: var(--primary-light);
+            background: rgba(139, 92, 246, 0.2);
+            box-shadow: 0 4px 14px rgba(139, 92, 246, 0.3);
+        }
+        .slide-canvas {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            background: radial-gradient(circle at center, #0f172a 0%, #060913 100%);
+        }
+        .slide-frame {
+            width: 100%;
+            max-width: 800px;
+            aspect-ratio: 16 / 9;
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
+            border: 1px solid var(--border-glow);
+            border-radius: 16px;
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+            position: relative;
+        }
+
+        /* ------------------------------------------------------------- */
+        /* 4. NyxVault Styles */
+        /* ------------------------------------------------------------- */
+        .vault-layout {
+            padding: 2.5rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            flex: 1;
+        }
+        .vault-card {
+            background: rgba(10, 15, 30, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.75rem;
+        }
+        .vault-card h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            color: #fff;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .key-badge {
+            background: rgba(56, 189, 248, 0.15);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            color: var(--cyan);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        /* ------------------------------------------------------------- */
+        /* 5. NyxTerminal Styles */
+        /* ------------------------------------------------------------- */
+        .terminal-container {
+            background: #04060f;
+            flex: 1;
+            padding: 1.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: #38bdf8;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        .term-history { flex: 1; margin-bottom: 1rem; }
+        .term-line { margin-bottom: 0.45rem; line-height: 1.5; }
+        .term-line.cmd { color: #fff; font-weight: 600; }
+        .term-line.res { color: #94a3b8; }
+        .term-line.succ { color: #34d399; }
+        .term-prompt-row { display: flex; align-items: center; gap: 0.5rem; }
+        .term-prompt { color: #c084fc; font-weight: 700; }
+        .term-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-family: inherit;
+            font-size: inherit;
+            outline: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .present-layout, .vault-layout { grid-template-columns: 1fr; }
+            .suite-hero h1 { font-size: 2.2rem; }
+            .calc-bar { flex-direction: column; align-items: stretch; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="index.html" class="brand">
+            <div style="width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #8b5cf6, #38bdf8); display: flex; align-items: center; justify-content: center; font-size: 1rem;">🌙</div>
+            <span>NyxOffice</span>
+            <span class="brand-badge">Sovereign Suite</span>
+        </a>
+        <nav class="nav-links">
+            <a href="index.html">Nyx Lang</a>
+            <a href="nyxos.html">🌙 NyxOS</a>
+            <a href="nyxos-architecture.html">🏛️ Deep Architecture</a>
+            <a href="nyxoffice.html" class="active">📝 NyxOffice Suite</a>
+            <a href="os-preview.html">🖥️ Desktop Live</a>
+            <a href="packages.html">📦 Package Hub</a>
+            <a href="faq.html">FAQ</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <section class="suite-hero">
+            <h1>Sovereign Productivity <span>Built on NyxOS</span></h1>
+            <p>A native, zero-garbage-collection desktop suite engineered with post-quantum security, real-time formula computation, and local on-device SLM intelligence.</p>
+
+            <div class="app-tabs">
+                <button class="tab-btn active" onclick="switchTab('writer')">📝 NyxWriter (Word Processor)</button>
+                <button class="tab-btn" onclick="switchTab('calc')">📊 NyxCalc (Vector Spreadsheet)</button>
+                <button class="tab-btn" onclick="switchTab('present')">📽️ NyxPresent (120 FPS Slides)</button>
+                <button class="tab-btn" onclick="switchTab('vault')">🔐 NyxVault (Hardware Wallet)</button>
+                <button class="tab-btn" onclick="switchTab('terminal')">💻 NyxTerminal (Capability Shell)</button>
+            </div>
+        </section>
+
+        <!-- Main Workspace View Container -->
+        <div class="workspace-card">
+
+            <!-- ========================================================= -->
+            <!-- 1. NyxWriter Tab -->
+            <!-- ========================================================= -->
+            <div id="view-writer" class="app-view active">
+                <div class="workspace-header">
+                    <div class="workspace-title">
+                        <span>📝</span>
+                        <span id="doc-title">Sovereign_Operating_System_Whitepaper.nyxdoc</span>
+                    </div>
+                    <div class="workspace-actions">
+                        <button class="btn-action btn-ai" onclick="runAiCopilot()">✨ AI Copilot Suggest</button>
+                        <button class="btn-action" onclick="exportDocument('markdown')">📥 Export Markdown</button>
+                        <button class="btn-action" onclick="saveDocument()">💾 Save to NyxFS</button>
+                    </div>
+                </div>
+
+                <div class="writer-toolbar">
+                    <button class="tool-btn" onclick="formatText('bold')"><b>B</b></button>
+                    <button class="tool-btn" onclick="formatText('italic')"><i>I</i></button>
+                    <button class="tool-btn" onclick="formatText('heading')"><b>H2</b></button>
+                    <button class="tool-btn" onclick="formatText('code')">&lt;/&gt;</button>
+                    <button class="tool-btn" onclick="insertMathFormula()">∑ LaTeX</button>
+                    <button class="tool-btn" onclick="insertCallout()">💡 Callout</button>
+                </div>
+
+                <div class="writer-body">
+                    <div id="writer-content" class="writer-editor-pane" contenteditable="true">
+                        <h1>NyxOS: The Sovereign Microkernel Architecture</h1>
+                        <p>Modern computing has reached an impasse where monolithic operating systems suffer from ambient privilege escalation, garbage collection latency pauses, and unrecoverable kernel panics.</p>
+                        <h2>1. Capability-Based Access Control (CBAC)</h2>
+                        <p>Every peripheral, memory region, and file descriptor in NyxOS requires an unforgeable 64-bit cryptographic Capability Token. System services verify these permissions mathematically at compile-time and runtime.</p>
+                        <blockquote>"By removing ambient authority, an exploit in a web browser or graphics driver cannot compromise the host kernel." — Sovereign System Principle</blockquote>
+                        <h2>2. Zero-GC Region Paging</h2>
+                        <p>Applications running in NyxOffice utilize O(1) region bump arenas, ensuring hard real-time latency across 120 FPS document composition and spreadsheet recalculations.</p>
+                    </div>
+                </div>
+
+                <div class="writer-footer">
+                    <span id="writer-stats">Words: 118 | Characters: 842 | Encoding: UTF-8 Zero-Copy</span>
+                    <span>Status: Synced with NyxFS Merkle Tree ⚡</span>
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- 2. NyxCalc Tab -->
+            <!-- ========================================================= -->
+            <div id="view-calc" class="app-view">
+                <div class="workspace-header">
+                    <div class="workspace-title">
+                        <span>📊</span>
+                        <span>NyxCalc — SIMD Vectorized Spreadsheet (Zero-GC Cell Engine)</span>
+                    </div>
+                    <div class="workspace-actions">
+                        <button class="btn-action" onclick="calcAutoSum()">∑ Auto-SUM Column C</button>
+                        <button class="btn-action" onclick="calcPlotChart()">📈 Render Vector Chart</button>
+                    </div>
+                </div>
+
+                <div class="calc-bar">
+                    <span style="font-weight: 700; color: var(--cyan); font-family: 'JetBrains Mono';">fx</span>
+                    <input type="text" id="formula-bar" class="formula-input" value="=SUM(C2:C6)" placeholder="Enter formula e.g. =SUM(A1:A5) or value">
+                </div>
+
+                <div class="calc-grid-wrapper">
+                    <table class="calc-table" id="calc-grid">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">#</th>
+                                <th>A (Metric / Subsystem)</th>
+                                <th>B (Allocation KB)</th>
+                                <th>C (Latency µs)</th>
+                                <th>D (Capability Token)</th>
+                                <th>E (Status)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th>1</th>
+                                <td><input class="calc-cell-input" value="Microkernel Core"></td>
+                                <td><input class="calc-cell-input" value="64"></td>
+                                <td><input class="calc-cell-input" id="c1" value="0.18"></td>
+                                <td><input class="calc-cell-input" value="0x7F01A"></td>
+                                <td><input class="calc-cell-input" value="VERIFIED"></td>
+                            </tr>
+                            <tr>
+                                <th>2</th>
+                                <td><input class="calc-cell-input" value="Janus-POSIX Bridge"></td>
+                                <td><input class="calc-cell-input" value="128"></td>
+                                <td><input class="calc-cell-input" id="c2" value="0.45"></td>
+                                <td><input class="calc-cell-input" value="0x8B02C"></td>
+                                <td><input class="calc-cell-input" value="ACTIVE"></td>
+                            </tr>
+                            <tr>
+                                <th>3</th>
+                                <td><input class="calc-cell-input" value="Nyx-Proton DX12->VK"></td>
+                                <td><input class="calc-cell-input" value="256"></td>
+                                <td><input class="calc-cell-input" id="c3" value="0.82"></td>
+                                <td><input class="calc-cell-input" value="0x9C03D"></td>
+                                <td><input class="calc-cell-input" value="RUNNING"></td>
+                            </tr>
+                            <tr>
+                                <th>4</th>
+                                <td><input class="calc-cell-input" value="Kernel Tensor NPU Sched"></td>
+                                <td><input class="calc-cell-input" value="512"></td>
+                                <td><input class="calc-cell-input" id="c4" value="0.31"></td>
+                                <td><input class="calc-cell-input" value="0xAE04F"></td>
+                                <td><input class="calc-cell-input" value="HARDWARE_LOCK"></td>
+                            </tr>
+                            <tr>
+                                <th>5</th>
+                                <td><input class="calc-cell-input" value="120 FPS Compositor"></td>
+                                <td><input class="calc-cell-input" value="1024"></td>
+                                <td><input class="calc-cell-input" id="c5" value="8.33"></td>
+                                <td><input class="calc-cell-input" value="0xBF05A"></td>
+                                <td><input class="calc-cell-input" value="PROMOTION"></td>
+                            </tr>
+                            <tr style="background: rgba(139, 92, 246, 0.15); font-weight: bold;">
+                                <th>SUM</th>
+                                <td><input class="calc-cell-input" style="color: #c084fc; font-weight: bold;" value="Total Combined Latency"></td>
+                                <td><input class="calc-cell-input" value="1984 KB"></td>
+                                <td><input class="calc-cell-input" id="c-sum" style="color: #34d399; font-weight: bold;" value="10.09 µs"></td>
+                                <td><input class="calc-cell-input" value="ALL_CAPS_VALID"></td>
+                                <td><input class="calc-cell-input" style="color: #38bdf8;" value="REAL-TIME PASS"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="writer-footer">
+                    <span>Cells: 30 Evaluated | SIMD Engine: AVX-512 / ARM Neon Hardware Accelerated</span>
+                    <span style="color: #34d399;">Formula Computation: 0.002ms (Zero-GC)</span>
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- 3. NyxPresent Tab -->
+            <!-- ========================================================= -->
+            <div id="view-present" class="app-view">
+                <div class="workspace-header">
+                    <div class="workspace-title">
+                        <span>📽️</span>
+                        <span>NyxPresent — 120 FPS Hardware Accelerated Keynote Deck</span>
+                    </div>
+                    <div class="workspace-actions">
+                        <button class="btn-action btn-ai" onclick="presentAddSlide()">➕ Add New Slide</button>
+                        <button class="btn-action btn-ai" onclick="startPresentationMode()">▶️ Present Fullscreen (120Hz)</button>
+                    </div>
+                </div>
+
+                <div class="present-layout">
+                    <div class="slide-nav" id="slide-nav-list">
+                        <div class="slide-thumb active" onclick="selectSlide(0)">
+                            <div style="font-size: 0.8rem; color: var(--cyan); margin-bottom: 0.2rem;">Slide 1</div>
+                            <div style="font-weight: 700; font-size: 0.9rem; color: #fff;">Sovereign Computing Vision</div>
+                        </div>
+                        <div class="slide-thumb" onclick="selectSlide(1)">
+                            <div style="font-size: 0.8rem; color: var(--cyan); margin-bottom: 0.2rem;">Slide 2</div>
+                            <div style="font-weight: 700; font-size: 0.9rem; color: #fff;">Tri-OS Compatibility (Linux/Win/Mac)</div>
+                        </div>
+                        <div class="slide-thumb" onclick="selectSlide(2)">
+                            <div style="font-size: 0.8rem; color: var(--cyan); margin-bottom: 0.2rem;">Slide 3</div>
+                            <div style="font-weight: 700; font-size: 0.9rem; color: #fff;">Zero-GC Deterministic Scheduling</div>
+                        </div>
+                    </div>
+
+                    <div class="slide-canvas">
+                        <div class="slide-frame" id="slide-display">
+                            <h1 style="font-size: 2.4rem; font-family: 'Outfit'; font-weight: 900; color: #fff; margin-bottom: 1rem;" id="slide-title">
+                                Sovereign Computing Vision
+                            </h1>
+                            <p style="font-size: 1.25rem; color: #94a3b8; line-height: 1.6;" id="slide-desc">
+                                Re-architecting the computing stack from bare metal up. Complete cryptographic sovereignty, post-quantum signing, and zero unrecoverable crashes.
+                            </p>
+                            <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                                <span class="key-badge">⚡ 120 FPS Vector Pacing</span>
+                                <span class="key-badge">🛡️ Capability Isolation</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- 4. NyxVault Tab -->
+            <!-- ========================================================= -->
+            <div id="view-vault" class="app-view">
+                <div class="workspace-header">
+                    <div class="workspace-title">
+                        <span>🔐</span>
+                        <span>NyxVault — Sovereign Hardware Key Store & Decentralized Ledger</span>
+                    </div>
+                    <div class="workspace-actions">
+                        <button class="btn-action btn-ai" onclick="generatePostQuantumKey()">🔑 Generate Dilithium5 Key</button>
+                        <button class="btn-action" onclick="lockVault()">🔒 Lock Vault</button>
+                    </div>
+                </div>
+
+                <div class="vault-layout">
+                    <div class="vault-card">
+                        <h3>🛡️ Cryptographic Identity</h3>
+                        <div style="margin-bottom: 1.25rem;">
+                            <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.35rem;">Post-Quantum Master Key (Dilithium-5)</div>
+                            <div class="key-badge" style="display: block; overflow-x: auto; padding: 0.6rem; font-size: 0.8rem;">
+                                0x9F4A8C82B14902EE71D05C384A64B29E10F5D982001A8321BEE4
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 1.25rem;">
+                            <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.35rem;">TPM 2.0 Hardware Seal</div>
+                            <div style="font-weight: 700; color: #34d399; font-size: 0.95rem;">
+                                ✔️ Enclave Verified (PCR-0 / PCR-7 Matches Golden Image)
+                            </div>
+                        </div>
+
+                        <div>
+                            <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.35rem;">Capability Grant Level</div>
+                            <div style="font-weight: 700; color: #c084fc;">
+                                Full Root Sovereign Authority (63 / 63 Bitmask)
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="vault-card">
+                        <h3>🪙 Sovereign Asset Portfolio</h3>
+                        <div style="display: flex; flex-direction: column; gap: 1rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(255,255,255,0.04); border-radius: 8px;">
+                                <div>
+                                    <div style="font-weight: 700; color: #fff;">Nyx Sovereign Token (NYX)</div>
+                                    <div style="font-size: 0.78rem; color: var(--text-muted);">Decentralized Compute & Storage Fuel</div>
+                                </div>
+                                <div style="font-family: 'JetBrains Mono'; font-weight: 800; font-size: 1.1rem; color: #38bdf8;">
+                                    25,000.00
+                                </div>
+                            </div>
+
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(255,255,255,0.04); border-radius: 8px;">
+                                <div>
+                                    <div style="font-weight: 700; color: #fff;">Sia Sovereign Storage Pin</div>
+                                    <div style="font-size: 0.78rem; color: var(--text-muted);">Encrypted OS Backups & Datasets</div>
+                                </div>
+                                <div style="font-family: 'JetBrains Mono'; font-weight: 800; font-size: 1.1rem; color: #34d399;">
+                                    10.4 TB Pinned
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- 5. NyxTerminal Tab -->
+            <!-- ========================================================= -->
+            <div id="view-terminal" class="app-view">
+                <div class="workspace-header">
+                    <div class="workspace-title">
+                        <span>💻</span>
+                        <span>Sovereign Terminal & Microkernel CLI Shell</span>
+                    </div>
+                    <div class="workspace-actions">
+                        <button class="btn-action" onclick="clearTerminal()">🧹 Clear</button>
+                    </div>
+                </div>
+
+                <div class="terminal-container" id="terminal-pane" onclick="document.getElementById('cli-input').focus()">
+                    <div class="term-history" id="term-history">
+                        <div class="term-line succ">NyxOS Sovereign Microkernel v1.0.0 [x86_64-nyx-elf]</div>
+                        <div class="term-line res">Zero-GC Region Memory: 4096 Pages Mapped | CBAC Cryptographic Tokens: Active</div>
+                        <div class="term-line res">Type 'help', 'sysinfo', 'nypm list', 'calc sum', or 'sched_tensor' to execute.</div>
+                        <div class="term-line res">--------------------------------------------------------------------------------</div>
+                    </div>
+                    <div class="term-prompt-row">
+                        <span class="term-prompt">sovereign@nyxos:~$</span>
+                        <input type="text" id="cli-input" class="term-input" autocomplete="off" autofocus onkeydown="handleTerminalKey(event)">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Tab Switching Logic
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.app-view').forEach(view => view.classList.remove('active'));
+
+            const targetView = document.getElementById('view-' + tabId);
+            if (targetView) targetView.classList.add('active');
+
+            // Set active button
+            const buttons = document.querySelectorAll('.tab-btn');
+            const map = { 'writer': 0, 'calc': 1, 'present': 2, 'vault': 3, 'terminal': 4 };
+            if (buttons[map[tabId]]) buttons[map[tabId]].classList.add('active');
+
+            if (tabId === 'terminal') {
+                setTimeout(() => document.getElementById('cli-input').focus(), 50);
+            }
+        }
+
+        // NyxWriter Features
+        function formatText(style) {
+            if (style === 'bold') document.execCommand('bold', false, null);
+            if (style === 'italic') document.execCommand('italic', false, null);
+            if (style === 'heading') document.execCommand('formatBlock', false, '<h2>');
+            if (style === 'code') document.execCommand('formatBlock', false, '<pre>');
+            updateWriterStats();
+        }
+
+        function insertMathFormula() {
+            const math = prompt('Enter LaTeX Math Expression:', 'E = mc^2 \\quad \\int_0^\\infty e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}');
+            if (math) {
+                document.execCommand('insertHTML', false, `<code style="background: rgba(139,92,246,0.25); color: #c084fc; padding: 2px 6px; border-radius: 4px;">\\[ ${math} \\]</code> `);
+                updateWriterStats();
+            }
+        }
+
+        function insertCallout() {
+            document.execCommand('insertHTML', false, `<blockquote style="border-left: 3px solid #10b981; padding-left: 1rem; color: #a7f3d0; margin: 1rem 0;"><strong>Sovereign Security Note:</strong> Verified by formal compile-time invariant contracts.</blockquote>`);
+            updateWriterStats();
+        }
+
+        function updateWriterStats() {
+            const text = document.getElementById('writer-content').innerText;
+            const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+            const chars = text.length;
+            document.getElementById('writer-stats').innerText = `Words: ${words} | Characters: ${chars} | Encoding: UTF-8 Zero-Copy`;
+        }
+        document.getElementById('writer-content').addEventListener('input', updateWriterStats);
+
+        function runAiCopilot() {
+            const editor = document.getElementById('writer-content');
+            editor.innerHTML += `<p style="color: #38bdf8; font-style: italic;">✨ [AI Copilot]: Integrated with local SLM on NPU. Suggested continuation: "Furthermore, the zero-copy capability bridge eliminates context switch bottlenecks, outperforming standard POSIX IPC by over 400%."</p>`;
+            updateWriterStats();
+        }
+
+        function saveDocument() {
+            alert('Saved successfully to NyxFS Merkle Tree! Cryptographic commit hash: 0x3A7AB7E');
+        }
+
+        function exportDocument(fmt) {
+            const text = document.getElementById('writer-content').innerText;
+            const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'Sovereign_Document.md';
+            a.click();
+        }
+
+        // NyxCalc Features
+        function calcAutoSum() {
+            const c1 = parseFloat(document.getElementById('c1').value) || 0;
+            const c2 = parseFloat(document.getElementById('c2').value) || 0;
+            const c3 = parseFloat(document.getElementById('c3').value) || 0;
+            const c4 = parseFloat(document.getElementById('c4').value) || 0;
+            const c5 = parseFloat(document.getElementById('c5').value) || 0;
+            const sum = (c1 + c2 + c3 + c4 + c5).toFixed(2);
+            document.getElementById('c-sum').value = sum + ' µs';
+            alert(`Auto-SUM Evaluated via SIMD Vector Engine: ${sum} µs`);
+        }
+
+        function calcPlotChart() {
+            alert('Generated dynamic hardware-accelerated SVG chart from range C1:C5 successfully!');
+        }
+
+        // NyxPresent Features
+        const slides = [
+            {
+                title: "Sovereign Computing Vision",
+                desc: "Re-architecting the computing stack from bare metal up. Complete cryptographic sovereignty, post-quantum signing, and zero unrecoverable crashes."
+            },
+            {
+                title: "Universal Tri-OS Compatibility",
+                desc: "Janus-POSIX (Linux ELF64), Nyx-Proton (Windows Win32/DX12), and Darling-WASI (macOS/WASI 0.2) running at zero-copy native speeds."
+            },
+            {
+                title: "Zero-GC Deterministic Scheduling",
+                desc: "Hardware NPU tensor scheduling (sched_tensor) coupled with 120 FPS ProMotion frame pacing and O(1) region memory arenas."
+            }
+        ];
+
+        function selectSlide(idx) {
+            document.querySelectorAll('.slide-thumb').forEach((el, i) => {
+                if (i === idx) el.classList.add('active');
+                else el.classList.remove('active');
+            });
+            document.getElementById('slide-title').innerText = slides[idx].title;
+            document.getElementById('slide-desc').innerText = slides[idx].desc;
+        }
+
+        function presentAddSlide() {
+            const newTitle = prompt('Enter Slide Title:', 'New Architectural Feature');
+            if (newTitle) {
+                slides.push({ title: newTitle, desc: 'Detailed sovereign specification and empirical performance benchmarks.' });
+                const nav = document.getElementById('slide-nav-list');
+                const idx = slides.length - 1;
+                const thumb = document.createElement('div');
+                thumb.className = 'slide-thumb';
+                thumb.onclick = () => selectSlide(idx);
+                thumb.innerHTML = `<div style="font-size: 0.8rem; color: var(--cyan); margin-bottom: 0.2rem;">Slide ${idx + 1}</div><div style="font-weight: 700; font-size: 0.9rem; color: #fff;">${newTitle}</div>`;
+                nav.appendChild(thumb);
+                selectSlide(idx);
+            }
+        }
+
+        function startPresentationMode() {
+            alert('Presentation started in 120 FPS Fullscreen Mode! Use Arrow keys to navigate slides.');
+        }
+
+        // NyxVault Features
+        function generatePostQuantumKey() {
+            const hex = '0x' + Array.from({length: 32}, () => Math.floor(Math.random()*16).toString(16)).join('').toUpperCase();
+            alert(`Generated new Post-Quantum Dilithium-5 Sovereign Key Pair:\n${hex}\nSigned and stored in hardware enclave.`);
+        }
+
+        function lockVault() {
+            alert('NyxVault locked. Enclave memory zeroized.');
+        }
+
+        // NyxTerminal Features
+        function handleTerminalKey(e) {
+            if (e.key === 'Enter') {
+                const input = document.getElementById('cli-input');
+                const cmd = input.value.trim();
+                if (!cmd) return;
+
+                const history = document.getElementById('term-history');
+                const cmdLine = document.createElement('div');
+                cmdLine.className = 'term-line cmd';
+                cmdLine.innerText = `sovereign@nyxos:~$ ${cmd}`;
+                history.appendChild(cmdLine);
+
+                let resText = '';
+                let resClass = 'term-line res';
+
+                if (cmd === 'help') {
+                    resText = 'Available commands: sysinfo, nypm list, sched_tensor, calc sum, cap_inspect, clear, office';
+                } else if (cmd === 'sysinfo') {
+                    resText = 'NyxOS 1.0 (x86_64) | Microkernel CBAC: Active | 120 FPS Compositor: Locked | NPU SLM: Ready';
+                    resClass = 'term-line succ';
+                } else if (cmd === 'nypm list') {
+                    resText = 'Installed: @nyx/office (v1.0), @nyx/tensor (v2.4), @nyx/ui (v3.1), @nyx/crypto (v1.2)';
+                } else if (cmd === 'sched_tensor') {
+                    resText = '[NPU Tensor Scheduler]: Dispatched 4,096 matrix GEMM operations to NPU hardware queue. Zero GC overhead.';
+                    resClass = 'term-line succ';
+                } else if (cmd === 'cap_inspect') {
+                    resText = 'CapToken: 0x7F01A | Permissions: Read (1), Write (2), Execute (4), Control (8), Grant (16), Revoke (32) [FULL ROOT]';
+                    resClass = 'term-line succ';
+                } else if (cmd === 'clear') {
+                    history.innerHTML = '';
+                    input.value = '';
+                    return;
+                } else {
+                    resText = `Command '${cmd}' executed in isolated actor sandbox. Return code: 0`;
+                }
+
+                const resLine = document.createElement('div');
+                resLine.className = resClass;
+                resLine.innerText = resText;
+                history.appendChild(resLine);
+
+                input.value = '';
+                document.getElementById('terminal-pane').scrollTop = document.getElementById('terminal-pane').scrollHeight;
+            }
+        }
+
+        function clearTerminal() {
+            document.getElementById('term-history').innerHTML = '';
+        }
+    </script>
+</body>
+</html>

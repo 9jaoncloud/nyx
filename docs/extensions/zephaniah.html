@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zephaniah (.zeph) — Gradual Ownership &amp; Ergonomic ARC Dialect for Nyx</title>
+    <meta name="description" content="Zephaniah is the ergonomics-first companion dialect of Nyx. Gradual ownership, automatic ARC fallback, zero lifetime annotations, and African language aliases.">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-dark: #050814;
+            --bg-card: rgba(13, 20, 38, 0.85);
+            --accent-emerald: #10b981;
+            --border-glow: rgba(16, 185, 129, 0.3);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.7;
+        }
+
+        .doc-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem 5rem;
+        }
+
+        .hero-box {
+            background: linear-gradient(135deg, rgba(6, 44, 34, 0.85) 0%, rgba(6, 15, 25, 0.98) 100%);
+            border: 1px solid var(--border-glow);
+            border-radius: 16px;
+            padding: 2.5rem 2rem;
+            margin-bottom: 2.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            padding: 0.35rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            letter-spacing: 0.05em;
+        }
+
+        .doc-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.4rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 0.75rem;
+            line-height: 1.2;
+        }
+
+        pre.code-block {
+            background: #030712 !important;
+            border: 1px solid rgba(16, 185, 129, 0.2) !important;
+            border-radius: 10px !important;
+            padding: 1.25rem !important;
+            font-family: 'JetBrains Mono', monospace !important;
+            font-size: 0.88rem !important;
+            color: #6ee7b7 !important;
+            overflow-x: auto !important;
+            margin: 1.25rem 0 !important;
+            line-height: 1.6 !important;
+            white-space: pre !important;
+            word-wrap: normal !important;
+            tab-size: 4 !important;
+        }
+
+        pre.code-block code {
+            font-family: inherit !important;
+            font-size: inherit !important;
+            color: inherit !important;
+            white-space: pre !important;
+            display: block !important;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 1.75rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        h2 {
+            font-family: 'Outfit', sans-serif;
+            color: #f1f5f9;
+            font-size: 1.5rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        h3 {
+            font-family: 'Outfit', sans-serif;
+            color: #34d399;
+            font-size: 1.2rem;
+            margin: 1.5rem 0 0.5rem;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.25rem 0;
+            font-size: 0.92rem;
+        }
+
+        .comparison-table th, .comparison-table td {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.75rem 1rem;
+            text-align: left;
+        }
+
+        .comparison-table th {
+            background: rgba(16, 185, 129, 0.12);
+            color: #34d399;
+            font-weight: 700;
+        }
+
+        .comparison-table tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.02);
+        }
+    </style>
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776; Menu</button>
+    <nav id="sidebar"></nav>
+
+    <main>
+        <div class="doc-container">
+            <div class="hero-box">
+                <div class="badge-pill">
+                    <i class="fa-solid fa-bolt"></i> Nyx Dialect 1 &bull; Ergonomics &amp; Productivity Axis
+                </div>
+                <h1 class="doc-title">Zephaniah: Gradual Ownership &amp; Ergonomic ARC</h1>
+                <p style="color:#cbd5e1; font-size:1.1rem; max-width:880px;">
+                    Write expressive, boilerplate-free systems code with the productivity of Python or TypeScript, backed by compile-time gradual ownership, automatic reference counting fallback, and zero borrow-checker friction.
+                </p>
+                <div style="display:flex; gap:1.25rem; flex-wrap:wrap; margin-top:1.25rem; font-family:'JetBrains Mono', monospace; font-size:0.85rem; color:#6ee7b7;">
+                    <span><strong>File Extension:</strong> <code>.zeph</code></span>
+                    <span>&bull;</span>
+                    <span><strong>Compiler Flag:</strong> <code>nyxc --mode=gradual</code></span>
+                    <span>&bull;</span>
+                    <span><strong>Ownership Mode:</strong> <code>Gradual / ARC Fallback</code></span>
+                    <span>&bull;</span>
+                    <span><strong>Lifetime Annotations:</strong> <code>None Required</code></span>
+                </div>
+            </div>
+
+            <!-- Core Rationale -->
+            <div class="card">
+                <h2><i class="fa-solid fa-lightbulb" style="color:var(--accent-emerald);"></i> 1. Why Zephaniah Exists</h2>
+                <p>
+                    While base Nyx uses region bump arenas and compile-time escape proofs (achieving 82.4% bump ratios), certain domains—such as rapid web prototyping, UI view controllers, script automation, and event listeners—involve complex graph topologies and cyclical references where lifetime reasoning slows down iteration.
+                </p>
+                <p>
+                    <strong>Zephaniah solves this:</strong> It allows developers to opt into progressive strictness. If an allocation escapes without an explicit region context, Zephaniah automatically wraps it in an atomic or thread-local reference-counted container (<code>Arc&lt;T&gt;</code>), requiring zero manual lifetime annotations.
+                </p>
+
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>Base Nyx (<code>.nyx</code>)</th>
+                            <th>Zephaniah (<code>.zeph</code>)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Primary Memory Strategy</strong></td>
+                            <td>Zero-GC Region Bump Arenas + Escape Analysis</td>
+                            <td>Gradual Ownership + Automatic ARC Fallback</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Lifetime Annotations</strong></td>
+                            <td>Explicit when escaping regional contexts</td>
+                            <td>None (Inferred or transparently refcounted)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Complex Graph Structures</strong></td>
+                            <td>Requires arena allocation or generational IDs</td>
+                            <td>Natural bidirectional references via weak pointers</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Compilation Speed</strong></td>
+                            <td>Ultra-fast single-pass MLIR lowering</td>
+                            <td>Same high-speed MLIR backend with ARC emission</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Syntax & Code Example -->
+            <div class="card">
+                <h2><i class="fa-solid fa-code" style="color:var(--accent-emerald);"></i> 2. Syntax &amp; Gradual Ownership Rules</h2>
+                <p>In Zephaniah, references are shared by default, and ownership can be progressively tightened using <code>@owned</code> or linear parameters:</p>
+
+<pre class="code-block"><code class="language-nyx">// file: server_session.zeph
+// Compile with: nyxc --mode=gradual server_session.zeph -o session_mgr.exe
+
+struct ClientSession {
+    id: u64,
+    username: String,
+    metadata: Map&lt;String, String&gt;,
+}
+
+fn handle_connection(session: ClientSession) {
+    // Transparently shared ARC reference - no lifetime parameters required
+    println("Connected: {session.username} (ID: {session.id})");
+    
+    // Gradual ownership handover: @owned enforces single-consumer transfer
+    dispatch_to_worker(@owned session);
+}
+
+fn dispatch_to_worker(owned_session: @owned ClientSession) {
+    // Zero-copy move: refcount drops to 1, converted into unshared owned frame
+    println("Worker background thread processing: {owned_session.username}");
+}</code></pre>
+            </div>
+
+            <!-- Concrete Industrial Use Cases -->
+            <div class="card">
+                <h2><i class="fa-solid fa-industry" style="color:var(--accent-emerald);"></i> 3. Concrete Industrial Use Cases</h2>
+
+                <!-- Use Case 1 -->
+                <h3>Use Case 1: High-Throughput Fintech Payment Gateway API</h3>
+                <p>
+                    Handling asynchronous webhooks from multiple bank switches and card rails requires parsing deeply nested JSON payloads and sharing parsed transaction graphs across asynchronous verification tasks without fighting lifetime parameters:
+                </p>
+<pre class="code-block"><code class="language-nyx">import std.net.http;
+import std.json;
+import std.async;
+
+struct PaymentPayload {
+    transaction_id: String,
+    amount_kobo: u64,
+    sender_account: String,
+    beneficiary_account: String,
+    bank_routing_code: String,
+}
+
+pub async fn handle_payment_webhook(req: HttpRequest) -> HttpResponse {
+    // Parse nested payload with automatic ARC memory management
+    let payload = json::parse&lt;PaymentPayload&gt;(&req.body);
+
+    if payload.amount_kobo == 0 {
+        return HttpResponse::bad_request("Invalid payment amount");
+    }
+
+    // Share transaction reference simultaneously with Fraud Engine and Audit Logger
+    let fraud_check = async::spawn(verify_fraud_rules(payload.clone()));
+    let audit_log   = async::spawn(write_audit_trail(payload.clone()));
+
+    let (fraud_ok, _) = async::join(fraud_check, audit_log).await;
+
+    if !fraud_ok {
+        return HttpResponse::forbidden("Transaction flagged by anti-fraud heuristic");
+    }
+
+    // Hand over owned payload to core banking settlement pipeline
+    let settlement_status = execute_nibss_instant_payment(@owned payload).await;
+    HttpResponse::ok(settlement_status.to_json())
+}</code></pre>
+
+                <!-- Use Case 2 -->
+                <h3>Use Case 2: Pan-African Multilingual Production Banking Microservice</h3>
+                <p>
+                    Zephaniah lets engineering teams author mission-critical services directly in Yorùbá, Hausa, or Igbo, natively lowering to high-performance machine code:
+                </p>
+<pre class="code-block"><code class="language-nyx">// file: ile_ifowopamo.zeph (Yorùbá Microservice)
+ìṣètò Oníbàárà {
+    orúkọ: Ọ̀rọ̀,
+    nọ́mbà_àkọọ́lẹ̀: Ọ̀rọ̀,
+    owó_tó_wà: Oye,
+}
+
+iṣẹ́ fi_owó_ránṣẹ́(oníbàárà: Oníbàárà, iye_owó: Oye, olugba: Ọ̀rọ̀) -> Otitọ {
+    nígbàtí (oníbàárà.owó_tó_wà >= iye_owó) {
+        oníbàárà.owó_tó_wà -= iye_owó;
+        tẹ̀wé("A ti fi #{iye_owó} kobo ránṣẹ́ sí #{olugba} fún #{oníbàárà.orúkọ}");
+        padà Otitọ::Bẹ́ẹ̀ni;
+    }
+    tẹ̀wé("Owó kò tó nínú àkọọ́lẹ̀ #{oníbàárà.nọ́mbà_àkọọ́lẹ̀}");
+    padà Otitọ::Bẹ́ẹ̀kọ́;
+}</code></pre>
+
+                <!-- Use Case 3 -->
+                <h3>Use Case 3: Real-Time Collaborative WebSockets (100k+ Connections)</h3>
+                <p>
+                    In collaborative canvas and chat backends, thousands of client sockets subscribe to dynamically changing room channels. Zephaniah cleans up room subscriptions automatically when clients disconnect:
+                </p>
+<pre class="code-block"><code class="language-nyx">import std.net.websocket;
+import std.collections.map;
+
+struct BroadcastChannel {
+    room_id: String,
+    subscribers: List&lt;Weak&lt;WebSocketConnection&gt;&gt;,
+}
+
+impl BroadcastChannel {
+    pub fn broadcast(&mut self, message: String) {
+        // Automatically prune disconnected clients whose weak references expired
+        self.subscribers.retain(|weak_client| {
+            if let Some(client) = weak_client.upgrade() {
+                client.send_text(&message);
+                true
+            } else {
+                false // Dropped automatically without leak
+            }
+        });
+    }
+}</code></pre>
+
+                <!-- Use Case 4 -->
+                <h3>Use Case 4: Rapid GUI Desktop &amp; Dashboard Controllers</h3>
+                <p>
+                    Building UI widgets and reactive state controllers in Material Design 3 requires circular parent-child references. Zephaniah handles widget tree mutations seamlessly:
+                </p>
+<pre class="code-block"><code class="language-nyx">import std.ui.material;
+
+struct DashboardController {
+    selected_account: Option&lt;String&gt;,
+    view_tree: UiNode,
+}
+
+pub fn create_analytics_view() -> DashboardController {
+    let mut root = UiNode::column();
+    let header = UiNode::text("Enterprise Treasury Overview", Style::HeadingLarge);
+    let chart  = UiNode::line_chart(data_source: "/api/v1/metrics/cashflow");
+
+    root.add_child(header);
+    root.add_child(chart);
+
+    DashboardController {
+        selected_account: None,
+        view_tree: root,
+    }
+}</code></pre>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; margin-top:2rem;">
+                <a href="index.html" class="btn" style="background:rgba(255,255,255,0.05); color:#cbd5e1; text-decoration:none; padding:0.6rem 1.2rem; border-radius:8px;">&larr; Extensions Hub</a>
+                <a href="havilah.html" class="btn" style="background:rgba(245,158,11,0.2); color:#fbbf24; text-decoration:none; padding:0.6rem 1.2rem; border-radius:8px; border:1px solid rgba(245,158,11,0.4);">Next: Havilah (.hav) &rarr;</a>
+            </div>
+        </div>
+    </main>
+
+    <script src="../navigation.js"></script>
+    <script src="../header_footer.js"></script>
+</body>
+</html>

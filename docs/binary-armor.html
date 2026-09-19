@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Armor & Firmware Security Specification — Nyx Research</title>
+    <meta name="description" content="Comprehensive specification for the Nyx Native Binary Hardening Framework: VM Bytecode Virtualization, Mixed Boolean Arithmetic, SRAM PUF Device Binding, and ASIL-D Reproducible Builds.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-page: #0b0f19;
+            --bg-card: #111827;
+            --bg-card-alt: #172033;
+            --accent-blue: #38bdf8;
+            --accent-purple: #a855f7;
+            --accent-green: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-rose: #f43f5e;
+            --border-card: rgba(255, 255, 255, 0.08);
+        }
+
+        body {
+            background-color: var(--bg-page);
+            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+            line-height: 1.7;
+            margin: 0;
+            padding: 0;
+            display: block;
+        }
+
+        .container {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem 6rem;
+        }
+
+        .paper-header {
+            text-align: center;
+            margin-bottom: 3.5rem;
+            border-bottom: 1px solid var(--border-card);
+            padding-bottom: 2.5rem;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(244, 63, 94, 0.12);
+            color: #fb7185;
+            border: 1px solid rgba(244, 63, 94, 0.35);
+            padding: 0.35rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            margin-bottom: 1.25rem;
+            text-transform: uppercase;
+        }
+
+        .paper-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.4rem;
+            font-weight: 800;
+            color: #f8fafc;
+            margin: 0 0 1rem;
+            line-height: 1.25;
+        }
+
+        .paper-meta {
+            font-size: 0.95rem;
+            color: #94a3b8;
+            margin-bottom: 1.5rem;
+        }
+
+        .abstract-box {
+            background: rgba(17, 24, 39, 0.85);
+            border-left: 4px solid var(--accent-rose);
+            border-radius: 8px;
+            padding: 1.5rem 1.75rem;
+            text-align: left;
+            margin: 2rem 0 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .abstract-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #f8fafc;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .paper-section {
+            margin-bottom: 4rem;
+        }
+
+        .section-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #f8fafc;
+            margin: 0 0 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding-bottom: 0.5rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2.5rem;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .code-box {
+            background: #0d1322;
+            border: 1px solid var(--border-card);
+            border-radius: 8px;
+            padding: 1.25rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88rem;
+            overflow-x: auto;
+            color: #e2e8f0;
+            margin: 1.25rem 0;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .spec-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.25rem;
+            margin: 1.5rem 0;
+        }
+
+        .spec-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: 8px;
+            padding: 1.25rem;
+        }
+
+        .spec-card h4 {
+            margin: 0 0 0.4rem;
+            color: var(--accent-blue);
+            font-size: 1rem;
+        }
+
+        .spec-card p {
+            margin: 0;
+            font-size: 0.88rem;
+            color: #cbd5e1;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.65rem 1.35rem;
+            border-radius: 6px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #f43f5e, #be123c);
+            color: #fff;
+        }
+
+        .btn-cyan {
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid #38bdf8;
+            color: #38bdf8;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 1.5rem 1rem 4rem; }
+            .paper-title { font-size: 1.7rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- ── Academic Paper Header ── -->
+        <header class="paper-header">
+            <div class="badge">Sovereign Systems &amp; Hardware Hardening Whitepaper</div>
+            <h1 class="paper-title">Nyx Binary Armor: Native Compile-Time Virtualization, Mixed Boolean Arithmetic &amp; Silicon PUF Hardware Binding</h1>
+            <div class="paper-meta">
+                <strong>Nyx Systems Architecture &amp; Security Engineering Group</strong> &bull; Published: September 2026<br>
+                <span>Applicable to: Deeply Embedded Microcontrollers (ARM Cortex-M/R, RISC-V), Automotive ECUs (ASIL-D), and Mission-Critical Desktop/Cloud Binaries</span>
+            </div>
+
+            <div style="display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin:1.25rem 0;">
+                <a href="../projects/binary-armor/index.php" class="btn btn-primary">
+                    <i class="fas fa-shield-halved"></i> Live Binary Armor Studio &rarr;
+                </a>
+                <a href="side-ecosystem.html" class="btn btn-cyan">
+                    <i class="fas fa-satellite-dish"></i> SIDE Defense Ecosystem &rarr;
+                </a>
+                <a href="safety-and-security.html" class="btn btn-cyan">
+                    <i class="fas fa-check-double"></i> CWE Immunity Proofs &rarr;
+                </a>
+            </div>
+
+            <div class="abstract-box">
+                <div class="abstract-title">Executive Abstract</div>
+                <p>
+                    Traditional binary protection mechanisms rely on third-party post-link wrappers that introduce unpredictability, large memory overhead, and functional verification challenges in safety-critical systems. In this architecture specification, we introduce <strong>Nyx Binary Armor</strong>: a compiler-native software protection framework built directly into the Nyx compiler toolchain (<code>nyxc</code>) and standard security library (<code>std/sec</code>). By integrating <strong>Dynamic Virtual-Machine Bytecode Virtualization</strong>, <strong>Higher-Order Mixed Boolean Arithmetic (MBA)</strong>, <strong>SRAM Physical Unclonable Function (PUF) Silicon Binding</strong>, <strong>Inception Anti-Debug/Anti-Emulation Hardware Guards</strong>, and <strong>ISO 26262 ASIL-D Deterministic Reproducible Build Trails</strong>, Nyx provides binary-level anti-reverse-engineering and tamper immunity while preserving Zero-GC predictable real-time determinism.
+                </p>
+            </div>
+        </header>
+
+        <!-- ── 1. Core Technical Pillars ── -->
+        <section class="paper-section">
+            <h2 class="section-title"><i class="fas fa-layer-group" style="color:var(--accent-blue);"></i> 1. The Six Core Pillars of Nyx Binary Armor</h2>
+            
+            <div class="spec-grid">
+                <div class="spec-card">
+                    <h4>1. VM Virtualization</h4>
+                    <p>Translates sensitive native machine instructions into a session-randomized bytecode architecture interpreted at runtime by an un-decompileable dispatcher.</p>
+                </div>
+                <div class="spec-card">
+                    <h4>2. MBA Mathematics</h4>
+                    <p>Replaces linear arithmetic and boolean logic with high-order non-linear polynomial identities, defeating Z3/SMT automated de-obfuscators.</p>
+                </div>
+                <div class="spec-card">
+                    <h4>3. Silicon PUF Binding</h4>
+                    <p>Derives cryptographic execution keys from uninitialized SRAM power-up entropy, locking firmware to physical hardware.</p>
+                </div>
+                <div class="spec-card">
+                    <h4>4. Inception Threat Guard</h4>
+                    <p>Real-time hardware breakpoint register inspection (DR0-DR7/DWT), timing cycle jitter analysis, and rolling code checksums.</p>
+                </div>
+                <div class="spec-card">
+                    <h4>5. AI Tensor Cloaking</h4>
+                    <p>Decrypts neural model tensor blocks directly into CPU registers during GEMM multiplication and immediately zeroizes to prevent RAM extraction.</p>
+                </div>
+                <div class="spec-card">
+                    <h4>6. ASIL-D Reproducibility</h4>
+                    <p>Deterministic PRNG seed engine producing bit-for-bit reproducible hardened binaries and ISO 26262 Delta-Testing certification records.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── 2. Standard Library Architecture ── -->
+        <section class="paper-section">
+            <h2 class="section-title"><i class="fas fa-code" style="color:var(--accent-purple);"></i> 2. Native Security Modules in <code>std/sec/</code></h2>
+            
+            <div class="card">
+                <h3>Using the Dynamic Bytecode Virtualizer (<code>std/sec/vm_obfuscator.nyx</code>)</h3>
+                <p>Functions annotated with <code>@vm</code> or executing through the VM runtime state machine are immune to standard IDA Pro / Ghidra decompilation:</p>
+                <div class="code-box"><pre style="background:none; border:none; padding:0; margin:0; font-family:inherit; color:inherit;"><code>import std::sec::vm_obfuscator;
+
+pub fn execute_hardened_license_check(seed: u64, candidate_token: u64) -> bool {
+    // 1. Initialize session-randomized opcode mapping
+    let opcode_table = vm_obfuscator::VmOpcodeTable::new(seed);
+    
+    // 2. Instantiate zero-GC virtual execution frame
+    let mut vm = vm_obfuscator::VmRuntimeState::new();
+    vm.regs[vm_obfuscator::VREG_R1] = candidate_token;
+
+    // 3. Execute hardened bytecode program
+    let result = vm.execute(&BYTECODE_PROGRAM, &opcode_table);
+    return result == 0x5A879E19A64E2B1F && !vm.tamper_detected;
+}</code></pre></div>
+            </div>
+
+            <div class="card">
+                <h3>Hardware Silicon PUF Binding (<code>std/sec/puf_binding.nyx</code>)</h3>
+                <p>Binds the software binary to physical silicon uninitialized SRAM startup entropy:</p>
+                <div class="code-box"><pre style="background:none; border:none; padding:0; margin:0; font-family:inherit; color:inherit;"><code>import std::sec::puf_binding;
+
+pub fn unlock_firmware_on_target_mcu(sram_startup_sample: &[u8]) -> bool {
+    let puf_engine = puf_binding::PufBindingEngine::new(0, 0x104A, &SALT_BYTES);
+    
+    // Reconstruct hardware key using enrolled helper data
+    let derived_key = puf_engine.reconstruct_key(sram_startup_sample, &GOLDEN_HELPER_DATA);
+    
+    // Validate identity against golden silicon signature
+    return puf_engine.verify_silicon_identity(&derived_key, &ENROLLED_CHIP_DIGEST);
+}</code></pre></div>
+            </div>
+        </section>
+
+        <!-- ── 3. CLI Compiler Flags ── -->
+        <section class="paper-section">
+            <h2 class="section-title"><i class="fas fa-terminal" style="color:var(--accent-green);"></i> 3. Compiler Command-Line Hardening Interface</h2>
+            <p>The standard Nyx compiler toolchain (<code>nyxc</code>) supports comprehensive compile-time binary armor flags:</p>
+
+            <div class="code-box"><pre style="background:none; border:none; padding:0; margin:0; font-family:inherit; color:inherit;"><code># 1. Compile with Full Binary Armor (VM Virtualization, MBA, Anti-Tamper)
+nyxc build --release --target=arm-cortex-m4 --harden --seed=0x5A879E19A64E2B1F
+
+# 2. Compile for Automotive ASIL-D Certification with Reproducible Audit Manifest
+nyxc build --release --harden --deterministic-seed=0x8892AB14 --emit-safety-audit
+
+# 3. Scope Protections (Protect only critical cryptographic routines)
+nyxc build --release --harden-scope="std::crypto::*,app::license::*"</code></pre></div>
+        </section>
+
+        <!-- ── 4. Cross-Sector Applications ── -->
+        <section class="paper-section">
+            <h2 class="section-title"><i class="fas fa-shield-virus" style="color:var(--accent-rose);"></i> 4. Cross-Sector Mission Applications</h2>
+            <div class="spec-grid">
+                <div class="spec-card">
+                    <h4>🚗 Automotive ECUs</h4>
+                    <p>ASIL-D compliant anti-tamper ECU firmware preventing aftermarket mileage fraud and unauthorized CAN bus command injection.</p>
+                </div>
+                <div class="spec-card">
+                    <h4>🛰️ Defense &amp; Aerospace</h4>
+                    <p>Anti-reverse-engineering algorithms protecting sovereign cryptographic keys in field-deployed unmanned aerial vehicles (UAVs).</p>
+                </div>
+                <div class="spec-card">
+                    <h4>🏥 Medical Implants</h4>
+                    <p>PUF-bound firmware ensuring pacemakers and insulin pumps execute only on authenticated medical hardware.</p>
+                </div>
+                <div class="spec-card">
+                    <h4>🧠 Edge AI Model Protection</h4>
+                    <p>In-memory weight shielding preventing on-device LLMs from being extracted via memory dumping tools.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="header_footer.js" defer></script>
+</body>
+</html>

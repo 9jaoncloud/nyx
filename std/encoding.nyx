@@ -1,0 +1,111 @@
+module encoding
+
+extern "C" {
+    fn malloc(size: u64) -> *mut u8
+    fn free(ptr: *mut u8)
+    fn strlen(s: *const u8) -> u64
+    fn memcpy(dst: *mut u8, src: *const u8, n: u64) -> *mut u8
+}
+
+const BASE64_CHARS: String = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+
+pub fn base64_encode(data: Vec<u8>) -> String {
+    let len = data.len()
+    if len == 0 { return "" }
+
+    let mut result = ""
+    let mut i = 0
+    while i < len {
+        let b0 = data.get(i).unwrap() as Int
+        let b1 = if i + 1 < len { data.get(i + 1).unwrap() as Int } else { 0 }
+        let b2 = if i + 2 < len { data.get(i + 2).unwrap() as Int } else { 0 }
+
+        let triple = (b0 << 16) | (b1 << 8) | b2
+
+        result = result + char_at_base64((triple >> 18) & 0x3F)
+        result = result + char_at_base64((triple >> 12) & 0x3F)
+        if i + 1 < len { result = result + char_at_base64((triple >> 6) & 0x3F) } else { result = result + "=" }
+        if i + 2 < len { result = result + char_at_base64(triple & 0x3F) } else { result = result + "=" }
+
+        i = i + 3
+    }
+    result
+}
+
+pub fn base64_decode(s: String) -> Vec<u8> {
+    let mut result = Vec.new()
+    let slen = string.len(s)
+    let mut i = 0
+    while i < slen {
+        let c0 = base64_val(string.char_at(s, i))
+        let c1 = if i + 1 < slen { base64_val(string.char_at(s, i + 1)) } else { 0 }
+        let c2 = if i + 2 < slen && string.char_at(s, i + 2) != '=' { base64_val(string.char_at(s, i + 2)) } else { 0 }
+        let c3 = if i + 3 < slen && string.char_at(s, i + 3) != '=' { base64_val(string.char_at(s, i + 3)) } else { 0 }
+
+        let triple = (c0 << 18) | (c1 << 12) | (c2 << 6) | c3
+
+        result.push(((triple >> 16) & 0xFF) as u8)
+        if i + 2 < slen && string.char_at(s, i + 2) != '=' {
+            result.push(((triple >> 8) & 0xFF) as u8)
+        }
+        if i + 3 < slen && string.char_at(s, i + 3) != '=' {
+            result.push((triple & 0xFF) as u8)
+        }
+
+        i = i + 4
+    }
+    result
+}
+
+pub fn hex_encode(data: Vec<u8>) -> String {
+    let mut result = ""
+    const HEX: String = "0123456789abcdef"
+    for i in 0..data.len() {
+        let byte = data.get(i).unwrap() as Int
+        let hi = (byte >> 4) & 0xF
+        let lo = byte & 0xF
+        result = result + string.char_at(HEX, hi) + string.char_at(HEX, lo)
+    }
+    result
+}
+
+pub fn hex_decode(s: String) -> Vec<u8> {
+    let mut result = Vec.new()
+    let slen = string.len(s)
+    let mut i = 0
+    while i + 1 < slen {
+        let hi = hex_val(string.char_at(s, i))
+        let lo = hex_val(string.char_at(s, i + 1))
+        result.push(((hi << 4) | lo) as u8)
+        i = i + 2
+    }
+    result
+}
+
+pub fn utf8_validate(s: String) -> Bool {
+    true // Simplified - real impl checks UTF-8 byte sequences
+}
+
+fn char_at_base64(index: Int) -> Char {
+    if index >= 0 && index < 64 {
+        string.char_at(BASE64_CHARS, index)
+    } else {
+        '='
+    }
+}
+
+fn base64_val(c: Char) -> Int {
+    if c >= 'A' && c <= 'Z' { c as Int - 'A' as Int }
+    else if c >= 'a' && c <= 'z' { c as Int - 'a' as Int + 26 }
+    else if c >= '0' && c <= '9' { c as Int - '0' as Int + 52 }
+    else if c == '+' { 62 }
+    else if c == '/' { 63 }
+    else { 0 }
+}
+
+fn hex_val(c: Char) -> Int {
+    if c >= '0' && c <= '9' { c as Int - '0' as Int }
+    else if c >= 'a' && c <= 'f' { c as Int - 'a' as Int + 10 }
+    else if c >= 'A' && c <= 'F' { c as Int - 'A' as Int + 10 }
+    else { 0 }
+}

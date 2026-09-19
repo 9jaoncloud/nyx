@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>std.ui (Material Design 3 UI Toolkit) — Nyx Docs</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <h1>std.ui — Material Design 3 UI Toolkit & Hardware GPU Motion</h1>
+        <p style="color:var(--text-muted)">Cross-platform high-refresh GDI/Skia UI engine featuring Google Material Design 3 tokens, elevation shadow system, interactive widgets, and 120 FPS GPU motion physics.</p>
+
+        <div class="note" style="background: rgba(124, 58, 237, 0.1); border-left: 3px solid var(--accent); margin: 1.5rem 0;">
+            <strong>Module Namespace:</strong> <code>import std.ui</code>
+        </div>
+
+        <h2>Overview</h2>
+        <p>The <code>std.ui</code> library delivers a complete design system for desktop, mobile (Android/iOS), and browser WebAssembly runtimes. It includes Material Design 3 color roles, typography scales, 6-level elevation shadows, and 10+ reactive widgets.</p>
+
+        <h2>Component Primitives</h2>
+        <table>
+            <tr><th>Widget / Feature</th><th>Description</th></tr>
+            <tr><td><code>fn draw_button(...)</code></td><td>Renders Filled, Tonal, Outlined, Text, and Elevated MD3 buttons with ripple state feedback.</td></tr>
+            <tr><td><code>fn draw_card(...)</code></td><td>Renders Elevated, Filled, and Outlined cards with dynamic elevation shadows (Level 0 - Level 5).</td></tr>
+            <tr><td><code>fn draw_text_field(...)</code></td><td>Interactive input field supporting cursor tracking, placeholder text, and active focus state.</td></tr>
+            <tr><td><code>fn draw_slider(...)</code></td><td>Interactive continuous slider with visual thumb position and hit testing.</td></tr>
+            <tr><td><code>fn draw_switch(...)</code></td><td>Toggle switch component with smooth motion track transitions.</td></tr>
+            <tr><td><code>fn draw_progress_bar(...)</code></td><td>Determinate/indeterminate progress bar indicators.</td></tr>
+            <tr><td><code>fn poll_input() -> InputState</code></td><td>Queries real-time native OS mouse coordinates, click state, hit testing, and key events.</td></tr>
+            <tr><td><code>struct AnimationController</code></td><td>Hardware GPU 120 FPS motion clock with cubic emphasized decelerate easing curves.</td></tr>
+        </table>
+
+        <h2>Code Example</h2>
+        <pre><code>import std.ui
+
+fn main() {
+    let mut win = ui.Window.new("Nyx Material Design Studio", 1024, 768)
+    let mut controller = ui.AnimationController.new(300.0) // 300ms easing
+    controller.forward()
+
+    while win.is_open() {
+        let input = ui.poll_input()
+        let t = controller.value() // Current eased animation ratio 0.0 -> 1.0
+
+        ui.begin_frame()
+        ui.draw_rect(0.0, 0.0, 1024.0, 768.0, ui.COLOR_SURFACE)
+
+        ui.draw_button(50.0, 50.0, 160.0, 48.0, "Click Me", ui.BUTTON_FILLED, input)
+        ui.draw_card(50.0, 120.0, 300.0, 200.0, "Card Header", 3, t) // Elevation level 3
+
+        ui.end_frame()
+    }
+}</code></pre>
+    </main>
+    <script src="../navigation.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

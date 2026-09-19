@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heterogeneous GPU Systems & Compiler Architecture — Nyx Documentation</title>
+    <meta name="description" content="Technical documentation for the Nyx GPU Heterogeneous Subsystem, zero-GC region memory hierarchy, and multi-backend accelerator compiler.">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-page: #040711;
+            --bg-card: #0a0f1d;
+            --border-card: rgba(56, 189, 248, 0.16);
+            --accent-cyan: #22d3ee;
+            --accent-green: #10b981;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+        }
+        body {
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.7;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem 6rem;
+        }
+        h1, h2, h3 {
+            font-family: 'Outfit', sans-serif;
+            color: #f8fafc;
+        }
+        h1 { font-size: 2.4rem; font-weight: 800; margin-bottom: 0.5rem; }
+        .badge {
+            display: inline-block;
+            background: rgba(6, 182, 212, 0.15);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(6, 182, 212, 0.35);
+            padding: 0.3rem 0.8rem;
+            border-radius: 9999px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            margin-bottom: 1.25rem;
+            text-transform: uppercase;
+        }
+        .code-block {
+            background: #0b0f19;
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            padding: 1.25rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88rem;
+            color: #38bdf8;
+            overflow-x: auto;
+            margin: 1.25rem 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 0.9rem;
+        }
+        th, td {
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-card);
+            text-align: left;
+        }
+        th { background: #0e1526; color: var(--accent-cyan); }
+        tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <span class="badge"><i class="fas fa-microchip"></i> Hardware Accelerator Architecture</span>
+        <h1>Heterogeneous GPU Systems & Accelerator Compilers</h1>
+        <p style="color:var(--text-muted); font-size:1.1rem; margin-bottom:2rem;">
+            Native Zero-GC memory regions, lock-free DMA streaming, and multi-target compilation for AMD ROCm, NVIDIA PTX, and Vulkan SPIR-V.
+        </p>
+
+        <div class="card">
+            <h2>1. Architecture Overview</h2>
+            <p>
+                Unlike CPU-centric languages that attempt to run heavy runtime garbage collection or rigid borrow-checking lifetimes across thousands of GPU hardware warps, Nyx maps physical GPU memory hierarchies directly into compile-time <strong>Lexical Region Frames</strong>.
+            </p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Hardware Tier</th>
+                        <th>Physical Subsystem</th>
+                        <th>Nyx Region Invariant</th>
+                        <th>Latency & Overhead</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Global Device VRAM</strong></td>
+                        <td>HBM3 / GDDR6 (16GB–192GB)</td>
+                        <td><code>@gpu_global</code> Region Slab</td>
+                        <td>Zero-copy DMA Buffer Handoff</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Shared Scratchpad SRAM</strong></td>
+                        <td>On-chip SRAM (64KB per CU)</td>
+                        <td><code>@gpu_shared</code> Frame</td>
+                        <td>Single-cycle \(O(1)\) bulk reset</td>
+                    </tr>
+                    <tr>
+                        <td><strong>SIMD Vector Registers</strong></td>
+                        <td>Hardware Warp Register File</td>
+                        <td><code>@gpu_warp</code> Register Ring</td>
+                        <td>Zero memory transaction stall</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>2. Native Nyx GPU Kernel Syntax</h2>
+            <p>Write host orchestration and GPU SIMT kernels within a single type-safe language:</p>
+            <pre class="code-block"><code>region host_frame {
+    var weights = load_model_weights("llama3.bin"); // Loaded in host region
+    
+    // Dispatched directly to GPU with hardware capability tokens
+    gpu_kernel&lt;1024, 64&gt;(move weights) {
+        var tid = thread_id();
+        var shared_sram = alloc_region_shared&lt;f32&gt;(256);
+        shared_sram[tid] = compute_fused_attention(tid);
+    };
+} // Entire host &amp; device temporary memory unmapped in single cycle</code></pre>
+        </div>
+
+        <div class="card">
+            <h2>3. Multi-Target Accelerator Backends</h2>
+            <ul style="padding-left:1.5rem; color:#cbd5e1;">
+                <li><strong>AMDGPU / ROCm:</strong> Native LLVM emission targeting AMD Instinct MI300X, Radeon RX 7900 series.</li>
+                <li><strong>NVIDIA PTX:</strong> Parallel Thread Execution ISA targeting H100, A100, and RTX 4090.</li>
+                <li><strong>Vulkan SPIR-V:</strong> Cross-platform compute shaders for mobile, embedded, and desktop GPUs.</li>
+                <li><strong>Apple Metal:</strong> Direct MSL translation for Apple Silicon M1/M2/M3/M4 unified memory.</li>
+            </ul>
+        </div>
+
+        <div style="text-align:center; margin-top:3rem;">
+            <a href="paper/nyx_gpu_systems_and_heterogeneous_computing_2026.html" class="btn" style="background:#0891b2; color:#fff; padding:0.75rem 1.5rem; border-radius:6px; text-decoration:none; font-weight:700;">
+                <i class="fas fa-file-lines"></i> Read Formal Research Paper &rarr;
+            </a>
+            <a href="paper/papers.html" style="color:#94a3b8; text-decoration:none; margin-left:1.5rem; font-weight:600;">
+                All Research Papers
+            </a>
+        </div>
+    </div>
+    <script src="header_footer.js" defer></script>
+</body>
+</html>

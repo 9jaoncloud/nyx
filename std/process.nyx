@@ -1,0 +1,57 @@
+module process
+
+extern "C" {
+    fn system(cmd: *const u8) -> i32
+    fn nyx_process_spawn(cmd: *const u8) -> i64
+    fn nyx_process_wait(pid: i64) -> i32
+    fn nyx_process_kill(pid: i64) -> i32
+    fn nyx_exit(code: i32)
+}
+
+pub struct Process {
+    pid: i64,
+}
+
+pub fn run(command: String, args: Vec<String>) -> Result<Process, String> {
+    let mut full_cmd = command.clone()
+    for arg in args {
+        full_cmd = full_cmd + " " + arg
+    }
+    let pid = nyx_process_spawn(full_cmd.as_ptr())
+    if pid > 0 {
+        Result.Ok(Process { pid })
+    } else {
+        Result.Err("Failed to spawn process".to_string())
+    }
+}
+
+pub fn run_sync(command: String, args: Vec<String>) -> Result<i32, String> {
+    let mut full_cmd = command.clone()
+    for arg in args {
+        full_cmd = full_cmd + " " + arg
+    }
+    let code = system(full_cmd.as_ptr())
+    Result.Ok(code)
+}
+
+impl Process {
+    pub fn wait(self: &Process) -> i32 {
+        nyx_process_wait(self.pid)
+    }
+
+    pub fn kill(self: &Process) -> Result<(), String> {
+        if nyx_process_kill(self.pid) == 0 {
+            Result.Ok(())
+        } else {
+            Result.Err("Failed to kill process".to_string())
+        }
+    }
+
+    pub fn pid(self: &Process) -> i64 {
+        self.pid
+    }
+}
+
+pub fn exit(code: i32) {
+    nyx_exit(code)
+}

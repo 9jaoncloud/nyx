@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modules & Imports — Nyx Documentation</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <h1>Modules & Imports in Nyx</h1>
+        <p class="lead">Nyx features a modern, hierarchical module system designed for encapsulation, clean namespace isolation, and blazing-fast compilation.</p>
+
+        <h2>1. Declaring a Module</h2>
+        <p>Every Nyx file can declare its module name using the <code>module</code> keyword at the top of the file:</p>
+<pre><code>module auth
+
+pub struct UserSession {
+    pub user_id: String,
+    pub token: String,
+    pub expires_at: i64,
+}
+
+pub fn create_session(user_id: String) -> UserSession {
+    UserSession {
+        user_id: user_id,
+        token: "tok_secure_session_91823".to_string(),
+        expires_at: 1724550000,
+    }
+}</code></pre>
+
+        <h2>2. Importing Standard Library Modules</h2>
+        <p>You can import modules from Nyx's rich standard library using dotted module identifiers:</p>
+<pre><code>import std.io
+import std.vec
+import std.string
+import std.cloud
+import std.gis.geo
+import std.ml.ai_model
+
+fn main() {
+    std.io.println("All standard modules imported successfully.")
+}</code></pre>
+
+        <h2>3. Aliased Imports</h2>
+        <p>To avoid naming collisions or shorten long module paths, use the <code>as</code> keyword:</p>
+<pre><code>import std.math as m
+import std.sec.vault as v
+
+fn calculate(val: f64) -> f64 {
+    m.sqrt(val) * 2.0
+}</code></pre>
+
+        <h2>4. Visibility and Access Control</h2>
+        <p>By default, functions, structs, and fields in Nyx are private to their declaring module. Use the <code>pub</code> modifier to export symbols publicly:</p>
+<pre><code>module ledger
+
+// Public struct with both public and private fields
+pub struct Account {
+    pub account_id: String,
+    pub balance: f64,
+    internal_salt: String, // Private to module 'ledger'
+}
+
+// Public constructor
+pub fn open_account(id: String, initial_deposit: f64) -> Account {
+    Account {
+        account_id: id,
+        balance: initial_deposit,
+        internal_salt: "entropy_seed_99".to_string(),
+    }
+}
+
+// Private helper function
+fn audit_transaction(id: String, amount: f64) {
+    // Internal logging logic
+}</code></pre>
+
+        <h2>5. Project Structure & nyx.toml</h2>
+        <p>Nyx projects are configured using a root <code>nyx.toml</code> manifest:</p>
+<pre><code>[package]
+name = "enterprise-service"
+version = "0.1.0"
+authors = ["Engineering Team &lt;dev@example.com&gt;"]
+edition = "2026"
+
+[dependencies]
+nyx-http = "1.2.0"
+nyx-crypto = "0.9.4"
+
+[build]
+opt-level = 3
+target = "native"</code></pre>
+
+        <h3>Standard Project Directory Layout:</h3>
+<pre><code>my-project/
+├── nyx.toml
+├── src/
+│   ├── main.nyx
+│   ├── auth/
+│   │   ├── session.nyx
+│   │   └── tokens.nyx
+│   └── services/
+│       └── api.nyx
+└── tests/
+    └── api_test.nyx</code></pre>
+
+        <div class="next-prev-links">
+            <a href="control-flow.html">&larr; Control Flow</a>
+            <a href="memory.html">Memory Model &rarr;</a>
+        </div>
+    </main>
+    <script src="../navigation.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Functions — Nyx Documentation</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <h1>Functions & Control Flow</h1>
+
+        <h2>Function Declarations</h2>
+<pre><code>// Full declaration with types
+fn add(a: Int, b: Int) -> Int {
+    return a + b
+}
+
+// Short syntax for single-expression functions
+fn square(x: Int) = x * x
+
+// With type inference
+fn greet(name) = "Hello, " + name</code></pre>
+
+        <h2>Lambdas / Closures</h2>
+<pre><code>let add = fn(a, b) -> a + b
+let inc = |x| x + 1
+
+// Multi-line lambda
+let compute = |x| {
+    let y = x * 2
+    return y + 1
+}
+
+// Higher-order function
+fn apply(f: fn(Int) -> Int, x: Int) -> Int { f(x) }
+let result = apply(|n| n * n, 5)  // 25</code></pre>
+
+        <h2>Conditionals</h2>
+<pre><code>if x > 0 {
+    print("positive")
+} else if x == 0 {
+    print("zero")
+} else {
+    print("negative")
+}</code></pre>
+
+        <h2>Pattern Matching</h2>
+<pre><code>match value {
+    Option.Some(v) if v > 0 => process(v),
+    Option.Some(v) => log("zero or negative"),
+    Option.None => log("nothing"),
+}</code></pre>
+
+        <h2>Loops</h2>
+<pre><code>// While loop
+let mut i = 0
+while i < 5 {
+    print(i)
+    i += 1
+}
+
+// For-in loop over ranges
+for i in 0..5 {
+    print(i)
+}
+
+// For-in loop over collections
+let items = [10, 20, 30]
+for item in items {
+    print(item)
+}
+</code></pre>
+
+        <h2>Early Returns</h2>
+<pre><code>fn find_user(id: Int) -> Option&lt;String&gt; {
+    if id < 0 { return Option.None }
+    // ...
+    Option.Some("user")
+}</code></pre>
+
+        <h2>Method Syntax</h2>
+<pre><code>impl Point {
+    fn translate(self: &mut Point, dx: Int, dy: Int) {
+        self.x += dx
+        self.y += dy
+    }
+}
+
+let mut p = Point{ x: 0, y: 0 }
+p.translate(5, 10)</code></pre>
+    </main>
+    <script src="../navigation.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

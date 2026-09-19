@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Havilah (.hav) — Linear Capability = Ownership Dialect for Nyx</title>
+    <meta name="description" content="Havilah is the security & architectural minimalism dialect for Nyx. Linear capabilities, zero-allocation hardware access, and sandbox isolation.">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-dark: #050814;
+            --bg-card: rgba(13, 20, 38, 0.85);
+            --accent-amber: #f59e0b;
+            --border-glow: rgba(245, 158, 11, 0.3);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.7;
+        }
+
+        .doc-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem 5rem;
+        }
+
+        .hero-box {
+            background: linear-gradient(135deg, rgba(69, 26, 3, 0.85) 0%, rgba(6, 15, 25, 0.98) 100%);
+            border: 1px solid var(--border-glow);
+            border-radius: 16px;
+            padding: 2.5rem 2rem;
+            margin-bottom: 2.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            padding: 0.35rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            letter-spacing: 0.05em;
+        }
+
+        .doc-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.4rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 0.75rem;
+            line-height: 1.2;
+        }
+
+        pre.code-block {
+            background: #030712 !important;
+            border: 1px solid rgba(245, 158, 11, 0.2) !important;
+            border-radius: 10px !important;
+            padding: 1.25rem !important;
+            font-family: 'JetBrains Mono', monospace !important;
+            font-size: 0.88rem !important;
+            color: #fbbf24 !important;
+            overflow-x: auto !important;
+            margin: 1.25rem 0 !important;
+            line-height: 1.6 !important;
+            white-space: pre !important;
+            word-wrap: normal !important;
+            tab-size: 4 !important;
+        }
+
+        pre.code-block code {
+            font-family: inherit !important;
+            font-size: inherit !important;
+            color: inherit !important;
+            white-space: pre !important;
+            display: block !important;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 1.75rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        h2 {
+            font-family: 'Outfit', sans-serif;
+            color: #f1f5f9;
+            font-size: 1.5rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        h3 {
+            font-family: 'Outfit', sans-serif;
+            color: #fbbf24;
+            font-size: 1.2rem;
+            margin: 1.5rem 0 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776; Menu</button>
+    <nav id="sidebar"></nav>
+
+    <main>
+        <div class="doc-container">
+            <div class="hero-box">
+                <div class="badge-pill">
+                    <i class="fa-solid fa-shield-halved"></i> Nyx Dialect 2 &bull; Security &amp; Minimalism Axis
+                </div>
+                <h1 class="doc-title">Havilah: Linear Capability = Ownership</h1>
+                <p style="color:#cbd5e1; font-size:1.1rem; max-width:880px;">
+                    Unify memory management and capability security into a single linear primitive. An object exists only while its capability token is held—consuming or dropping the token destroys the resource immediately with zero runtime overhead.
+                </p>
+                <div style="display:flex; gap:1.25rem; flex-wrap:wrap; margin-top:1.25rem; font-family:'JetBrains Mono', monospace; font-size:0.85rem; color:#fde68a;">
+                    <span><strong>File Extension:</strong> <code>.hav</code></span>
+                    <span>&bull;</span>
+                    <span><strong>Compiler Flag:</strong> <code>nyxc --mode=capability</code></span>
+                    <span>&bull;</span>
+                    <span><strong>Primitive:</strong> <code>Linear Cap&lt;T&gt;</code></span>
+                    <span>&bull;</span>
+                    <span><strong>Memory Tax:</strong> <code>0 bytes (Compile-Time)</code></span>
+                </div>
+            </div>
+
+            <!-- Core Rationale -->
+            <div class="card">
+                <h2><i class="fa-solid fa-lock" style="color:var(--accent-amber);"></i> 1. The Core Philosophy of Havilah</h2>
+                <p>
+                    Standard Nyx separates memory management (regions) from capability access (security tokens). <strong>Havilah unifies them:</strong>
+                </p>
+                <blockquote style="border-left: 4px solid var(--accent-amber); padding: 0.85rem 1.25rem; margin: 1.25rem 0; background: rgba(245, 158, 11, 0.05); border-radius: 0 8px 8px 0; color: #fef08a; font-style: italic;">
+                    "Capability is Ownership. If you hold the capability token, you hold the memory. When you consume or drop the token, the resource is reclaimed immediately."
+                </blockquote>
+                <p>
+                    This eliminates the need for both garbage collection and region boundary inference. Because capabilities are linear by default, they cannot be copied or leaked, creating an unforgeable hardware-enforced sandbox.
+                </p>
+            </div>
+
+            <!-- Syntax & Code Example -->
+            <div class="card">
+                <h2><i class="fa-solid fa-code" style="color:var(--accent-amber);"></i> 2. Syntax &amp; Linear Token Mechanics</h2>
+                <p>In Havilah, every sensitive resource (files, sockets, GPU buffers, motor registers) is accessed via a single-use <code>Cap&lt;T&gt;</code>:</p>
+
+<pre class="code-block"><code class="language-nyx">// file: hardware_driver.hav
+// Compile with: nyxc --mode=capability hardware_driver.hav -o driver.exe
+
+struct SpiBus;
+
+fn write_oled_display(cap: Cap&lt;SpiBus&gt;, pixels: &[u8]) -> Cap&lt;SpiBus&gt; {
+    // Access hardware only through unforgeable linear token
+    cap.transmit_raw(pixels);
+    
+    // Return token to caller; if not returned, SpiBus is immediately shutdown and reclaimed
+    cap
+}
+
+fn secure_memory_sandbox(entry: Cap&lt;IsolatedSandbox&gt;) {
+    let token = entry.allocate_memory(4096);
+    token.write_bytes("Confidential biometric payload");
+    
+    // Dropping 'token' immediately zeros and deallocates the 4096 bytes:
+    // drop(token); // Zero residual memory trace in RAM
+}</code></pre>
+            </div>
+
+            <!-- 4 Concrete Industrial Use Cases -->
+            <div class="card">
+                <h2><i class="fa-solid fa-microchip" style="color:var(--accent-amber);"></i> 3. Concrete Industrial Use Cases</h2>
+
+                <!-- Use Case 1 -->
+                <h3>Use Case 1: Zero-Trust Microkernel OS Device Drivers</h3>
+                <p>
+                    Writing bare-metal drivers in Havilah guarantees that unprivileged userland code cannot forge hardware MMIO pointers or access unauthorized registers:
+                </p>
+<pre class="code-block"><code class="language-nyx">import kernel.arch.x86_64;
+import kernel.capabilities;
+
+struct PciEthernetController {
+    mmio_base: u64,
+}
+
+// Linear driver function: takes hardware capability, executes DMA transfer, returns capability
+pub fn transfer_dma_frame(
+    mut cap: Cap&lt;PciEthernetController&gt;,
+    packet: &[u8]
+) -> Result&lt;Cap&lt;PciEthernetController&gt;, DriverError&gt; {
+    // 1. Verify physical ring descriptor alignment
+    let desc_ring = cap.map_dma_ring(ring_size: 256)?;
+
+    // 2. Transmit raw frame directly to silicon
+    desc_ring.write_buffer(0, packet);
+    cap.trigger_interrupt();
+
+    // 3. Return unforgeable capability back to kernel scheduler
+    Ok(cap)
+}</code></pre>
+
+                <!-- Use Case 2 -->
+                <h3>Use Case 2: Multi-Tenant Cloud Enclaves &amp; Confidential Sandboxes</h3>
+                <p>
+                    In confidential computing nodes (AMD SEV-SNP / Intel TDX), data remnants in shared RAM pose severe security risks. Havilah enforces zero residual memory traces upon capability destruction:
+                </p>
+<pre class="code-block"><code class="language-nyx">import std.security.enclave;
+
+pub fn execute_confidential_inference(
+    enclave_cap: Cap&lt;SecureEnclave&gt;,
+    encrypted_weights: &[u8],
+    input_vector: &[f32]
+) -> OutputPrediction {
+    // Allocate isolated encrypted RAM buffer
+    let mut weight_buffer = enclave_cap.decrypt_to_confidential_ram(encrypted_weights);
+    
+    // Run inference inside hardware enclave
+    let prediction = enclave_cap.run_neural_forward(&weight_buffer, input_vector);
+
+    // Linear consumption: Explicitly destroy capability token
+    // The compiler lowers this to hardware AVX-512 zeroing instructions before releasing page
+    drop(weight_buffer);
+    drop(enclave_cap);
+
+    prediction
+}</code></pre>
+
+                <!-- Use Case 3 -->
+                <h3>Use Case 3: Physical HSM Key Managers &amp; Silicon Token Burning</h3>
+                <p>
+                    Cryptographic signature keys stored in Hardware Security Modules (HSMs) must never be cloned or reused across unauthorized transactions:
+                </p>
+<pre class="code-block"><code class="language-nyx">import std.crypto.hsm;
+
+struct PrivateSigningKey;
+
+// One-time signature capability: Consumes token upon signing (Single-Use Linear Type)
+pub fn sign_interbank_wire(
+    single_use_key: Cap&lt;PrivateSigningKey&gt;,
+    wire_payload: &[u8]
+) -> Ed25519Signature {
+    // Hardware sign operation burns the capability token in silicon
+    let signature = single_use_key.execute_ecdsa_sign(wire_payload);
+    
+    // Note: single_use_key is NOT returned; it ceases to exist in the type system
+    signature
+}</code></pre>
+
+                <!-- Use Case 4 -->
+                <h3>Use Case 4: DO-178C Aerospace Subsystem Fault Isolation</h3>
+                <p>
+                    Avionics buses (ARINC 429 / MIL-STD-1553) require strict mathematical partition separation between flight navigation and entertainment modules:
+                </p>
+<pre class="code-block"><code class="language-nyx">import avionics.bus.arinc429;
+
+struct NavigationSubsystem;
+struct CabinLightingSubsystem;
+
+pub fn process_avionics_tick(
+    nav_cap: Cap&lt;NavigationSubsystem&gt;,
+    lighting_cap: Cap&lt;CabinLightingSubsystem&gt;
+) -> (Cap&lt;NavigationSubsystem&gt;, Cap&lt;CabinLightingSubsystem&gt;) {
+    // Navigation capability cannot access cabin lighting memory, and vice-versa
+    nav_cap.update_inertial_navigation_unit();
+    lighting_cap.dim_cabin_lights(0.8);
+
+    (nav_cap, lighting_cap)
+}</code></pre>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; margin-top:2rem;">
+                <a href="zephaniah.html" class="btn" style="background:rgba(16,185,129,0.2); color:#34d399; text-decoration:none; padding:0.6rem 1.2rem; border-radius:8px; border:1px solid rgba(16,185,129,0.4);">&larr; Previous: Zephaniah (.zeph)</a>
+                <a href="jude.html" class="btn" style="background:rgba(168,85,247,0.2); color:#c084fc; text-decoration:none; padding:0.6rem 1.2rem; border-radius:8px; border:1px solid rgba(168,85,247,0.4);">Next: Jude (.jude) &rarr;</a>
+            </div>
+        </div>
+    </main>
+
+    <script src="../navigation.js"></script>
+    <script src="../header_footer.js"></script>
+</body>
+</html>

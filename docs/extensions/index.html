@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nyx Multi-Dialect Sovereign Extensions — Zephaniah, Havilah &amp; Jude</title>
+    <meta name="description" content="Explore Nyx's 3 unified compiler dialects (Zephaniah, Havilah, Jude) and cybernetic platforms (SERAPHIM Robotics, Nyx SOPHIA AGI). Four memory models on one unified compiler and OS.">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        :root {
+            --bg-dark: #050814;
+            --bg-card: rgba(13, 20, 38, 0.85);
+            --border-glow: rgba(56, 189, 248, 0.25);
+            --accent-cyan: #38bdf8;
+            --accent-purple: #a855f7;
+            --accent-emerald: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-rose: #f43f5e;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.7;
+        }
+
+        .ext-container {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem 5rem;
+        }
+
+        .hero-banner {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(6, 10, 24, 0.98) 100%);
+            border: 1px solid var(--border-glow);
+            border-radius: 16px;
+            padding: 2.75rem 2.25rem;
+            margin-bottom: 2.5rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+        }
+
+        .hero-banner::before {
+            content: '';
+            position: absolute;
+            top: -120px;
+            right: -120px;
+            width: 320px;
+            height: 320px;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.2) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(168, 85, 247, 0.15);
+            color: #c084fc;
+            border: 1px solid rgba(168, 85, 247, 0.35);
+            padding: 0.35rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .hero-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.6rem;
+            font-weight: 800;
+            line-height: 1.25;
+            color: #ffffff;
+            margin-bottom: 1rem;
+        }
+
+        .hero-desc {
+            font-size: 1.15rem;
+            color: #cbd5e1;
+            max-width: 880px;
+            margin-bottom: 1.75rem;
+        }
+
+        .dialects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .dialect-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.25s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dialect-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .dialect-card.zeph { border-top: 4px solid var(--accent-emerald); }
+        .dialect-card.zeph:hover { border-color: var(--accent-emerald); }
+        .dialect-card.hav { border-top: 4px solid var(--accent-amber); }
+        .dialect-card.hav:hover { border-color: var(--accent-amber); }
+        .dialect-card.jude { border-top: 4px solid var(--accent-purple); }
+        .dialect-card.jude:hover { border-color: var(--accent-purple); }
+        .dialect-card.seraph { border-top: 4px solid var(--accent-cyan); }
+        .dialect-card.seraph:hover { border-color: var(--accent-cyan); }
+        .dialect-card.sophia { border-top: 4px solid var(--accent-rose); }
+        .dialect-card.sophia:hover { border-color: var(--accent-rose); }
+
+        .card-header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .card-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.35rem;
+        }
+
+        .ext-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
+        }
+
+        .card-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.45rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.4rem;
+        }
+
+        .card-purpose {
+            font-size: 0.92rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.25rem;
+            line-height: 1.6;
+        }
+
+        .feature-bullets {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 1.5rem 0;
+        }
+
+        .feature-bullets li {
+            font-size: 0.88rem;
+            color: #cbd5e1;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .feature-bullets li i {
+            margin-top: 0.25rem;
+            font-size: 0.8rem;
+        }
+
+        .btn-card {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.65rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.88rem;
+            text-decoration: none;
+            transition: all 0.2s;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .btn-zeph { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); }
+        .btn-zeph:hover { background: #10b981; color: #022c22; }
+        .btn-hav { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); }
+        .btn-hav:hover { background: #f59e0b; color: #451a03; }
+        .btn-jude { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.35); }
+        .btn-jude:hover { background: #a855f7; color: #fff; }
+        .btn-seraph { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.35); }
+        .btn-seraph:hover { background: #38bdf8; color: #020617; }
+        .btn-sophia { background: rgba(244, 63, 94, 0.15); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.35); }
+        .btn-sophia:hover { background: #f43f5e; color: #fff; }
+
+        /* Architecture Section */
+        .arch-box {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 2.25rem;
+            margin: 2.5rem 0;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            margin-top: 1.25rem;
+        }
+
+        table.dialect-matrix {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        table.dialect-matrix th, table.dialect-matrix td {
+            padding: 0.9rem 1.15rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        table.dialect-matrix th {
+            background: rgba(15, 23, 42, 0.9);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            color: #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776; Menu</button>
+    <nav id="sidebar"></nav>
+
+    <main>
+        <div class="ext-container">
+            <!-- Top Alert -->
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.75rem; background:rgba(168,85,247,0.1); border:1px solid rgba(168,85,247,0.3); border-radius:12px; padding:0.75rem 1.25rem; margin-bottom:1.75rem;">
+                <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+                    <span style="background:#a855f7; color:#fff; font-size:0.75rem; font-weight:800; padding:0.25rem 0.6rem; border-radius:6px; text-transform:uppercase;">Nyx Upgrade 2 Core</span>
+                    <strong style="color:#e9d5ff; font-size:0.92rem;">Multi-Dialect Unified Trunk &bull; 5 Memory &amp; Execution Models &bull; One Sovereign Toolchain</strong>
+                </div>
+                <a href="../roadmap.html" style="color:#38bdf8; font-weight:600; text-decoration:none; font-size:0.85rem;">View Architecture Roadmap &rarr;</a>
+            </div>
+
+            <!-- Hero Banner -->
+            <div class="hero-banner">
+                <div class="badge-pill">
+                    <i class="fa-solid fa-layer-group"></i> Sovereign Language Extensions
+                </div>
+                <h1 class="hero-title">Beyond Single-Paradigm Limits:<br>The Nyx Multi-Dialect Architecture</h1>
+                <p class="hero-desc">
+                    Rather than forcing one rigid memory model on every domain, Nyx extends into 3 specialized companion dialects (Zephaniah, Havilah, Jude) on top of the Nyx Base engine, sharing the exact same compiler trunk, MLIR/LLVM codegen, standard library, and African language aliases (Hausa, Yorùbá, Igbo).
+                </p>
+                <div style="display:flex; gap:1.25rem; flex-wrap:wrap; font-size:0.88rem; color:var(--text-secondary); border-top:1px solid rgba(255,255,255,0.08); padding-top:1.25rem;">
+                    <span><i class="fa-solid fa-code-branch" style="color:#38bdf8;"></i> <strong>One Unified Toolchain:</strong> <code>nyxc</code></span>
+                    <span><i class="fa-solid fa-microchip" style="color:#10b981;"></i> <strong>Zero-Cost Interop:</strong> Direct ABI shims</span>
+                    <span><i class="fa-solid fa-shield-halved" style="color:#a855f7;"></i> <strong>Sovereign Heritage:</strong> 9jaonCloud Research</span>
+                </div>
+            </div>
+
+            <!-- Architecture Diagram -->
+            <div class="arch-box">
+                <h2 style="font-family:'Outfit',sans-serif; color:#f8fafc; font-size:1.6rem; margin-bottom:0.5rem;"><i class="fa-solid fa-sitemap" style="color:var(--accent-purple);"></i> Multi-Dialect Architectural Hierarchy</h2>
+                <p style="color:var(--text-secondary); font-size:0.95rem; margin-bottom:1.5rem;">
+                    All companion dialects compile through the shared Nyx driver and lower into identical MLIR dialect representations, allowing zero-cost cross-dialect calling conventions.
+                </p>
+
+                <div style="background:#030712; padding:1.5rem; border-radius:10px; border:1px solid rgba(255,255,255,0.08); text-align:center;">
+                    <pre class="mermaid" style="background:transparent;">
+graph TD
+    subgraph Base [Nyx Unified Foundation]
+        NYX[🌙 Nyx Base Engine & OS<br>Region Arenas + Zero-GC]
+    end
+    
+    subgraph Dialects [3 Companion Dialects]
+        ZEPH[⚡ Zephaniah .zeph<br>Gradual Ownership & ARC<br>Flag: --mode=gradual]
+        HAV[🛡️ Havilah .hav<br>Linear Capability = Ownership<br>Flag: --mode=capability]
+        JUDE[📐 Jude .jude<br>SMT Formal Proofs & Z3<br>Flag: --verify]
+    end
+
+    subgraph Cybernetics [Sovereign Cybernetic Substrates]
+        SERAPH[🤖 SERAPHIM<br>1 kHz Whole-Body Humanoid Robotics]
+        SOPHIA[🧠 Nyx SOPHIA<br>7-Layer AGI & World Model]
+    end
+
+    NYX --> ZEPH
+    NYX --> HAV
+    NYX --> JUDE
+    
+    ZEPH --> SERAPH
+    HAV --> SERAPH
+    JUDE --> SERAPH
+    SERAPH --> SOPHIA
+                    </pre>
+                </div>
+            </div>
+
+            <!-- Dialects Section -->
+            <h2 style="font-family:'Outfit',sans-serif; color:#f8fafc; font-size:1.8rem; margin:2.5rem 0 0.5rem;"><i class="fa-solid fa-code" style="color:var(--accent-cyan);"></i> The 3 Companion Extension Dialects</h2>
+            <p style="color:var(--text-secondary); font-size:0.95rem; margin-bottom:1.5rem;">
+                Select any companion dialect below to explore its syntax, formal semantics, compiler flags, and industrial use cases:
+            </p>
+
+            <div class="dialects-grid">
+                <!-- Zephaniah -->
+                <div class="dialect-card zeph">
+                    <div>
+                        <div class="card-header-top">
+                            <div class="card-icon" style="background:rgba(16,185,129,0.15); color:#34d399;">⚡</div>
+                            <span class="ext-tag" style="background:rgba(16,185,129,0.2); color:#34d399;">.zeph &bull; --mode=gradual</span>
+                        </div>
+                        <h3 class="card-title">Zephaniah</h3>
+                        <p class="card-purpose">
+                            <strong>Ergonomics &amp; Gradual Ownership:</strong> Designed for rapid development and application code where strict lifetime annotations are burdensome. Uses progressive strictness and automatic ARC fallback.
+                        </p>
+                        <ul class="feature-bullets">
+                            <li><i class="fa-solid fa-check" style="color:#34d399;"></i> <strong>Zero Lifetime Annotations:</strong> Write high-level script-like code with C performance.</li>
+                            <li><i class="fa-solid fa-check" style="color:#34d399;"></i> <strong>Gradual Borrow Checker:</strong> Enforces borrow checking only where declared.</li>
+                            <li><i class="fa-solid fa-check" style="color:#34d399;"></i> <strong>Ideal For:</strong> Web services, UI controllers, scripts, and high-level business logic.</li>
+                        </ul>
+                    </div>
+                    <a href="zephaniah.html" class="btn-card btn-zeph">
+                        Explore Zephaniah &rarr;
+                    </a>
+                </div>
+
+                <!-- Havilah -->
+                <div class="dialect-card hav">
+                    <div>
+                        <div class="card-header-top">
+                            <div class="card-icon" style="background:rgba(245,158,11,0.15); color:#fbbf24;">🛡️</div>
+                            <span class="ext-tag" style="background:rgba(245,158,11,0.2); color:#fbbf24;">.hav &bull; --mode=capability</span>
+                        </div>
+                        <h3 class="card-title">Havilah</h3>
+                        <p class="card-purpose">
+                            <strong>Linear Capability = Ownership:</strong> Minimalist architectural security where resources are linear capability tokens. Dropping the capability immediately and deterministically frees the underlying resource.
+                        </p>
+                        <ul class="feature-bullets">
+                            <li><i class="fa-solid fa-check" style="color:#fbbf24;"></i> <strong>Linear Type System:</strong> Capabilities cannot be duplicated, leaked, or forged.</li>
+                            <li><i class="fa-solid fa-check" style="color:#fbbf24;"></i> <strong>Drop = Deallocate:</strong> No garbage collection and no region tracking overhead.</li>
+                            <li><i class="fa-solid fa-check" style="color:#fbbf24;"></i> <strong>Ideal For:</strong> Microkernel drivers, hardware peripheral sandboxes, multi-tenant cloud.</li>
+                        </ul>
+                    </div>
+                    <a href="havilah.html" class="btn-card btn-hav">
+                        Explore Havilah &rarr;
+                    </a>
+                </div>
+
+                <!-- Jude -->
+                <div class="dialect-card jude">
+                    <div>
+                        <div class="card-header-top">
+                            <div class="card-icon" style="background:rgba(168,85,247,0.15); color:#c084fc;">📐</div>
+                            <span class="ext-tag" style="background:rgba(168,85,247,0.2); color:#c084fc;">.jude &bull; --verify</span>
+                        </div>
+                        <h3 class="card-title">Jude</h3>
+                        <p class="card-purpose">
+                            <strong>SMT Formal Mathematical Verification:</strong> Embeds first-order logic pre/post condition contracts (<code>@verify</code>) directly into systems code, discharging proof obligations to Z3/CVC5 solvers.
+                        </p>
+                        <ul class="feature-bullets">
+                            <li><i class="fa-solid fa-check" style="color:#c084fc;"></i> <strong>Machine-Checked Proofs:</strong> Zero runtime assertion cost; verified at compile-time.</li>
+                            <li><i class="fa-solid fa-check" style="color:#c084fc;"></i> <strong>Cryptographic Certificates:</strong> Emits standalone <code>.jude.cert</code> audit artifacts.</li>
+                            <li><i class="fa-solid fa-check" style="color:#c084fc;"></i> <strong>Ideal For:</strong> Avionics flight control, medical devices, cryptography, defense systems.</li>
+                        </ul>
+                    </div>
+                    <a href="jude.html" class="btn-card btn-jude">
+                        Explore Jude &rarr;
+                    </a>
+                </div>
+            </div>
+
+            <!-- Cybernetic Substrates Section -->
+            <h2 style="font-family:'Outfit',sans-serif; color:#f8fafc; font-size:1.8rem; margin:3rem 0 0.5rem;"><i class="fa-solid fa-robot" style="color:var(--accent-purple);"></i> Sovereign Cybernetic Substrates (Robotics &amp; AGI)</h2>
+            <p style="color:var(--text-secondary); font-size:0.95rem; margin-bottom:1.5rem;">
+                Built on the multi-dialect safety and mathematical guarantees of Nyx, these two high-level platforms power real-world robotics and embodied intelligence:
+            </p>
+
+            <div class="dialects-grid">
+                <!-- SERAPHIM -->
+                <div class="dialect-card seraph">
+                    <div>
+                        <div class="card-header-top">
+                            <div class="card-icon" style="background:rgba(56,189,248,0.15); color:#38bdf8;">🤖</div>
+                            <span class="ext-tag" style="background:rgba(56,189,248,0.2); color:#38bdf8;">@nyx/seraphim &bull; 1 kHz RT</span>
+                        </div>
+                        <h3 class="card-title">SERAPHIM</h3>
+                        <p class="card-purpose">
+                            <strong>Real-Time Humanoid Robotics Substrate:</strong> End-to-end physics, rigid-body Featherstone \(O(n)\) dynamics, Whole-Body Control (WBC) Quadratic Programming, and 1,000 Hz zero-GC motor control loops.
+                        </p>
+                        <ul class="feature-bullets">
+                            <li><i class="fa-solid fa-check" style="color:#38bdf8;"></i> <strong>Zero GC Pause:</strong> Hard deterministic sub-0.5ms loop jitter.</li>
+                            <li><i class="fa-solid fa-check" style="color:#38bdf8;"></i> <strong>Rigid Body Physics:</strong> Spatial 6D Plücker vector algebra.</li>
+                        </ul>
+                    </div>
+                    <a href="seraphim.html" class="btn-card btn-seraph">
+                        Explore SERAPHIM Robotics &rarr;
+                    </a>
+                </div>
+
+                <!-- Nyx SOPHIA -->
+                <div class="dialect-card sophia">
+                    <div>
+                        <div class="card-header-top">
+                            <div class="card-icon" style="background:rgba(244,63,94,0.15); color:#fb7185;">🧠</div>
+                            <span class="ext-tag" style="background:rgba(244,63,94,0.2); color:#fb7185;">@nyx/sophia &bull; 7-Layer AGI</span>
+                        </div>
+                        <h3 class="card-title">Nyx SOPHIA</h3>
+                        <p class="card-purpose">
+                            <strong>7-Layer Cognitive AGI Architecture:</strong> DreamerV3-style RSSM latent world model, episodic/semantic HNSW memory substrate, 3-tier goal hierarchy, and epistemic self-reflection.
+                        </p>
+                        <ul class="feature-bullets">
+                            <li><i class="fa-solid fa-check" style="color:#fb7185;"></i> <strong>Latent Imagination:</strong> Counterfactual reasoning in latent space without physical risk.</li>
+                            <li><i class="fa-solid fa-check" style="color:#fb7185;"></i> <strong>Embodied Action:</strong> Direct integration with SERAPHIM WBC motors.</li>
+                        </ul>
+                    </div>
+                    <a href="sophia-agi.html" class="btn-card btn-sophia">
+                        Explore Nyx SOPHIA AGI &rarr;
+                    </a>
+                </div>
+            </div>
+
+            <!-- Master Dialect Comparison Matrix -->
+            <div class="arch-box">
+                <h3 style="font-family:'Outfit',sans-serif; color:#f8fafc; font-size:1.4rem; margin-bottom:1rem;">Master Comparison Matrix</h3>
+                <div class="table-responsive">
+                    <table class="dialect-matrix">
+                        <thead>
+                            <tr>
+                                <th>Dialect / Extension</th>
+                                <th>Extension</th>
+                                <th>Memory / Safety Model</th>
+                                <th>Primary Industrial Use Case</th>
+                                <th>Verification Mechanism</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Nyx Base</strong></td>
+                                <td><code>.nyx</code></td>
+                                <td>Region Bump Arenas + ARC Fallback</td>
+                                <td>Systems software, OS kernels, cloud web engines</td>
+                                <td>Compile-Time Escape Analysis</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Zephaniah</strong></td>
+                                <td><code>.zeph</code></td>
+                                <td>Gradual Ownership &amp; Transparent ARC</td>
+                                <td>Rapid application engineering, high-level business logic</td>
+                                <td>Gradual Borrow Checking (<code>[Z003]</code>)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Havilah</strong></td>
+                                <td><code>.hav</code></td>
+                                <td>Linear Capability Tokens (Cap = Ownership)</td>
+                                <td>Microkernel sandboxes, hardware device drivers</td>
+                                <td>Linearity Single-Use Enforcement (<code>[H001]</code>)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Jude</strong></td>
+                                <td><code>.jude</code></td>
+                                <td>SMT Contract Proof Obligations</td>
+                                <td>Avionics, medical devices, defense, cryptography</td>
+                                <td>Z3/CVC5 Machine-Checked SMT Solvers</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Toka</strong></td>
+                                <td><code>.toka</code></td>
+                                <td>Tokenized Declarative Stream Pipelines</td>
+                                <td>Event routing, micro-agent pipelines, embedded rules</td>
+                                <td>AST Lowering &amp; Zero-GC Region Mapping</td>
+                            </tr>
+                            <tr>
+                                <td><strong>SERAPHIM</strong></td>
+                                <td><code>std.robotics.*</code></td>
+                                <td>Lockless Real-Time 1 kHz Memory Pools</td>
+                                <td>Humanoid locomotion, bipedal balance, robotic arms</td>
+                                <td>Whole-Body QP Feasibility &amp; Watchdogs</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Nyx SOPHIA</strong></td>
+                                <td><code>std.sophia.*</code></td>
+                                <td>Multi-Modal Dual-Trace Substrates</td>
+                                <td>Autonomous embodied agents, AGI cognitive planning</td>
+                                <td>Epistemic Uncertainty Estimation (\(\text{MSE}\))</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Footer Inquiries -->
+            <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.5rem; text-align:center; margin-top:2.5rem;">
+                <p style="color:#cbd5e1; font-size:0.92rem; margin-bottom:0.75rem;">
+                    The Nyx Multi-Dialect Sovereign Architecture is developed by <strong>Simeon Bala</strong> &bull; 9jaonCloud Sovereign Systems Research.
+                </p>
+                <div style="display:flex; justify-content:center; gap:1.5rem; flex-wrap:wrap;">
+                    <a href="mailto:nyx@9jaoncloud.com.ng" style="color:#38bdf8; text-decoration:none; font-weight:600;"><i class="fa-solid fa-envelope"></i> nyx@9jaoncloud.com.ng</a>
+                    <a href="../llm-policy.html" style="color:#c084fc; text-decoration:none; font-weight:600;"><i class="fa-solid fa-shield-halved"></i> LLM Provenance Policy</a>
+                    <a href="../paper/papers.html" style="color:#34d399; text-decoration:none; font-weight:600;"><i class="fa-solid fa-book-open"></i> Research Papers Directory</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="../navigation.js"></script>
+    <script src="../header_footer.js"></script>
+</body>
+</html>

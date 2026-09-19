@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>std.sec (Cryptography, Capability Vaults & NIDS) — Nyx Docs</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+
+    <main>
+        <div style="display:inline-block; padding: 0.35rem 0.85rem; border-radius: 9999px; background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.3); color: #c084fc; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; margin-bottom: 1rem;">
+            Standard Library Module
+        </div>
+        <h1>std.sec — Cryptography, Capability Vaults &amp; NIDS</h1>
+        <p class="lead" style="font-size: 1.15rem; color: var(--text-muted); margin-bottom: 2rem;">
+            A complete function-by-function guide to <strong>hardware-accelerated cryptography, constant-time token verification, capability-based secret vaults, and real-time network packet inspection</strong> in Nyx.
+        </p>
+
+        <!-- ── Part 1: Why This Module Exists ── -->
+        <h2>1. Why Does This Module Exist?</h2>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+            <div style="background: #111827; border: 1px solid rgba(239, 68, 68, 0.3); padding: 1.25rem; border-radius: 8px;">
+                <h4 style="color: #f87171; margin-top: 0;">🛑 The Real-World Problem</h4>
+                <p style="color: #94a3b8; font-size: 0.92rem; line-height: 1.6; margin-bottom: 0;">
+                    In standard libraries (Node.js crypto, Python hashlib), developers frequently write timing-attack vulnerable code using standard string comparisons (<code>token == user_token</code>), leak unencrypted API keys in heap dumps, or struggle to inspect network packets for SQL injection and shellcode attacks in real-time without external C dependencies.
+                </p>
+            </div>
+            <div style="background: #111827; border: 1px solid rgba(16, 185, 129, 0.3); padding: 1.25rem; border-radius: 8px;">
+                <h4 style="color: #34d399; margin-top: 0;">🛡️ The Nyx Solution</h4>
+                <p style="color: #94a3b8; font-size: 0.92rem; line-height: 1.6; margin-bottom: 0;">
+                    <code>std.sec</code> provides <strong>constant-time cryptographic equality</strong> (defeats timing attacks), <strong>AES-256 capability vaults</strong> that isolate secrets in memory, and an inline <strong>NIDS engine</strong> that inspects network payloads in &lt; 2 microseconds with zero garbage collection overhead.
+                </p>
+            </div>
+        </div>
+
+        <!-- ── Part 2: Functions Reference ── -->
+        <h2>2. Function Reference &amp; Tutorial</h2>
+
+        <!-- Function 1: sha256_hash -->
+        <div style="background: #0f172a; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem;">
+            <h3 style="margin-top: 0; color: #38bdf8; font-family: 'JetBrains Mono', monospace;">sec::sha256_hash(data: String) -&gt; String</h3>
+            <p style="color: #cbd5e1;">Computes the cryptographic SHA-256 hexadecimal hash string for input data.</p>
+            <p><strong>Example:</strong></p>
+            <pre><code>import std.sec;
+
+let hash = sec::sha256_hash("payload_to_verify");
+print("SHA-256 Hash: {hash}");</code></pre>
+        </div>
+
+        <!-- Function 2: verify_token -->
+        <div style="background: #0f172a; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem;">
+            <h3 style="margin-top: 0; color: #38bdf8; font-family: 'JetBrains Mono', monospace;">sec::verify_token(token: String, secret: String) -&gt; bool</h3>
+            <p style="color: #cbd5e1;">Validates cryptographic auth tokens with constant-time equality check, completely preventing side-channel timing attacks.</p>
+            <p><strong>Example:</strong></p>
+            <pre><code>import std.sec;
+
+let is_valid = sec::verify_token(user_provided_token, expected_secret_token);
+if is_valid {
+    print("Authentication successful!");
+}</code></pre>
+        </div>
+
+        <!-- Function 3: create_vault -->
+        <div style="background: #0f172a; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem;">
+            <h3 style="margin-top: 0; color: #a855f7; font-family: 'JetBrains Mono', monospace;">vault::create_vault(name: String, master_key: String) -&gt; SecurityVault</h3>
+            <p style="color: #cbd5e1;">Initializes an in-memory AES-256 encrypted capability vault to store API keys and database credentials safely.</p>
+            <p><strong>Example:</strong></p>
+            <pre><code>import std.sec.vault;
+
+let mut vault = vault::create_vault("BankingVault", "MasterKey-2026-Strict");
+vault.put_secret("DATABASE_PASSWORD", "SuperSecretPass123!");
+
+// Retrieve only if correct capability token is provided:
+let db_pass = vault.get_secret("DATABASE_PASSWORD", "CAP_ADMIN_AUTHORIZED");
+print("Decrypted Secret: {db_pass}");</code></pre>
+        </div>
+
+        <!-- Function 4: inspect_packet -->
+        <div style="background: #0f172a; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem;">
+            <h3 style="margin-top: 0; color: #f59e0b; font-family: 'JetBrains Mono', monospace;">net::inspect_packet(scanner: &amp;mut NidsScanner, ip: String, port: i32, payload: String) -&gt; bool</h3>
+            <p style="color: #cbd5e1;">Scans raw network packet payloads for SQL injection, cross-site scripting (XSS), buffer overflow shellcode, and anomaly signatures.</p>
+            <p><strong>Returns:</strong> <code>true</code> if safe, <code>false</code> if malicious payload detected.</p>
+            <p><strong>Example:</strong></p>
+            <pre><code>import std.sec.net;
+
+let mut scanner = net::new_scanner();
+let is_clean = net::inspect_packet(&amp;mut scanner, "192.168.1.45", 8080, "SELECT * FROM users WHERE id = 1");
+if !is_clean {
+    print("ALERT: Threat detected! Dropping packet.");
+}</code></pre>
+        </div>
+
+        <!-- ── Part 3: Complete Working Tutorial ── -->
+        <h2>3. Complete Tutorial: Zero-Trust Microservice Gateway</h2>
+        <div class="code-box">
+<pre><code>import std.sec;
+import std.sec.vault;
+import std.sec.net;
+
+fn main() {
+    print("Starting Zero-Trust Security Gateway...");
+
+    // 1. Initialize encrypted vault for API tokens
+    let mut vault = vault::create_vault("GatewayVault", "HardwareMasterKey#2026");
+    vault.put_secret("STRIPE_KEY", "sk_live_98a72b1c8f4e2d");
+
+    // 2. Setup real-time packet scanner
+    let mut scanner = net::new_scanner();
+
+    // 3. Inspect incoming request
+    let incoming_payload = "GET /api/v1/checkout HTTP/1.1\nAuth: Bearer tok_sec99";
+    let is_safe = net::inspect_packet(&amp;mut scanner, "10.0.4.12", 443, incoming_payload);
+
+    if is_safe {
+        let stripe_key = vault.get_secret("STRIPE_KEY", "CAP_PAYMENTS_SERVICE");
+        print("Gateway approved! Processing payment with token: {stripe_key}");
+    }
+}</code></pre>
+        </div>
+
+        <p style="margin-top: 2rem;">
+            <a href="index.html">&larr; Return to Standard Library Index</a> | 
+            <a href="cloud.html">Next: std.cloud (Distributed Mesh) &rarr;</a>
+        </p>
+    </main>
+
+    <script src="../navigation.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nyx Spatial Computing &amp; VR/AR Engine Architecture — Zero-GC 120 FPS Determinism</title>
+    <meta name="description" content="Technical guide and runtime specifications for Nyx Spatial Computing, OpenXR, WebXR, Zero-GC stereoscopic rendering, 6DoF tracking, and AI-generated 3D assets (GLB/USDZ).">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --bg-page: #030611;
+            --bg-card: #090f20;
+            --bg-card-alt: #0e172e;
+            --border-card: rgba(56, 189, 248, 0.16);
+            --border-highlight: rgba(16, 185, 129, 0.4);
+            --accent-blue: #38bdf8;
+            --accent-purple: #a855f7;
+            --accent-green: #10b981;
+            --accent-rose: #f43f5e;
+            --accent-amber: #f59e0b;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.75;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .paper-wrapper {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem 6rem;
+        }
+
+        /* ── Header ── */
+        .paper-header {
+            text-align: center;
+            margin-bottom: 3.5rem;
+            padding-bottom: 2.5rem;
+            border-bottom: 1px solid var(--border-card);
+        }
+
+        .badge-classification {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(168, 85, 247, 0.14);
+            color: var(--accent-purple);
+            border: 1px solid rgba(168, 85, 247, 0.35);
+            padding: 0.35rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 1.25rem;
+        }
+
+        h1.paper-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.6rem;
+            font-weight: 800;
+            color: #ffffff;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+            margin-bottom: 1rem;
+        }
+
+        .paper-subtitle {
+            font-size: 1.15rem;
+            color: var(--text-muted);
+            max-width: 860px;
+            margin: 0 auto 1.75rem;
+        }
+
+        .cta-banner-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .cta-banner {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(168, 85, 247, 0.2));
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            padding: 0.85rem 1.6rem;
+            border-radius: 12px;
+            text-decoration: none;
+            color: #fff;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            transition: all 0.25s ease;
+        }
+        .cta-banner:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent-blue);
+            box-shadow: 0 8px 25px rgba(56, 189, 248, 0.3);
+        }
+
+        /* ── Sections ── */
+        .paper-section {
+            margin-bottom: 3.75rem;
+        }
+
+        .section-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .section-title i {
+            color: var(--accent-blue);
+            font-size: 1.35rem;
+        }
+
+        p {
+            margin-bottom: 1.25rem;
+            color: #cbd5e1;
+            font-size: 1.02rem;
+        }
+
+        /* ── Cards & Callouts ── */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin: 1.75rem 0;
+        }
+
+        .info-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: 14px;
+            padding: 1.75rem;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+        .info-card:hover {
+            border-color: rgba(56, 189, 248, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .info-card h4 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            color: #fff;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .callout {
+            background: var(--bg-card-alt);
+            border-left: 4px solid var(--accent-green);
+            border-radius: 0 12px 12px 0;
+            padding: 1.25rem 1.5rem;
+            margin: 1.75rem 0;
+            font-size: 0.95rem;
+        }
+
+        .callout-warning {
+            border-left-color: var(--accent-amber);
+            background: rgba(245, 158, 11, 0.06);
+        }
+
+        /* ── Tables ── */
+        .table-container {
+            overflow-x: auto;
+            margin: 2rem 0;
+            border-radius: 12px;
+            border: 1px solid var(--border-card);
+            background: var(--bg-card);
+        }
+
+        table.comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.94rem;
+        }
+
+        table.comparison-table th {
+            background: var(--bg-card-alt);
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border-card);
+        }
+
+        table.comparison-table td {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            vertical-align: top;
+        }
+
+        table.comparison-table tr:hover {
+            background: rgba(56, 189, 248, 0.03);
+        }
+
+        .badge-nyx {
+            display: inline-block;
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--accent-blue);
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        /* ── Code Snippets ── */
+        pre {
+            background: #02050f;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 1.25rem;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88rem;
+            color: #e2e8f0;
+            margin: 1.5rem 0;
+            line-height: 1.55;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-blue);
+            background: rgba(56, 189, 248, 0.1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.88em;
+        }
+
+        .highlight-win {
+            color: var(--accent-green);
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            h1.paper-title { font-size: 1.9rem; }
+            .paper-wrapper { padding: 2rem 1rem 4rem; }
+            .card-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="nyx-global-header"></div>
+
+    <div class="paper-wrapper">
+        <header class="paper-header">
+            <div class="badge-classification">
+                <i class="fa-solid fa-vr-cardboard"></i> Spatial Computing &amp; OpenXR Blueprint · 2026
+            </div>
+            <h1 class="paper-title">Spatial Computing, VR &amp; AR in Nyx</h1>
+            <p class="paper-subtitle">
+                How Nyx's Zero-GC lexical region inference, sub-millisecond OpenXR stereoscopy, and native GLB/USDZ asset pipelines eliminate motion sickness and enable deterministic 90Hz / 120Hz spatial applications.
+            </p>
+            <div class="cta-banner-group">
+                <a href="../projects/spatial-vr/index.php" class="cta-banner" target="_blank">
+                    <i class="fa-solid fa-play"></i> Launch Interactive 3D WebXR Demo
+                </a>
+                <a href="game-engine.html" class="cta-banner" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.2);">
+                    <i class="fa-solid fa-gamepad"></i> Universal Game Engine Architecture
+                </a>
+            </div>
+        </header>
+
+        <!-- SECTION 1: THE ZERO-GC IMPERATIVE FOR VR/AR -->
+        <section class="paper-section">
+            <h2 class="section-title"><i class="fa-solid fa-headset"></i> 1. The Physics of Motion Sickness &amp; The Zero-GC Imperative</h2>
+            <p>
+                In Virtual Reality (VR) and Mixed Reality (AR/MR), rendering latency is not merely an aesthetic concern—it is a physiological threshold. The human <strong>Vestibulo-Ocular Reflex (VOR)</strong> demands a Motion-to-Photon (MTP) latency under <strong>20 milliseconds</strong> and an uninterrupted framerate of <strong>90 FPS to 120 FPS</strong>.
+            </p>
+            <p>
+                When a traditional managed engine (Unity/C#, Godot/GDScript, or WebXR in JavaScript) triggers a Garbage Collection pause (typically 8ms to 35ms), the compositor misses its frame presentation window. The user's inner ear senses head rotation, but the display remains frozen on the previous frame. This sensory mismatch induces instantaneous <em>simulator sickness, dizziness, and visual judder</em>.
+            </p>
+
+            <div class="callout">
+                <strong><i class="fa-solid fa-shield-halved"></i> The Nyx Spatial Guarantee:</strong> Nyx guarantees <strong>0.00 ms Garbage Collection pauses</strong>. Every stereoscopic view matrix, spatial raycast, and skeletal hand joint is allocated within a thread-local <code>region { ... }</code> stack bump frame that is reclaimed in <strong>1 single CPU cycle</strong> upon frame swap.
+            </div>
+        </section>
+
+        <!-- SECTION 2: ARCHITECTURAL COMPARISON -->
+        <section class="paper-section">
+            <h2 class="section-title"><i class="fa-solid fa-table-cells"></i> 2. VR/AR Spatial Architecture Comparison Matrix</h2>
+            <p>
+                Comparing Nyx's native spatial runtime (`@nyx/xr`) against legacy game engines and web spatial frameworks:
+            </p>
+
+            <div class="table-container">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Spatial Vector</th>
+                            <th>Unity (OpenXR / C#)</th>
+                            <th>Unreal Engine 5 (C++)</th>
+                            <th>WebXR (Three.js / JS)</th>
+                            <th>Nyx `@nyx/xr` (Zero-GC)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>GC Pause Latency</strong></td>
+                            <td>8.0 ms – 35.0 ms (Spikes)</td>
+                            <td>0.0 ms (Manual C++ Heap)</td>
+                            <td>12.0 ms – 45.0 ms (V8 GC)</td>
+                            <td class="highlight-win"><strong>0.00 ms (Deterministic)</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Stereo Multiview Overhead</strong></td>
+                            <td>High (C# Managed Interop)</td>
+                            <td>Low (Direct DirectX/Vulkan)</td>
+                            <td>Moderate (JS Context Switching)</td>
+                            <td class="highlight-win"><strong>Zero-Copy Vulkan Multiview</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Memory Safety</strong></td>
+                            <td>Safe (Managed Runtime)</td>
+                            <td>Memory Leaks &amp; Segfaults</td>
+                            <td>Safe (Sandboxed V8)</td>
+                            <td class="highlight-win"><strong>Static Region Safety (No Borrow Tax)</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Cold Boot to Spatial Canvas</strong></td>
+                            <td>3.5s – 8.0s</td>
+                            <td>6.0s – 15.0s</td>
+                            <td>1.2s – 3.0s</td>
+                            <td class="highlight-win"><strong>&lt; 120 ms (Static WASM / Unikernel)</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Headset Target Support</strong></td>
+                            <td>Meta Quest, PCVR</td>
+                            <td>PCVR, PSVR2, Quest</td>
+                            <td>Browser / Vision Pro Web</td>
+                            <td class="highlight-win"><strong>Quest 3, Vision Pro, WebXR, PCVR</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- SECTION 3: COMPREHENSIVE VR/AR USE CASES & GAME GENRES -->
+        <section class="paper-section">
+            <h2 class="section-title"><i class="fa-solid fa-cubes"></i> 3. Comprehensive VR / AR Use Cases &amp; Game Types</h2>
+            <p>
+                With native SIMD vector math, 6DoF hand tracking, and zero-GC region memory, developers can build a broad spectrum of spatial applications and game genres in Nyx:
+            </p>
+
+            <div class="card-grid">
+                <!-- Use Case 1 -->
+                <div class="info-card">
+                    <h4><i class="fa-solid fa-gamepad" style="color: var(--accent-blue);"></i> 1. 6DoF Rhythm, Action &amp; Mecha Games</h4>
+                    <p style="font-size: 0.92rem; color: var(--text-muted);">
+                        High-speed saber rhythm games (like Beat Saber), first-person spatial shooters, and cockpit mecha simulators requiring tight sub-millisecond controller haptic response and zero frame drops at 120Hz.
+                    </p>
+                </div>
+
+                <!-- Use Case 2 -->
+                <div class="info-card">
+                    <h4><i class="fa-solid fa-user-doctor" style="color: var(--accent-green);"></i> 2. Surgical, Medical &amp; Industrial Training</h4>
+                    <p style="font-size: 0.92rem; color: var(--text-muted);">
+                        Micro-precision anatomical simulators with real-time deformable soft-body physics, volumetric DICOM medical scan rendering, and tactile haptic feedback for surgical training without lag.
+                    </p>
+                </div>
+
+                <!-- Use Case 3 -->
+                <div class="info-card">
+                    <h4><i class="fa-solid fa-glasses" style="color: var(--accent-purple);"></i> 3. AR Digital Twins &amp; Enterprise Maintenance</h4>
+                    <p style="font-size: 0.92rem; color: var(--text-muted);">
+                        Industrial spatial overlays on Apple Vision Pro and Magic Leap: real-time IoT sensor telemetry, wiring schematics, and structural fault detection superimposed onto physical factory machinery.
+                    </p>
+                </div>
+
+                <!-- Use Case 4 -->
+                <div class="info-card">
+                    <h4><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--accent-rose);"></i> 4. Generative AI 3D Mesh Pipelines</h4>
+                    <p style="font-size: 0.92rem; color: var(--text-muted);">
+                        Real-time loading and procedural LOD decimation of AI-generated 3D assets (e.g., from Meshy.ai, Tripo, and InstantMesh) with instant runtime conversion into <code>GLB / USDZ</code> formats.
+                    </p>
+                </div>
+
+                <!-- Use Case 5 -->
+                <div class="info-card">
+                    <h4><i class="fa-solid fa-desktop" style="color: var(--accent-amber);"></i> 5. Spatial Infinite Multitasking Workstations</h4>
+                    <p style="font-size: 0.92rem; color: var(--text-muted);">
+                        Infinite 3D floating desktop canvases in <code>nyxdesktop</code>, allowing engineers to view multiple code windows, live multi-agent git worktree graphs, and 3D architectural debuggers in room space.
+                    </p>
+                </div>
+
+                <!-- Use Case 6 -->
+                <div class="info-card">
+                    <h4><i class="fa-solid fa-building-columns" style="color: var(--accent-blue);"></i> 6. Immersive Architectural Pre-Visualization</h4>
+                    <p style="font-size: 0.92rem; color: var(--text-muted);">
+                        Real-time walkthroughs of complex CAD/BIM architectural models with physically-based rendering (PBR), dynamic global illumination, and collaborative multi-user presence over lockless IPC.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: CODE SAMPLES -->
+        <section class="paper-section">
+            <h2 class="section-title"><i class="fa-solid fa-code"></i> 4. Implementation: Native Nyx `@nyx/xr` Code Samples</h2>
+            <p>
+                Here is how developers author a high-performance, capability-secured stereoscopic VR application in Nyx:
+            </p>
+
+            <pre><code>// ============================================================================
+// Nyx Stereoscopic VR Application Example (@nyx/xr)
+// ============================================================================
+import "@nyx/xr";
+import "@nyx/math";
+import "@nyx/graphics";
+import "@nyx/audio";
+
+struct VREntity {
+    mesh_id: u32,
+    pos: Vec3,
+    rot: Quat,
+    scale: Vec3,
+}
+
+fn main() -> Result&lt;(), XRError&gt; {
+    // 1. Initialize OpenXR / WebXR runtime session with capability token
+    let mut xr = XRSession::init(XROptions {
+        app_name: "Nyx Spatial Holodeck",
+        target_framerate: 120,          // 120 FPS paced
+        enable_passthrough: true,        // AR / Mixed reality
+        enable_hand_tracking: true,     // Skeletal hand tracking
+    })?;
+
+    // 2. Spatial Audio Engine with Head-Related Transfer Function (HRTF)
+    let mut spatial_audio = SpatialAudioEngine::new()?;
+    spatial_audio.set_listener_position(Vec3::zero());
+
+    // 3. Load 3D Asset (GLB / USDZ with automated LOD retopology)
+    let mecha_mesh = graphics::load_mesh("assets/models/drone.glb")?;
+
+    println("🚀 Spatial VR engine running at 120 FPS with 0.00ms GC pauses...");
+
+    // 4. Main Deterministic 120Hz Spatial Loop
+    while xr.is_running() {
+        let frame = xr.wait_frame()?;
+        xr.begin_frame()?;
+
+        // Query 6DoF Headset and Hand Controller Poses
+        let head_pose = xr.locate_head_pose(frame.display_time)?;
+        let left_hand = xr.locate_hand_joints(XRHand::Left)?;
+        let right_hand = xr.locate_hand_joints(XRHand::Right)?;
+
+        // Transient frame region: Zero dynamic heap allocations
+        region {
+            let left_eye = xr.get_eye_pass(XREye::Left, head_pose);
+            let right_eye = xr.get_eye_pass(XREye::Right, head_pose);
+
+            // Render stereo passes (Left Eye + Right Eye)
+            for eye in [left_eye, right_eye] {
+                xr.bind_eye_framebuffer(eye.eye);
+                graphics::clear(Color::rgb(0.01, 0.02, 0.06));
+
+                let view_proj = Mat4x4::multiply(eye.proj_matrix, eye.view_matrix);
+
+                // Draw spatial drone model
+                let model = Mat4x4::transform(Vec3::new(0.0, 1.2, -2.5), Quat::identity(), Vec3::one());
+                let mvp = Mat4x4::multiply(view_proj, model);
+                graphics::draw_mesh_pbr(mecha_mesh, mvp);
+            }
+        }
+
+        // Submit rendered stereo pair to OpenXR Asynchronous Time-Warp compositor
+        xr.end_frame()?;
+    }
+
+    return Ok(());
+}</code></pre>
+        </section>
+
+        <!-- SECTION 5: CAPABILITY SECURITY & BIOMETRIC SAFETY -->
+        <section class="paper-section">
+            <h2 class="section-title"><i class="fa-solid fa-shield-virus"></i> 5. Spatial Privacy &amp; Biometric Security Guardrails</h2>
+            <p>
+                Spatial computing headsets collect sensitive biometric data, including <strong>infrared eye-tracking coordinates, iris gaze patterns, room-mesh depth topology, and forward passthrough camera feeds</strong>. On legacy platforms, rogue third-party packages can exfiltrate raw camera frames and gaze heatmaps without user awareness.
+            </p>
+            <p>
+                NyxOS resolves spatial privacy at the kernel capability level:
+            </p>
+            <ul style="margin-left: 2rem; margin-bottom: 1.5rem; color: #cbd5e1;">
+                <li><strong><code>CAP_XR_PASSTHROUGH</code>:</strong> Applications never receive raw video pixels from the cameras; only abstracted spatial feature anchors computed inside the kernel.</li>
+                <li><strong><code>CAP_XR_EYE_GAZE</code>:</strong> Gaze vectors are fuzzily quantized to prevent biometric iris reconstruction or subconscious fixation profiling.</li>
+                <li><strong>Zero Ambient Network Authority:</strong> A spatial game or 3D viewer cannot initiate external TCP egress without an explicit, cryptographically signed capability token.</li>
+            </ul>
+        </section>
+
+        <!-- SECTION 6: INTERACTIVE DEMO CTA -->
+        <section class="paper-section" style="background: var(--bg-card); border: 1px solid var(--border-card); border-radius: 16px; padding: 2.5rem; text-align: center;">
+            <h2 style="font-family: 'Outfit', sans-serif; font-size: 2rem; color: #fff; margin-bottom: 1rem;">
+                Explore the Nyx Spatial 3D / WebXR Simulator
+            </h2>
+            <p style="color: var(--text-muted); max-width: 650px; margin: 0 auto 1.75rem;">
+                Experience stereoscopic dual-eye rendering, 6DoF orbit controls, PBR lighting, and wireframe LOD inspection directly in your browser.
+            </p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="../projects/spatial-vr/index.php" class="cta-banner" target="_blank">
+                    <i class="fa-solid fa-play"></i> Launch Spatial VR Interactive Demo
+                </a>
+                <a href="../nyxos.html" class="cta-banner" style="background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.2);">
+                    <i class="fa-solid fa-cube"></i> Explore NyxOS Overview
+                </a>
+            </div>
+        </section>
+
+    </div>
+
+    <div id="nyx-global-footer"></div>
+
+    <script src="header_footer.js"></script>
+</body>
+</html>

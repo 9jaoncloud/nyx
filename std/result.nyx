@@ -1,0 +1,30 @@
+module result
+
+pub enum Result<T, E> {
+    Ok(T),
+    Err(E),
+}
+
+impl<T, E> Result<T, E> {
+    pub fn is_ok(self: &Result<T, E>) -> Bool {
+        match self { Result.Ok(_) => true, _ => false }
+    }
+
+    pub fn is_err(self: &Result<T, E>) -> Bool {
+        match self { Result.Err(_) => true, _ => false }
+    }
+
+    pub fn unwrap(self: Result<T, E>) -> T {
+        match self {
+            Result.Ok(v) => v,
+            Result.Err(_) => panic("unwrap called on Err"),
+        }
+    }
+
+    pub fn unwrap_or(self: Result<T, E>, default: T) -> T {
+        match self {
+            Result.Ok(v) => v,
+            Result.Err(_) => default,
+        }
+    }
+}

@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Research Papers & Empirical Benchmarks — Nyx Programming Language</title>
+    <meta name="description" content="Comprehensive directory of formal academic papers, empirical benchmark suites, safety proofs, and technical whitepapers for the Nyx Programming Language.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-page: #040711;
+            --bg-card: #0a0f1d;
+            --bg-card-alt: #0e1526;
+            --border-card: rgba(56, 189, 248, 0.16);
+            --border-highlight: rgba(99, 102, 241, 0.4);
+            --accent-blue: #38bdf8;
+            --accent-purple: #a855f7;
+            --accent-green: #10b981;
+            --accent-rose: #f43f5e;
+            --accent-indigo: #6366f1;
+            --accent-amber: #f59e0b;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .portal-wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem 6rem;
+        }
+
+        /* ── Hero Header ── */
+        .portal-header {
+            text-align: center;
+            margin-bottom: 3.5rem;
+            padding-bottom: 2.5rem;
+            border-bottom: 1px solid var(--border-card);
+        }
+
+        .badge-header {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(99, 102, 241, 0.12);
+            color: #818cf8;
+            border: 1px solid rgba(99, 102, 241, 0.35);
+            padding: 0.4rem 1.1rem;
+            border-radius: 9999px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            margin-bottom: 1.25rem;
+            text-transform: uppercase;
+        }
+
+        .portal-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.75rem;
+            font-weight: 800;
+            color: #f8fafc;
+            margin: 0 0 1rem;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+        }
+
+        .portal-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            max-width: 800px;
+            margin: 0 auto 1.75rem;
+        }
+
+        .global-stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: 10px;
+            padding: 1.25rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.85rem;
+            font-weight: 800;
+            color: #38bdf8;
+            margin-bottom: 0.25rem;
+        }
+        .stat-value.green { color: var(--accent-green); }
+        .stat-value.purple { color: var(--accent-purple); }
+        .stat-value.rose { color: var(--accent-rose); }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        /* ── Section Grid ── */
+        .section-category {
+            margin-bottom: 4rem;
+        }
+
+        .category-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #f8fafc;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .category-desc {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-bottom: 1.75rem;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .paper-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: 12px;
+            padding: 1.75rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .paper-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(56, 189, 248, 0.4);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-tag {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.25rem 0.65rem;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+            align-self: flex-start;
+        }
+        .tag-academic { background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3); }
+        .tag-benchmark { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .tag-defense { background: rgba(244, 63, 94, 0.15); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.3); }
+        .tag-ai { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+        .tag-interactive { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+
+        .card-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #f8fafc;
+            margin-bottom: 0.75rem;
+            line-height: 1.35;
+        }
+        .card-title a {
+            color: inherit;
+            text-decoration: none;
+        }
+        .card-title a:hover {
+            color: var(--accent-blue);
+        }
+
+        .card-abstract {
+            font-size: 0.88rem;
+            color: #cbd5e1;
+            margin-bottom: 1.25rem;
+            flex-grow: 1;
+        }
+
+        .card-metrics {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-bottom: 1.25rem;
+            border-left: 3px solid var(--accent-blue);
+        }
+        .card-metrics strong { color: #f1f5f9; }
+
+        .card-action-bar {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn-card-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: #1e293b;
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            padding: 0.45rem 0.9rem;
+            border-radius: 6px;
+            font-size: 0.84rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .btn-card-primary:hover {
+            background: rgba(56, 189, 248, 0.15);
+            border-color: #38bdf8;
+            color: #fff;
+        }
+
+        .btn-card-download {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(16, 185, 129, 0.1);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 0.45rem 0.9rem;
+            border-radius: 6px;
+            font-size: 0.84rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .btn-card-download:hover {
+            background: rgba(16, 185, 129, 0.2);
+            color: #fff;
+        }
+
+        .banner-download {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 12px;
+            padding: 2.5rem;
+            text-align: center;
+            margin-top: 4rem;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        }
+
+        .banner-download h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #f8fafc;
+            margin-bottom: 0.75rem;
+        }
+
+        .banner-download p {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            max-width: 700px;
+            margin: 0 auto 1.5rem;
+        }
+
+        .btn-cta-large {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: #fff;
+            font-weight: 700;
+            padding: 0.85rem 1.85rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.05rem;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-cta-large:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(99, 102, 241, 0.6);
+        }
+
+        @media (max-width: 768px) {
+            .portal-wrapper { padding: 1.5rem 1rem 4rem; }
+            .portal-title { font-size: 2rem; }
+            .cards-grid { grid-template-columns: 1fr; }
+            .banner-download { padding: 1.75rem 1.25rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="portal-wrapper">
+        <!-- Header -->
+        <header class="portal-header">
+            <div class="badge-header">
+                <i class="fas fa-graduation-cap"></i> Nyx Systems Research & Academic Repository
+            </div>
+            <h1 class="portal-title">Academic Papers & Benchmark Directory</h1>
+            <p class="portal-subtitle">
+                Peer-reviewed research manuscripts, formal memory safety proofs, empirical reproducibility suites, and sovereign edge whitepapers published by the Nyx Architecture Team.
+            </p>
+
+            <!-- Global High-Level Invariants -->
+            <div class="global-stats-bar">
+                <div class="stat-card">
+                    <div class="stat-value green">0.00 ms</div>
+                    <div class="stat-label">Max Tracing-GC Pause</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">82.4%</div>
+                    <div class="stat-label">Region Confinement Ratio</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value purple">145.8 tok/s</div>
+                    <div class="stat-label">Zero-GC LLM Inference</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value rose">12.4 μs</div>
+                    <div class="stat-label">L7 In-Flight Threat Mitigation</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 1. Formal Academic Research Papers -->
+        <section class="section-category">
+            <h2 class="category-title">
+                <i class="fas fa-book-open" style="color:var(--accent-indigo);"></i> 1. Academic Papers & Formal Specifications
+            </h2>
+            <p class="category-desc">
+                Theoretical foundation, operational semantics, formal proofs, and conference research drafts.
+            </p>
+
+            <div class="cards-grid">
+                <!-- NEW Landmark Paper: Verification Over Origin (LLM Governance & Proof Architecture) -->
+                <div class="paper-card" style="border-color: rgba(56, 189, 248, 0.5); background: rgba(14, 21, 38, 0.98); box-shadow: 0 0 25px rgba(56, 189, 248, 0.15);">
+                    <div>
+                        <span class="card-tag" style="background:rgba(56, 189, 248, 0.2); color:#38bdf8; border:1px solid rgba(56, 189, 248, 0.4);">PLDI / OOPSLA 2026 Submission &bull; LLM Governance</span>
+                        <h3 class="card-title">
+                            <a href="nyx-provenance-and-verification.html" style="color:#fff;">Verification Over Origin: Safe Systems Software Construction in the LLM Era</a>
+                        </h3>
+                        <p class="card-abstract">
+                            Authored by <strong>Simeon Bala</strong> (<a href="mailto:nyx@9jaoncloud.com.ng" style="color:#38bdf8;">nyx@9jaoncloud.com.ng</a>). Responding directly to the Rust Foundation's 2026 LLM draft policy. Details why software trust must be grounded in mathematical SMT formal proofs (Jude dialect), 100% CI regression circuit breakers, and single-command benchmark replication rather than fallible human review and origin-based filtering.
+                        </p>
+                    </div>
+                    <div>
+                        <div class="card-metrics" style="border-left-color:#38bdf8;">
+                            <strong>Author:</strong> Simeon Bala &middot; <strong>Governance:</strong> 4-Tier Verification Model &middot; Jude SMT Dialect<br>
+                            <strong>Key Result:</strong> 100% Pass Circuit Breaker &middot; SMT Invariant Verification &middot; 100% Reproducible Claims
+                        </div>
+                        <div class="card-action-bar">
+                            <a href="nyx-provenance-and-verification.html" class="btn-card-primary" style="background:linear-gradient(135deg,#0284c7,#0369a1); color:#fff; border:none;">
+                                <i class="fas fa-file-lines"></i> Read Research Paper &rarr;
+                            </a>
+                            <a href="../llm-policy.html" class="btn-card-download" style="border-color:rgba(56,189,248,0.4); color:#38bdf8;">
+                                <i class="fas fa-shield-halved"></i> Interactive Policy
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NEW Landmark Paper 1: ISMM 2016 Blackburn Reimagined -->
+                <div class="paper-card" style="border-color: rgba(16, 185, 129, 0.4); background: rgba(14, 21, 38, 0.95);">
+                    <div>
+                        <span class="card-tag" style="background:rgba(16, 185, 129, 0.2); color:#34d399; border:1px solid rgba(16, 185, 129, 0.4);">ISMM 2016 Empirical Response (2026)</span>
+                        <h3 class="card-title">
+                            <a href="nyx_beyond_garbage_collection_ismm2026.html" style="color:#fff;">Beyond Garbage Collection: Automated Region Inference and Deterministic Zero-Pause Memory Management in Nyx</a>
+                        </h3>
+                        <p class="card-abstract">
+                            Authored by <strong>Simeon Bala</strong>. An empirical evaluation responding directly to Blackburn et al. (ISMM 2016). Demonstrates how Nyx's \(O(V+E)\) Region Inference delivers <strong>188.4M allocations/sec</strong> (+41% over Rust Immix) and instant 0.0001 ms bulk frame deallocation (1.8M&times; faster than sweep traversal), permanently achieving 0.00 ms GC pauses.
+                        </p>
+                    </div>
+                    <div>
+                        <div class="card-metrics" style="border-left-color:#34d399;">
+                            <strong>Author:</strong> Simeon Bala &middot; <strong>Benchmark:</strong> 50M Objects &middot; GCBench &middot; MT-GCBench<br>
+                            <strong>Key Result:</strong> 188.4 M ops/s &middot; 0.00 ms GC Pause &middot; 0.0% Unsafe Code
+                        </div>
+                        <div class="card-action-bar">
+                            <a href="nyx_beyond_garbage_collection_ismm2026.html" class="btn-card-primary" style="background:linear-gradient(135deg,#059669,#10b981); color:#fff; border:none;">
+                                <i class="fas fa-file-lines"></i> Read ISMM Paper &rarr;
+                            </a>
+                            <a href="../../papers/nyx_beyond_garbage_collection_ismm2026.md" class="btn-card-download">
+                                <i class="fas fa-file-code"></i> Markdown Source
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NEW Landmark Paper 2: Vale Hidden Taxes of Memory Safety -->
+                <div class="paper-card" style="border-color: rgba(168, 85, 247, 0.4); background: rgba(14, 21, 38, 0.95);">
+                    <div>
+                        <span class="card-tag" style="background:rgba(168, 85, 247, 0.2); color:#c084fc; border:1px solid rgba(168, 85, 247, 0.4);">Memory Safety Architecture (2026)</span>
+                        <h3 class="card-title">
+                            <a href="nyx_eliminating_memory_safety_runtime_tax_2026.html" style="color:#fff;">Eliminating the Hidden Runtime Tax of Compile-Time Memory Safety in Nyx</a>
+                        </h3>
+                        <p class="card-abstract">
+                            Authored by <strong>Simeon Bala</strong>. Investigating Evan Ovadia's (Vale) landmark analysis on the hidden costs of borrow checking (forced clones, <code>Arc</code> ref-counting churn, vector bounds checks). Shows how Nyx lexical regions and affine handles eliminate <strong>22.0%</strong> of bounds-check branch overhead and <strong>16.8%</strong> of atomic lock churn.
+                        </p>
+                    </div>
+                    <div>
+                        <div class="card-metrics" style="border-left-color:#c084fc;">
+                            <strong>Author:</strong> Simeon Bala &middot; <strong>Evaluates:</strong> Borrow-checker hidden taxes &amp; bounds checking<br>
+                            <strong>Key Result:</strong> +22.0% Faster than bounds checking &middot; +16.8% Faster than Atomic Ref Counting
+                        </div>
+                        <div class="card-action-bar">
+                            <a href="nyx_eliminating_memory_safety_runtime_tax_2026.html" class="btn-card-primary" style="background:linear-gradient(135deg,#7c3aed,#a855f7); color:#fff; border:none;">
+                                <i class="fas fa-file-lines"></i> Read Architecture Paper &rarr;
+                            </a>
+                            <a href="../../papers/nyx_eliminating_memory_safety_runtime_tax_2026.md" class="btn-card-download">
+                                <i class="fas fa-file-code"></i> Markdown Source
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NEW Landmark Paper 3: Bottles / NyxOS Sovereign Enterprise Compatibility -->
+                <div class="paper-card" style="border-color: rgba(244, 63, 94, 0.4); background: rgba(14, 21, 38, 0.95);">
+                    <div>
+                        <span class="card-tag" style="background:rgba(244, 63, 94, 0.2); color:#fb7185; border:1px solid rgba(244, 63, 94, 0.4);">Sovereign OS Architecture (2026)</span>
+                        <h3 class="card-title">
+                            <a href="nyxos_sovereign_microkernel_sandboxing_enterprise_compat_2026.html" style="color:#fff;">Sovereign Micro-Kernel Sandboxing: Running Enterprise Win32 and Microsoft 365 Workloads on NyxOS</a>
+                        </h3>
+                        <p class="card-abstract">
+                            Authored by <strong>Simeon Bala</strong>. Blueprint for the <code>nyx.sys.compat</code> subsystem. Drawing on the Bottles and Soda Wine runner breakthrough, this paper shows how NyxOS executes Microsoft 365 desktop apps and legacy Win32 software under 500MB RAM in capability-isolated micro-regions with 0.42s launch times.
+                        </p>
+                    </div>
+                    <div>
+                        <div class="card-metrics" style="border-left-color:#fb7185;">
+                            <strong>Author:</strong> Simeon Bala &middot; <strong>Architecture:</strong> Capability Sandboxing &middot; &lt;512MB Quota<br>
+                            <strong>Key Result:</strong> -94% RAM reduction vs VMs &middot; 0.42s instant launch &middot; 0.0025ms bulk cleanup
+                        </div>
+                        <div class="card-action-bar">
+                            <a href="nyxos_sovereign_microkernel_sandboxing_enterprise_compat_2026.html" class="btn-card-primary" style="background:linear-gradient(135deg,#e11d48,#f43f5e); color:#fff; border:none;">
+                                <i class="fas fa-file-lines"></i> Read NyxOS Paper &rarr;
+                            </a>
+                            <a href="../../papers/nyxos_sovereign_microkernel_sandboxing_enterprise_compat_2026.md" class="btn-card-download">
+                                <i class="fas fa-file-code"></i> Markdown Source
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Landmark Paper 4: Heterogeneous GPU Systems & Accelerator Compilers -->
+                <div class="paper-card" style="border-color: rgba(6, 182, 212, 0.4); background: rgba(14, 21, 38, 0.95);">
+                    <div>
+                        <span class="card-tag" style="background:rgba(6, 182, 212, 0.2); color:#22d3ee; border:1px solid rgba(6, 182, 212, 0.4);">Heterogeneous GPU Systems (2026)</span>
+                        <h3 class="card-title">
+                            <a href="nyx_gpu_systems_and_heterogeneous_computing_2026.html" style="color:#fff;">Heterogeneous GPU Systems &amp; Sovereign Accelerator Compilers: Why Lexical Regions Dominate SIMT</a>
+                        </h3>
+                        <p class="card-abstract">
+                            Authored by <strong>Simeon Bala</strong>. Responding to AMD and NVIDIA's GPU compiler modernization. Details how Nyx maps physical GPU hardware hierarchies (HBM3 VRAM, on-chip scratchpad SRAM, and register rings) directly to zero-GC lexical regions, eliminating the 22.0% bounds checking branch tax and achieving single-cycle bulk scratchpad reclamation.
+                        </p>
+                    </div>
+                    <div>
+                        <div class="card-metrics" style="border-left-color:#22d3ee;">
+                            <strong>Author:</strong> Simeon Bala &middot; <strong>Backends:</strong> AMDGPU/ROCm &middot; NVIDIA PTX &middot; Vulkan SPIR-V<br>
+                            <strong>Key Result:</strong> 100% Zero-Tax SIMT &middot; Zero Bank Conflicts &middot; 0.00 ms GC Pause
+                        </div>
+                        <div class="card-action-bar">
+                            <a href="nyx_gpu_systems_and_heterogeneous_computing_2026.html" class="btn-card-primary" style="background:linear-gradient(135deg,#0891b2,#06b6d4); color:#fff; border:none;">
+                                <i class="fas fa-file-lines"></i> Read GPU Paper &rarr;
+                            </a>
+                            <a href="../../papers/nyx_gpu_systems_and_heterogeneous_computing_2026.md" class="btn-card-download">
+                                <i class="fas fa-file-code"></i> Markdown Source
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Landmark Paper 5: Bio-Neuromorphic Connectome Simulation & Spiking Game AI -->
+                <div class="paper-card" style="border-color: rgba(16, 185, 129, 0.4); background: rgba(14, 21, 38, 0.95);">
+                    <div>
+                        <span class="card-tag" style="background:rgba(16, 185, 129, 0.2); color:#34d399; border:1px solid rgba(16, 185, 129, 0.4);">Bio-Neuromorphic Connectomics (2026)</span>
+                        <h3 class="card-title">
+                            <a href="nyx_bio_neuromorphic_connectome_and_spiking_game_ai_2026.html" style="color:#fff;">Bio-Neuromorphic Whole-Brain Connectome Simulation: 140,000-Neuron Spiking LIF Networks, Optic Flow Motion Detectors, and Zero-GC Game AI</a>
+                        </h3>
+                        <p class="card-abstract">
+                            Authored by <strong>Simeon Bala</strong>. Landmark formal paper leveraging FlyWire whole-brain connectome topology (Nature 2024). Implements 139,255 spiking Leaky Integrate-and-Fire (LIF) neurons, Hassenstein-Reichardt Elementary Motion Detectors (EMD), and Kenyon cell mushroom body associative memory running at <strong>8,300+ FPS (&lt; 0.12 ms/step)</strong> with zero garbage collection.
+                        </p>
+                    </div>
+                    <div>
+                        <div class="card-metrics" style="border-left-color:#34d399;">
+                            <strong>Author:</strong> Simeon Bala &middot; <strong>Topology:</strong> 139,255 Neurons &middot; 54.5M Synapses &middot; Nature 2024<br>
+                            <strong>Key Result:</strong> 8,300 FPS (&lt;0.12 ms) &middot; 0.00 ms GC Pause &middot; 100% Zero-Allocation Synaptic Matrix
+                        </div>
+                        <div class="card-action-bar">
+                            <a href="nyx_bio_neuromorphic_connectome_and_spiking_game_ai_2026.html" class="btn-card-primary" style="background:linear-gradient(135deg,#059669,#10b981); color:#fff; border:none;">
+                                <i class="fas fa-file-lines"></i> Read Connectome Paper &rarr;
+                            </a>
+                            <a href="../../projects/flybrain-pong/index.php" class="btn-card-download" style="background:rgba(56, 189, 248, 0.15); color:#38bdf8; border-color:rgba(56, 189, 248, 0.3);">
+                                <i class="fas fa-gamepad"></i> Play FlyBrain Pong
+                            </a>
+                            <a href="../connectome.html" class="btn-card-primary" style="border-color:rgba(16, 185, 129, 0.5); color:#34d399;">
+                                <i class="fas fa-brain"></i> Architecture Spec
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Paper 0: Grand Frontiers Research Paper -->
+                <div class="paper-card" style="border-color: rgba(56, 189, 248, 0.4); background: rgba(14, 21, 38, 0.95);">
+                    <div>
+                        <span class="card-tag" style="background:rgba(56, 189, 248, 0.2); color:#38bdf8; border:1px solid rgba(56, 189, 248, 0.4);">Frontiers in Physical &amp; Systems Computing (2026)</span>
+                        <h3 class="card-title">
+                            <a href="frontier-breakthroughs-paper.html" style="color:#fff;">Deterministic Region Memory for Grand Computing Frontiers: Nuclear Fusion, Synthetic DNA, FHE &amp; Neuromorphic SNNs</a>
+                        </h3>
+                        <p class="card-abstract">
+                            Authored by <strong>Simeon Bala</strong>. Solves four landmark unsolved and open research challenges using Nyx: 10,000 Hz real-time Tokamak plasma Grad-Shafranov equilibrium control, biochemical constraint-bound synthetic DNA molecular fountain storage, FHE CKKS RNS polynomial acceleration, and asynchronous event-driven Spiking Neural Networks with STDP.
+                        </p>
+                    </div>
+                    <div>
+                        <div class="card-metrics" style="border-left-color:#38bdf8;">
+                            <strong>Author:</strong> Simeon Bala &middot; <strong>AFN-ID:</strong> <a href="https://afnid.org.ng/papers/paper_nyx_grand_frontiers/deterministic-region-inferred-memory-for-grand-computing-frontiers-real-time-nuclear-fusion-synthetic-dna-codecs-fhe-neuromorphic-snns" target="_blank" style="color:#38bdf8; text-decoration:none; font-family:'JetBrains Mono',monospace;">AFN.1000/paper.2026.00008</a> &middot; September 2026<br>
+                            <strong>Key Results:</strong> 8.4 µs Fusion Loop (99.98% VDE Suppression) &middot; 100% DNA Recovery under 35% Loss &middot; 42.8k FHE Mults/s
+                        </div>
+                        <div class="card-action-bar">
+                            <a href="frontier-breakthroughs-paper.html" class="btn-card-primary" style="background:linear-gradient(135deg,#0284c7,#38bdf8); color:#fff; border:none;">
+                                <i class="fas fa-file-lines"></i> Read Full Paper &rarr;
+                            </a>
+                            <a href="../../downloads/nyx-frontiers-empirical-benchmarks.zip" class="btn-card-download">
+                                <i class="fas fa-file-zipper"></i> Download Benchmarks (.ZIP)
+                            </a>
+                            <a href="https://afnid.org.ng/papers/paper_nyx_grand_frontiers/deterministic-region-inferred-memory-for-grand-computing-frontiers-real-time-nuclear-fusion-synthetic-dna-codecs-fhe-neuromorphic-snns" target="_blank" class="btn-card-primary" style="border-color:rgba(168,85,247,0.5); color:#c084fc;">
+                                <i class="fas fa-certificate"></i> AFN-ID
+                            </a>
+                            <a href="../../projects/fusion-simulator/index.php" class="btn-card-primary">
+                                <i class="fas fa-atom"></i> Tokamak Studio
+                            </a>
+                            <a href="../../projects/dna-codec/index.php" class="btn-card-primary">
+                                <i class="fas fa-dna"></i> DNA Codec Lab
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Paper: Compiler Hardening & Silicon Trojan Co-Verification -->
+                <div class="paper-card" style="border-color: rgba(245, 158, 11, 0.4); background: rgba(14, 21, 38, 0.95);">
+                    <div>
+                        <span class="card-tag" style="background:rgba(245, 158, 11, 0.15); color:#fbbf24; border:1px solid rgba(245, 158, 11, 0.35);">16-Pass Hardening &amp; Hardware Verification (2026)</span>
+                        <h3 class="card-title">
+                            <a href="compiler-hardening-frontiers-paper.html" style="color:#fff;">Deterministic Compiler Invariants, Silicon Trojan Co-Verification, and Physical Computing Synthesis</a>
+                        </h3>
+                        <p class="card-abstract">
+                            Authored by <strong>Simeon Bala</strong>. Unveils the 16-pass compiler verification pipeline, formal hardware register safety invariants, and automated silicon trojan co-verification across embedded ARM/RISC-V/x86_64 target architectures. Proves zero instruction replay vulnerabilities and deterministic machine code emission.
+                        </p>
+                    </div>
+                    <div>
+                        <div class="card-metrics" style="border-left-color:#f59e0b;">
+                            <strong>Author:</strong> Simeon Bala &middot; <strong>AFN-ID:</strong> <a href="https://afnid.org.ng/papers/paper_nyx_compiler_hardening/deterministic-compiler-invariants-silicon-trojan-co-verification-and-physical-computing-synthesis-in-zero-gc-region-runtimes" target="_blank" style="color:#fbbf24; text-decoration:none; font-family:'JetBrains Mono',monospace;">AFN.1000/paper.2026.00011</a> &middot; September 2026<br>
+                            <strong>Key Result:</strong> 16 Hardening Passes &middot; 0.00% Trojan Insertion Vulnerability &middot; 100% Deterministic Bitstream
+                        </div>
+                        <div class="card-action-bar">
+                            <a href="compiler-hardening-frontiers-paper.html" class="btn-card-primary" style="background:linear-gradient(135deg,#d97706,#f59e0b); color:#fff; border:none;">
+                                <i class="fas fa-file-lines"></i> Read Hardening Paper &rarr;
+                            </a>
+                            <a href="../../papers/nyx_compiler_hardening_and_physical_computing_2026.md" class="btn-card-download">
+                                <i class="fas fa-file-code"></i> Markdown Source
+                            </a>
+                            <a href="https://afnid.org.ng/papers/paper_nyx_compiler_hardening/deterministic-compiler-invariants-silicon-trojan-co-verification-and-physical-computing-synthesis-in-zero-gc-region-runtimes" target="_blank" class="btn-card-primary" style="border-color:rgba(245,158,11,0.5); color:#fbbf24;">
+                                <i class="fas fa-certificate"></i> AFN-ID
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Paper: Sovereign Autonomous Workstations (Athena) -->
+                <div class="paper-card" style="border-color: rgba(56, 189, 248, 0.4); background: rgba(14, 21, 38, 0.95);">
+                    <div>
+                        <span class="card-tag" style="background:rgba(56, 189, 248, 0.15); color:#38bdf8; border:1px solid rgba(56, 189, 248, 0.35);">Sovereign Workstation Architecture (2026)</span>
+                        <h3 class="card-title">
+                            <a href="../../athena/dashboard.html" style="color:#fff;">Sovereign Autonomous Workstations &amp; Hardware-Accelerated Microservices</a>
+                        </h3>
+                        <p class="card-abstract">
+                            Authored by <strong>Simeon Bala</strong>. Architecture and empirical validation of Athena: an autonomous sovereign workstation and microservice engine on a zero-overhead native runtime. Delivers 120 FPS hardware-accelerated Vulkan/Skia rendering, sub-microsecond local IPC, and ChaCha20/Ed25519 encrypted air-gapped vaults.
+                        </p>
+                    </div>
+                    <div>
+                        <div class="card-metrics" style="border-left-color:#38bdf8;">
+                            <strong>Author:</strong> Simeon Bala &middot; <strong>AFN-ID:</strong> <a href="https://afnid.org.ng/papers/paper_nyx_sovereign_workstations/sovereign-autonomous-workstations-hardware-accelerated-microservices-in-resource-constrained-distributed-environments" target="_blank" style="color:#38bdf8; text-decoration:none; font-family:'JetBrains Mono',monospace;">AFN.1000/paper.2026.00006</a><br>
+                            <strong>Key Result:</strong> 120 FPS Native GPU UI &middot; 8.4 MB Idle RAM &middot; &lt;0.04 μs IPC
+                        </div>
+                        <div class="card-action-bar">
+                            <a href="../../athena/dashboard.html" class="btn-card-primary" style="background:linear-gradient(135deg,#0284c7,#38bdf8); color:#fff; border:none;">
+                                <i class="fas fa-terminal"></i> Athena Console &rarr;
+                            </a>
+                            <a href="../../simulator.html" class="btn-card-primary">
+                                <i class="fas fa-desktop"></i> 120 FPS Web Simulator
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Paper: Aero-Mobility Specification -->
+                <div class="paper-card">
+                    <div>
+                        <span class="card-tag tag-interactive">3D Aero-Mobility Systems</span>
+                        <h3 class="card-title">
+                            <a href="../aero-mobility.html">Autonomous eVTOL Avionics &amp; Hyperloop Aerodynamic Guidance</a>
+                        </h3>
+                        <p class="card-abstract">
+                            Systems engineering specification and real-time flight telemetry model for autonomous electric Vertical Takeoff &amp; Landing (eVTOL) aircraft and supersonic Hyperloop low-pressure tube transit networks written in zero-GC Nyx.
+                        </p>
+                    </div>
+                    <div>
+                        <div class="card-metrics" style="border-left-color:#38bdf8;">
+                            <strong>Avionics Loop:</strong> 1,000 Hz Deterministic IMU Filter &middot; 0.00 ms GC Pause<br>
+                            <strong>Hyperloop:</strong> Mach 0.92 Capsule Air Bearing &amp; Linear Induction Telemetry
+                        </div>
+                        <div class="card-action-bar">
+                            <a href="../aero-mobility.html" class="btn-card-primary">
+                                <i class="fas fa-plane-departure"></i> Read Aero-Mobility Spec &rarr;
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Paper 1: PLDI/POPL Primary Paper -->
+                <div class="paper-card">
+                    <div>
+                        <span class="card-tag tag-academic">PLDI / POPL 2026 Submission</span>
+                        <h3 class="card-title">
+                            <a href="index.html">Sound Region Inference and Zero-GC Memory Safety</a>
+                        </h3>
+                        <p class="card-abstract">
+                            Introduces the formal Lambda-Nyx calculus, compile-time region inference mechanics, O(V+E) intra-procedural escape analysis, and automated reference promotion without programmer-written lifetime annotations.
+                        </p>
+                    </div>
+                    <div>
+                        <div class="card-metrics" style="border-left-color:#818cf8;">
+                            <strong>Identifiers:</strong> DOI: 10.13140/RG.2.2.26984.84483 &middot; ACM SIGPLAN Draft<br>
+                            <strong>Key Result:</strong> 82.4% Region Confinement &middot; Zero Stop-The-World Pauses
+                        </div>
+                        <div class="card-action-bar">
+                            <a href="index.html" class="btn-card-primary">
+                                <i class="fas fa-file-lines"></i> Read HTML Paper &rarr;
+                            </a>
+                            <a href="nyx-zero-gc-paper.html" class="btn-card-primary">
+                                <i class="fas fa-scroll"></i> Print / IEEE View
+                            </a>
+                            <a href="nyx_region_inference_pldi2026.tex" class="btn-card-download">
+                                <i class="fas fa-code"></i> LaTeX Source
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Paper 2: Formal Safety Proofs -->
+                <div class="paper-card">
+                    <div>
+                        <span class="card-tag tag-academic">Formal Verification</span>
+                        <h3 class="card-title">
+                            <a href="../safety-and-security.html">Formal Memory Safety &amp; Soundness Invariants</a>
+                        </h3>
+                        <p class="card-abstract">
+                            Complete inductive proofs for Progress, Preservation, Region Lifetime Safety (Theorem 1), Type Soundness, and ARC Thread Confinement. Proves memory safety without tracing GC.
+                        </p>
+                    </div>
+                    <div>
+                        <div class="card-metrics" style="border-left-color:#10b981;">
+                            <strong>Theorems:</strong> Progress, Subject Reduction, Region Lifetime Isolation<br>
+                            <strong>Validation:</strong> Validated on LLVM 18 IR with 100% Region Invariant Guarantees
+                        </div>
+                        <div class="card-action-bar">
+                            <a href="../safety-and-security.html" class="btn-card-primary">
+                                <i class="fas fa-shield-alt"></i> View Formal Proofs &rarr;
+                            </a>
+                            <a href="../escape-playground.html" class="btn-card-primary">
+                                <i class="fas fa-flask"></i> Interactive Playground
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Paper 3: SIDE Sovereign Defense Whitepaper -->
+                <div class="paper-card">
+                    <div>
+                        <span class="card-tag tag-defense">Defense Architecture</span>
+                        <h3 class="card-title">
+                            <a href="../side-ecosystem.html">Sovereign Intelligence &amp; Defense Ecosystem (SIDE)</a>
+                        </h3>
+                        <p class="card-abstract">
+                            Architectural whitepaper covering the tactical edge failure modes (L7 packet injection, 4GB VRAM GPU crashes, quantum-vulnerable relays) and the engineering rationale for PoisonGuard Core, AegisVanguard, and GhostMesh.
+                        </p>
+                    </div>
+                    <div>
+                        <div class="card-metrics" style="border-left-color:#f43f5e;">
+                            <strong>Modules:</strong> PoisonGuard (12.4μs L7) &middot; AegisVanguard (DMA) &middot; GhostMesh (Kyber)<br>
+                            <strong>Footprint:</strong> 4.8 MB Unikernel &middot; 6.2 ms Cold Boot &middot; 0 Heap Drift
+                        </div>
+                        <div class="card-action-bar">
+                            <a href="../side-ecosystem.html" class="btn-card-primary">
+                                <i class="fas fa-file-shield"></i> Read SIDE Paper &rarr;
+                            </a>
+                            <a href="../../projects/nyx-side/index.php" class="btn-card-download" style="color:#fb7185; border-color:rgba(244,63,94,0.3); background:rgba(244,63,94,0.1);">
+                                <i class="fas fa-satellite-dish"></i> Live Tactical HUD
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. Empirical Benchmark Suites & Reproducibility -->
+        <section class="section-category">
+            <h2 class="category-title">
+                <i class="fas fa-chart-line" style="color:var(--accent-green);"></i> 2. Empirical Benchmark Suites & Methodology
+            </h2>
+            <p class="category-desc">
+                Bare-metal performance evaluations, memory footprint tracking, and reproducible multi-language comparative tests.
+            </p>
+
+            <div class="cards-grid">
+                <!-- Bench 1: Master Empirical Benchmarks -->
+                <div class="paper-card">
+                    <div>
+                        <span class="card-tag tag-benchmark">Core Language Verification</span>
+                        <h3 class="card-title">
+                            <a href="../benchmarks.html">Master Empirical Benchmark Suite (24 Workloads)</a>
+                        </h3>
+                        <p class="card-abstract">
+                            Comprehensive evaluation across 24 real-world systems domains: AI inference, SIMD vector math, SQLite query engines, Web servers, Audio DSP, GPU rendering, and OS microkernel pipelines.
+                        </p>
+                    </div>
+                    <div>
+                        <div class="card-metrics">
+                            <strong>Platform:</strong> Intel Core i7-6700HQ @ 2.60GHz &middot; 16GB RAM &middot; Windows 10/Linux<br>
+                            <strong>Summary:</strong> 24/24 Testbeds Passed &middot; Mean Build Time: 0.24s
+                        </div>
+                        <div class="card-action-bar">
+                            <a href="../benchmarks.html" class="btn-card-primary">
+                                <i class="fas fa-chart-bar"></i> View Master Suite &rarr;
+                            </a>
+                            <a href="../benchmark-code.html" class="btn-card-primary">
+                                <i class="fas fa-code"></i> Benchmark Source
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bench 2: Standardized Industry Benchmarks -->
+                <div class="paper-card">
+                    <div>
+                        <span class="card-tag tag-benchmark">Industry Standards</span>
+                        <h3 class="card-title">
+                            <a href="../industry-benchmarks.html">Standardized Industry Benchmarks & Concurrency</a>
+                        </h3>
+                        <p class="card-abstract">
+                            Rigorous standard stress testing including 100M Actor Concurrency Mesh, AVX2 1536-D Vector Cosine Dot Products, HTTP Req/Sec Throughput, and 99.99th Percentile Tail Latency tracking.
+                        </p>
+                    </div>
+                    <div>
+                        <div class="card-metrics" style="border-left-color:#34d399;">
+                            <strong>Actor Mesh:</strong> 100M Messages in 1.42s (70.4M msg/s throughput)<br>
+                            <strong>Vector SIMD:</strong> 24,800 QPS on 1536-D embeddings (0.040 ms/query)
+                        </div>
+                        <div class="card-action-bar">
+                            <a href="../industry-benchmarks.html" class="btn-card-primary">
+                                <i class="fas fa-tachometer-alt"></i> View Industry Bench &rarr;
+                            </a>
+                            <a href="../academic-benchmarks.html" class="btn-card-primary">
+                                <i class="fas fa-balance-scale"></i> Comparative Suite
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bench 3: Sovereign AI Inference Benchmarks -->
+                <div class="paper-card">
+                    <div>
+                        <span class="card-tag tag-ai">AI Systems</span>
+                        <h3 class="card-title">
+                            <a href="../ai-benchmarks.html">Nyx Sovereign AI Engine — Inference Benchmarks</a>
+                        </h3>
+                        <p class="card-abstract">
+                            Empirical validation of the native Zero-GC local LLM inference server. Compares DMA layer weight streaming, KV-cache memory stability, and prompt token processing against llama.cpp and Ollama.
+                        </p>
+                    </div>
+                    <div>
+                        <div class="card-metrics" style="border-left-color:#38bdf8;">
+                            <strong>Throughput:</strong> 145.8 tokens/sec on 4GB VRAM consumer GPU<br>
+                            <strong>KV Cache:</strong> Static Region Bump Rings &middot; 0 Byte Heap Fragmentation
+                        </div>
+                        <div class="card-action-bar">
+                            <a href="../ai-benchmarks.html" class="btn-card-primary">
+                                <i class="fas fa-microchip"></i> View AI Benchmarks &rarr;
+                            </a>
+                            <a href="../ai-engine.html" class="btn-card-primary">
+                                <i class="fas fa-brain"></i> AI Engine Architecture
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. Interactive Proofs, Methodology & OS Artifacts -->
+        <section class="section-category">
+            <h2 class="category-title">
+                <i class="fas fa-laptop-code" style="color:var(--accent-purple);"></i> 3. Interactive Tools, Architecture & Artifacts
+            </h2>
+            <p class="category-desc">
+                Interactive proof sandboxes, testbed methodology guidelines, and deployable sovereign unikernels.
+            </p>
+
+            <div class="cards-grid">
+                <!-- Interactive Escape Playground -->
+                <div class="paper-card">
+                    <div>
+                        <span class="card-tag tag-interactive">Live Interactive Sandbox</span>
+                        <h3 class="card-title">
+                            <a href="../escape-playground.html">Formal Escape Analysis & Type Derivation Tool</a>
+                        </h3>
+                        <p class="card-abstract">
+                            Interactive visual playground for testing escape classification algorithms, viewing live generated LLVM 18 IR with SIMD auto-vectorization, and verifying typing derivations.
+                        </p>
+                    </div>
+                    <div>
+                        <div class="card-metrics" style="border-left-color:#c084fc;">
+                            <strong>Capabilities:</strong> Real-time Type Proofs, LLVM IR Viewer, Memory Model Visualizer
+                        </div>
+                        <div class="card-action-bar">
+                            <a href="../escape-playground.html" class="btn-card-primary">
+                                <i class="fas fa-play"></i> Open Escape Playground &rarr;
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Benchmark Methodology & Environment Standards -->
+                <div class="paper-card">
+                    <div>
+                        <span class="card-tag tag-academic">Methodology & Rigor</span>
+                        <h3 class="card-title">
+                            <a href="../benchmark-methodology.html">Measurement Methodology & Testbed Standards</a>
+                        </h3>
+                        <p class="card-abstract">
+                            Detailed documentation of process isolation, hardware thread pinning, thermal throttling prevention, high-resolution TSC timing, and statistical confidence interval standards.
+                        </p>
+                    </div>
+                    <div>
+                        <div class="card-metrics" style="border-left-color:#f59e0b;">
+                            <strong>Standard:</strong> 100 Iterations per workload &middot; 99% CI &middot; Outlier elimination
+                        </div>
+                        <div class="card-action-bar">
+                            <a href="../benchmark-methodology.html" class="btn-card-primary">
+                                <i class="fas fa-clipboard-check"></i> Read Methodology &rarr;
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nyx Universal Smart Board -->
+                <div class="paper-card">
+                    <div>
+                        <span class="card-tag tag-ai" style="background:rgba(16,185,129,0.15); color:#34d399; border-color:rgba(16,185,129,0.3);">Next-Gen AI EdTech</span>
+                        <h3 class="card-title">
+                            <a href="../smart-board.html">Universal Smart Board &amp; AI Graphing Engine</a>
+                        </h3>
+                        <p class="card-abstract">
+                            Zero-GC digital ink model, math-aware handwriting recognition, and deterministic Computer Algebra System (CAS) for instant live graphing on classroom interactive blackboards.
+                        </p>
+                    </div>
+                    <div>
+                        <div class="card-metrics" style="border-left-color:#10b981;">
+                            <strong>Pipeline:</strong> 120Hz Ink &middot; Deterministic CAS &middot; 0.038ms Latency<br>
+                            <strong>Interface:</strong> Radial Context Menu &middot; Deterministic CAS &middot; AI Math Lens
+                        </div>
+                        <div class="card-action-bar">
+                            <a href="../smart-board.html" class="btn-card-primary">
+                                <i class="fas fa-file-lines"></i> Read Architecture &rarr;
+                            </a>
+                            <a href="../../projects/smart-board/index.php" class="btn-card-download">
+                                <i class="fas fa-chalkboard-user"></i> Live Smart Board App
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nyx Sovereign OS / Unikernel -->
+                <div class="paper-card">
+                    <div>
+                        <span class="card-tag tag-defense">Sovereign Unikernel</span>
+                        <h3 class="card-title">
+                            <a href="../nyxos-download.html">Nyx Microkernel OS & Unikernel Package</a>
+                        </h3>
+                        <p class="card-abstract">
+                            Deployable 4.8 MB cloud unikernel and bare-metal microkernel featuring 6.2 ms cold boot, capability-based security, and native zero-GC memory guarantees.
+                        </p>
+                    </div>
+                    <div>
+                        <div class="card-metrics" style="border-left-color:#38bdf8;">
+                            <strong>Artifact:</strong> 4.8 MB ISO / QEMU Image &middot; Air-Gapped Zero-Dependency
+                        </div>
+                        <div class="card-action-bar">
+                            <a href="../nyxos-download.html" class="btn-card-primary">
+                                <i class="fas fa-download"></i> Get NyxOS Unikernel &rarr;
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Offline Academic Reproducibility Package Banner -->
+        <div class="banner-download">
+            <h3><i class="fas fa-box-archive" style="color:var(--accent-indigo); margin-right:0.5rem;"></i> Download Complete Offline Academic Suite</h3>
+            <p>
+                Contains all 9 academic manuscripts, LaTeX source code, 24 bare-metal benchmark testbeds, dataset generators, and automated compilation verification harnesses.
+            </p>
+            <a href="../../downloads/nyx-academic-benchmarks.zip" class="btn-cta-large">
+                <i class="fas fa-file-zipper"></i> Download Academic Suite (.zip) &rarr;
+            </a>
+        </div>
+    </div>
+
+    <!-- Navigation, Mobile Drawer & Global Footer Scripts -->
+    <script src="../header_footer.js" defer></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+import std.io
+import std.vec
+import std.ml.ai_model
+
+fn main() {
+    println("=================================================================")
+    println("  🧠 NYX UNIVERSAL AI MODEL HUB & SIMD TENSOR ENGINE (std.ml)   ")
+    println("=================================================================")
+
+    // 1. Frontier Cloud AI Model Connectors
+    let openai = ai_model.create_openai_client("gpt-4o".to_string(), "sk-proj-test-key-openai".to_string())
+    println("✓ OpenAI Client Initialized: Provider=" + openai.provider + " Model=" + openai.model_name)
+
+    let claude = ai_model.create_anthropic_client("claude-3-5-sonnet-20241022".to_string(), "sk-ant-test-key".to_string())
+    println("✓ Anthropic Claude Client Initialized: Provider=" + claude.provider + " Model=" + claude.model_name)
+
+    let gemini = ai_model.create_gemini_client("gemini-2.0-flash".to_string(), "AIzaSyTestKeyGemini".to_string())
+    println("✓ Google Gemini Client Initialized: Provider=" + gemini.provider + " Model=" + gemini.model_name)
+
+    let deepseek = ai_model.create_deepseek_client("deepseek-reasoner".to_string(), "sk-dsk-test-key".to_string())
+    println("✓ DeepSeek R1 Client Initialized: Provider=" + deepseek.provider + " Model=" + deepseek.model_name)
+
+    // 2. Local Open-Weight Inference (Ollama / GGUF)
+    let ollama = ai_model.create_ollama_client("llama3.3:70b".to_string(), "http://localhost:11434".to_string())
+    println("✓ Local Ollama / GGUF Client Initialized: Endpoint=" + ollama.base_url + " Model=" + ollama.model_name)
+
+    // 3. Multi-Turn Chat & Tool-Calling Schema Execution
+    let chat_resp = ai_model.generate_chat_response(&openai,
+        "You are an autonomous GIS & Financial Risk Agent.".to_string(),
+        "Evaluate regional risk for San Francisco Data Center cluster.".to_string()
+    )
+    println("✓ AI Model Inference Result: " + chat_resp)
+
+    // 4. Vector Embedding Similarity (RAG / Vector Store Search)
+    let sim = ai_model.compute_cosine_similarity_4(
+        0.85, 0.12, 0.53, 0.77,
+        0.82, 0.15, 0.49, 0.79
+    )
+    println("✓ Vector Store Cosine Similarity (Query vs Document): " + sim.to_string())
+
+    println("=================================================================")
+    println("  ✓ AI MODEL HUB & TENSOR ML EXECUTION COMPLETE - ALL OK         ")
+    println("=================================================================")
+}

@@ -1,0 +1,126 @@
+module std.apps.snake
+
+import std.collections
+import std.math
+
+pub enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
+pub struct Point {
+    pub x: Int,
+    pub y: Int,
+}
+
+pub struct SnakeGame {
+    pub grid_width: Int,
+    pub grid_height: Int,
+    pub snake: Vec[Point],
+    pub food: Point,
+    pub current_dir: Direction,
+    pub score: Int,
+    pub high_score: Int,
+    pub is_game_over: Bool,
+    pub is_paused: Bool,
+}
+
+impl SnakeGame {
+    pub fn new(width: Int, height: Int) -> SnakeGame {
+        let mut snake = Vec.new();
+        // Initial 3-segment snake
+        snake.push(Point { x: 10, y: 10 });
+        snake.push(Point { x: 9, y: 10 });
+        snake.push(Point { x: 8, y: 10 });
+
+        SnakeGame {
+            grid_width: width,
+            grid_height: height,
+            snake: snake,
+            food: Point { x: 15, y: 10 },
+            current_dir: Direction.Right,
+            score: 0,
+            high_score: 0,
+            is_game_over: false,
+            is_paused: false,
+        }
+    }
+
+    pub fn change_direction(self: &mut Self, new_dir: Direction) {
+        match (self.current_dir, new_dir) {
+            (Direction.Up, Direction.Down) => {},
+            (Direction.Down, Direction.Up) => {},
+            (Direction.Left, Direction.Right) => {},
+            (Direction.Right, Direction.Left) => {},
+            _ => { self.current_dir = new_dir; },
+        }
+    }
+
+    pub fn tick(self: &mut Self) {
+        if self.is_game_over || self.is_paused {
+            return;
+        }
+
+        let head = self.snake.get(0).unwrap();
+        let mut new_x = head.x;
+        let mut new_y = head.y;
+
+        match self.current_dir {
+            Direction.Up => { new_y = new_y - 1; },
+            Direction.Down => { new_y = new_y + 1; },
+            Direction.Left => { new_x = new_x - 1; },
+            Direction.Right => { new_x = new_x + 1; },
+        }
+
+        // Wall Collision Check (wrapping or boundary)
+        if new_x < 0 || new_x >= self.grid_width || new_y < 0 || new_y >= self.grid_height {
+            self.is_game_over = true;
+            return;
+        }
+
+        // Self Collision Check
+        let mut i = 0;
+        while i < self.snake.len() {
+            let seg = self.snake.get(i).unwrap();
+            if seg.x == new_x && seg.y == new_y {
+                self.is_game_over = true;
+                return;
+            }
+            i = i + 1;
+        }
+
+        // Move head forward
+        let new_head = Point { x: new_x, y: new_y };
+        self.snake.insert(0, new_head);
+
+        // Check Food Collision
+        if new_x == self.food.x && new_y == self.food.y {
+            self.score = self.score + 10;
+            if self.score > self.high_score {
+                self.high_score = self.score;
+            }
+            // Spawn new food (deterministic pseudo-random generator)
+            self.food = Point {
+                x: (new_x * 7 + 13) % self.grid_width,
+                y: (new_y * 11 + 5) % self.grid_height,
+            };
+        } else {
+            // Remove tail
+            self.snake.pop();
+        }
+    }
+
+    pub fn reset(self: &mut Self) {
+        self.snake.clear();
+        self.snake.push(Point { x: 10, y: 10 });
+        self.snake.push(Point { x: 9, y: 10 });
+        self.snake.push(Point { x: 8, y: 10 });
+        self.current_dir = Direction.Right;
+        self.food = Point { x: 15, y: 10 };
+        self.score = 0;
+        self.is_game_over = false;
+        self.is_paused = false;
+    }
+}

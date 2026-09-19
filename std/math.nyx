@@ -1,0 +1,371 @@
+module math
+
+extern "C" {
+    fn sqrt(x: f64) -> f64
+    fn pow(base: f64, exp: f64) -> f64
+    fn sin(x: f64) -> f64
+    fn cos(x: f64) -> f64
+    fn tan(x: f64) -> f64
+    fn asin(x: f64) -> f64
+    fn acos(x: f64) -> f64
+    fn atan(x: f64) -> f64
+    fn atan2(y: f64, x: f64) -> f64
+    fn sinh(x: f64) -> f64
+    fn cosh(x: f64) -> f64
+    fn tanh(x: f64) -> f64
+    fn asinh(x: f64) -> f64
+    fn acosh(x: f64) -> f64
+    fn atanh(x: f64) -> f64
+    fn log(x: f64) -> f64
+    fn log2(x: f64) -> f64
+    fn log10(x: f64) -> f64
+    fn exp(x: f64) -> f64
+    fn exp2(x: f64) -> f64
+    fn expm1(x: f64) -> f64
+    fn log1p(x: f64) -> f64
+    fn cbrt(x: f64) -> f64
+    fn hypot(x: f64, y: f64) -> f64
+    fn erf(x: f64) -> f64
+    fn erfc(x: f64) -> f64
+    fn tgamma(x: f64) -> f64
+    fn lgamma(x: f64) -> f64
+    fn floor(x: f64) -> f64
+    fn ceil(x: f64) -> f64
+    fn fabs(x: f64) -> f64
+    fn fmod(x: f64, y: f64) -> f64
+    fn round(x: f64) -> f64
+    fn trunc(x: f64) -> f64
+    fn fmax(x: f64, y: f64) -> f64
+    fn fmin(x: f64, y: f64) -> f64
+    fn fdim(x: f64, y: f64) -> f64
+    fn fma(x: f64, y: f64, z: f64) -> f64
+    fn copysign(x: f64, y: f64) -> f64
+    fn nextafter(x: f64, y: f64) -> f64
+    fn remainder(x: f64, y: f64) -> f64
+    fn remquo(x: f64, y: f64, quo: *mut i32) -> f64
+}
+
+pub const PI: Float = 3.141592653589793
+pub const E: Float = 2.718281828459045
+pub const TAU: Float = 6.283185307179586
+pub const SQRT2: Float = 1.4142135623730951
+pub const LN2: Float = 0.6931471805599453
+pub const INFINITY: Float = 1.0 / 0.0
+pub const NAN: Float = 0.0 / 0.0
+
+pub const INT_MAX: Int = 9223372036854775807
+pub const INT_MIN: Int = -9223372036854775808
+
+pub fn abs_int(x: Int) -> Int { if x < 0 { -x } else { x } }
+pub fn abs(x: Float) -> Float { unsafe { fabs(x) } }
+pub fn max(a: Float, b: Float) -> Float { if a > b { a } else { b } }
+pub fn min(a: Float, b: Float) -> Float { if a < b { a } else { b } }
+pub fn max_int(a: Int, b: Int) -> Int { if a > b { a } else { b } }
+pub fn min_int(a: Int, b: Int) -> Int { if a < b { a } else { b } }
+pub fn clamp(x: Float, lo: Float, hi: Float) -> Float { max(lo, min(x, hi)) }
+pub fn clamp_int(x: Int, lo: Int, hi: Int) -> Int { max_int(lo, min_int(x, hi)) }
+
+pub fn sqrt(x: Float) -> Float { unsafe { sqrt(x) } }
+pub fn pow(base: Float, exp: Float) -> Float { unsafe { pow(base, exp) } }
+pub fn sin(x: Float) -> Float { unsafe { sin(x) } }
+pub fn cos(x: Float) -> Float { unsafe { cos(x) } }
+pub fn tan(x: Float) -> Float { unsafe { tan(x) } }
+pub fn asin(x: Float) -> Float { unsafe { asin(x) } }
+pub fn acos(x: Float) -> Float { unsafe { acos(x) } }
+pub fn atan(x: Float) -> Float { unsafe { atan(x) } }
+pub fn atan2(y: Float, x: Float) -> Float { unsafe { atan2(y, x) } }
+pub fn sinh(x: Float) -> Float { unsafe { sinh(x) } }
+pub fn cosh(x: Float) -> Float { unsafe { cosh(x) } }
+pub fn tanh(x: Float) -> Float { unsafe { tanh(x) } }
+pub fn asinh(x: Float) -> Float { unsafe { asinh(x) } }
+pub fn acosh(x: Float) -> Float { unsafe { acosh(x) } }
+pub fn atanh(x: Float) -> Float { unsafe { atanh(x) } }
+pub fn ln(x: Float) -> Float { unsafe { log(x) } }
+pub fn log2(x: Float) -> Float { unsafe { log2(x) } }
+pub fn log10(x: Float) -> Float { unsafe { log10(x) } }
+pub fn log1p(x: Float) -> Float { unsafe { log1p(x) } }
+pub fn exp(x: Float) -> Float { unsafe { exp(x) } }
+pub fn exp2(x: Float) -> Float { unsafe { exp2(x) } }
+pub fn expm1(x: Float) -> Float { unsafe { expm1(x) } }
+pub fn cbrt(x: Float) -> Float { unsafe { cbrt(x) } }
+pub fn hypot(x: Float, y: Float) -> Float { unsafe { hypot(x, y) } }
+pub fn erf(x: Float) -> Float { unsafe { erf(x) } }
+pub fn erfc(x: Float) -> Float { unsafe { erfc(x) } }
+pub fn tgamma(x: Float) -> Float { unsafe { tgamma(x) } }
+pub fn lgamma(x: Float) -> Float { unsafe { lgamma(x) } }
+pub fn floor(x: Float) -> Float { unsafe { floor(x) } }
+pub fn ceil(x: Float) -> Float { unsafe { ceil(x) } }
+pub fn round(x: Float) -> Float { unsafe { round(x) } }
+pub fn trunc(x: Float) -> Float { unsafe { trunc(x) } }
+pub fn fmax(x: Float, y: Float) -> Float { unsafe { fmax(x, y) } }
+pub fn fmin(x: Float, y: Float) -> Float { unsafe { fmin(x, y) } }
+pub fn fdim(x: Float, y: Float) -> Float { unsafe { fdim(x, y) } }
+pub fn fma(x: Float, y: Float, z: Float) -> Float { unsafe { fma(x, y, z) } }
+pub fn fmod(x: Float, y: Float) -> Float { unsafe { fmod(x, y) } }
+pub fn copysign(x: Float, y: Float) -> Float { unsafe { copysign(x, y) } }
+pub fn nextafter(x: Float, y: Float) -> Float { unsafe { nextafter(x, y) } }
+pub fn remainder(x: Float, y: Float) -> Float { unsafe { remainder(x, y) } }
+
+pub fn gcd(a: Int, b: Int) -> Int {
+    if b == 0 { abs_int(a) } else { gcd(b, a % b) }
+}
+
+pub fn lcm(a: Int, b: Int) -> Int {
+    if a == 0 || b == 0 { 0 } else { abs_int(a) / gcd(a, b) * abs_int(b) }
+}
+
+pub fn is_prime(n: Int) -> Bool {
+    if n <= 1 { return false }
+    if n <= 3 { return true }
+    if n % 2 == 0 || n % 3 == 0 { return false }
+    let mut i = 5
+    while i * i <= n {
+        if n % i == 0 || n % (i + 2) == 0 { return false }
+        i = i + 6
+    }
+    true
+}
+
+pub fn factorial(n: Int) -> Int {
+    if n <= 1 { 1 } else { n * factorial(n - 1) }
+}
+
+pub fn binomial(n: Int, k: Int) -> Int {
+    if k < 0 || k > n { return 0 }
+    if k == 0 || k == n { return 1 }
+    let mut result = 1
+    let mut i = 1
+    while i <= k {
+        result = result * (n - k + i) / i
+        i = i + 1
+    }
+    result
+}
+
+pub fn is_power_of_two(n: Int) -> Bool {
+    n > 0 && (n & (n - 1)) == 0
+}
+
+pub fn next_power_of_two(n: Int) -> Int {
+    if n <= 0 { return 1 }
+    let mut v = n - 1
+    v = v | (v >> 1)
+    v = v | (v >> 2)
+    v = v | (v >> 4)
+    v = v | (v >> 8)
+    v = v | (v >> 16)
+    v = v | (v >> 32)
+    v + 1
+}
+
+pub fn lerp(a: Float, b: Float, t: Float) -> Float {
+    a + (b - a) * t
+}
+
+pub fn is_close(a: Float, b: Float, epsilon: Float) -> Bool {
+    abs(a - b) < epsilon
+}
+
+pub fn sign(x: Float) -> Float {
+    if x > 0.0 { 1.0 } else if x < 0.0 { -1.0 } else { 0.0 }
+}
+
+pub fn sign_int(x: Int) -> Int {
+    if x > 0 { 1 } else if x < 0 { -1 } else { 0 }
+}
+
+pub struct Vec2 {
+    pub x: Float,
+    pub y: Float,
+}
+
+pub struct Vec3 {
+    pub x: Float,
+    pub y: Float,
+    pub z: Float,
+}
+
+pub struct Vec4 {
+    pub x: Float,
+    pub y: Float,
+    pub z: Float,
+    pub w: Float,
+}
+
+pub struct Matrix4 {
+    pub elements: Vec<Float>,
+}
+
+impl Vec2 {
+    pub fn new(x: Float, y: Float) -> Vec2 { Vec2 { x, y } }
+    pub fn zero() -> Vec2 { Vec2 { x: 0.0, y: 0.0 } }
+    pub fn one() -> Vec2 { Vec2 { x: 1.0, y: 1.0 } }
+
+    pub fn len(self: &Vec2) -> Float {
+        sqrt(self.x * self.x + self.y * self.y)
+    }
+
+    pub fn len_squared(self: &Vec2) -> Float {
+        self.x * self.x + self.y * self.y
+    }
+
+    pub fn normalize(self: &Vec2) -> Vec2 {
+        let l = self.len()
+        if l == 0.0 { return Vec2.zero() }
+        Vec2 { x: self.x / l, y: self.y / l }
+    }
+
+    pub fn dot(self: &Vec2, other: &Vec2) -> Float {
+        self.x * other.x + self.y * other.y
+    }
+
+    pub fn cross(self: &Vec2, other: &Vec2) -> Float {
+        self.x * other.y - self.y * other.x
+    }
+
+    pub fn distance(self: &Vec2, other: &Vec2) -> Float {
+        let dx = self.x - other.x
+        let dy = self.y - other.y
+        sqrt(dx * dx + dy * dy)
+    }
+
+    pub fn lerp(self: &Vec2, other: &Vec2, t: Float) -> Vec2 {
+        Vec2 {
+            x: lerp(self.x, other.x, t),
+            y: lerp(self.y, other.y, t),
+        }
+    }
+
+    pub fn add(self: &Vec2, other: &Vec2) -> Vec2 {
+        Vec2 { x: self.x + other.x, y: self.y + other.y }
+    }
+
+    pub fn sub(self: &Vec2, other: &Vec2) -> Vec2 {
+        Vec2 { x: self.x - other.x, y: self.y - other.y }
+    }
+
+    pub fn scale(self: &Vec2, s: Float) -> Vec2 {
+        Vec2 { x: self.x * s, y: self.y * s }
+    }
+}
+
+impl Vec3 {
+    pub fn new(x: Float, y: Float, z: Float) -> Vec3 { Vec3 { x, y, z } }
+    pub fn zero() -> Vec3 { Vec3 { x: 0.0, y: 0.0, z: 0.0 } }
+
+    pub fn len(self: &Vec3) -> Float {
+        sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
+    }
+
+    pub fn len_squared(self: &Vec3) -> Float {
+        self.x * self.x + self.y * self.y + self.z * self.z
+    }
+
+    pub fn normalize(self: &Vec3) -> Vec3 {
+        let l = self.len()
+        if l == 0.0 { return Vec3.zero() }
+        Vec3 { x: self.x / l, y: self.y / l, z: self.z / l }
+    }
+
+    pub fn dot(self: &Vec3, other: &Vec3) -> Float {
+        self.x * other.x + self.y * other.y + self.z * other.z
+    }
+
+    pub fn cross(self: &Vec3, other: &Vec3) -> Vec3 {
+        Vec3 {
+            x: self.y * other.z - self.z * other.y,
+            y: self.z * other.x - self.x * other.z,
+            z: self.x * other.y - self.y * other.x,
+        }
+    }
+
+    pub fn add(self: &Vec3, other: &Vec3) -> Vec3 {
+        Vec3 { x: self.x + other.x, y: self.y + other.y, z: self.z + other.z }
+    }
+
+    pub fn sub(self: &Vec3, other: &Vec3) -> Vec3 {
+        Vec3 { x: self.x - other.x, y: self.y - other.y, z: self.z - other.z }
+    }
+
+    pub fn scale(self: &Vec3, s: Float) -> Vec3 {
+        Vec3 { x: self.x * s, y: self.y * s, z: self.z * s }
+    }
+}
+
+impl Matrix4 {
+    pub fn identity() -> Matrix4 {
+        Matrix4 { m: [
+            1.0, 0.0, 0.0, 0.0,
+            0.0, 1.0, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0,
+            0.0, 0.0, 0.0, 1.0,
+        ]}
+    }
+
+    pub fn multiply(self: &Matrix4, other: &Matrix4) -> Matrix4 {
+        let mut result = Matrix4.identity()
+        for row in 0..4 {
+            for col in 0..4 {
+                let mut sum = 0.0
+                for k in 0..4 {
+                    sum = sum + self.m[row * 4 + k] * other.m[k * 4 + col]
+                }
+                result.m[row * 4 + col] = sum
+            }
+        }
+        result
+    }
+
+    pub fn translate(x: Float, y: Float, z: Float) -> Matrix4 {
+        let mut m = Matrix4.identity()
+        m.m[12] = x
+        m.m[13] = y
+        m.m[14] = z
+        m
+    }
+
+    pub fn scale(x: Float, y: Float, z: Float) -> Matrix4 {
+        let mut m = Matrix4.identity()
+        m.m[0] = x
+        m.m[5] = y
+        m.m[10] = z
+        m
+    }
+}
+
+// ── Algebraic Floating-Point Methods (Auto-Vectorizing FMA & Reassociation) ──
+extern "C" {
+    fn nyx_algebraic_add(a: f64, b: f64) -> f64;
+    fn nyx_algebraic_sub(a: f64, b: f64) -> f64;
+    fn nyx_algebraic_mul(a: f64, b: f64) -> f64;
+    fn nyx_algebraic_div(a: f64, b: f64) -> f64;
+    fn nyx_algebraic_fma(a: f64, b: f64, c: f64) -> f64;
+    fn nyx_algebraic_dot_product(a: *const f64, b: *const f64, len: usize) -> f64;
+    fn nyx_algebraic_axpy(alpha: f64, x: *const f64, y: *mut f64, len: usize);
+    fn nyx_algebraic_poly_eval(x: f64, coeffs: *const f64, degree: usize) -> f64;
+}
+
+pub fn algebraic_add(a: Float, b: Float) -> Float {
+    nyx_algebraic_add(a, b)
+}
+
+pub fn algebraic_sub(a: Float, b: Float) -> Float {
+    nyx_algebraic_sub(a, b)
+}
+
+pub fn algebraic_mul(a: Float, b: Float) -> Float {
+    nyx_algebraic_mul(a, b)
+}
+
+pub fn algebraic_div(a: Float, b: Float) -> Float {
+    nyx_algebraic_div(a, b)
+}
+
+pub fn algebraic_fma(a: Float, b: Float, c: Float) -> Float {
+    nyx_algebraic_fma(a, b, c)
+}
+
+pub fn algebraic_dot_product(a: &[Float], b: &[Float]) -> Float {
+    nyx_algebraic_dot_product(a.as_ptr(), b.as_ptr(), a.len())
+}
+

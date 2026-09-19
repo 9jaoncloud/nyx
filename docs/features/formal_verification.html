@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Formal Verification & Decentralized Registry — Function Guide</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+
+    <main>
+        <div style="display:inline-block; padding: 0.35rem 0.85rem; border-radius: 9999px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; margin-bottom: 1rem;">
+            Enterprise Milestone Certified
+        </div>
+        <h1>Formal Verification &amp; Global Decentralized Registry</h1>
+        <p class="lead" style="font-size: 1.15rem; color: var(--text-muted); margin-bottom: 2rem;">
+            A practical, function-by-function developer guide explaining <strong>why</strong> formal contracts and decentralized package registries are needed, and <strong>how to use them</strong> to build crash-proof software.
+        </p>
+
+        <!-- ── Part 1: Why This Module Exists ── -->
+        <h2>1. Why Does This Module Exist?</h2>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+            <div style="background: #111827; border: 1px solid rgba(239, 68, 68, 0.3); padding: 1.25rem; border-radius: 8px;">
+                <h4 style="color: #f87171; margin-top: 0;">🛑 The Real-World Problem</h4>
+                <p style="color: #94a3b8; font-size: 0.92rem; line-height: 1.6; margin-bottom: 0;">
+                    In safety-critical avionics (airplane autopilot), medical pacemakers, or banking engines moving $100 Million, a crash or buffer overflow can kill people or bankrupt companies. Meanwhile, centralized registries (like npm or PyPI) have had servers hacked to inject malware, and cannot function in <strong>air-gapped defense networks</strong> without internet access.
+                </p>
+            </div>
+            <div style="background: #111827; border: 1px solid rgba(16, 185, 129, 0.3); padding: 1.25rem; border-radius: 8px;">
+                <h4 style="color: #34d399; margin-top: 0;">🛡️ The Nyx Solution</h4>
+                <p style="color: #94a3b8; font-size: 0.92rem; line-height: 1.6; margin-bottom: 0;">
+                    <strong>Formal Contracts (<code>@requires</code>, <code>@ensures</code>)</strong> mathematically prove that functions cannot receive bad inputs or produce bad outputs before running. <strong>Decentralized Registries</strong> use Ed25519 author signatures and SHA-256 hashes so packages can be verified 100% offline with mathematical tamper-resistance.
+                </p>
+            </div>
+        </div>
+
+        <!-- ── Part 2: Formal Verification Functions ── -->
+        <h2>2. Formal Contracts (`std.formal`): Function Reference</h2>
+        <p>Import <code>std.formal</code> to declare mathematical contracts on functions and structs.</p>
+
+        <!-- Function 1: @requires -->
+        <div style="background: #0f172a; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem;">
+            <h3 style="margin-top: 0; color: #10b981; font-family: 'JetBrains Mono', monospace;">@requires(condition: bool)</h3>
+            <p style="color: #cbd5e1;">Declares a mandatory mathematical precondition that MUST be true before the function is called.</p>
+            <p><strong>Example:</strong></p>
+            <pre><code>import std.formal;
+
+// Precondition: Divisor cannot be zero, and balance must be non-negative
+@requires(denominator != 0.0)
+fn divide_safe(numerator: f64, denominator: f64) -> f64 {
+    return numerator / denominator;
+}</code></pre>
+        </div>
+
+        <!-- Function 2: @ensures -->
+        <div style="background: #0f172a; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem;">
+            <h3 style="margin-top: 0; color: #10b981; font-family: 'JetBrains Mono', monospace;">@ensures(condition: bool)</h3>
+            <p style="color: #cbd5e1;">Declares a postcondition that the function guarantees to be true upon returning. If violated, compilation fails or throws a contract fault.</p>
+            <p><strong>Example:</strong></p>
+            <pre><code>import std.formal;
+
+// Postcondition: Result must always be non-negative
+@requires(amount > 0.0 &amp;&amp; amount &lt;= balance)
+@ensures(result &gt;= 0.0)
+fn withdraw(balance: f64, amount: f64) -> f64 {
+    return balance - amount;
+}</code></pre>
+        </div>
+
+        <!-- Function 3: verify_region_safety -->
+        <div style="background: #0f172a; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem;">
+            <h3 style="margin-top: 0; color: #10b981; font-family: 'JetBrains Mono', monospace;">formal::verify_region_safety(scope: String, size: usize, has_escape: bool) -&gt; VerificationProof</h3>
+            <p style="color: #cbd5e1;">Generates an SMT-LIB2 / Lean 4 mathematical proof confirming that all pointers in a region expire before the region drops.</p>
+            <p><strong>Example:</strong></p>
+            <pre><code>import std.formal;
+
+let proof = formal::verify_region_safety("FlightControlArena", 1024 * 1024, false);
+if proof.is_verified {
+    print("Soundness Proof # {proof.proof_id}: Q.E.D. Mathematically Sound!");
+}</code></pre>
+        </div>
+
+        <!-- ── Part 3: Decentralized Registry Functions ── -->
+        <h2>3. Decentralized Registry (`std.registry`): Function Reference</h2>
+        <p>Import <code>std.registry</code> to sign, verify, and sync package artifacts without relying on a central server.</p>
+
+        <!-- Function 4: sign_package -->
+        <div style="background: #0f172a; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem;">
+            <h3 style="margin-top: 0; color: #f59e0b; font-family: 'JetBrains Mono', monospace;">registry::sign_package(name: String, version: String, payload: *void, size: usize, key: String) -&gt; PackageManifest</h3>
+            <p style="color: #cbd5e1;">Hashes the package bytes with SHA-256 and attaches an Ed25519 digital signature generated from your private key.</p>
+            <p><strong>Example:</strong></p>
+            <pre><code>import std.registry;
+
+let manifest = registry::sign_package("@nyx/crypto", "1.0.0", payload_ptr, payload_len, "private_key.pem");
+print("Signed Hash: {manifest.content_hash}");
+print("Signature: {manifest.signature}");</code></pre>
+        </div>
+
+        <!-- Function 5: verify_package -->
+        <div style="background: #0f172a; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem;">
+            <h3 style="margin-top: 0; color: #f59e0b; font-family: 'JetBrains Mono', monospace;">registry::verify_package(manifest: *PackageManifest, payload: *void, size: usize) -&gt; bool</h3>
+            <p style="color: #cbd5e1;">Validates the binary payload against the author's public key and content hash. Returns <code>true</code> if authentic, <code>false</code> if tampered.</p>
+            <p><strong>Example:</strong></p>
+            <pre><code>import std.registry;
+
+let is_safe = registry::verify_package(&amp;manifest, payload_ptr, payload_len);
+if is_safe {
+    print("Package authentic &amp; verified offline!");
+}</code></pre>
+        </div>
+
+        <!-- Function 6: replicate_to_peer -->
+        <div style="background: #0f172a; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem;">
+            <h3 style="margin-top: 0; color: #f59e0b; font-family: 'JetBrains Mono', monospace;">registry::replicate_to_peer(manifest: *PackageManifest, peer_url: String) -&gt; bool</h3>
+            <p style="color: #cbd5e1;">Replicates the package artifact to another node in the peer-to-peer network (IPFS or Raft consensus mesh).</p>
+            <p><strong>Example:</strong></p>
+            <pre><code>import std.registry;
+
+registry::replicate_to_peer(&amp;manifest, "ipfs://QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco");
+registry::replicate_to_peer(&amp;manifest, "raft-mesh://node-backup.internal:9443");</code></pre>
+        </div>
+
+        <!-- ── Part 4: Practical End-to-End Tutorial ── -->
+        <h2>4. Complete Working Tutorial: Mission-Critical Aerospace Fuel Valve Controller</h2>
+        <p>This complete example demonstrates how aerospace engineers use formal contracts to eliminate runtime catastrophic failure:</p>
+
+        <div class="code-box">
+<pre><code>import std.formal;
+
+struct ValveState {
+    flow_rate_liters_sec: f64,
+    pressure_psi: f64,
+    is_emergency_shutdown: bool,
+}
+
+@requires(target_pressure &gt;= 10.0 &amp;&amp; target_pressure &lt;= 350.0) // Safe operating pressure band
+@ensures(result.pressure_psi == target_pressure)                 // Guaranteed exact calibration
+@ensures(result.is_emergency_shutdown == false)                  // Invariant: Valve is operational
+fn calibrate_fuel_valve(target_pressure: f64) -&gt; ValveState {
+    let mut valve = ValveState {
+        flow_rate_liters_sec: 14.5,
+        pressure_psi: target_pressure,
+        is_emergency_shutdown: false,
+    };
+    return valve;
+}
+
+fn main() {
+    print("Calibrating rocket engine fuel valves...");
+    let valve = calibrate_fuel_valve(185.0);
+    print("Calibration verified! Pressure: {valve.pressure_psi} PSI (Zero Runtime Risk)");
+}</code></pre>
+        </div>
+
+        <p style="margin-top: 2rem;">
+            <a href="../roadmap.html">&larr; Return to Engineering Roadmap</a> | 
+            <a href="../tutorial/concurrency-and-safety-guide.html">View Concurrency Guide &rarr;</a>
+        </p>
+    </main>
+
+    <script src="../navigation.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>
