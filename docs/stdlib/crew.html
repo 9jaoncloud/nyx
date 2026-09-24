@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@nyx/crew (Autonomous Multi-Agent Crew & Git Worktree Isolation) — Nyx Docs</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .example-box { background: #0b1120; border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 1.5rem; margin: 1.5rem 0; }
+        .example-title { color: #38bdf8; font-size: 1.1rem; font-weight: 700; margin-top: 0; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+        .feature-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; }
+        .feature-card h4 { color: #fff; margin: 0 0 0.5rem; font-size: 0.95rem; }
+        .feature-card p { color: var(--text-muted); font-size: 0.85rem; margin: 0; line-height: 1.5; }
+        table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.9rem; }
+        th, td { padding: 0.85rem 1rem; border: 1px solid var(--border); text-align: left; }
+        th { background: rgba(0,0,0,0.25); color: var(--accent-light); font-weight: 600; }
+    </style>
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+
+    <main>
+        <div style="display:inline-block; padding: 0.35rem 0.85rem; border-radius: 9999px; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; margin-bottom: 1rem;">
+            Official Standard Package
+        </div>
+        <h1>@nyx/crew — Multi-Agent Crew Orchestration &amp; Git Worktree Sandboxes</h1>
+        <p class="lead" style="font-size: 1.15rem; color: var(--text-muted); margin-bottom: 2rem;">
+            An autonomous multi-agent swarm framework. Orchestrates specialized AI agents operating inside <strong>ephemeral Git worktree sandboxes with lock-free 42ns SPSC inter-agent communication</strong>.
+        </p>
+
+        <!-- Feature Grid -->
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>🌿 Git Worktree Isolation</h4>
+                <p>Subagents develop in dedicated, parallel Git worktree directories, eliminating file overwrite conflicts and git lock collisions.</p>
+            </div>
+            <div class="feature-card">
+                <h4>⚡ 42ns SPSC Ring Buffer</h4>
+                <p>Ultra-low-latency inter-agent IPC bypassing heavy JSON-RPC serialization and Python thread lock contention.</p>
+            </div>
+            <div class="feature-card">
+                <h4>🛡️ BFT Quorum Consensus</h4>
+                <p>Multi-agent voting ensures code changes, unit tests, and security assertions achieve cryptographic quorum before merging.</p>
+            </div>
+            <div class="feature-card">
+                <h4>🤖 Local Model Compatibility</h4>
+                <p>Assign distinct local models (e.g. Nanbeige 4.2-3B for coding, Spark-X2.5 for testing, Llama-3 for architecture review).</p>
+            </div>
+        </div>
+
+        <h2>1. Installation</h2>
+        <pre><code># Install via Nyx Package Manager
+nypm add @nyx/crew</code></pre>
+
+        <!-- Practical Examples -->
+        <h2>2. Comprehensive Practical Example</h2>
+
+        <div class="example-box">
+            <div class="example-title">🤖 Example: Spawning an Autonomous 3-Agent Engineering Crew</div>
+            <p style="color: #cbd5e1; font-size: 0.92rem;">
+                This program instantiates an Architect Agent, a Coder Agent, and a QA Fuzzer Agent working simultaneously in parallel Git worktrees to implement and test a new feature.
+            </p>
+            <pre><code>use @nyx/crew;
+
+fn main() {
+    // 1. Create a specialized software engineering crew
+    let mut dev_crew = crew::create_crew("compiler_optimization_crew");
+
+    // 2. Add specialized agents with dedicated model backends and isolated worktrees
+    crew::add_member(
+        mut dev_crew,
+        "Architect",
+        "nanbeige-4.2-3b",
+        ".worktrees/agent_architect"
+    );
+
+    crew::add_member(
+        mut dev_crew,
+        "Systems_Coder",
+        "spark-x2.5-4b",
+        ".worktrees/agent_coder"
+    );
+
+    crew::add_member(
+        mut dev_crew,
+        "QA_Fuzzer",
+        "local-fuzz-target",
+        ".worktrees/agent_qa"
+    );
+
+    println("🚀 Crew initialized with 3 agents across isolated Git worktrees.");
+
+    // 3. Dispatch high-level goal
+    let result = crew::execute_collaborative_goal(
+        &dev_crew,
+        "Implement SIMD AVX2 cosine distance acceleration in @nyx/tensor and run 1M fuzz iterations."
+    );
+
+    println("Result: {result}");
+}</code></pre>
+        </div>
+
+        <!-- API Reference -->
+        <h2>3. Function Reference</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Signature</th>
+                    <th>Parameters</th>
+                    <th>Return</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>crew::create_crew(name: str)</code></td>
+                    <td><code>name: str</code></td>
+                    <td><code>AgentCrew</code></td>
+                    <td>Initializes an agent crew coordinator with SPSC message ring buffers.</td>
+                </tr>
+                <tr>
+                    <td><code>crew::add_member(crew: mut ref AgentCrew, role: str, model: str, worktree: str)</code></td>
+                    <td><code>role, model, worktree</code></td>
+                    <td><code>void</code></td>
+                    <td>Provisions an isolated Git worktree branch and binds the specified SLM model.</td>
+                </tr>
+                <tr>
+                    <td><code>crew::execute_collaborative_goal(crew: ref AgentCrew, goal: str)</code></td>
+                    <td><code>goal: str</code></td>
+                    <td><code>str</code></td>
+                    <td>Executes collaborative multi-agent loop with automated branch synthesis and testing.</td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+    <script src="../navigation.js"></script>
+</body>
+</html>

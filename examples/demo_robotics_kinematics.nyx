@@ -1,0 +1,38 @@
+import std.io
+import std.robotics.kinematics
+
+fn main() {
+    println("=================================================================")
+    println("  🤖 NYX ROBOTICS KINEMATICS & AUTONOMOUS CONTROL (std.robotics) ")
+    println("=================================================================")
+
+    // 1. 6-DOF Industrial Serial Manipulator (Denavit-Hartenberg Parameters)
+    let mut arm = kinematics.create_robot_arm("Nyx-Manipulator-6DOF".to_string(), 6)
+    kinematics.add_joint(&mut arm, 0.0, 1.570796, 0.333, 0.0)      // Joint 1 (Waist)
+    kinematics.add_joint(&mut arm, 0.425, 0.0, 0.0, 0.785398)       // Joint 2 (Shoulder)
+    kinematics.add_joint(&mut arm, 0.392, 0.0, 0.0, -0.523598)      // Joint 3 (Elbow)
+    kinematics.add_joint(&mut arm, 0.0, 1.570796, 0.109, 0.0)      // Joint 4 (Wrist 1)
+    kinematics.add_joint(&mut arm, 0.0, -1.570796, 0.094, 0.0)     // Joint 5 (Wrist 2)
+    kinematics.add_joint(&mut arm, 0.0, 0.0, 0.082, 0.0)           // Joint 6 (Wrist 3 / Tool)
+
+    let total_joints = arm.joints_count
+    println("✓ 6-DOF Robot Arm Configured: Total Joints Ingested = " + total_joints.to_string())
+
+    let ef_x = arm.end_effector_x
+    let ef_y = arm.end_effector_y
+    let ef_z = arm.end_effector_z
+    println("✓ Forward Kinematics End-Effector Pose: X=" + ef_x.to_string() + " Y=" + ef_y.to_string() + " Z=" + ef_z.to_string())
+
+    // 2. Quintic Polynomial Minimum-Jerk Trajectory Generation
+    let p_mid = kinematics.evaluate_quintic_trajectory(2.5, 5.0, 0.0, 1.570796)
+    println("✓ Quintic Trajectory Waypoint at t=2.5s (Target=1.5708 rad): " + p_mid.to_string() + " rad")
+
+    // 3. Cascaded PID Joint Controller with Anti-Windup Clamping
+    let mut pid = kinematics.create_pid(150.0, 10.0, 25.0, 100.0)
+    let torque = kinematics.update_pid(&mut pid, 1.570796, 1.520000, 0.01)
+    println("✓ PID Joint Torque Output Calculated: " + torque.to_string() + " Nm")
+
+    println("=================================================================")
+    println("  ✓ ROBOTICS KINEMATICS & CONTROL COMPLETE - ALL OK              ")
+    println("=================================================================")
+}

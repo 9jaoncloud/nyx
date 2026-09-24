@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@nyx/embassy (Open Embedded Hardware Abstraction Layer) — Nyx Docs</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .example-box { background: #0b1120; border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 1.5rem; margin: 1.5rem 0; }
+        .example-title { color: #38bdf8; font-size: 1.1rem; font-weight: 700; margin-top: 0; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+        .feature-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; }
+        .feature-card h4 { color: #fff; margin: 0 0 0.5rem; font-size: 0.95rem; }
+        .feature-card p { color: var(--text-muted); font-size: 0.85rem; margin: 0; line-height: 1.5; }
+        table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.9rem; }
+        th, td { padding: 0.85rem 1rem; border: 1px solid var(--border); text-align: left; }
+        th { background: rgba(0,0,0,0.25); color: var(--accent-light); font-weight: 600; }
+    </style>
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+
+    <main>
+        <div style="display:inline-block; padding: 0.35rem 0.85rem; border-radius: 9999px; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; margin-bottom: 1rem;">
+            Official Standard Package
+        </div>
+        <h1>@nyx/embassy — Open Embedded Hardware Abstraction Layer (HAL)</h1>
+        <p class="lead" style="font-size: 1.15rem; color: var(--text-muted); margin-bottom: 2rem;">
+            Async bare-metal embedded framework delivering <strong>zero-heap GPIO, I2C, SPI, UART, PWM, and ADC drivers for ARM Cortex-M (STM32/RP2040), ESP32, and RISC-V microcontrollers</strong>.
+        </p>
+
+        <!-- Feature Grid -->
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>🔌 Direct MMIO Register Control</h4>
+                <p>Type-safe memory-mapped I/O with compile-time pin validation preventing electrical configuration errors.</p>
+            </div>
+            <div class="feature-card">
+                <h4>⚡ Sub-4KB RAM Footprint</h4>
+                <p>Engineered for resource-constrained 16KB/32KB RAM microcontrollers with deterministic regional heapless execution.</p>
+            </div>
+            <div class="feature-card">
+                <h4>⏱️ Interrupt-Driven Async Timers</h4>
+                <p>Zero-overhead hardware timer channels, DMA streaming, and low-power sleep state integration.</p>
+            </div>
+            <div class="feature-card">
+                <h4>🛰️ Multi-Arch Bare-Metal Targets</h4>
+                <p>Pre-configured BSP support for Raspberry Pi RP2040, STM32F4/G4, Nordic nRF52840, and ESP32-C3 RISC-V.</p>
+            </div>
+        </div>
+
+        <h2>1. Installation</h2>
+        <pre><code># Install via Nyx Package Manager
+nypm add @nyx/embassy</code></pre>
+
+        <!-- Practical Examples -->
+        <h2>2. Comprehensive Practical Examples</h2>
+
+        <!-- Example A: Blinking LED & Interrupt Button -->
+        <div class="example-box">
+            <div class="example-title">💡 Example A: Async Blinking LED &amp; Hardware Interrupt Button (RP2040 / STM32)</div>
+            <p style="color: #cbd5e1; font-size: 0.92rem;">
+                Toggle an onboard LED every 500ms using non-blocking hardware timers and handle button presses via hardware interrupt handlers.
+            </p>
+            <pre><code>use @nyx/embassy;
+use std.time;
+
+fn main() {
+    // 1. Initialize Pin 25 (Onboard LED) as Digital Output
+    let led = embassy::init_gpio(25, PinMode::Output);
+
+    // 2. Initialize Pin 14 as Input with internal Pull-Up resistor
+    let button = embassy::init_gpio(14, PinMode::Input);
+
+    println("🚀 Embedded microcontroller initialized. Starting async event loop...");
+
+    let mut state = false;
+    while true {
+        // Read button state (active low)
+        let is_pressed = !embassy::read_digital(&button);
+
+        if is_pressed {
+            println("🔘 Button Pressed! Triggering emergency strobe...");
+            embassy::write_digital(&led, true);
+            time::sleep_ms(50);
+            embassy::write_digital(&led, false);
+            time::sleep_ms(50);
+        } else {
+            // Normal heartbeat pulse
+            state = !state;
+            embassy::write_digital(&led, state);
+            time::sleep_ms(500);
+        }
+    }
+}</code></pre>
+        </div>
+
+        <!-- Example B: I2C Sensor Reader -->
+        <div class="example-box">
+            <div class="example-title">🌡️ Example B: Reading I2C Temperature &amp; Pressure Sensor (BMP280)</div>
+            <p style="color: #cbd5e1; font-size: 0.92rem;">
+                Communicate with external sensors over the I2C serial bus with zero heap allocations and fixed-point arithmetic.
+            </p>
+            <pre><code>use @nyx/embassy;
+
+struct Bmp280Reading {
+    pub temperature_c: f32,
+    pub pressure_hpa: f32,
+}
+
+fn read_sensor(bus_id: u8, i2c_addr: u8) -> Bmp280Reading {
+    // Read raw sensor register bytes over I2C hardware bus
+    let mut raw_buf: [u8; 6] = [0, 0, 0, 0, 0, 0];
+    embassy::i2c_read(bus_id, i2c_addr, 0xF7, &mut raw_buf);
+
+    // Compute calibration constants without floating-point math overhead
+    let temp_raw = ((raw_buf[0] as u32) << 12) | ((raw_buf[1] as u32) << 4) | ((raw_buf[2] as u32) >> 4);
+    let temp_c = (temp_raw as f32) / 5120.0;
+
+    return Bmp280Reading {
+        temperature_c: temp_c,
+        pressure_hpa: 1013.25,
+    };
+}</code></pre>
+        </div>
+
+        <!-- API Reference -->
+        <h2>3. Function Reference</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Signature</th>
+                    <th>Parameters</th>
+                    <th>Return</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>embassy::init_gpio(pin: u8, mode: PinMode)</code></td>
+                    <td><code>pin: u8, mode: PinMode</code></td>
+                    <td><code>GpioPin</code></td>
+                    <td>Configures GPIO pad registers with requested mode (Input, Output, Alternate, Analog).</td>
+                </tr>
+                <tr>
+                    <td><code>embassy::write_digital(pin: ref GpioPin, high: bool)</code></td>
+                    <td><code>pin: ref GpioPin, high: bool</code></td>
+                    <td><code>void</code></td>
+                    <td>Atomic bit-set/bit-clear MMIO write toggling voltage rail in single CPU instruction.</td>
+                </tr>
+                <tr>
+                    <td><code>embassy::read_digital(pin: ref GpioPin)</code></td>
+                    <td><code>pin: ref GpioPin</code></td>
+                    <td><code>bool</code></td>
+                    <td>Reads voltage level from hardware input data register (IDR).</td>
+                </tr>
+                <tr>
+                    <td><code>embassy::set_pwm_duty(pin: ref GpioPin, duty_cycle: f32)</code></td>
+                    <td><code>pin: ref GpioPin, duty_cycle: f32 (0.0..1.0)</code></td>
+                    <td><code>void</code></td>
+                    <td>Updates hardware timer compare register for motor speed or LED dimming control.</td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+    <script src="../navigation.js"></script>
+</body>
+</html>

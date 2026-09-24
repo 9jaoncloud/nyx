@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@nyx/serde (Unified Multi-Format Serialization Framework) — Nyx Docs</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .example-box { background: #0b1120; border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 1.5rem; margin: 1.5rem 0; }
+        .example-title { color: #38bdf8; font-size: 1.1rem; font-weight: 700; margin-top: 0; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+        .feature-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; }
+        .feature-card h4 { color: #fff; margin: 0 0 0.5rem; font-size: 0.95rem; }
+        .feature-card p { color: var(--text-muted); font-size: 0.85rem; margin: 0; line-height: 1.5; }
+        table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.9rem; }
+        th, td { padding: 0.85rem 1rem; border: 1px solid var(--border); text-align: left; }
+        th { background: rgba(0,0,0,0.25); color: var(--accent-light); font-weight: 600; }
+    </style>
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+
+    <main>
+        <div style="display:inline-block; padding: 0.35rem 0.85rem; border-radius: 9999px; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; margin-bottom: 1rem;">
+            Official Standard Package
+        </div>
+        <h1>@nyx/serde — Unified Multi-Format Serialization Framework</h1>
+        <p class="lead" style="font-size: 1.15rem; color: var(--text-muted); margin-bottom: 2rem;">
+            A unified serialization and deserialization architecture supporting <strong>JSON, YAML, TOML, MessagePack, and CBOR</strong> with zero heap allocations and compile-time type introspection.
+        </p>
+
+        <!-- Feature Grid -->
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>📄 Text Formats (JSON, YAML, TOML)</h4>
+                <p>Seamlessly serialize structs to human-readable configs or Web API responses with exact formatting control.</p>
+            </div>
+            <div class="feature-card">
+                <h4>⚡ Binary Formats (MsgPack &amp; CBOR)</h4>
+                <p>Compact, high-density binary serialization for microsecond IPC and network RPC stream pipelines.</p>
+            </div>
+            <div class="feature-card">
+                <h4>🛡️ Zero-Allocation Region Streaming</h4>
+                <p>Parses incoming payloads directly into caller region frames without garbage collection pauses.</p>
+            </div>
+            <div class="feature-card">
+                <h4>🔄 Single Generic API</h4>
+                <p>Write data structures once; serialize across any format with a single method call: <code>serde::to_string(val, format)</code>.</p>
+            </div>
+        </div>
+
+        <h2>1. Installation</h2>
+        <pre><code># Install via Nyx Package Manager
+nypm add @nyx/serde</code></pre>
+
+        <!-- Practical Examples -->
+        <h2>2. Comprehensive Practical Examples</h2>
+
+        <!-- Example A -->
+        <div class="example-box">
+            <div class="example-title">⚙️ Example A: Loading YAML / TOML Configs &amp; Exporting JSON Responses</div>
+            <p style="color: #cbd5e1; font-size: 0.92rem;">
+                Load application server settings from a YAML or TOML file, validate settings, and export status payloads as JSON.
+            </p>
+            <pre><code>use @nyx/serde;
+
+struct DatabaseConfig {
+    pub host: str,
+    pub port: u16,
+    pub max_connections: u32,
+    pub enable_ssl: bool,
+}
+
+struct AppConfig {
+    pub app_name: str,
+    pub environment: str,
+    pub db: DatabaseConfig,
+}
+
+fn main() {
+    // 1. Create a structured configuration object
+    let config = AppConfig {
+        app_name: "Sovereign Payment Gateway",
+        environment: "production",
+        db: DatabaseConfig {
+            host: "postgres.internal.cloud",
+            port: 5432,
+            max_connections: 250,
+            enable_ssl: true,
+        },
+    };
+
+    // 2. Serialize to formatted YAML (for Kubernetes / DevOps configs)
+    let yaml_out = serde::to_string(config, DataFormat::Yaml);
+    println("--- YAML Configuration ---");
+    println(yaml_out);
+
+    // 3. Serialize to standard JSON (for REST API responses)
+    let json_out = serde::to_string(config, DataFormat::Json);
+    println("\n--- JSON Payload ---");
+    println(json_out);
+
+    // 4. Serialize to TOML (for package manifests)
+    let toml_out = serde::to_string(config, DataFormat::Toml);
+    println("\n--- TOML Manifest ---");
+    println(toml_out);
+}</code></pre>
+        </div>
+
+        <!-- Example B -->
+        <div class="example-box">
+            <div class="example-title">⚡ Example B: Ultra-Fast MessagePack Binary Serialization for RPC</div>
+            <p style="color: #cbd5e1; font-size: 0.92rem;">
+                Encode 1,000,000 telemetry packets into dense MessagePack binary format for high-speed inter-process communication.
+            </p>
+            <pre><code>use @nyx/serde;
+
+struct TelemetryEvent {
+    pub device_id: u64,
+    pub timestamp_ns: u64,
+    pub voltage: f32,
+    pub temperature_c: f32,
+    pub is_alert: bool,
+}
+
+fn encode_network_packet(event: TelemetryEvent) -> [u8] {
+    // Zero-heap MessagePack encoding
+    let binary_bytes = serde::to_bytes(event, DataFormat::MsgPack);
+    println("Encoded telemetry packet into {binary_bytes.len()} binary bytes.");
+    return binary_bytes;
+}</code></pre>
+        </div>
+
+        <!-- API Reference -->
+        <h2>3. Function Reference</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Signature</th>
+                    <th>Parameters</th>
+                    <th>Return</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>serde::to_string&lt;T&gt;(val: T, format: DataFormat)</code></td>
+                    <td><code>val: T, format: DataFormat</code></td>
+                    <td><code>str</code></td>
+                    <td>Serializes generic struct <code>T</code> into UTF-8 text string (JSON, YAML, or TOML).</td>
+                </tr>
+                <tr>
+                    <td><code>serde::to_bytes&lt;T&gt;(val: T, format: DataFormat)</code></td>
+                    <td><code>val: T, format: DataFormat</code></td>
+                    <td><code>[u8]</code></td>
+                    <td>Encodes generic struct <code>T</code> into compact binary byte array (MessagePack or CBOR).</td>
+                </tr>
+                <tr>
+                    <td><code>serde::from_string&lt;T&gt;(raw: str, format: DataFormat)</code></td>
+                    <td><code>raw: str, format: DataFormat</code></td>
+                    <td><code>T</code></td>
+                    <td>Parses text payload into typed struct <code>T</code> using zero-copy regional allocation.</td>
+                </tr>
+                <tr>
+                    <td><code>serde::from_bytes&lt;T&gt;(bytes: [u8], format: DataFormat)</code></td>
+                    <td><code>bytes: [u8], format: DataFormat</code></td>
+                    <td><code>T</code></td>
+                    <td>Decodes binary payload directly into structured representation in memory.</td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+    <script src="../navigation.js"></script>
+</body>
+</html>

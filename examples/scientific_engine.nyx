@@ -1,0 +1,261 @@
+// examples/scientific_engine.nyx — Pure-Nyx Scientific Engine + CLI runner
+// Math primitives via Taylor series, in the verified compilable dialect.
+
+fn fact(n: Int) -> Float {
+    let mut r: Float = 1.0;
+    let mut i: Int = 1;
+    while i <= n {
+        r = r * (i as Float);
+        i = i + 1;
+    }
+    return r;
+}
+
+fn absf(x: Float) -> Float {
+    if x < 0.0 { return -x; }
+    return x;
+}
+
+fn powi(base: Float, exp: Int) -> Float {
+    let mut r: Float = 1.0;
+    let mut i: Int = 0;
+    let mut neg = false;
+    let mut e = exp;
+    if e < 0 { neg = true; e = -e; }
+    while i < e {
+        r = r * base;
+        i = i + 1;
+    }
+    if neg {
+        if r == 0.0 { return 0.0; }
+        return 1.0 / r;
+    }
+    return r;
+}
+
+fn expf(x: Float) -> Float {
+    let mut sum: Float = 1.0;
+    let mut term: Float = 1.0;
+    let mut n: Int = 1;
+    while n < 40 {
+        term = term * x / (n as Float);
+        sum = sum + term;
+        n = n + 1;
+        if absf(term) < 0.000000000000001 { break; }
+    }
+    return sum;
+}
+
+fn sinf(x: Float) -> Float {
+    let mut a = x;
+    while a > 3.141592653589793 { a = a - 6.283185307179586; }
+    while a < -3.141592653589793 { a = a + 6.283185307179586; }
+    let mut sum: Float = a;
+    let mut term: Float = a;
+    let mut n: Int = 1;
+    while n < 40 {
+        term = -term * a * a / ((2.0 * (n as Float) + 1.0) * (2.0 * (n as Float)));
+        sum = sum + term;
+        n = n + 1;
+        if absf(term) < 0.000000000000001 { break; }
+    }
+    return sum;
+}
+
+fn cosf(x: Float) -> Float {
+    let mut a = x;
+    while a > 3.141592653589793 { a = a - 6.283185307179586; }
+    while a < -3.141592653589793 { a = a + 6.283185307179586; }
+    let mut sum: Float = 1.0;
+    let mut term: Float = 1.0;
+    let mut n: Int = 1;
+    while n < 40 {
+        term = -term * a * a / ((2.0 * (n as Float)) * (2.0 * (n as Float) - 1.0));
+        sum = sum + term;
+        n = n + 1;
+        if absf(term) < 0.000000000000001 { break; }
+    }
+    return sum;
+}
+
+fn lnf(x: Float) -> Float {
+    if x <= 0.0 { return 0.0; }
+    let mut y: Float = (x - 1.0) / (x + 1.0);
+    let y2: Float = y * y;
+    let mut sum: Float = 0.0;
+    let mut term: Float = y;
+    let mut denom: Int = 1;
+    let mut n: Int = 0;
+    while n < 200 {
+        sum = sum + term / (denom as Float);
+        term = term * y2;
+        denom = denom + 2;
+        n = n + 1;
+        if absf(term / (denom as Float)) < 0.00000000000001 { break; }
+    }
+    return 2.0 * sum;
+}
+
+fn sqrtf(x: Float) -> Float {
+    if x <= 0.0 { return 0.0; }
+    if x == 1.0 { return 1.0; }
+    let mut guess: Float = x;
+    let mut i: Int = 0;
+    while i < 100 {
+        let next: Float = (guess + x / guess) / 2.0;
+        if absf(next - guess) < 0.0000000000001 { return next; }
+        guess = next;
+        i = i + 1;
+    }
+    return guess;
+}
+
+fn powf(base: Float, expo: Float) -> Float {
+    if base <= 0.0 {
+        let ie = expo as Int;
+        if (ie as Float) == expo { return powi(base, ie); }
+        return 0.0;
+    }
+    return expf(expo * lnf(base));
+}
+
+fn tanf(x: Float) -> Float {
+    let c = cosf(x);
+    if absf(c) < 0.000000000001 { return 0.0; }
+    return sinf(x) / c;
+}
+
+enum SciOp {
+    None,
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
+    Power,
+}
+
+struct SciCalc {
+    display: Float,
+    previous: Float,
+    op: SciOp,
+    input_str: String,
+    entered: Bool,
+}
+
+impl SciCalc {
+    fn new() -> SciCalc {
+        SciCalc {
+            display: 0.0,
+            previous: 0.0,
+            op: SciOp.None,
+            input_str: "0".to_string(),
+            entered: false,
+        }
+    }
+
+    fn digit(self: &mut SciCalc, d: String) {
+        if self.entered {
+            self.input_str = d;
+            self.entered = false;
+        } else if self.input_str == "0" {
+            self.input_str = d;
+        } else {
+            self.input_str = self.input_str + d;
+        }
+        self.display = self.input_str.to_float();
+    }
+
+    fn dot(self: &mut SciCalc) {
+        if self.entered {
+            self.input_str = "0.".to_string();
+            self.entered = false;
+        } else if !self.input_str.contains(".") {
+            self.input_str = self.input_str + ".";
+        }
+    }
+
+    fn unary(self: &mut SciCalc, kind: String) {
+        let v = self.display;
+        if kind == "sin" {
+            self.display = sinf(v);
+        } else if kind == "cos" {
+            self.display = cosf(v);
+        } else if kind == "tan" {
+            self.display = tanf(v);
+        } else if kind == "ln" {
+            self.display = lnf(v);
+        } else if kind == "log" {
+            self.display = lnf(v) / lnf(10.0);
+        } else if kind == "sqrt" {
+            self.display = sqrtf(v);
+        } else if kind == "exp" {
+            self.display = expf(v);
+        } else if kind == "sqr" {
+            self.display = v * v;
+        } else if kind == "inv" {
+            if v != 0.0 { self.display = 1.0 / v; } else { self.display = 0.0; }
+        } else if kind == "neg" {
+            self.display = -v;
+        } else if kind == "fact" {
+            if v >= 0.0 && v <= 170.0 {
+                self.display = fact(v as Int);
+            }
+        }
+        self.input_str = self.display.to_string();
+        self.entered = true;
+    }
+
+    fn set_op(self: &mut SciCalc, o: SciOp) {
+        self.previous = self.display;
+        self.op = o;
+        self.entered = true;
+    }
+
+    fn equals(self: &mut SciCalc) {
+        let current = self.display;
+        let mut res = current;
+        match self.op {
+            SciOp.Add => { res = self.previous + current; },
+            SciOp.Subtract => { res = self.previous - current; },
+            SciOp.Multiply => { res = self.previous * current; },
+            SciOp.Divide => { if current != 0.0 { res = self.previous / current; } },
+            SciOp.Power => { res = powf(self.previous, current); },
+            SciOp.None => { res = current; },
+        }
+        self.display = res;
+        self.input_str = res.to_string();
+        self.op = SciOp.None;
+        self.entered = true;
+    }
+
+    fn clear(self: &mut SciCalc) {
+        self.display = 0.0;
+        self.previous = 0.0;
+        self.op = SciOp.None;
+        self.input_str = "0".to_string();
+        self.entered = false;
+    }
+}
+
+fn main() -> Int {
+    println("=============================================");
+    println("Sci engine self-test");
+    println("=============================================");
+    println("sin(0) = ", sinf(0.0));
+    println("cos(0) = ", cosf(0.0));
+    println("sin(pi/2) = ", sinf(1.5707963267948966));
+    println("exp(1) = ", expf(1.0));
+    println("sqrt(2) = ", sqrtf(2.0));
+    println("2^10 = ", powf(2.0, 10.0));
+    println("fact(5) = ", fact(5));
+
+    let mut c = SciCalc.new();
+    c.digit("1".to_string());
+    c.digit("2".to_string());
+    c.set_op(SciOp.Add);
+    c.digit("3".to_string());
+    c.digit("0".to_string());
+    c.equals();
+    println("calc 12+30 = ", c.display);
+    return 0;
+}

@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nyx Sovereign Survival — High-Fidelity Web Game Engine</title>
+    <style>
+        :root {
+            --bg-dark: #0d1117;
+            --panel-bg: rgba(22, 27, 34, 0.85);
+            --border-glow: #58a6ff;
+            --accent-gold: #f1e05a;
+            --accent-green: #2ea043;
+            --accent-red: #f85149;
+            --accent-blue: #388bfd;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #c9d1d9;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        #game-container {
+            position: relative;
+            width: 1280px;
+            height: 720px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            background: #000;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            image-rendering: auto;
+        }
+
+        /* Top Overlay Controls Bar */
+        .game-bar {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            display: flex;
+            gap: 8px;
+            z-index: 100;
+        }
+
+        .btn {
+            background: rgba(33, 38, 45, 0.85);
+            border: 1px solid rgba(240, 246, 252, 0.15);
+            color: #e6edf3;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover {
+            background: rgba(48, 54, 61, 0.95);
+            border-color: #8b949e;
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: #238636;
+            border-color: rgba(240, 246, 252, 0.1);
+        }
+
+        .btn-primary:hover {
+            background: #2ea043;
+        }
+
+        /* Bottom Controls Quick Reference */
+        .controls-hint {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(13, 17, 23, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 6px 20px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: #8b949e;
+            backdrop-filter: blur(8px);
+            pointer-events: none;
+            display: flex;
+            gap: 16px;
+        }
+
+        .key-badge {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <canvas id="gameCanvas" width="1280" height="720"></canvas>
+
+        <div class="game-bar">
+            <button class="btn" id="btnSound">🔊 Sound: ON</button>
+            <button class="btn" id="btnFullscreen">⛶ Fullscreen</button>
+            <button class="btn btn-primary" id="btnRespawn">🔄 Center Camera</button>
+        </div>
+
+        <div class="controls-hint">
+            <span><span class="key-badge">WASD</span> Move</span>
+            <span><span class="key-badge">E</span> Cook / Craft / Mine</span>
+            <span><span class="key-badge">B</span> Build Structure</span>
+            <span><span class="key-badge">Space</span> Shoot Arrow</span>
+            <span><span class="key-badge">F</span> Fish</span>
+            <span><span class="key-badge">1-5</span> Biomes</span>
+        </div>
+    </div>
+
+    <script>
+        /* ── Audio Synthesizer (Zero External Dependencies) ─────────────────────── */
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let soundEnabled = true;
+
+        function playSound(type) {
+            if (!soundEnabled || !audioCtx) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'bow') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.exponentialRampToValueAtTime(110, now + 0.15);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+                osc.start(now);
+                osc.stop(now + 0.15);
+            } else if (type === 'hit') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.linearRampToValueAtTime(40, now + 0.2);
+                gain.gain.setValueAtTime(0.4, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } else if (type === 'chop') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.exponentialRampToValueAtTime(80, now + 0.08);
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            } else if (type === 'craft') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+                osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            } else if (type === 'step') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(80 + Math.random()*20, now);
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.linearRampToValueAtTime(0.001, now + 0.04);
+                osc.start(now);
+                osc.stop(now + 0.04);
+            }
+        }
+
+        /* ── Sprite Asset Manager ─────────────────────────────────────────────────── */
+        const assets = {};
+        const assetPaths = {
+            player_front: 'assets/survival/player_front.png',
+            player_back:  'assets/survival/player_back.png',
+            player_side:  'assets/survival/player_side.png',
+            player_34:    'assets/survival/player_34.png',
+
+            villager_huntress:  'assets/survival/villager_huntress.png',
+            villager_forester:  'assets/survival/villager_forester.png',
+            villager_fisherman: 'assets/survival/villager_fisherman.png',
+            villager_mason:     'assets/survival/villager_mason.png',
+
+            animal_deer:    'assets/survival/animal_deer.png',
+            animal_bear:    'assets/survival/animal_bear.png',
+            animal_jaguar:  'assets/survival/animal_jaguar.png',
+            animal_chicken: 'assets/survival/animal_chicken.png',
+
+            struct_cabin:   'assets/survival/struct_cabin.png',
+            struct_coop:    'assets/survival/struct_coop.png',
+            struct_kiln:    'assets/survival/struct_kiln.png',
+            struct_firepit: 'assets/survival/struct_firepit.png'
+        };
+
+        let loadedCount = 0;
+        const totalAssets = Object.keys(assetPaths).length;
+
+        for (const [key, path] of Object.entries(assetPaths)) {
+            assets[key] = new Image();
+            assets[key].src = path;
+            assets[key].onload = () => loadedCount++;
+            assets[key].onerror = () => {
+                console.warn(`Fallback for ${key} at ${path}`);
+                loadedCount++;
+            };
+        }
+
+        /* ── Game State ───────────────────────────────────────────────────────────── */
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const state = {
+            player: {
+                x_km: 50.0,
+                y_km: 45.0,
+                facing: 0, // radians
+                isMoving: false,
+                walkCycle: 0,
+                health: 100,
+                stamina: 100,
+                hydration: 100,
+                coreTemp: 37.0,
+                wood: 14,
+                stone: 8,
+                clay: 6,
+                meat: 4,
+                fish: 2,
+                cookedSteaks: 2,
+                smokedFish: 1,
+                eggs: 6,
+                jugs: 1,
+                bricks: 4,
+                arrows: 15,
+                nearFire: true
+            },
+            camera: {
+                x_km: 50.0,
+                y_km: 45.0,
+                zoom: 2.8 // pixels per meter
+            },
+            timeOfDay: 10.5, // 10:30 AM
+            quest: {
+                title: "Chapter I: Gathering Raw Materials",
+                objective: "Chop Trees & Mine Stone [Press E] (8/12)",
+                progress: 8,
+                target: 12
+            },
+            structures: [
+                { type: 'cabin', x_km: 49.982, y_km: 44.988, name: "Timber Cabin" },
+                { type: 'coop', x_km: 50.016, y_km: 44.992, name: "Chicken Coop" },
+                { type: 'kiln', x_km: 49.988, y_km: 45.014, name: "Pottery Kiln" },
+                { type: 'firepit', x_km: 50.005, y_km: 45.006, name: "Basalt Firepit" }
+            ],
+            villagers: [
+                { name: "Mira", role: "Huntress", sprite: "villager_huntress", x_km: 50.008, y_km: 45.008, tx: 50.008, ty: 45.008, angle: 0, cycle: 0 },
+                { name: "Kaelen", role: "Forester", sprite: "villager_forester", x_km: 49.985, y_km: 44.995, tx: 49.985, ty: 44.995, angle: 0, cycle: 0 },
+                { name: "Bran", role: "Fisherman", sprite: "villager_fisherman", x_km: 50.022, y_km: 45.012, tx: 50.022, ty: 45.012, angle: 0, cycle: 0 },
+                { name: "Elowen", role: "Mason", sprite: "villager_mason", x_km: 49.992, y_km: 45.018, tx: 49.992, ty: 45.018, angle: 0, cycle: 0 }
+            ],
+            wildlife: [
+                { type: 'deer', sprite: 'animal_deer', x_km: 50.024, y_km: 45.018, vx: 0.0002, vy: 0, angle: 0, dead: false },
+                { type: 'deer', sprite: 'animal_deer', x_km: 50.032, y_km: 45.034, vx: -0.0001, vy: 0.0001, angle: Math.PI, dead: false },
+                { type: 'chicken', sprite: 'animal_chicken', x_km: 50.015, y_km: 44.994, vx: 0.0001, vy: 0, angle: 0, dead: false },
+                { type: 'chicken', sprite: 'animal_chicken', x_km: 50.018, y_km: 44.991, vx: -0.0001, vy: 0, angle: Math.PI, dead: false },
+                { type: 'bear', sprite: 'animal_bear', x_km: 50.050, y_km: 12.050, vx: 0, vy: 0, angle: 0, dead: false },
+                { type: 'jaguar', sprite: 'animal_jaguar', x_km: 40.010, y_km: 60.010, vx: 0, vy: 0, angle: 0, dead: false }
+            ],
+            trees: [],
+            particles: [],
+            arrows: [],
+            keys: {},
+            bannerMsg: "🌟 Nyx Sovereign Survival Engine — Web Edition Active!",
+            bannerTimer: 6.0,
+            selectedBuild: 0,
+            buildTypes: ["Cabin (12W, 4S)", "Chicken Coop (8W)", "Pottery Kiln (6S, 4C)", "Firepit (4S, 2W)"]
+        };
+
+        // Generate procedural trees
+        for (let i = 0; i < 140; i++) {
+            state.trees.push({
+                x_km: 49.6 + Math.random() * 0.8,
+                y_km: 44.6 + Math.random() * 0.8,
+                scale: 0.85 + Math.random() * 0.35,
+                sway: Math.random() * Math.PI * 2
+            });
+        }
+
+        /* ── Input Handlers ───────────────────────────────────────────────────────── */
+        window.addEventListener('keydown', (e) => {
+            state.keys[e.key.toLowerCase()] = true;
+            if (e.key === ' ') e.preventDefault();
+
+            // Action keys
+            if (e.key.toLowerCase() === 'e') handleInteract();
+            if (e.key.toLowerCase() === 'b') handleBuild();
+            if (e.key.toLowerCase() === 'f') handleFishing();
+            if (e.key === ' ') handleShootArrow();
+            if (e.key.toLowerCase() === 'c') {
+                state.player.nearFire = !state.player.nearFire;
+                showBanner(state.player.nearFire ? "🔥 Campfire Lit! Warmth Restored." : "❄️ Campfire Extinguished.");
+                playSound('craft');
+            }
+
+            // Biome teleports
+            if (e.key === '1') warpTo(50.0, 12.0, "❄️ Polar Glaciers (-18°C)!");
+            if (e.key === '2') warpTo(50.0, 28.0, "🌲 Boreal Taiga Range (-7°C).");
+            if (e.key === '3') warpTo(50.0, 45.0, "🌾 Fertile Temperate Village.");
+            if (e.key === '4') warpTo(40.0, 60.0, "🌴 Amazon Rainforest Delta!");
+            if (e.key === '5') warpTo(68.0, 82.0, "🏜️ Arid Dune Desert (+41°C)!");
+        });
+
+        window.addEventListener('keyup', (e) => {
+            state.keys[e.key.toLowerCase()] = false;
+        });
+
+        function showBanner(msg) {
+            state.bannerMsg = msg;
+            state.bannerTimer = 5.0;
+        }
+
+        function warpTo(x, y, msg) {
+            state.player.x_km = x;
+            state.player.y_km = y;
+            state.camera.x_km = x;
+            state.camera.y_km = y;
+            showBanner(msg);
+            playSound('craft');
+        }
+
+        function handleInteract() {
+            // Check near structures
+            for (const s of state.structures) {
+                const dist_m = Math.hypot((state.player.x_km - s.x_km) * 1000, (state.player.y_km - s.y_km) * 1000);
+                if (dist_m < 14) {
+                    if (s.type === 'firepit') {
+                        if (state.player.meat > 0) {
+                            state.player.meat--;
+                            state.player.cookedSteaks++;
+                            showBanner(`🥩 Cooked Roasted Steak at Firepit! (+1 Steak, Total: ${state.player.cookedSteaks})`);
+                            playSound('craft');
+                            return;
+                        } else if (state.player.fish > 0) {
+                            state.player.fish--;
+                            state.player.smokedFish++;
+                            showBanner(`🐟 Smoked Fish over Firepit! (+1 Smoked Fish, Total: ${state.player.smokedFish})`);
+                            playSound('craft');
+                            return;
+                        }
+                    } else if (s.type === 'kiln') {
+                        if (state.player.clay >= 2) {
+                            state.player.clay -= 2;
+                            state.player.jugs++;
+                            state.player.bricks += 4;
+                            showBanner(`🏺 Fired Pottery Kiln! Crafted +1 Glazed Jug & +4 Adobe Bricks.`);
+                            playSound('craft');
+                            return;
+                        }
+                    } else if (s.type === 'coop') {
+                        state.player.eggs += 3;
+                        showBanner(`🥚 Collected +3 Fresh Eggs from Chicken Coop Nesting Boxes!`);
+                        playSound('craft');
+                        return;
+                    }
+                }
+            }
+
+            // Otherwise chop trees / mine stone
+            state.player.wood += 3;
+            state.player.stone += 2;
+            state.player.clay += 1;
+            showBanner(`⛏️ Harvested +3 Wood, +2 Stone, +1 Clay! (Wood: ${state.player.wood}, Stone: ${state.player.stone})`);
+            playSound('chop');
+        }
+
+        function handleBuild() {
+            const types = ['cabin', 'coop', 'kiln', 'firepit'];
+            const chosen = types[state.selectedBuild];
+            state.structures.push({
+                type: chosen,
+                x_km: state.player.x_km + 0.003,
+                y_km: state.player.y_km + 0.003,
+                name: state.buildTypes[state.selectedBuild]
+            });
+            showBanner(`🔨 Constructed new ${state.buildTypes[state.selectedBuild]}!`);
+            state.selectedBuild = (state.selectedBuild + 1) % 4;
+            playSound('craft');
+        }
+
+        function handleShootArrow() {
+            if (state.player.arrows <= 0) return;
+            state.player.arrows--;
+            const speed = 0.0006;
+            state.arrows.push({
+                x_km: state.player.x_km,
+                y_km: state.player.y_km,
+                vx: Math.cos(state.player.facing) * speed,
+                vy: Math.sin(state.player.facing) * speed,
+                life: 1.2
+            });
+            playSound('bow');
+            showBanner(`🏹 Arrow fired! Arrows remaining: ${state.player.arrows}`);
+        }
+
+        function handleFishing() {
+            state.player.fish += 1;
+            showBanner(`🎣 Landed a prize Arctic Char (2.4 kg)! Fish in bag: ${state.player.fish}`);
+            playSound('craft');
+        }
+
+        // UI buttons
+        document.getElementById('btnSound').addEventListener('click', (e) => {
+            soundEnabled = !soundEnabled;
+            e.target.textContent = soundEnabled ? '🔊 Sound: ON' : '🔇 Sound: OFF';
+        });
+
+        document.getElementById('btnFullscreen').addEventListener('click', () => {
+            if (!document.fullscreenElement) document.getElementById('game-container').requestFullscreen();
+            else document.exitFullscreen();
+        });
+
+        document.getElementById('btnRespawn').addEventListener('click', () => {
+            state.camera.x_km = state.player.x_km;
+            state.camera.y_km = state.player.y_km;
+        });
+
+        /* ── Coordinate Transformation ────────────────────────────────────────────── */
+        function worldToScreen(wx, wy) {
+            const dx = (wx - state.camera.x_km) * 1000;
+            const dy = (wy - state.camera.y_km) * 1000;
+            return {
+                x: (canvas.width / 2) + dx * state.camera.zoom,
+                y: (canvas.height / 2) + dy * state.camera.zoom
+            };
+        }
+
+        /* ── Main Game Loop ───────────────────────────────────────────────────────── */
+        let lastTime = performance.now();
+
+        function gameLoop(now) {
+            const dt = Math.min((now - lastTime) / 1000, 0.1);
+            lastTime = now;
+
+            update(dt);
+            render();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        /* ── Update Logic ─────────────────────────────────────────────────────────── */
+        function update(dt) {
+            // Player Movement
+            let mx = 0, my = 0;
+            if (state.keys['w'] || state.keys['arrowup']) my -= 1;
+            if (state.keys['s'] || state.keys['arrowdown']) my += 1;
+            if (state.keys['a'] || state.keys['arrowleft']) mx -= 1;
+            if (state.keys['d'] || state.keys['arrowright']) mx += 1;
+
+            const len = Math.hypot(mx, my);
+            state.player.isMoving = len > 0;
+
+            if (state.player.isMoving) {
+                const speed = (6.0 * dt) / 1000.0;
+                state.player.x_km += (mx / len) * speed;
+                state.player.y_km += (my / len) * speed;
+                state.player.facing = Math.atan2(my, mx);
+                state.player.walkCycle += dt * 10.0;
+
+                if (Math.random() < 0.1) playSound('step');
+            }
+
+            // Smooth Camera Follow
+            state.camera.x_km += (state.player.x_km - state.camera.x_km) * 8.0 * dt;
+            state.camera.y_km += (state.player.y_km - state.camera.y_km) * 8.0 * dt;
+
+            // Update Villagers AI
+            for (const v of state.villagers) {
+                const dist = Math.hypot(v.tx - v.x_km, v.ty - v.y_km);
+                if (dist > 0.0004) {
+                    v.x_km += ((v.tx - v.x_km) / dist) * 0.0025 * dt;
+                    v.y_km += ((v.ty - v.y_km) / dist) * 0.0025 * dt;
+                    v.angle = Math.atan2(v.ty - v.y_km, v.tx - v.x_km);
+                    v.cycle += dt * 8.0;
+                } else if (Math.random() < 0.03) {
+                    v.tx = state.player.x_km + (Math.random() - 0.5) * 0.03;
+                    v.ty = state.player.y_km + (Math.random() - 0.5) * 0.03;
+                }
+            }
+
+            // Update Wildlife AI
+            for (const a of state.wildlife) {
+                if (a.dead) continue;
+                a.x_km += a.vx * dt;
+                a.y_km += a.vy * dt;
+                if (Math.random() < 0.02) {
+                    a.vx = (Math.random() - 0.5) * 0.003;
+                    a.vy = (Math.random() - 0.5) * 0.003;
+                    a.angle = Math.atan2(a.vy, a.vx);
+                }
+            }
+
+            // Update Arrows & Hit Detection
+            for (let i = state.arrows.length - 1; i >= 0; i--) {
+                const arr = state.arrows[i];
+                arr.x_km += arr.vx * dt * 60;
+                arr.y_km += arr.vy * dt * 60;
+                arr.life -= dt;
+
+                // Check hit against wildlife
+                for (const w of state.wildlife) {
+                    if (w.dead) continue;
+                    const d = Math.hypot((arr.x_km - w.x_km) * 1000, (arr.y_km - w.y_km) * 1000);
+                    if (d < 4.0) {
+                        w.dead = true;
+                        arr.life = 0;
+                        state.player.meat += 4;
+                        showBanner(`🎯 Direct hit! Harvested +4 Venison from ${w.type}!`);
+                        playSound('hit');
+                        break;
+                    }
+                }
+
+                if (arr.life <= 0) state.arrows.splice(i, 1);
+            }
+
+            // Smoke Particles
+            if (Math.random() < 0.4 && state.particles.length < 80) {
+                for (const s of state.structures) {
+                    if (s.type === 'cabin' || s.type === 'firepit' || s.type === 'kiln') {
+                        state.particles.push({
+                            x_km: s.x_km,
+                            y_km: s.y_km - 0.001,
+                            vx: (Math.random() - 0.5) * 0.0002 + 0.0002,
+                            vy: -0.0008 - Math.random() * 0.0004,
+                            life: 1.5,
+                            maxLife: 1.5,
+                            size: 4 + Math.random() * 6
+                        });
+                    }
+                }
+            }
+
+            for (let i = state.particles.length - 1; i >= 0; i--) {
+                const p = state.particles[i];
+                p.x_km += p.vx * dt;
+                p.y_km += p.vy * dt;
+                p.life -= dt;
+                p.size += dt * 3.0;
+                if (p.life <= 0) state.particles.splice(i, 1);
+            }
+
+            // Time & Banner
+            state.timeOfDay = (state.timeOfDay + (dt * 30) / 3600) % 24;
+            if (state.bannerTimer > 0) state.bannerTimer -= dt;
+        }
+
+        /* ── Render Engine with Y-Sorting ─────────────────────────────────────────── */
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. Terrain Grid
+            const tileSize = 48;
+            for (let y = 0; y < canvas.height; y += tileSize) {
+                for (let x = 0; x < canvas.width; x += tileSize) {
+                    const wx = state.camera.x_km + ((x - canvas.width/2) / state.camera.zoom) / 1000;
+                    const wy = state.camera.y_km + ((y - canvas.height/2) / state.camera.zoom) / 1000;
+
+                    let col = '#4caf50'; // Lush green
+                    if (wy < 20.0) col = '#cfd8dc'; // Arctic snow
+                    else if (wy < 35.0) col = '#90a4ae'; // Taiga
+                    else if (wy > 75.0) col = '#ffe082'; // Desert dunes
+                    else if (wx < 45.0 && wy > 55.0) col = '#1b5e20'; // Amazon rainforest
+
+                    ctx.fillStyle = col;
+                    ctx.fillRect(x, y, tileSize, tileSize);
+                }
+            }
+
+            // 2. Procedural Meandering River
+            ctx.strokeStyle = '#1976d2';
+            ctx.lineWidth = 26;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            for (let i = -10; i <= 10; i++) {
+                const rx = 50.0 + i * 0.015 + Math.sin(i * 0.8) * 0.006;
+                const ry = 44.96 + i * 0.012;
+                const sp = worldToScreen(rx, ry);
+                if (i === -10) ctx.moveTo(sp.x, sp.y);
+                else ctx.lineTo(sp.x, sp.y);
+            }
+            ctx.stroke();
+
+            // 3. Collect & Y-Sort All Drawable Entities
+            const drawList = [];
+
+            // Structures
+            for (const s of state.structures) {
+                const sp = worldToScreen(s.x_km, s.y_km);
+                drawList.push({
+                    type: 'structure',
+                    data: s,
+                    x: sp.x,
+                    y: sp.y,
+                    sortY: sp.y
+                });
+            }
+
+            // Trees
+            for (const t of state.trees) {
+                const sp = worldToScreen(t.x_km, t.y_km);
+                if (sp.x >= -60 && sp.x <= canvas.width + 60 && sp.y >= -60 && sp.y <= canvas.height + 60) {
+                    drawList.push({
+                        type: 'tree',
+                        data: t,
+                        x: sp.x,
+                        y: sp.y,
+                        sortY: sp.y
+                    });
+                }
+            }
+
+            // Wildlife
+            for (const w of state.wildlife) {
+                if (w.dead) continue;
+                const sp = worldToScreen(w.x_km, w.y_km);
+                drawList.push({
+                    type: 'wildlife',
+                    data: w,
+                    x: sp.x,
+                    y: sp.y,
+                    sortY: sp.y
+                });
+            }
+
+            // Villagers
+            for (const v of state.villagers) {
+                const sp = worldToScreen(v.x_km, v.y_km);
+                drawList.push({
+                    type: 'villager',
+                    data: v,
+                    x: sp.x,
+                    y: sp.y,
+                    sortY: sp.y
+                });
+            }
+
+            // Player
+            {
+                const sp = worldToScreen(state.player.x_km, state.player.y_km);
+                drawList.push({
+                    type: 'player',
+                    data: state.player,
+                    x: sp.x,
+                    y: sp.y,
+                    sortY: sp.y
+                });
+            }
+
+            // Sort by Screen Y (bottom to top)
+            drawList.sort((a, b) => a.sortY - b.sortY);
+
+            // 4. Render Sorted Entities
+            for (const item of drawList) {
+                if (item.type === 'structure') {
+                    renderStructure(item.x, item.y, item.data);
+                } else if (item.type === 'tree') {
+                    renderTree(item.x, item.y, item.data);
+                } else if (item.type === 'wildlife') {
+                    renderWildlife(item.x, item.y, item.data);
+                } else if (item.type === 'villager') {
+                    renderVillager(item.x, item.y, item.data);
+                } else if (item.type === 'player') {
+                    renderPlayer(item.x, item.y, item.data);
+                }
+            }
+
+            // 5. Render Arrows
+            ctx.fillStyle = '#ffeb3b';
+            for (const arr of state.arrows) {
+                const sp = worldToScreen(arr.x_km, arr.y_km);
+                ctx.beginPath();
+                ctx.arc(sp.x, sp.y, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 6. Render Smoke Particles
+            for (const p of state.particles) {
+                const sp = worldToScreen(p.x_km, p.y_km);
+                const alpha = Math.max(0, p.life / p.maxLife) * 0.6;
+                ctx.fillStyle = `rgba(230, 235, 245, ${alpha})`;
+                ctx.beginPath();
+                ctx.arc(sp.x, sp.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 7. Render Survival HUD
+            renderHUD();
+        }
+
+        /* ── Entity Drawers with High-Res Sprites & Articulated Kinematics ───────── */
+        function drawShadow(x, y, rw, rh) {
+            ctx.fillStyle = 'rgba(10, 15, 20, 0.45)';
+            ctx.beginPath();
+            ctx.ellipse(x, y, rw, rh, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function renderStructure(x, y, s) {
+            let img = assets.struct_cabin;
+            let w = 170, h = 140;
+            if (s.type === 'coop') { img = assets.struct_coop; w = 140; h = 120; }
+            if (s.type === 'kiln') { img = assets.struct_kiln; w = 130; h = 110; }
+            if (s.type === 'firepit') { img = assets.struct_firepit; w = 110; h = 90; }
+
+            // Radial Campfire Lightmap Glow (GDevelop / PardCode lighting pattern)
+            if (s.type === 'firepit' || s.type === 'kiln') {
+                const flicker = 1.0 + Math.sin(performance.now() * 0.01) * 0.08;
+                const lightRadius = (s.type === 'firepit' ? 150 : 120) * flicker;
+                const grad = ctx.createRadialGradient(x, y, 10, x, y, lightRadius);
+                grad.addColorStop(0, 'rgba(255, 170, 50, 0.55)');
+                grad.addColorStop(0.4, 'rgba(255, 110, 20, 0.22)');
+                grad.addColorStop(1, 'rgba(255, 60, 0, 0)');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(x, y, lightRadius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            drawShadow(x, y, w * 0.45, h * 0.16);
+
+            if (img && img.complete && img.naturalWidth > 0) {
+                ctx.drawImage(img, x - w/2, y - h + 10, w, h);
+            } else {
+                ctx.fillStyle = '#8d6e63';
+                ctx.fillRect(x - w/2, y - h, w, h);
+            }
+        }
+
+        function renderTree(x, y, t) {
+            const crown_r = 22 * t.scale;
+            const trunk_w = 8 * t.scale;
+            const trunk_h = 26 * t.scale;
+
+            drawShadow(x, y, crown_r * 0.9, crown_r * 0.35);
+
+            ctx.fillStyle = '#4e342e';
+            ctx.fillRect(x - trunk_w/2, y - trunk_h, trunk_w, trunk_h);
+
+            ctx.fillStyle = '#2e7d32';
+            ctx.beginPath();
+            ctx.arc(x, y - trunk_h - crown_r * 0.8, crown_r, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function renderWildlife(x, y, a) {
+            const img = assets[a.sprite];
+            let w = 84, h = 84;
+            if (a.type === 'bear') { w = 108; h = 90; }
+            if (a.type === 'jaguar') { w = 96; h = 70; }
+            if (a.type === 'chicken') { w = 40; h = 38; }
+
+            const isMoving = Math.hypot(a.vx, a.vy) > 0.0001;
+            const cycle = performance.now() * 0.008;
+            const strideTilt = isMoving ? Math.sin(cycle * 1.5) * 0.06 : 0;
+            const squash = isMoving ? 1.0 + Math.sin(cycle * 3) * 0.04 : 1.0;
+            const stretch = isMoving ? 1.0 - Math.sin(cycle * 3) * 0.03 : 1.0;
+
+            drawShadow(x, y + 2, w * 0.38 * stretch, h * 0.15);
+
+            const flip = a.angle > Math.PI / 2 || a.angle < -Math.PI / 2;
+
+            if (img && img.complete && img.naturalWidth > 0) {
+                ctx.save();
+                ctx.translate(x, y);
+                if (flip) ctx.scale(-1, 1);
+                ctx.rotate(strideTilt);
+                ctx.scale(stretch, squash);
+                ctx.drawImage(img, -w/2, -h + 8, w, h);
+                ctx.restore();
+            }
+        }
+
+        function renderVillager(x, y, v) {
+            const img = assets[v.sprite];
+            const w = 64, h = 100;
+            const isMoving = Math.hypot(v.tx - v.x_km, v.ty - v.y_km) > 0.0004;
+            
+            // Walking Kinematics: Stride tilt & subtle squash
+            const strideTilt = isMoving ? Math.sin(v.cycle) * 0.07 : Math.sin(performance.now() * 0.002) * 0.01;
+            const squash = isMoving ? 1.0 + Math.sin(v.cycle * 2) * 0.04 : 1.0;
+            const stretch = isMoving ? 1.0 - Math.sin(v.cycle * 2) * 0.03 : 1.0;
+            const liftY = isMoving ? Math.abs(Math.sin(v.cycle)) * 4 : 0;
+
+            drawShadow(x, y + 2, 26 * stretch, 10);
+
+            // Stepping Feet
+            if (isMoving) {
+                const footL = Math.sin(v.cycle) * 8;
+                const footR = -Math.sin(v.cycle) * 8;
+                ctx.fillStyle = '#2b231c';
+                ctx.fillRect(x - 12 + footL, y - 6, 8, 6);
+                ctx.fillRect(x + 4 + footR, y - 6, 8, 6);
+            }
+
+            const flip = v.angle > Math.PI / 2 || v.angle < -Math.PI / 2;
+
+            if (img && img.complete && img.naturalWidth > 0) {
+                ctx.save();
+                ctx.translate(x, y - liftY);
+                if (flip) ctx.scale(-1, 1);
+                ctx.rotate(strideTilt);
+                ctx.scale(stretch, squash);
+                ctx.drawImage(img, -w/2, -h + 8, w, h);
+                ctx.restore();
+            }
+
+            // Name Tag
+            ctx.font = 'bold 12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = 'rgba(15, 20, 25, 0.8)';
+            ctx.fillRect(x - 40, y - h - 14, 80, 18);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(`${v.name} (${v.role})`, x, y - h);
+        }
+
+        function renderPlayer(x, y, p) {
+            let img = assets.player_front;
+            let flip = false;
+            let angle = p.facing;
+            if (angle < 0) angle += Math.PI * 2;
+
+            if (angle >= 0.25 * Math.PI && angle < 0.75 * Math.PI) {
+                img = assets.player_front;
+            } else if (angle >= 1.25 * Math.PI && angle < 1.75 * Math.PI) {
+                img = assets.player_back;
+            } else if (angle >= 0.75 * Math.PI && angle < 1.25 * Math.PI) {
+                img = assets.player_side;
+                flip = true;
+            } else {
+                img = assets.player_side;
+                flip = false;
+            }
+
+            const w = 68, h = 104;
+
+            // True Walking Kinematics:
+            const strideTilt = p.isMoving ? Math.sin(p.walkCycle) * 0.08 : Math.sin(performance.now() * 0.003) * 0.015;
+            const squash = p.isMoving ? 1.0 + Math.sin(p.walkCycle * 2.0) * 0.045 : 1.0;
+            const stretch = p.isMoving ? 1.0 - Math.sin(p.walkCycle * 2.0) * 0.035 : 1.0;
+            const liftY = p.isMoving ? Math.abs(Math.sin(p.walkCycle)) * 3.5 : 0;
+
+            drawShadow(x, y + 2, 28 * stretch, 11);
+
+            // Stepping Boots Animation under sprite
+            if (p.isMoving) {
+                const stepL = Math.sin(p.walkCycle) * 10;
+                const stepR = -Math.sin(p.walkCycle) * 10;
+                const bootLiftL = Math.max(0, Math.cos(p.walkCycle) * 5);
+                const bootLiftR = Math.max(0, -Math.cos(p.walkCycle) * 5);
+
+                ctx.fillStyle = '#3e2723';
+                ctx.fillRect(x - 14 + stepL, y - 6 - bootLiftL, 10, 7);
+                ctx.fillRect(x + 4 + stepR, y - 6 - bootLiftR, 10, 7);
+
+                if (Math.abs(Math.sin(p.walkCycle)) > 0.95 && Math.random() < 0.3) {
+                    state.particles.push({
+                        x_km: p.x_km + (stepL > 0 ? -0.0003 : 0.0003),
+                        y_km: p.y_km,
+                        vx: (Math.random() - 0.5) * 0.0001,
+                        vy: -0.0002,
+                        life: 0.5,
+                        maxLife: 0.5,
+                        size: 2 + Math.random() * 3
+                    });
+                }
+            }
+
+            if (img && img.complete && img.naturalWidth > 0) {
+                ctx.save();
+                ctx.translate(x, y - liftY);
+                if (flip) ctx.scale(-1, 1);
+                ctx.rotate(strideTilt);
+                ctx.scale(stretch, squash);
+                ctx.drawImage(img, -w/2, -h + 8, w, h);
+
+                // GDevelop-Style Socket Attachment: Equipped Hunting Bow in hand
+                ctx.save();
+                ctx.translate(w * 0.25, -h * 0.45);
+                ctx.rotate(0.2 + (p.isMoving ? Math.sin(p.walkCycle) * 0.15 : 0));
+                ctx.strokeStyle = '#8d6e63';
+                ctx.lineWidth = 3.5;
+                ctx.beginPath();
+                ctx.arc(0, 0, 16, -Math.PI * 0.4, Math.PI * 0.4); // Bow curve
+                ctx.stroke();
+                ctx.strokeStyle = '#e0e0e0';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(10, -12);
+                ctx.lineTo(10, 12); // Bow string
+                ctx.stroke();
+                ctx.restore();
+
+                ctx.restore();
+            }
+
+            // Player Tag
+            ctx.font = 'bold 12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = 'rgba(15, 20, 25, 0.85)';
+            ctx.fillRect(x - 45, y - h - 14, 90, 18);
+            ctx.fillStyle = '#f1e05a';
+            ctx.fillText(`Pioneer (You)`, x, y - h);
+        }
+
+        /* ── Survival HUD ─────────────────────────────────────────────────────────── */
+        function renderHUD() {
+            // Main HUD Box
+            ctx.fillStyle = 'rgba(18, 24, 32, 0.9)';
+            ctx.fillRect(20, 20, 480, 250);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(20, 20, 480, 250);
+
+            // Title
+            const hours = Math.floor(state.timeOfDay);
+            const mins = Math.floor((state.timeOfDay - hours) * 60);
+            ctx.font = 'bold 14px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#f1e05a';
+            ctx.fillText(`NYX SURVIVAL [${hours}:${mins < 10 ? '0' : ''}${mins} ${hours >= 12 ? 'PM' : 'AM'}] - Temperate Sector`, 32, 44);
+
+            // Gauges
+            drawGauge(32, 68, "Health", state.player.health / 100, '#f85149');
+            drawGauge(32, 92, "Stamina", state.player.stamina / 100, '#e3b341');
+            drawGauge(32, 116, "Hydration", state.player.hydration / 100, '#58a6ff');
+            drawGauge(32, 140, `Core Temp (${state.player.coreTemp.toFixed(1)}°C)`, 0.74, '#3fb950');
+
+            // Inventory
+            ctx.font = '12px sans-serif';
+            ctx.fillStyle = '#7ee787';
+            ctx.fillText(`🪵 Wood: ${state.player.wood} | 🪨 Stone: ${state.player.stone} | 🏺 Clay: ${state.player.clay} | 🥩 Steaks: ${state.player.cookedSteaks}`, 32, 172);
+            ctx.fillStyle = '#79c0ff';
+            ctx.fillText(`🐟 Fish: ${state.player.fish} | 🥚 Eggs: ${state.player.eggs} | 🏺 Jugs: ${state.player.jugs} | 🧱 Bricks: ${state.player.bricks} | 🏹 Arrows: ${state.player.arrows}`, 32, 192);
+
+            // Quest Box
+            ctx.fillStyle = 'rgba(28, 36, 48, 0.95)';
+            ctx.fillRect(32, 206, 456, 52);
+            ctx.fillStyle = '#f1e05a';
+            ctx.font = 'bold 11px sans-serif';
+            ctx.fillText(`📜 QUEST: ${state.quest.title}`, 42, 224);
+            ctx.fillStyle = '#c9d1d9';
+            ctx.font = '11px sans-serif';
+            ctx.fillText(state.quest.objective, 42, 242);
+
+            // Controls & Build HUD
+            ctx.fillStyle = 'rgba(18, 24, 32, 0.9)';
+            ctx.fillRect(canvas.width - 420, 20, 400, 145);
+            ctx.strokeRect(canvas.width - 420, 20, 400, 145);
+
+            ctx.font = 'bold 13px sans-serif';
+            ctx.fillStyle = '#f1e05a';
+            ctx.fillText(`BUILD MENU [B]: Place ${state.buildTypes[state.selectedBuild]}`, canvas.width - 405, 44);
+
+            ctx.font = '12px sans-serif';
+            ctx.fillStyle = '#c9d1d9';
+            ctx.fillText(`[E] Cook Food / Fire Kiln / Collect Eggs / Mine`, canvas.width - 405, 68);
+            ctx.fillText(`[B] Place Selected Structure (Cabin/Coop/Kiln)`, canvas.width - 405, 88);
+            ctx.fillText(`[Space] Shoot Bow  |  [F] Cast Fishing Line`, canvas.width - 405, 108);
+            ctx.fillText(`[1] Arctic [2] Taiga [3] Plains [4] Amazon [5] Desert`, canvas.width - 405, 128);
+
+            // Banner Message
+            if (state.bannerTimer > 0) {
+                ctx.fillStyle = 'rgba(25, 32, 42, 0.92)';
+                ctx.fillRect(canvas.width/2 - 380, canvas.height - 65, 760, 40);
+                ctx.strokeStyle = '#f1e05a';
+                ctx.strokeRect(canvas.width/2 - 380, canvas.height - 65, 760, 40);
+
+                ctx.font = 'bold 14px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#ffdf5d';
+                ctx.fillText(state.bannerMsg, canvas.width/2, canvas.height - 40);
+            }
+        }
+
+        function drawGauge(x, y, label, pct, color) {
+            ctx.font = '12px sans-serif';
+            ctx.fillStyle = '#c9d1d9';
+            ctx.fillText(label + ':', x, y + 10);
+
+            const barX = x + 110;
+            const barW = 220;
+            const barH = 12;
+
+            ctx.fillStyle = '#21262d';
+            ctx.fillRect(barX, y, barW, barH);
+
+            ctx.fillStyle = color;
+            ctx.fillRect(barX, y, Math.max(0, Math.min(1, pct)) * barW, barH);
+
+            ctx.strokeStyle = '#30363d';
+            ctx.strokeRect(barX, y, barW, barH);
+        }
+
+        // Start Loop
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>

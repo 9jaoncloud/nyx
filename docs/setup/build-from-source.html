@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Build Source — Nyx Docs</title><link rel="stylesheet" href="../style.css"></head>
+<body><button id="mobile-toggle" class="mobile-toggle">&#9776;</button><nav id="sidebar"></nav>
+<main><h1>Building from Source</h1>
+<h2>Full Build Instructions</h2>
+<pre><code># Clone the repository
+git clone https://github.com/9jaoncloud/nyx
+cd nyx
+
+# Build everything in one shot
+chmod +x scripts/bootstrap.sh scripts/build-all.sh
+./scripts/build-all.sh</code></pre>
+<h2>What Gets Built</h2>
+<ol>
+<li><strong>nyx-bootstrap/</strong> — Rust compiler (cargo build --release)</li>
+<li><strong>nyxc/</strong> — Self-hosted Nyx compiler (compiled by Phase 1)</li>
+<li><strong>std/</strong> — Standard library (.nyx modules)</li>
+<li><strong>nyx-cli/</strong> — Package manager + build system</li>
+<li><strong>web-runtime/</strong> — WASM JavaScript bridge</li>
+</ol>
+<p><a href="../setup/installation.html">Back to Installation &rarr;</a></p></main>
+<script src="../navigation.js"></script>    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body></html>

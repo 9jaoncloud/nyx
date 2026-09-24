@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Limits & Formal Guarantees — Nyx Documentation</title>
+    <meta name="description" content="Formal specification of what the Nyx programming language guarantees mathematically versus out-of-scope operational boundaries.">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --green: #10b981;
+            --cyan: #38bdf8;
+            --purple: #a78bfa;
+            --amber: #fbbf24;
+            --red: #f87171;
+        }
+        .limits-hero {
+            background: radial-gradient(circle at 10% 20%, rgba(56, 189, 248, 0.12) 0%, transparent 50%),
+                        radial-gradient(circle at 90% 80%, rgba(167, 139, 250, 0.12) 0%, transparent 50%);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .matrix-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        @media (max-width: 768px) {
+            .matrix-grid { grid-template-columns: 1fr; }
+        }
+        .matrix-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.5rem;
+        }
+        .matrix-card.guaranteed {
+            border-top: 4px solid var(--green);
+        }
+        .matrix-card.not-guaranteed {
+            border-top: 4px solid var(--amber);
+        }
+        .matrix-item {
+            margin-bottom: 1.25rem;
+            padding-bottom: 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .matrix-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        .matrix-title {
+            font-weight: 700;
+            font-size: 1.05rem;
+            margin-bottom: 0.35rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .flag-box {
+            background: #060a12;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88rem;
+            color: #e2e8f0;
+            margin: 1rem 0;
+        }
+        .badge-optin {
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--cyan);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap;">
+            <span class="badge-optin">SECURITY ARCHITECTURE</span>
+            <span class="badge-optin" style="color: var(--green); background: rgba(16, 185, 129, 0.15);">FORMAL SPECIFICATION</span>
+        </div>
+
+        <h1>Nyx Security Limits & Formal Guarantees</h1>
+        <p style="color:var(--text-muted); font-size: 1.05rem;">A precise, mathematically verified breakdown of what Nyx guarantees by default, what is enabled via opt-in flags, and what remains outside the scope of a general-purpose programming language.</p>
+
+        <div class="limits-hero">
+            <h3 style="margin-top:0; color:#fff; font-family:'Outfit', sans-serif;">🛡️ The Security Ground Truth</h3>
+            <p style="color:var(--text-muted); margin-bottom:0.75rem; line-height: 1.6;">
+                Modern security breaches like <strong>RUSTYSHADE</strong> prove that memory safety does not prevent malware; memory safety merely ensures the software runs without memory errors. Nyx takes an honest approach: the language cannot stop malicious intent, but it gives defenders <strong>provable tools (SBOMs, SMT proofs, linear capabilities, and kernel sandboxes)</strong> to mathematically audit and isolate untrusted software.
+            </p>
+        </div>
+
+        <div class="matrix-grid">
+            <!-- GUARANTEED -->
+            <div class="matrix-card guaranteed">
+                <h3 style="color: var(--green); display: flex; align-items: center; gap: 0.5rem; margin-top: 0;">
+                    <span>✅</span> What Nyx Guarantees
+                </h3>
+
+                <div class="matrix-item">
+                    <div class="matrix-title" style="color: var(--green);">1. Zero Spatial & Temporal Memory Corruption</div>
+                    <p style="font-size: 0.9rem; color: var(--text-muted);">
+                        Enforced statically via the <strong>Region Inference Engine</strong>. Buffer overflows, use-after-free, double-free, and dangling pointer dereferences are mathematically impossible in safe Nyx code, with <strong>0.00ms GC pause jitter</strong>.
+                    </p>
+                </div>
+
+                <div class="matrix-item">
+                    <div class="matrix-title" style="color: var(--green);">2. Linear Capability Membranes (Havilah)</div>
+                    <p style="font-size: 0.9rem; color: var(--text-muted);">
+                        Files written with <code>.hav</code> enforce linear token tracking. Privileged capabilities (<code>CAP_NET</code>, <code>CAP_FILE</code>, <code>CAP_SPAWN</code>) cannot be duplicated, leaked, or forged by untrusted sub-modules.
+                    </p>
+                </div>
+
+                <div class="matrix-item">
+                    <div class="matrix-title" style="color: var(--green);">3. Machine-Checkable Invariants (Jude)</div>
+                    <p style="font-size: 0.9rem; color: var(--text-muted);">
+                        Code verified with <code>.jude</code> discharges mathematical proof obligations against the Z3 SMT solver. Declared invariants (e.g. robotic torque bounds or array monotonicity) hold across 100% of inputs.
+                    </p>
+                </div>
+
+                <div class="matrix-item">
+                    <div class="matrix-title" style="color: var(--green);">4. OS Kernel Sandboxing (Opt-In)</div>
+                    <p style="font-size: 0.9rem; color: var(--text-muted);">
+                        When executed via <code>nyx run --sandbox=policy.toml</code>, the OS kernel (Landlock/Seccomp on Linux, AppContainer on Windows) strictly restricts file paths, network interfaces, and child processes.
+                    </p>
+                </div>
+
+                <div class="matrix-item">
+                    <div class="matrix-title" style="color: var(--green);">5. Cryptographic Provenance & SBOM (Opt-In)</div>
+                    <p style="font-size: 0.9rem; color: var(--text-muted);">
+                        Compiling with <code>nyxc build --emit-sbom</code> attaches signed CycloneDX 1.5 sidecar manifests recording dependency hashes and static capability usage.
+                    </p>
+                </div>
+            </div>
+
+            <!-- NOT GUARANTEED -->
+            <div class="matrix-card not-guaranteed">
+                <h3 style="color: var(--amber); display: flex; align-items: center; gap: 0.5rem; margin-top: 0;">
+                    <span>⚠️</span> What Nyx Does NOT Guarantee
+                </h3>
+
+                <div class="matrix-item">
+                    <div class="matrix-title" style="color: var(--amber);">1. Developer Logic & Intent Correctness</div>
+                    <p style="font-size: 0.9rem; color: var(--text-muted);">
+                        Memory safety prevents memory corruption bugs; it does not prevent logic bugs. A function that calculates incorrect financial interest or misinterprets sensor telemetry is memory-safe but logically incorrect.
+                    </p>
+                </div>
+
+                <div class="matrix-item">
+                    <div class="matrix-title" style="color: var(--amber);">2. Prevention of Malicious Software Creation</div>
+                    <p style="font-size: 0.9rem; color: var(--text-muted);">
+                        Any general-purpose language with HTTP and file I/O capabilities can be used to write malware. Nyx empowers defenders to detect and isolate threats; it does not restrict the general-purpose power of the compiler.
+                    </p>
+                </div>
+
+                <div class="matrix-item">
+                    <div class="matrix-title" style="color: var(--amber);">3. Automatic Supply-Chain Immunity</div>
+                    <p style="font-size: 0.9rem; color: var(--text-muted);">
+                        Importing an untrusted third-party package without auditing will execute with host permissions unless the application is explicitly wrapped in a capability sandbox or verified with Jude certificates.
+                    </p>
+                </div>
+
+                <div class="matrix-item">
+                    <div class="matrix-title" style="color: var(--amber);">4. Side-Channel Resistance by Default</div>
+                    <p style="font-size: 0.9rem; color: var(--text-muted);">
+                        Timing attacks and cache side-channels require constant-time programming discipline (supported via <code>std.crypto</code>).
+                    </p>
+                </div>
+
+                <div class="matrix-item">
+                    <div class="matrix-title" style="color: var(--amber);">5. Raw C FFI Memory Safety</div>
+                    <p style="font-size: 0.9rem; color: var(--text-muted);">
+                        Calling unsafe external C libraries via <code>extern "C"</code> bypasses Nyx's safe memory inference. FFI boundaries must be audited independently.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <h2>2. Opt-In Security CLI Flags</h2>
+        <p>In accordance with Nyx's zero-overhead design, all advanced security features are opt-in:</p>
+
+        <div class="flag-box">
+            <span style="color: var(--cyan);"># 1. Emit Cryptographic SBOM & Provenance</span><br>
+            nyxc build main.nyx --emit-sbom --sbom-key ./keys/prod.key<br><br>
+            <span style="color: var(--cyan);"># 2. Emit Jude Mathematical Proof Certificates</span><br>
+            nyxc build telemetry.nyx --verify --emit-certificates<br><br>
+            <span style="color: var(--cyan);"># 3. Execute Inside Kernel Capability Sandbox</span><br>
+            nyx run --sandbox=strict_policy.toml ./main.nyx
+        </div>
+
+        <h2>3. Explore Further</h2>
+        <div style="display:flex; gap:1rem; flex-wrap:wrap; margin-top:1.5rem;">
+            <a href="abuse-patterns.html" style="background: rgba(56, 189, 248, 0.12); border: 1px solid var(--cyan); color: var(--cyan); padding: 0.75rem 1.25rem; border-radius: 8px; text-decoration: none; font-weight: 600;">🔍 Living Abuse Patterns & Defense Registry →</a>
+            <a href="security-audit.html" style="background: rgba(16, 185, 129, 0.12); border: 1px solid var(--green); color: var(--green); padding: 0.75rem 1.25rem; border-radius: 8px; text-decoration: none; font-weight: 600;">🛡️ 2026 Security Penetration Audit →</a>
+        </div>
+    </main>
+
+    <script src="navigation.js"></script>
+</body>
+</html>

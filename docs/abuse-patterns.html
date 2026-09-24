@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Living Abuse Patterns & Defense Registry — Nyx Documentation</title>
+    <meta name="description" content="Technical catalog of real-world malware patterns across systems languages (Rust, C, Nyx) with Indicators of Compromise and Nyx defensive mitigations.">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .pattern-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.75rem;
+            margin-bottom: 2rem;
+            transition: border-color 0.2s ease;
+        }
+        .pattern-card:hover {
+            border-color: rgba(56, 189, 248, 0.4);
+        }
+        .ioc-list {
+            background: #070b14;
+            border: 1px solid rgba(248, 113, 113, 0.2);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            margin: 1rem 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: #fca5a5;
+        }
+        .mitigation-box {
+            background: #060e1a;
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            margin: 1rem 0;
+        }
+        .mitigation-box h4 {
+            color: #34d399;
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+        }
+        .tag-threat {
+            background: rgba(248, 113, 113, 0.15);
+            color: #f87171;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <span class="tag-threat">BLUE TEAM THREAT INTELLIGENCE</span>
+        <h1>Living Abuse Patterns & Defense Registry</h1>
+        <p style="color:var(--text-muted); font-size: 1.05rem;">An open, community-maintained catalog documenting real-world attack techniques across systems languages (Rust, C, Go, Nyx) and exact defender mitigations.</p>
+
+        <!-- PATTERN 1 -->
+        <div class="pattern-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                <h2 style="margin:0; font-size:1.35rem; color:#fff;">Pattern 1: Cloud & Git-as-C2 Channel (e.g. RUSTYSHADE)</h2>
+                <span class="tag-threat">HIGH SEVERITY</span>
+            </div>
+            <p style="color:var(--text-muted); margin:0.75rem 0;">
+                A backdoor binary leverages standard HTTPS client libraries (<code>std.http</code> / REST APIs) to poll private GitHub/GitLab repositories for encrypted command files, using issue threads or commit updates for bidirectional command-and-control.
+            </p>
+
+            <h4 style="color:#f87171; margin-bottom:0.25rem;">🔍 Indicators of Compromise (IOCs) & Heuristics:</h4>
+            <div class="ioc-list">
+                • Outbound TLS connections to api.github.com/repos/*/contents/* on 30s-120s beacons<br>
+                • Obfuscated payload chunks loaded into memory with custom AES-GCM / ChaCha20 decryptors<br>
+                • Execution of system discovery commands immediately following repository sync
+            </div>
+
+            <div class="mitigation-box">
+                <h4>🛡️ Nyx Defensive Mitigations:</h4>
+                <ul style="margin:0; padding-left:1.25rem; font-size:0.9rem; color:#cbd5e1; line-height:1.6;">
+                    <li><strong>Static SBOM Auditing:</strong> Inspect <code>.nyx.sbom</code> to detect if a tool contains unauthorized <code>std.http</code> or <code>std.net</code> calls.</li>
+                    <li><strong>Kernel Sandbox Isolation:</strong> Enforce <code>nyx-sandbox --policy=isolated.toml</code> with <code>[network] allow_hosts = []</code> to completely disable kernel socket creation.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- PATTERN 2 -->
+        <div class="pattern-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                <h2 style="margin:0; font-size:1.35rem; color:#fff;">Pattern 2: Removable Media & USB Auto-Propagation</h2>
+                <span class="tag-threat">MODERATE SEVERITY</span>
+            </div>
+            <p style="color:var(--text-muted); margin:0.75rem 0;">
+                Malware listens to OS storage mount events and writes executable payloads alongside disguised Windows shortcut (<code>.lnk</code>) files directly to USB root directories.
+            </p>
+
+            <h4 style="color:#f87171; margin-bottom:0.25rem;">🔍 Indicators of Compromise (IOCs) & Heuristics:</h4>
+            <div class="ioc-list">
+                • Polling of drive letters (D:\, E:\) or /media/* mount points<br>
+                • Dropping hidden .lnk files targeting powershell.exe or native binaries
+            </div>
+
+            <div class="mitigation-box">
+                <h4>🛡️ Nyx Defensive Mitigations:</h4>
+                <ul style="margin:0; padding-left:1.25rem; font-size:0.9rem; color:#cbd5e1; line-height:1.6;">
+                    <li><strong>Filesystem Path Sandboxing:</strong> Landlock / AppContainer rules denying write access outside designated application directories.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- PATTERN 3 -->
+        <div class="pattern-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                <h2 style="margin:0; font-size:1.35rem; color:#fff;">Pattern 3: Typo-Squatted Package Ingestion</h2>
+                <span class="tag-threat">SUPPLY CHAIN SEVERITY</span>
+            </div>
+            <p style="color:var(--text-muted); margin:0.75rem 0;">
+                An attacker publishes a library with a name that mimics an official package (e.g. <code>@nyx-httpp</code> instead of <code>@nyx/http</code>), hoping developers install it by mistake.
+            </p>
+
+            <div class="mitigation-box">
+                <h4>🛡️ Nyx Defensive Mitigations:</h4>
+                <ul style="margin:0; padding-left:1.25rem; font-size:0.9rem; color:#cbd5e1; line-height:1.6;">
+                    <li><strong>Namespace Scope Protection:</strong> The official <code>@nyx/</code> scope is cryptographically reserved and signed by the sovereign team.</li>
+                    <li><strong>Deterministic Lockfiles (<code>nyx.lock</code>):</strong> Cryptographically binds package version to exact SHA-256 tarball hashes.</li>
+                    <li><strong>Jude Formal Certificates:</strong> Enterprise CI pipelines can require third-party packages to pass <code>nyx-verify-cert</code> prior to build.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div style="display:flex; gap:1rem; flex-wrap:wrap; margin-top:2rem;">
+            <a href="security-limits.html" style="background: rgba(56, 189, 248, 0.12); border: 1px solid #38bdf8; color: #38bdf8; padding: 0.75rem 1.25rem; border-radius: 8px; text-decoration: none; font-weight: 600;">← Security Limits & Formal Guarantees</a>
+            <a href="security.html" style="background: rgba(16, 185, 129, 0.12); border: 1px solid #10b981; color: #10b981; padding: 0.75rem 1.25rem; border-radius: 8px; text-decoration: none; font-weight: 600;">Security Architecture Overview →</a>
+        </div>
+    </main>
+
+    <script src="navigation.js"></script>
+</body>
+</html>

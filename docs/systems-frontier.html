@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Systems Frontier: Hardware, LoRa ESP32, Sovereign Kernel & NyxOS | Nyx Documentation</title>
+    <meta name="description" content="Technical specification for Nyx bare-metal hardware programming, ESP32 LoRa long-range mesh radio, Sovereign OS bare-metal kernel, and NyxOS declarative reproducible OS.">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .hero-banner {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.12) 0%, rgba(99, 102, 241, 0.12) 100%);
+            border: 1px solid rgba(14, 165, 233, 0.3);
+            border-radius: 12px;
+            padding: 2.5rem;
+            margin-bottom: 2.5rem;
+        }
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        .tech-card {
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .tech-card:hover {
+            transform: translateY(-2px);
+            border-color: #38bdf8;
+        }
+        .tech-card h4 {
+            color: #38bdf8;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .code-preview {
+            background: #030712;
+            border: 1px solid #1f2937;
+            border-radius: 6px;
+            padding: 1rem;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.85rem;
+            color: #e5e7eb;
+            overflow-x: auto;
+            margin-top: 1rem;
+        }
+        .badge-pill {
+            display: inline-block;
+            padding: 0.25rem 0.6rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+        .badge-blue { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+        .badge-purple { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+        .badge-green { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+        .badge-amber { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav id="sidebar"></nav>
+        <main class="content">
+            <div class="hero-banner">
+                <span class="badge-pill badge-blue">SYSTEMS FRONTIER 2026</span>
+                <span class="badge-pill badge-purple">ZERO-GC SOVEREIGN ARCHITECTURE</span>
+                <h1 style="margin-top: 0.8rem; margin-bottom: 0.5rem;">Hardware, LoRa Mesh, Sovereign Kernel & NyxOS</h1>
+                <p style="color: #94a3b8; font-size: 1.1rem; line-height: 1.6; margin-bottom: 0;">
+                    From bare-metal silicon MMIO register bitfields and off-grid LoRa radio meshes to sovereign OS kernels and declarative reproducible operating systems.
+                </p>
+            </div>
+
+            <div class="tech-grid">
+                <div class="tech-card">
+                    <h4><span class="badge-pill badge-blue">1</span> Hardware & MMIO</h4>
+                    <p style="color: #94a3b8; font-size: 0.9rem;">
+                        Zero-overhead memory-mapped I/O, volatile bitfield modifications, GPIO pin controllers, SPI/I2C buses, and zero-jitter Interrupt Service Routines (ISRs).
+                    </p>
+                    <div class="code-preview">
+let moder = MMIORegister.new(0x40020000);
+moder.modify(0x03 &lt;&lt; 6, 0x01 &lt;&lt; 6); // Output</div>
+                </div>
+
+                <div class="tech-card">
+                    <h4><span class="badge-pill badge-green">2</span> LoRa ESP32 & Mesh</h4>
+                    <p style="color: #94a3b8; font-size: 0.9rem;">
+                        Native SX1262/SX1276 transceiver driver with spread-spectrum modulation (SF7-SF12), frequency synthesis, RSSI/SNR telemetry, and decentralized mesh routing.
+                    </p>
+                    <div class="code-preview">
+let mut lora = LoRaTransceiver.init(spi, cs, rst, dio0, cfg);
+lora.transmit_packet(&amp;packet);</div>
+                </div>
+
+                <div class="tech-card">
+                    <h4><span class="badge-pill badge-purple">3</span> Sovereign OS Kernel</h4>
+                    <p style="color: #94a3b8; font-size: 0.9rem;">
+                        Monolithic/Microkernel operating system architecture in pure Nyx: Virtual Memory Paging, Preemptive Task Schedulers, and Linear Framebuffer GUI Compositor.
+                    </p>
+                    <div class="code-preview">
+let mut os = SovereignKernel.boot(0xE0000000, 1920, 1080);
+os.spawn_task("Compositor", 10, 0x7FFF0000);</div>
+                </div>
+
+                <div class="tech-card">
+                    <h4><span class="badge-pill badge-amber">4</span> NyxOS Declarative Engine</h4>
+                    <p style="color: #94a3b8; font-size: 0.9rem;">
+                        Content-addressed store <code>/nyx/store/&lt;sha256&gt;</code>, pure sandboxed derivations, generational booting, and zero-downtime instant transactional rollback.
+                    </p>
+                    <div class="code-preview">
+gen_mgr.build_and_switch_generation(new_cfg);
+gen_mgr.rollback_generation(); // Instant</div>
+                </div>
+            </div>
+
+            <hr style="border-color: #1e293b; margin: 3rem 0;">
+
+            <h2>1. Bare-Metal Hardware & Embedded Programming (<code>std.embedded.hardware</code>)</h2>
+            <p>
+                Nyx delivers C/Rust-equivalent zero-cost abstractions for direct hardware manipulation with compile-time memory boundary verification and volatile pointer safety.
+            </p>
+            <ul>
+                <li><strong>Volatile MMIO Operations</strong>: Direct memory register reads and writes with hardware atomic bit-masking without undefined behavior.</li>
+                <li><strong>Peripheral Abstractions</strong>: Built-in drivers for GPIO, Hardware SPI, I2C, UART, and DMA descriptors.</li>
+                <li><strong>Deterministic ISR Handlers</strong>: Zero allocation, no garbage collection pauses, static register preservation for microsecond-level response times.</li>
+            </ul>
+
+            <div class="code-preview">
+module examples.embedded_demo
+
+import std.embedded.hardware
+
+fn main() {
+    let pin13 = GpioPin.new(0x40020000, 13, PinMode.Output);
+    pin13.write(PinState.High);
+    pin13.toggle();
+}</div>
+
+            <hr style="border-color: #1e293b; margin: 3rem 0;">
+
+            <h2>2. LoRa ESP32 & Long-Range Off-Grid Mesh Networking (<code>std.net.lora</code>)</h2>
+            <p>
+                Decentralized communication for off-grid IoT sensors, mobile field nodes, and autonomous edge devices operating over kilometer-range sub-GHz frequencies (868/915 MHz).
+            </p>
+            <ul>
+                <li><strong>SX1262 / SX1276 Hardware Control</strong>: Configure Spreading Factor (SF7-SF12), Bandwidth (125-500 kHz), and Coding Rate (4/5-4/8).</li>
+                <li><strong>Decentralized Multi-Hop Mesh Routing</strong>: Automatic hop count tracking, packet deduplication ring buffers, and peer-to-peer rebroadcasting.</li>
+                <li><strong>Zero-Allocation Packet Crypto</strong>: In-place ChaCha20-Poly1305 / AES-128-CTR packet encryption with zero runtime allocation overhead.</li>
+            </ul>
+
+            <hr style="border-color: #1e293b; margin: 3rem 0;">
+
+            <h2>3. Sovereign OS Kernel: Native OS in Pure Nyx (<code>std.os.kernel</code>)</h2>
+            <p>
+                Sovereign monolithic and microkernel architectures written entirely in native Nyx syntax:
+            </p>
+            <ul>
+                <li><strong>Virtual Memory Manager</strong>: Identity-mapped kernel pages, user space page tables, and region-per-task memory boundaries.</li>
+                <li><strong>Preemptive Pre-Calculated Scheduler</strong>: Deterministic quantum round-robin task switching with hardware timer IRQs.</li>
+                <li><strong>Direct Framebuffer Window Compositor</strong>: Linear VESA/GOP 120 FPS windowing manager rendering directly to display RAM without bloated display servers.</li>
+            </ul>
+
+            <hr style="border-color: #1e293b; margin: 3rem 0;">
+
+            <h2>4. NyxOS: Declarative, Immutable & Reproducible Architecture</h2>
+            <p>
+                Solving system fragility and package dependency hell through pure declarative configuration and content-addressed storage:
+            </p>
+            <ul>
+                <li><strong>Content-Addressed Store (<code>/nyx/store/&lt;sha256&gt;-&lt;pkg&gt;-&lt;ver&gt;</code>)</strong>: Bit-for-bit reproducible derivations where every binary is isolated and immutable.</li>
+                <li><strong>Atomic Generational Switching</strong>: System upgrades switch a single symlink (<code>/run/current-system</code>) atomically at boot time or live in memory.</li>
+                <li><strong>Transactional Rollbacks</strong>: Instantly revert corrupt updates or failed kernel drivers to previous known-good generations with 100% state recovery.</li>
+            </ul>
+        </main>
+    </div>
+    <script src="navigation.js"></script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Reference — Nyx Documentation</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <h1>Nyx API & Symbol Reference</h1>
+        <p class="lead">Complete symbol and module reference for all built-in types, functions, and standard library components in the Nyx programming language.</p>
+
+        <h2>Core Packages & Namespaces</h2>
+        <table>
+            <tr><th>Module</th><th>Namespace</th><th>Description</th></tr>
+            <tr><td><a href="../stdlib/sec.html"><code>std.sec</code></a></td><td><code>std::sec</code></td><td>Enterprise security, AES-256 encrypted capability vaults, NIDS intrusion inspection</td></tr>
+            <tr><td><a href="../stdlib/gis.html"><code>std.gis</code></a></td><td><code>std::gis</code></td><td>WGS84 (EPSG:4326), Web Mercator (EPSG:3857), point-in-polygon, hillshading, Spatial Agent Memory</td></tr>
+            <tr><td><a href="../stdlib/cloud.html"><code>std.cloud</code></a></td><td><code>std::cloud</code></td><td>AWS S3 SigV4, GCP GCS, Azure Blob Storage, Connect RPC, Circuit Breakers</td></tr>
+            <tr><td><a href="../stdlib/ui.html"><code>std.ui</code></a></td><td><code>std::ui</code></td><td>Material Design 3 desktop UI components, 120 FPS motion physics, Skia rendering</td></tr>
+            <tr><td><a href="../stdlib/ml.html"><code>std.ml</code></a></td><td><code>std::ml</code></td><td>Universal AI Model Hub (OpenAI, Claude, Gemini, DeepSeek, Ollama), AVX2 SIMD GEMM, vector search</td></tr>
+            <tr><td><a href="../stdlib/robotics.html"><code>std.robotics</code></a></td><td><code>std::robotics</code></td><td>6-DOF DH parameter forward kinematics, quintic trajectory splines, PID controllers</td></tr>
+            <tr><td><a href="../stdlib/blockchain.html"><code>std.blockchain</code></a></td><td><code>std::blockchain</code></td><td>Merkle tree proofs, SHA-256 block mining, UTXO ledgers, 3-phase PBFT consensus</td></tr>
+            <tr><td><a href="../stdlib/audio.html"><code>std.audio</code></a></td><td><code>std::audio</code></td><td>PortAudio 16 kHz low-latency streaming, FFT, Mel filterbanks for Whisper AI, Biquad filters</td></tr>
+        </table>
+
+        <h2>Generating API Documentation</h2>
+        <p>To auto-generate HTML documentation from doc comments in your own Nyx packages, run:</p>
+<pre><code>nyx doc --output docs/api/</code></pre>
+
+        <div class="next-prev-links">
+            <a href="../stdlib/index.html">&larr; Standard Library Overview</a>
+            <a href="../index.html">Documentation Home &rarr;</a>
+        </div>
+    </main>
+    <script src="../navigation.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

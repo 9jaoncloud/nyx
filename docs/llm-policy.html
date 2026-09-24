@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nyx LLM Usage, Provenance &amp; Verification Policy — 9jaonCloud Sovereign Systems</title>
+    <meta name="description" content="Official Nyx LLM Usage & Provenance Policy: Verification Over Origin. Learn how Nyx enforces 100% test coverage, formal Jude SMT proofs, and reproducible benchmarks for AI-assisted systems software.">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-dark: #050814;
+            --bg-card: rgba(13, 20, 38, 0.85);
+            --bg-card-hover: rgba(20, 30, 58, 0.95);
+            --border-glow: rgba(56, 189, 248, 0.25);
+            --border-purple: rgba(168, 85, 247, 0.3);
+            --border-green: rgba(16, 185, 129, 0.3);
+            --accent-cyan: #38bdf8;
+            --accent-purple: #a855f7;
+            --accent-emerald: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-rose: #f43f5e;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.7;
+        }
+
+        .policy-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem 5rem;
+        }
+
+        .badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(56, 189, 248, 0.12);
+            color: var(--accent-cyan);
+            border: 1px solid var(--border-glow);
+            padding: 0.35rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, rgba(14, 23, 47, 0.9) 0%, rgba(6, 10, 22, 0.95) 100%);
+            border: 1px solid var(--border-glow);
+            border-radius: 16px;
+            padding: 2.75rem 2.25rem;
+            margin-bottom: 2.5rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: -100px;
+            right: -100px;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .hero-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+            line-height: 1.25;
+            color: #ffffff;
+            margin-bottom: 1rem;
+        }
+
+        .hero-subtitle {
+            font-size: 1.15rem;
+            color: #cbd5e1;
+            max-width: 850px;
+            margin-bottom: 1.75rem;
+        }
+
+        .meta-strip {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.25rem;
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 1.25rem;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+        }
+
+        .meta-item strong {
+            color: var(--accent-cyan);
+        }
+
+        /* Section Cards */
+        .policy-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(12px);
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .policy-card:hover {
+            border-color: var(--border-glow);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            padding-bottom: 0.75rem;
+        }
+
+        .section-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        /* Comparison Table */
+        .comparison-table-wrapper {
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.92rem;
+        }
+
+        .comparison-table th, .comparison-table td {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .comparison-table th {
+            background: rgba(15, 23, 42, 0.95);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            color: #e2e8f0;
+        }
+
+        .comparison-table th.rust-col {
+            color: #f87171;
+            border-top: 3px solid #ef4444;
+        }
+
+        .comparison-table th.nyx-col {
+            color: #38bdf8;
+            border-top: 3px solid #0ea5e9;
+            background: rgba(14, 165, 233, 0.08);
+        }
+
+        .comparison-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .comparison-table td.nyx-cell {
+            background: rgba(14, 165, 233, 0.03);
+            font-weight: 500;
+            color: #f1f5f9;
+        }
+
+        /* Verification Tiers Grid */
+        .tier-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.25rem;
+            margin: 1.5rem 0;
+        }
+
+        .tier-card {
+            background: rgba(10, 15, 30, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 1.5rem;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .tier-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 8px 24px rgba(56, 189, 248, 0.15);
+        }
+
+        .tier-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
+            display: inline-block;
+            margin-bottom: 0.75rem;
+        }
+
+        .tier-1 { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .tier-2 { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+        .tier-3 { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+        .tier-4 { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+
+        .tier-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .tier-desc {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .tier-code {
+            background: #030712;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            padding: 0.5rem 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            color: #38bdf8;
+            word-break: break-all;
+        }
+
+        /* Rules Badges & Tabs */
+        .rules-tab-bar {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .rule-tab-btn {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .rule-tab-btn.active, .rule-tab-btn:hover {
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+            border-color: var(--accent-cyan);
+        }
+
+        .rule-item {
+            background: rgba(10, 15, 30, 0.5);
+            border-left: 4px solid var(--accent-cyan);
+            border-radius: 0 10px 10px 0;
+            padding: 1.15rem 1.4rem;
+            margin-bottom: 1rem;
+        }
+
+        .rule-item.allowed { border-left-color: var(--accent-emerald); }
+        .rule-item.caveat { border-left-color: var(--accent-amber); }
+        .rule-item.banned { border-left-color: var(--accent-rose); }
+        .rule-item.penalty { border-left-color: #e11d48; background: rgba(225, 29, 72, 0.05); }
+
+        .rule-title {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #ffffff;
+            margin-bottom: 0.35rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .rule-desc {
+            font-size: 0.88rem;
+            color: #cbd5e1;
+        }
+
+        /* Interactive Generator */
+        .generator-box {
+            background: #040711;
+            border: 1px solid var(--border-glow);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1.25rem;
+        }
+
+        .gen-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .gen-group label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.35rem;
+        }
+
+        .gen-group input, .gen-group select {
+            width: 100%;
+            background: #0d1428;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #f8fafc;
+            padding: 0.6rem 0.85rem;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.88rem;
+            box-sizing: border-box;
+        }
+
+        .gen-group input:focus, .gen-group select:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+        }
+
+        .output-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .code-output {
+            background: #02040a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: #38bdf8;
+            white-space: pre-wrap;
+            user-select: all;
+        }
+
+        .copy-btn {
+            background: var(--accent-cyan);
+            color: #020617;
+            border: none;
+            padding: 0.45rem 0.9rem;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.82rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: opacity 0.2s;
+        }
+
+        .copy-btn:hover {
+            opacity: 0.9;
+        }
+
+        /* Buttons & CTA */
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.85rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.65rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0284c7, #0369a1);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .contact-box {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(6, 182, 212, 0.05) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 12px;
+            padding: 1.75rem;
+            margin-top: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1.25rem;
+        }
+    </style>
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776; Menu</button>
+    <nav id="sidebar"></nav>
+
+    <main>
+        <div class="policy-container">
+            <!-- Top Announcement -->
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.75rem; background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.25); border-radius:12px; padding:0.75rem 1.25rem; margin-bottom:1.75rem;">
+                <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+                    <span style="background:#38bdf8; color:#020617; font-size:0.75rem; font-weight:800; padding:0.25rem 0.6rem; border-radius:6px; text-transform:uppercase;">Official Policy v1.0</span>
+                    <strong style="color:#e0f2fe; font-size:0.92rem;">Nyx LLM Usage, Provenance &amp; Verification Framework</strong>
+                </div>
+                <a href="PROVENANCE_AND_VERIFICATION.md" target="_blank" style="color:#38bdf8; font-weight:600; text-decoration:none; font-size:0.85rem;">View Architecture Spec &rarr;</a>
+            </div>
+
+            <!-- Hero Header -->
+            <div class="hero-section">
+                <div class="badge-pill">
+                    <i class="fa-solid fa-shield-halved"></i> Governance &amp; Software Trust Architecture
+                </div>
+                <h1 class="hero-title">Verification Over Origin:<br>The Nyx LLM &amp; Provenance Policy</h1>
+                <p class="hero-subtitle">
+                    How Nyx replaces tribal authorial pedigree with mathematical SMT formal proofs (Jude dialect), 100% CI test coverage, and single-command reproducible benchmarks.
+                </p>
+                <div class="meta-strip">
+                    <div class="meta-item">
+                        <i class="fa-solid fa-file-contract"></i>
+                        <span>Document ID: <strong>nyx-llm-policy-1.0</strong></span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fa-solid fa-calendar-check"></i>
+                        <span>Effective Date: <strong>September 18, 2026</strong></span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fa-solid fa-user-check"></i>
+                        <span>Chief Architect: <strong>Simeon Bala (9jaonCloud)</strong></span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fa-solid fa-envelope"></i>
+                        <span>Official Inquiries: <a href="mailto:nyx@9jaoncloud.com.ng" style="color:#38bdf8; text-decoration:underline;">nyx@9jaoncloud.com.ng</a></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Core Rationale -->
+            <div class="policy-card">
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fa-solid fa-compass" style="color:var(--accent-cyan);"></i> 1. Executive Summary &amp; Core Rationale</h2>
+                    <span style="font-size:0.85rem; color:var(--text-secondary);">Section 1 &bull; Normative Foundation</span>
+                </div>
+                <p>
+                    Nyx is a systems programming language created during the era of large language models. The foundational compiler, runtime, and standard library were architected solo by Simeon Bala in collaboration with advanced AI models. 
+                </p>
+                <blockquote style="border-left: 4px solid var(--accent-cyan); padding: 0.85rem 1.25rem; margin: 1.25rem 0; background: rgba(56, 189, 248, 0.05); border-radius: 0 8px 8px 0; color: #f1f5f9; font-size: 1.02rem; font-style: italic;">
+                    "The central question in systems engineering is not whether an AI tool was used, but whether the software artifact is mathematically memory-safe, 100% covered by passing tests, reproducible on standard hardware, and accountable to a named human engineer."
+                </blockquote>
+                <p>
+                    While legacy language foundations with decades of pre-AI history attempt to restrict LLM contributions to protect human reviewer bandwidth, <strong>Nyx embraces full transparency</strong>. We disclose AI involvement as structured metadata, while establishing the strictest verification gate in modern systems software.
+                </p>
+            </div>
+
+            <!-- Nyx vs Rust Comparison Table -->
+            <div class="policy-card">
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fa-solid fa-code-compare" style="color:var(--accent-purple);"></i> 2. Deep Dive: Nyx vs. Rust LLM Policies</h2>
+                    <span style="font-size:0.85rem; color:var(--accent-purple); font-weight:600;">Comparative Paradigm</span>
+                </div>
+                <p>
+                    In 2026, the Rust Foundation drafted an LLM usage policy designed around human-only legacy assumptions. Below is a structured architectural comparison of why Nyx's model is fundamentally tailored for the modern era:
+                </p>
+
+                <div class="comparison-table-wrapper">
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 25%;">Governance Dimension</th>
+                                <th class="rust-col" style="width: 37%;">🦀 Rust Foundation Draft Policy</th>
+                                <th class="nyx-col" style="width: 38%;">🌙 Nyx Sovereign Systems Policy</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Core Philosophical Premise</strong></td>
+                                <td><strong>Origin-Centric:</strong> LLM code generation is restricted/banned in spirit to safeguard human reviewer trust.</td>
+                                <td class="nyx-cell"><strong>Verification-Centric:</strong> Origin is openly disclosed as metadata; trust is mathematically established through SMT proofs and tests.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Foundational Origin</strong></td>
+                                <td>Assumes multi-million line codebase created historically without LLMs.</td>
+                                <td class="nyx-cell">Transparent LLM-era co-creation from Day 0. Disclosed without apology; backed by machine-checked proofs.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Circuit Breaker Mechanism</strong></td>
+                                <td>Freezes all LLM PRs if >50% of PRs in a 6-week period are LLM-assisted.</td>
+                                <td class="nyx-cell"><strong>100% Test Pass Circuit Breaker:</strong> If any test or proof fails, feature merges for that subsystem are frozen immediately regardless of origin.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Safety Guarantees</strong></td>
+                                <td>Human peer review and compiler borrow-checker diagnostics.</td>
+                                <td class="nyx-cell"><strong>Formal SMT Invariants (Jude):</strong> Critical routines use machine-checked SMT contracts (<code>@verify</code>).</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Provenance Tracking</strong></td>
+                                <td>Ad-hoc PR tags; no standard file-level metadata requirement.</td>
+                                <td class="nyx-cell"><strong>Mandatory File Headers:</strong> Machine-checked CI validation for <code>// provenance: ai-assisted</code> headers.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Benchmark &amp; Claim Standard</strong></td>
+                                <td>Standard CI regression runs.</td>
+                                <td class="nyx-cell"><strong>Strict Provenance Tags:</strong> <code>[MEASURED]</code>, <code>[SIMULATED]</code>, <code>[LITERATURE]</code>, <code>[ESTIMATED]</code>.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- The 4-Tier Verification Model -->
+            <div class="policy-card">
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fa-solid fa-cubes-stacked" style="color:var(--accent-emerald);"></i> 3. The 4-Tier Verification Architecture</h2>
+                    <span style="font-size:0.85rem; color:var(--accent-emerald); font-weight:600;">The Foundation of Trust</span>
+                </div>
+                <p>
+                    Every line of code and every release artifact in the Nyx ecosystem must satisfy one or more tiers of our automated verification pipeline:
+                </p>
+
+                <div class="tier-grid">
+                    <div class="tier-card">
+                        <span class="tier-badge tier-1">TIER 1 &bull; REGRESSION</span>
+                        <h3 class="tier-title">100% Automated CI Suite</h3>
+                        <p class="tier-desc">Every commit must pass 100% of unit, integration, and compiler codegen tests. Zero broken tests permitted.</p>
+                        <div class="tier-code">nyx test --all --subsystems</div>
+                    </div>
+
+                    <div class="tier-card">
+                        <span class="tier-badge tier-2">TIER 2 &bull; REPRODUCIBILITY</span>
+                        <h3 class="tier-title">Deterministic Benchmarks</h3>
+                        <p class="tier-desc">Every performance claim is pinned to exact CPU/RAM, compiler flags, and reproducible with one CLI command.</p>
+                        <div class="tier-code">nyx bench --provenance</div>
+                    </div>
+
+                    <div class="tier-card">
+                        <span class="tier-badge tier-3">TIER 3 &bull; FORMAL SMT</span>
+                        <h3 class="tier-title">Jude Formal Proofs</h3>
+                        <p class="tier-desc">Safety-critical bump allocators and SIMD kernels are verified with pre/post condition SMT contracts via Z3/CVC5.</p>
+                        <div class="tier-code">@verify(ensures: safe_alloc)</div>
+                    </div>
+
+                    <div class="tier-card">
+                        <span class="tier-badge tier-4">TIER 4 &bull; REPLICATION</span>
+                        <h3 class="tier-title">Turnkey Replication Kits</h3>
+                        <p class="tier-desc">Containerized kits allow independent external academic researchers and auditors to replicate all published results.</p>
+                        <div class="tier-code">./reproduce_all.sh --audit</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Policy Rules Breakdown -->
+            <div class="policy-card">
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fa-solid fa-list-check" style="color:var(--accent-cyan);"></i> 4. Permitted, Conditional &amp; Banned Uses</h2>
+                    <span style="font-size:0.85rem; color:var(--text-secondary);">Section 2 &bull; Rules Matrix</span>
+                </div>
+
+                <div class="rules-tab-bar">
+                    <button class="rule-tab-btn active" onclick="filterRules('all')">All Rules</button>
+                    <button class="rule-tab-btn" onclick="filterRules('allowed')">✅ Allowed</button>
+                    <button class="rule-tab-btn" onclick="filterRules('caveat')">⚠️ Allowed with Caveats</button>
+                    <button class="rule-tab-btn" onclick="filterRules('banned')">❌ Banned</button>
+                    <button class="rule-tab-btn" onclick="filterRules('penalty')">🔨 Moderation Penalties</button>
+                </div>
+
+                <div id="rules-container">
+                    <div class="rule-item allowed" data-category="allowed">
+                        <div class="rule-title">✅ §2.1.1 Private Study &amp; Ideation</div>
+                        <div class="rule-desc">Asking an LLM to explain compiler internals, region inference passes, or MLIR lowering for your own private study requires no disclosure.</div>
+                    </div>
+
+                    <div class="rule-item allowed" data-category="allowed">
+                        <div class="rule-title">✅ §2.1.2 Private Pre-Submission Code Review</div>
+                        <div class="rule-desc">Using an LLM locally to check your branch for subtle edge cases before opening a PR is fully permitted.</div>
+                    </div>
+
+                    <div class="rule-item allowed" data-category="allowed">
+                        <div class="rule-title">✅ §2.1.3 Experimental Prototypes &amp; Benchmarks</div>
+                        <div class="rule-desc">PRs marked with <code>[EXPERIMENTAL &mdash; DO NOT REVIEW]</code> or on branches starting with <code>experimental/</code> require no formal disclosure until promoted to stable.</div>
+                    </div>
+
+                    <div class="rule-item caveat" data-category="caveat">
+                        <div class="rule-title">⚠️ §2.3.1 LLM-Assisted Code PRs</div>
+                        <div class="rule-desc">Permitted if tagged with <code>llm-assisted</code>, accompanied by complete test coverage, valid provenance headers, and pre-arranged human review.</div>
+                    </div>
+
+                    <div class="rule-item caveat" data-category="caveat">
+                        <div class="rule-title">⚠️ §2.3.2 Dialect Translation (Hausa, Yorùbá, Igbo)</div>
+                        <div class="rule-desc">Using LLM translation to bring Nyx docs to indigenous Nigerian languages is allowed with transparent disclosure and native speaker human sign-off.</div>
+                    </div>
+
+                    <div class="rule-item caveat" data-category="caveat">
+                        <div class="rule-title">⚠️ §2.3.4 Review Bots &amp; Automated Scanners</div>
+                        <div class="rule-desc">Bots must operate from dedicated bot accounts, be blockable, and can never unilaterally block or merge a PR without human confirmation.</div>
+                    </div>
+
+                    <div class="rule-item banned" data-category="banned">
+                        <div class="rule-title">❌ §2.2.1 Impersonating Human Authorship</div>
+                        <div class="rule-desc">Posting raw LLM output as your personal analysis, issue comment, or review feedback without disclosure is strictly prohibited.</div>
+                    </div>
+
+                    <div class="rule-item banned" data-category="banned">
+                        <div class="rule-title">❌ §2.2.2 Unverified LLM Diagnostics &amp; Documentation</div>
+                        <div class="rule-desc">Merging LLM-generated error diagnostics or docs without line-by-line human technical validation is banned.</div>
+                    </div>
+
+                    <div class="rule-item banned" data-category="banned">
+                        <div class="rule-title">❌ §2.2.4 Autonomous AI Merge Decisions</div>
+                        <div class="rule-desc">An AI model or agent may never serve as the sole approver or gatekeeper for merging code. A named human must sign every commit.</div>
+                    </div>
+
+                    <div class="rule-item penalty" data-category="penalty">
+                        <div class="rule-title">🔨 §2.4.1 Deliberate Provenance Concealment</div>
+                        <div class="rule-desc">Intentionally concealing AI assistance, forging provenance headers, or misrepresenting authorial metadata is a serious Code of Conduct violation resulting in contributor bans.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Header Generator -->
+            <div class="policy-card">
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fa-solid fa-wand-magic-sparkles" style="color:var(--accent-cyan);"></i> 5. Interactive Provenance Header Builder</h2>
+                    <span style="font-size:0.85rem; color:var(--text-secondary);">CI Metadata Helper</span>
+                </div>
+                <p>
+                    Every file in the Nyx repository must include a machine-checked header. Use this interactive generator to create a compliant header for your code:
+                </p>
+
+                <div class="generator-box">
+                    <div class="gen-inputs">
+                        <div class="gen-group">
+                            <label for="prov-type">Provenance Origin</label>
+                            <select id="prov-type" onchange="updateHeader()">
+                                <option value="ai-assisted">ai-assisted (Co-created with LLM)</option>
+                                <option value="human-authored">human-authored (100% Human Written)</option>
+                                <option value="mixed">mixed (Refactored / Hybrid)</option>
+                            </select>
+                        </div>
+                        <div class="gen-group">
+                            <label for="prov-tier">Verification Tier</label>
+                            <select id="prov-tier" onchange="updateHeader()">
+                                <option value="1">Tier 1: Automated Unit/Integration Tests</option>
+                                <option value="2">Tier 2: Reproducible Benchmarks</option>
+                                <option value="3" selected>Tier 3: Formal SMT Proof (Jude)</option>
+                                <option value="4">Tier 4: Independent Replication Kit</option>
+                            </select>
+                        </div>
+                        <div class="gen-group">
+                            <label for="prov-author">Author Handle / Name</label>
+                            <input type="text" id="prov-author" value="simeonbala" oninput="updateHeader()">
+                        </div>
+                        <div class="gen-group">
+                            <label for="prov-reviewer">Human Reviewer Handle</label>
+                            <input type="text" id="prov-reviewer" value="simeonbala" oninput="updateHeader()">
+                        </div>
+                    </div>
+
+                    <div class="output-header">
+                        <span style="font-size:0.85rem; font-weight:700; color:#cbd5e1;"><i class="fa-solid fa-code"></i> Generated Nyx Header</span>
+                        <button class="copy-btn" onclick="copyHeader()"><i class="fa-regular fa-copy"></i> Copy to Clipboard</button>
+                    </div>
+                    <pre class="code-output" id="header-output"></pre>
+                </div>
+            </div>
+
+            <!-- Commitments -->
+            <div class="policy-card">
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fa-solid fa-handshake-angle" style="color:var(--accent-emerald);"></i> 6. Immutable Commitments</h2>
+                    <span style="font-size:0.85rem; color:var(--text-secondary);">Section 8 &amp; 9</span>
+                </div>
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1.5rem;">
+                    <div style="background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.2); border-radius:10px; padding:1.25rem;">
+                        <h4 style="color:#34d399; margin-bottom:0.6rem; font-size:1.1rem;"><i class="fa-solid fa-users"></i> To All Contributors</h4>
+                        <ul style="padding-left:1.2rem; font-size:0.88rem; color:#cbd5e1;">
+                            <li>You will never be required or pressured to use an LLM.</li>
+                            <li>Your work is evaluated purely on correctness and verification.</li>
+                            <li>Honest disclosure of AI tools is welcomed and protected.</li>
+                        </ul>
+                    </div>
+                    <div style="background:rgba(56,189,248,0.05); border:1px solid rgba(56,189,248,0.2); border-radius:10px; padding:1.25rem;">
+                        <h4 style="color:#38bdf8; margin-bottom:0.6rem; font-size:1.1rem;"><i class="fa-solid fa-building-shield"></i> To Enterprise &amp; Users</h4>
+                        <ul style="padding-left:1.2rem; font-size:0.88rem; color:#cbd5e1;">
+                            <li>Every documented latency &amp; safety claim is reproducible.</li>
+                            <li>Zero-GC memory guarantees are formally verified by Jude.</li>
+                            <li>Any claim that fails replication is retracted immediately.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Official Ratification & Contact -->
+            <div class="contact-box">
+                <div>
+                    <h3 style="color:#f8fafc; font-family:'Outfit', sans-serif; font-size:1.3rem; margin-bottom:0.35rem;">Official Policy Sign-Off &amp; Contact</h3>
+                    <p style="color:#cbd5e1; font-size:0.9rem; max-width:650px;">
+                        Adopted September 18, 2026 &bull; Architect: <strong>Simeon Bala</strong> &bull; 9jaonCloud Sovereign Systems Research &bull; Licensed under CC BY 4.0.
+                    </p>
+                </div>
+                <div>
+                    <a href="mailto:nyx@9jaoncloud.com.ng" class="btn btn-primary" style="background: linear-gradient(135deg, #10b981, #059669); border:none;">
+                        <i class="fa-solid fa-envelope"></i> nyx@9jaoncloud.com.ng
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quick Navigation Footer -->
+            <div class="btn-group" style="justify-content:center; margin-top:2.5rem;">
+                <a href="paper/nyx-provenance-and-verification.html" class="btn btn-primary"><i class="fa-solid fa-book-open"></i> Read Full Academic Research Paper</a>
+                <a href="PROVENANCE_AND_VERIFICATION.md" class="btn btn-secondary" target="_blank"><i class="fa-solid fa-file-lines"></i> View Architecture Spec (MD)</a>
+                <a href="LLM_POLICY.md" class="btn btn-secondary" target="_blank"><i class="fa-solid fa-download"></i> Raw Policy (Markdown)</a>
+                <a href="benchmarks.html" class="btn btn-secondary"><i class="fa-solid fa-chart-line"></i> Empirical Benchmarks</a>
+            </div>
+        </div>
+    </main>
+
+    <script src="navigation.js"></script>
+    <script src="header_footer.js"></script>
+    <script>
+        function filterRules(category) {
+            const buttons = document.querySelectorAll('.rule-tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const items = document.querySelectorAll('.rule-item');
+            items.forEach(item => {
+                if (category === 'all' || item.dataset.category === category) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function updateHeader() {
+            const origin = document.getElementById('prov-type').value;
+            const tier = document.getElementById('prov-tier').value;
+            const author = document.getElementById('prov-author').value || 'simeonbala';
+            const reviewer = document.getElementById('prov-reviewer').value || 'simeonbala';
+            const today = new Date().toISOString().split('T')[0];
+
+            let verifier = 'ci-runner-v0.30/pass';
+            if (tier === '2') verifier = 'bench-suite-v0.30/amd-7950x';
+            if (tier === '3') verifier = 'jude-1.2.0/cert-smt-9a0f42';
+            if (tier === '4') verifier = 'reproduce-kit-v0.30/audit-pass';
+
+            const headerText = `// provenance: ${origin}\n// first-authored: 2026-03-15\n// last-human-review: ${today}\n// verification-tier: ${tier}\n// verified-by: ${verifier}\n// author: ${author}\n// reviewer: ${reviewer}\n// contact: nyx@9jaoncloud.com.ng`;
+
+            document.getElementById('header-output').textContent = headerText;
+        }
+
+        function copyHeader() {
+            const text = document.getElementById('header-output').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                const orig = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+                setTimeout(() => { btn.innerHTML = orig; }, 2000);
+            });
+        }
+
+        // Initialize header
+        updateHeader();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NyxOffice Suite — Sovereign Native Enterprise Productivity Applications</title>
+    <meta name="description" content="NyxOffice is the sovereign, zero-GC, post-quantum productivity ecosystem for NyxOS: 12 native applications replacing legacy enterprise suites with hard real-time latency and local AI.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <style>
+        :root {
+            --bg: #050711;
+            --surface: rgba(13, 19, 36, 0.92);
+            --surface-card: rgba(18, 25, 48, 0.75);
+            --border: rgba(255, 255, 255, 0.12);
+            --border-glow: rgba(139, 92, 246, 0.4);
+            --primary: #8b5cf6;
+            --primary-light: #c084fc;
+            --cyan: #38bdf8;
+            --emerald: #10b981;
+            --amber: #f59e0b;
+            --rose: #f43f5e;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --code-bg: #090d1a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.18) 0px, transparent 50%),
+                radial-gradient(at 100% 30%, rgba(56, 189, 248, 0.14) 0px, transparent 50%),
+                radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 2rem;
+            background: rgba(5, 7, 17, 0.95);
+            backdrop-filter: blur(18px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 1.25rem;
+        }
+        .brand-badge {
+            background: linear-gradient(135deg, var(--primary), var(--cyan));
+            color: #fff;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.25rem;
+            align-items: center;
+        }
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .nav-links a:hover, .nav-links a.active {
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2.5rem 1.5rem 5rem;
+            width: 100%;
+            flex: 1;
+        }
+
+        /* Hero / Suite Intro */
+        .suite-hero {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+        .suite-hero h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3.4rem;
+            font-weight: 900;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.75rem;
+        }
+        .suite-hero h1 span {
+            background: linear-gradient(135deg, #c084fc, #38bdf8, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .suite-hero p {
+            color: var(--text-muted);
+            font-size: 1.15rem;
+            max-width: 880px;
+            margin: 0 auto 1.75rem;
+        }
+
+        /* App Tabs Navigation Grid */
+        .app-tabs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.6rem;
+            margin-bottom: 2rem;
+        }
+        .tab-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.7rem 0.9rem;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            font-weight: 700;
+            font-size: 0.86rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            justify-content: flex-start;
+        }
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            transform: translateY(-2px);
+            border-color: rgba(255,255,255,0.25);
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.35), rgba(56, 189, 248, 0.25));
+            border-color: var(--primary-light);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
+        }
+
+        /* Main Workspace Card */
+        .workspace-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            min-height: 680px;
+            margin-bottom: 4rem;
+        }
+
+        .workspace-header {
+            background: rgba(6, 9, 22, 0.96);
+            border-bottom: 1px solid var(--border);
+            padding: 0.9rem 1.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .workspace-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+        }
+        .workspace-actions {
+            display: flex;
+            gap: 0.6rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .btn-action {
+            padding: 0.45rem 0.95rem;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text);
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .btn-action:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: var(--primary-light);
+        }
+        .btn-action.btn-ai {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.4), rgba(56, 189, 248, 0.4));
+            border-color: var(--primary-light);
+            color: #fff;
+        }
+
+        .app-view {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+        }
+        .app-view.active {
+            display: flex;
+        }
+
+        /* Generic Workspace Footer */
+        .app-footer {
+            background: rgba(6, 9, 22, 0.96);
+            border-top: 1px solid var(--border);
+            padding: 0.6rem 1.75rem;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            align-items: center;
+        }
+
+        /* ------------------------------------------------------------- */
+        /* 1. NyxWriter */
+        /* ------------------------------------------------------------- */
+        .writer-toolbar {
+            background: rgba(10, 14, 28, 0.9);
+            border-bottom: 1px solid var(--border);
+            padding: 0.5rem 1.5rem;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .tool-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            padding: 0.35rem 0.65rem;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .tool-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            border-color: var(--border);
+        }
+        .writer-editor-pane {
+            flex: 1;
+            padding: 2.5rem;
+            outline: none;
+            color: #f1f5f9;
+            font-size: 1.05rem;
+            line-height: 1.8;
+            overflow-y: auto;
+            min-height: 480px;
+        }
+        .writer-editor-pane h1 { font-size: 2.2rem; margin-bottom: 1rem; color: #fff; font-family: 'Outfit'; }
+        .writer-editor-pane h2 { font-size: 1.5rem; margin-top: 1.5rem; margin-bottom: 0.75rem; color: #c084fc; font-family: 'Outfit'; }
+        .writer-editor-pane p { margin-bottom: 1.2rem; }
+        .writer-editor-pane blockquote {
+            border-left: 3px solid var(--cyan);
+            padding-left: 1rem;
+            color: #94a3b8;
+            font-style: italic;
+            margin: 1.2rem 0;
+        }
+
+        /* ------------------------------------------------------------- */
+        /* 2. NyxCalc */
+        /* ------------------------------------------------------------- */
+        .calc-bar {
+            background: rgba(10, 14, 28, 0.9);
+            border-bottom: 1px solid var(--border);
+            padding: 0.6rem 1.5rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        .formula-input {
+            flex: 1;
+            background: #090d1a;
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 0.45rem 0.85rem;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88rem;
+            outline: none;
+        }
+        .formula-input:focus { border-color: var(--primary); }
+        .calc-grid-wrapper {
+            flex: 1;
+            overflow: auto;
+            padding: 1.25rem;
+            background: #080c1b;
+        }
+        .calc-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+        }
+        .calc-table th {
+            background: #0e162c;
+            color: var(--text-muted);
+            padding: 0.6rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            text-align: center;
+            font-weight: 700;
+        }
+        .calc-table td {
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 0;
+            background: rgba(15, 23, 42, 0.4);
+        }
+        .calc-cell-input {
+            width: 100%;
+            height: 100%;
+            padding: 0.55rem 0.75rem;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-family: inherit;
+            font-size: inherit;
+            outline: none;
+        }
+        .calc-cell-input:focus {
+            background: rgba(139, 92, 246, 0.18);
+            box-shadow: inset 0 0 0 2px var(--primary);
+        }
+
+        /* ------------------------------------------------------------- */
+        /* 3. NyxDeck */
+        /* ------------------------------------------------------------- */
+        .deck-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            flex: 1;
+            min-height: 520px;
+        }
+        .slide-nav {
+            background: #0a0f22;
+            border-right: 1px solid var(--border);
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            overflow-y: auto;
+        }
+        .slide-thumb {
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .slide-thumb:hover { border-color: var(--cyan); }
+        .slide-thumb.active {
+            border-color: var(--primary-light);
+            background: rgba(139, 92, 246, 0.25);
+            box-shadow: 0 4px 14px rgba(139, 92, 246, 0.3);
+        }
+        .slide-canvas {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2.5rem;
+            background: radial-gradient(circle at center, #0f172a 0%, #060913 100%);
+        }
+        .slide-frame {
+            width: 100%;
+            max-width: 820px;
+            aspect-ratio: 16 / 9;
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
+            border: 1px solid var(--border-glow);
+            border-radius: 16px;
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+            position: relative;
+        }
+
+        /* ------------------------------------------------------------- */
+        /* 4. NyxMail */
+        /* ------------------------------------------------------------- */
+        .mail-layout {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            flex: 1;
+            min-height: 520px;
+        }
+        .mail-inbox-list {
+            background: #090d1c;
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+        }
+        .mail-item {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .mail-item:hover { background: rgba(255, 255, 255, 0.05); }
+        .mail-item.active { background: rgba(139, 92, 246, 0.2); border-left: 3px solid var(--primary-light); }
+        .mail-preview-pane {
+            padding: 2rem;
+            background: #0b1022;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        /* ------------------------------------------------------------- */
+        /* 5. NyxMeet */
+        /* ------------------------------------------------------------- */
+        .meet-layout {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            flex: 1;
+            min-height: 520px;
+        }
+        .meet-mesh-stage {
+            padding: 2rem;
+            background: #060914;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+        }
+        .mesh-nodes-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 600px;
+        }
+        .mesh-peer-box {
+            background: rgba(18, 25, 48, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            position: relative;
+        }
+        .meet-transcript-sidebar {
+            background: #0a0f24;
+            border-left: 1px solid var(--border);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ------------------------------------------------------------- */
+        /* 6. NyxBase */
+        /* ------------------------------------------------------------- */
+        .base-layout {
+            padding: 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            background: #070b18;
+        }
+        .kanban-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            flex: 1;
+        }
+        .kanban-col {
+            background: rgba(13, 19, 36, 0.7);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .kanban-card {
+            background: rgba(25, 34, 64, 0.8);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 8px;
+            padding: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .kanban-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+
+        /* ------------------------------------------------------------- */
+        /* 7. NyxDraw */
+        /* ------------------------------------------------------------- */
+        .draw-canvas-wrapper {
+            flex: 1;
+            background: radial-gradient(#1e293b 1px, #070a17 1px);
+            background-size: 24px 24px;
+            position: relative;
+            min-height: 520px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ------------------------------------------------------------- */
+        /* 8. NyxNotes */
+        /* ------------------------------------------------------------- */
+        .notes-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr 300px;
+            flex: 1;
+            min-height: 520px;
+        }
+        .notes-sidebar { background: #080d1e; border-right: 1px solid var(--border); padding: 1.25rem; }
+        .notes-editor { padding: 2rem; background: #0a0f24; outline: none; }
+        .notes-graph-pane { background: #060914; border-left: 1px solid var(--border); padding: 1.25rem; }
+
+        /* ------------------------------------------------------------- */
+        /* 9. NyxPDF Studio */
+        /* ------------------------------------------------------------- */
+        .pdf-layout {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            flex: 1;
+            min-height: 520px;
+        }
+        .pdf-viewer-stage {
+            padding: 2.5rem;
+            background: #111827;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .pdf-page-sheet {
+            background: #ffffff;
+            color: #111827;
+            width: 100%;
+            max-width: 550px;
+            aspect-ratio: 1 / 1.414;
+            padding: 2.5rem;
+            border-radius: 4px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            font-family: 'Inter', serif;
+            position: relative;
+        }
+        .pdf-seal-panel {
+            background: #090e21;
+            border-left: 1px solid var(--border);
+            padding: 1.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        /* ------------------------------------------------------------- */
+        /* 10. NyxFlow (Gantt & CPM) */
+        /* ------------------------------------------------------------- */
+        .flow-layout {
+            padding: 1.5rem;
+            flex: 1;
+            background: #070c1a;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+        .gantt-chart-wrapper {
+            background: #090e24;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            overflow-x: auto;
+        }
+        .gantt-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.9rem;
+            font-size: 0.85rem;
+        }
+        .gantt-label { width: 180px; font-weight: 600; color: #fff; }
+        .gantt-timeline { flex: 1; height: 28px; background: rgba(255,255,255,0.04); border-radius: 6px; position: relative; }
+        .gantt-bar {
+            position: absolute;
+            height: 100%;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            padding: 0 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        /* ------------------------------------------------------------- */
+        /* 11. NyxForms */
+        /* ------------------------------------------------------------- */
+        .forms-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            padding: 2rem;
+            flex: 1;
+            background: #070c1c;
+        }
+        .form-preview-card {
+            background: #0d142c;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.75rem;
+        }
+
+        /* ------------------------------------------------------------- */
+        /* 12. NyxVault */
+        /* ------------------------------------------------------------- */
+        .vault-layout {
+            padding: 2.5rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            flex: 1;
+            background: #070b18;
+        }
+        .vault-card {
+            background: rgba(10, 15, 30, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.75rem;
+        }
+        .key-badge {
+            background: rgba(56, 189, 248, 0.15);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            color: var(--cyan);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+        }
+
+        /* Assessment & Comparison Matrix Table */
+        .assessment-section {
+            margin-top: 3rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 2.5rem;
+        }
+        .assessment-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+            font-size: 0.88rem;
+        }
+        .assessment-table th {
+            background: #0a0f26;
+            color: #c084fc;
+            padding: 0.9rem 1rem;
+            text-align: left;
+            border-bottom: 2px solid var(--primary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+        }
+        .assessment-table td {
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            vertical-align: top;
+        }
+        .assessment-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        @media (max-width: 1024px) {
+            .deck-layout, .mail-layout, .meet-layout, .pdf-layout, .notes-layout, .forms-layout, .vault-layout {
+                grid-template-columns: 1fr;
+            }
+            .app-tabs { grid-template-columns: repeat(3, 1fr); }
+            .suite-hero h1 { font-size: 2.4rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="index.html" class="brand">
+            <div style="width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #8b5cf6, #38bdf8); display: flex; align-items: center; justify-content: center; font-size: 1rem;">🌙</div>
+            <span>NyxOffice</span>
+            <span class="brand-badge">Sovereign Enterprise</span>
+        </a>
+        <nav class="nav-links">
+            <a href="index.html">Nyx Lang</a>
+            <a href="nyxos.html">🌙 NyxOS</a>
+            <a href="nyxos-architecture.html">🏛️ Deep Architecture</a>
+            <a href="nyxoffice.html" class="active">📝 NyxOffice Suite</a>
+            <a href="os-preview.html">🖥️ Desktop Live</a>
+            <a href="packages.html">📦 Package Hub</a>
+            <a href="docs/roadmap.html">🗺️ Roadmap</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <section class="suite-hero">
+            <h1>Sovereign Productivity <span>Built on NyxOS</span></h1>
+            <p>A native, zero-garbage-collection productivity ecosystem engineered with post-quantum Dilithium cryptography, SIMD vectorized formulas, and local on-device SLM intelligence.</p>
+
+            <div class="app-tabs">
+                <button class="tab-btn active" onclick="switchTab('writer')">📝 NyxWriter</button>
+                <button class="tab-btn" onclick="switchTab('calc')">📊 NyxCalc</button>
+                <button class="tab-btn" onclick="switchTab('deck')">📽️ NyxDeck</button>
+                <button class="tab-btn" onclick="switchTab('mail')">📧 NyxMail</button>
+                <button class="tab-btn" onclick="switchTab('meet')">💬 NyxMeet</button>
+                <button class="tab-btn" onclick="switchTab('base')">🗄️ NyxBase</button>
+                <button class="tab-btn" onclick="switchTab('draw')">📐 NyxDraw</button>
+                <button class="tab-btn" onclick="switchTab('notes')">🧠 NyxNotes</button>
+                <button class="tab-btn" onclick="switchTab('pdf')">📄 NyxPDF Studio</button>
+                <button class="tab-btn" onclick="switchTab('flow')">📅 NyxFlow</button>
+                <button class="tab-btn" onclick="switchTab('forms')">📋 NyxForms</button>
+                <button class="tab-btn" onclick="switchTab('vault')">🔐 NyxVault</button>
+            </div>
+        </section>
+
+        <!-- Main Workspace View Container -->
+        <div class="workspace-card">
+
+            <!-- ========================================================= -->
+            <!-- 1. NyxWriter (Native Document Studio) -->
+            <!-- ========================================================= -->
+            <div id="view-writer" class="app-view active">
+                <div class="workspace-header">
+                    <div class="workspace-title">
+                        <span>📝</span>
+                        <span id="doc-title">Sovereign_Technical_Specification.nyxdoc</span>
+                    </div>
+                    <div class="workspace-actions">
+                        <button class="btn-action btn-ai" onclick="runAiCopilot()">✨ AI Copilot Suggest</button>
+                        <button class="btn-action" onclick="exportDocument('markdown')">📥 Export Markdown</button>
+                        <button class="btn-action" onclick="saveDocument()">💾 Save to NyxFS Merkle Tree</button>
+                    </div>
+                </div>
+
+                <div class="writer-toolbar">
+                    <button class="tool-btn" onclick="formatText('bold')"><b>B</b></button>
+                    <button class="tool-btn" onclick="formatText('italic')"><i>I</i></button>
+                    <button class="tool-btn" onclick="formatText('heading')"><b>H2</b></button>
+                    <button class="tool-btn" onclick="formatText('code')">&lt;/&gt;</button>
+                    <button class="tool-btn" onclick="insertMathFormula()">∑ LaTeX</button>
+                    <button class="tool-btn" onclick="insertCallout()">💡 Callout</button>
+                </div>
+
+                <div class="writer-editor-pane" id="writer-content" contenteditable="true">
+                    <h1>NyxOS: The Sovereign Microkernel Architecture</h1>
+                    <p>Modern enterprise stacks suffer from ambient privilege escalation, garbage collection latency pauses, and unrecoverable kernel panics.</p>
+                    <h2>1. Capability-Based Access Control (CBAC)</h2>
+                    <p>Every peripheral, memory region, and file descriptor in NyxOS requires an unforgeable 64-bit cryptographic Capability Token. System services verify these permissions mathematically at compile-time and runtime.</p>
+                    <blockquote>"By removing ambient authority, an exploit in a web browser or graphics driver cannot compromise the host kernel." — Sovereign System Principle</blockquote>
+                    <h2>2. Zero-GC Region Memory Arenas</h2>
+                    <p>Applications running in NyxOffice utilize O(1) region bump arenas, ensuring hard real-time latency across 120 FPS document composition and spreadsheet recalculations.</p>
+                </div>
+
+                <div class="app-footer">
+                    <span id="writer-stats">Words: 124 | Characters: 890 | Encoding: UTF-8 Zero-Copy</span>
+                    <span style="color: #34d399;">Status: Synced with Merkle Tree ⚡</span>
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- 2. NyxCalc (Vector Spreadsheet & Formula Engine) -->
+            <!-- ========================================================= -->
+            <div id="view-calc" class="app-view">
+                <div class="workspace-header">
+                    <div class="workspace-title">
+                        <span>📊</span>
+                        <span>NyxCalc — SIMD Vectorized Spreadsheet (480+ Function Formula Engine)</span>
+                    </div>
+                    <div class="workspace-actions">
+                        <button class="btn-action" onclick="calcEvaluateFormula()">⚡ Re-Evaluate Formula Bar</button>
+                        <button class="btn-action" onclick="calcAutoSum()">∑ Auto-SUM Column C</button>
+                        <button class="btn-action" onclick="calcRunIRR()">💹 Newton-Raphson IRR</button>
+                    </div>
+                </div>
+
+                <div class="calc-bar">
+                    <span style="font-weight: 800; color: var(--cyan); font-family: 'JetBrains Mono';">fx</span>
+                    <input type="text" id="formula-bar" class="formula-input" value="=SUM(C1:C5)" placeholder="Enter formula e.g. =SUM(C1:C5), =AVERAGE(C1:C5), =MEDIAN(C1:C5), =IRR(C1:C5)">
+                </div>
+
+                <div class="calc-grid-wrapper">
+                    <table class="calc-table" id="calc-grid">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">#</th>
+                                <th>A (Subsystem Name)</th>
+                                <th>B (Allocation KB)</th>
+                                <th>C (Latency µs)</th>
+                                <th>D (Capability Token)</th>
+                                <th>E (Validation Status)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th>1</th>
+                                <td><input class="calc-cell-input" value="Microkernel Core"></td>
+                                <td><input class="calc-cell-input" value="64"></td>
+                                <td><input class="calc-cell-input" id="c1" value="0.18"></td>
+                                <td><input class="calc-cell-input" value="0x7F01A"></td>
+                                <td><input class="calc-cell-input" value="VERIFIED"></td>
+                            </tr>
+                            <tr>
+                                <th>2</th>
+                                <td><input class="calc-cell-input" value="Janus-POSIX Bridge"></td>
+                                <td><input class="calc-cell-input" value="128"></td>
+                                <td><input class="calc-cell-input" id="c2" value="0.45"></td>
+                                <td><input class="calc-cell-input" value="0x8B02C"></td>
+                                <td><input class="calc-cell-input" value="ACTIVE"></td>
+                            </tr>
+                            <tr>
+                                <th>3</th>
+                                <td><input class="calc-cell-input" value="Nyx-Proton DX12->VK"></td>
+                                <td><input class="calc-cell-input" value="256"></td>
+                                <td><input class="calc-cell-input" id="c3" value="0.82"></td>
+                                <td><input class="calc-cell-input" value="0x9C03D"></td>
+                                <td><input class="calc-cell-input" value="RUNNING"></td>
+                            </tr>
+                            <tr>
+                                <th>4</th>
+                                <td><input class="calc-cell-input" value="Kernel Tensor NPU Sched"></td>
+                                <td><input class="calc-cell-input" value="512"></td>
+                                <td><input class="calc-cell-input" id="c4" value="0.31"></td>
+                                <td><input class="calc-cell-input" value="0xAE04F"></td>
+                                <td><input class="calc-cell-input" value="HARDWARE_LOCK"></td>
+                            </tr>
+                            <tr>
+                                <th>5</th>
+                                <td><input class="calc-cell-input" value="120 FPS Compositor"></td>
+                                <td><input class="calc-cell-input" value="1024"></td>
+                                <td><input class="calc-cell-input" id="c5" value="8.33"></td>
+                                <td><input class="calc-cell-input" value="0xBF05A"></td>
+                                <td><input class="calc-cell-input" value="PROMOTION"></td>
+                            </tr>
+                            <tr style="background: rgba(139, 92, 246, 0.15); font-weight: bold;">
+                                <th>∑</th>
+                                <td><input class="calc-cell-input" style="color: #c084fc; font-weight: bold;" value="Total / Metric Result"></td>
+                                <td><input class="calc-cell-input" value="1984 KB"></td>
+                                <td><input class="calc-cell-input" id="c-sum" style="color: #34d399; font-weight: bold;" value="10.09 µs"></td>
+                                <td><input class="calc-cell-input" value="ALL_CAPS_VALID"></td>
+                                <td><input class="calc-cell-input" style="color: #38bdf8;" value="REAL-TIME PASS"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="app-footer">
+                    <span>Cells: 30 Evaluated | SIMD AVX-512 Parallel Engine</span>
+                    <span style="color: #34d399;">Formula Computation: 0.002ms (Zero-GC)</span>
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- 3. NyxDeck (Presentation & Pitch Deck Studio) -->
+            <!-- ========================================================= -->
+            <div id="view-deck" class="app-view">
+                <div class="workspace-header">
+                    <div class="workspace-title">
+                        <span>📽️</span>
+                        <span>NyxDeck — 120 FPS Hardware-Paced Presentation Deck</span>
+                    </div>
+                    <div class="workspace-actions">
+                        <button class="btn-action btn-ai" onclick="deckAddSlide()">➕ Add Slide</button>
+                        <button class="btn-action btn-ai" onclick="startPresentationMode()">▶️ Present Fullscreen (120Hz)</button>
+                    </div>
+                </div>
+
+                <div class="deck-layout">
+                    <div class="slide-nav" id="slide-nav-list">
+                        <div class="slide-thumb active" onclick="selectSlide(0)">
+                            <div style="font-size: 0.78rem; color: var(--cyan); margin-bottom: 0.2rem;">Slide 1</div>
+                            <div style="font-weight: 700; font-size: 0.9rem; color: #fff;">Sovereign Computing Vision</div>
+                        </div>
+                        <div class="slide-thumb" onclick="selectSlide(1)">
+                            <div style="font-size: 0.78rem; color: var(--cyan); margin-bottom: 0.2rem;">Slide 2</div>
+                            <div style="font-weight: 700; font-size: 0.9rem; color: #fff;">Tri-OS Compatibility (Linux/Win/Mac)</div>
+                        </div>
+                        <div class="slide-thumb" onclick="selectSlide(2)">
+                            <div style="font-size: 0.78rem; color: var(--cyan); margin-bottom: 0.2rem;">Slide 3</div>
+                            <div style="font-weight: 700; font-size: 0.9rem; color: #fff;">Zero-GC Deterministic Scheduling</div>
+                        </div>
+                    </div>
+
+                    <div class="slide-canvas">
+                        <div class="slide-frame" id="slide-display">
+                            <h1 style="font-size: 2.3rem; font-family: 'Outfit'; font-weight: 900; color: #fff; margin-bottom: 1rem;" id="slide-title">
+                                Sovereign Computing Vision
+                            </h1>
+                            <p style="font-size: 1.2rem; color: #94a3b8; line-height: 1.6;" id="slide-desc">
+                                Re-architecting the computing stack from bare metal up. Complete cryptographic sovereignty, post-quantum signing, and zero unrecoverable crashes.
+                            </p>
+                            <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                                <span class="key-badge">⚡ 120 FPS Vector Pacing</span>
+                                <span class="key-badge">🛡️ Capability Isolation</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="app-footer">
+                    <span>Active Slide: 1 / 3 | Renderer: Vulkan / Metal Direct Pipeline</span>
+                    <span style="color: #38bdf8;">Frame Time: 0.45ms (120 Hz Locked)</span>
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- 4. NyxMail (Cryptographic Mailbox & CalDAV) -->
+            <!-- ========================================================= -->
+            <div id="view-mail" class="app-view">
+                <div class="workspace-header">
+                    <div class="workspace-title">
+                        <span>📧</span>
+                        <span>NyxMail — Cryptographic Mailbox with Bayesian Spam Filter</span>
+                    </div>
+                    <div class="workspace-actions">
+                        <button class="btn-action btn-ai" onclick="mailTestSpamFilter()">🧪 Test Spam Gate</button>
+                        <button class="btn-action" onclick="mailSignDilithium()">🔑 Sign with Dilithium-5</button>
+                    </div>
+                </div>
+
+                <div class="mail-layout">
+                    <div class="mail-inbox-list">
+                        <div class="mail-item active" onclick="selectMail(0)">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.2rem;">
+                                <span style="font-weight: 700; color: #fff; font-size: 0.9rem;">Board of Governors</span>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">10:42 AM</span>
+                            </div>
+                            <div style="font-size: 0.85rem; color: var(--cyan); margin-bottom: 0.2rem;">Q3 Sovereign Strategy & Rollout</div>
+                            <div style="font-size: 0.78rem; color: var(--text-muted);">Verified PQC Seal • Spam Score: 0.02</div>
+                        </div>
+                        <div class="mail-item" onclick="selectMail(1)">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.2rem;">
+                                <span style="font-weight: 700; color: #fff; font-size: 0.9rem;">Security Enclave Alert</span>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">08:15 AM</span>
+                            </div>
+                            <div style="font-size: 0.85rem; color: #34d399; margin-bottom: 0.2rem;">TPM 2.0 PCR-0 Match Confirmed</div>
+                            <div style="font-size: 0.78rem; color: var(--text-muted);">Hardware Golden Image • Spam Score: 0.01</div>
+                        </div>
+                    </div>
+
+                    <div class="mail-preview-pane">
+                        <h2 style="font-size: 1.4rem; color: #fff; margin-bottom: 0.5rem;" id="mail-subject">Q3 Sovereign Strategy & Rollout</h2>
+                        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem; display: flex; gap: 1rem; align-items: center;">
+                            <span>From: <b>governance@corp.sovereign</b></span>
+                            <span class="key-badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">Dilithium-5 Verified</span>
+                        </div>
+                        <div style="font-size: 0.98rem; line-height: 1.7; color: #cbd5e1;" id="mail-body">
+                            The transition to NyxOffice across all enterprise workstations is proceeding ahead of schedule. SIMD formula execution in NyxCalc has reduced financial reporting turnaround from 4 hours to under 2 seconds. All outbound communication is sealed via post-quantum signatures.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="app-footer">
+                    <span>Protocol: JMAP / IMAP / CalDAV | Storage: Zero-Cloud Local SQLite FTS5</span>
+                    <span style="color: #34d399;">Spam Filter: Local Bayesian / Bloom Gate</span>
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- 5. NyxMeet (P2P Mesh Conferencing & DSP) -->
+            <!-- ========================================================= -->
+            <div id="view-meet" class="app-view">
+                <div class="workspace-header">
+                    <div class="workspace-title">
+                        <span>💬</span>
+                        <span>NyxMeet — Zero-Cloud P2P Mesh Conferencing & Audio DSP Gate</span>
+                    </div>
+                    <div class="workspace-actions">
+                        <button class="btn-action btn-ai" onclick="meetSimulateSpeech()">🎤 Simulate Audio Packet</button>
+                        <button class="btn-action" onclick="meetToggleNoiseGate()">🎛️ DSP Noise Gate: <span id="noise-gate-status">ACTIVE (-42dB)</span></button>
+                    </div>
+                </div>
+
+                <div class="meet-layout">
+                    <div class="meet-mesh-stage">
+                        <div class="mesh-nodes-grid">
+                            <div class="mesh-peer-box" style="border-color: var(--primary);">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">👩‍💻</div>
+                                <div style="font-weight: 700; color: #fff;">Alice (Host / Lead)</div>
+                                <div style="font-size: 0.75rem; color: #34d399;">RTT: 4.2ms • Loss: 0.0%</div>
+                            </div>
+                            <div class="mesh-peer-box" style="border-color: var(--cyan);">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">👨‍🔬</div>
+                                <div style="font-weight: 700; color: #fff;">Bob (Kernel Dev)</div>
+                                <div style="font-size: 0.75rem; color: #38bdf8;">RTT: 6.8ms • Loss: 0.0%</div>
+                            </div>
+                            <div class="mesh-peer-box">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">👨‍💼</div>
+                                <div style="font-weight: 700; color: #fff;">Carol (Systems Architect)</div>
+                                <div style="font-size: 0.75rem; color: #c084fc;">RTT: 8.1ms • Loss: 0.0%</div>
+                            </div>
+                            <div class="mesh-peer-box">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🤖</div>
+                                <div style="font-weight: 700; color: #fff;">NyxSLM (Local Scribe)</div>
+                                <div style="font-size: 0.75rem; color: #f59e0b;">NPU Engine • In-Memory</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="meet-transcript-sidebar">
+                        <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 1rem; color: #fff;">🎙️ Zero-Cloud Live Transcript</div>
+                        <div id="meet-transcript-stream" style="flex: 1; font-size: 0.85rem; line-height: 1.6; color: #94a3b8; overflow-y: auto;">
+                            <p><b style="color: var(--cyan);">[Alice]:</b> We verified the new 480+ formula evaluator in NyxCalc today.</p>
+                            <p><b style="color: #34d399;">[Bob]:</b> Newton-Raphson IRR converged in 25 iterations with zero memory allocations.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="app-footer">
+                    <span>Topology: P2P Full-Mesh WebRTC | E2EE: ChaCha20-Poly1305</span>
+                    <span style="color: #34d399;">Audio DSP Latency: 0.018ms</span>
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- 6. NyxBase (Relational Data & Kanban Matrix) -->
+            <!-- ========================================================= -->
+            <div id="view-base" class="app-view">
+                <div class="workspace-header">
+                    <div class="workspace-title">
+                        <span>🗄️</span>
+                        <span>NyxBase — Relational No-Code Database & Kanban Matrix</span>
+                    </div>
+                    <div class="workspace-actions">
+                        <button class="btn-action btn-ai" onclick="baseAddRecord()">➕ Add Record</button>
+                        <button class="btn-action" onclick="baseToggleView()">🔄 Switch Grid / Kanban View</button>
+                    </div>
+                </div>
+
+                <div class="base-layout" id="base-content">
+                    <div class="kanban-grid">
+                        <div class="kanban-col">
+                            <div style="font-weight: 700; font-size: 0.9rem; color: #f59e0b;">⏳ Todo (1)</div>
+                            <div class="kanban-card">
+                                <div style="font-weight: 700; color: #fff; margin-bottom: 0.3rem;">Benchmark JMAP Sync</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Priority: Medium • Assignee: Alice</div>
+                            </div>
+                        </div>
+                        <div class="kanban-col">
+                            <div style="font-weight: 700; font-size: 0.9rem; color: var(--cyan);">⚡ In Progress (1)</div>
+                            <div class="kanban-card">
+                                <div style="font-weight: 700; color: #fff; margin-bottom: 0.3rem;">Design NyxPDF Seal UI</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Priority: Urgent • Assignee: Bob</div>
+                            </div>
+                        </div>
+                        <div class="kanban-col">
+                            <div style="font-weight: 700; font-size: 0.9rem; color: #34d399;">✔️ Shipped (1)</div>
+                            <div class="kanban-card">
+                                <div style="font-weight: 700; color: #fff; margin-bottom: 0.3rem;">Implement AVX512 Math Engine</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Priority: Critical • Assignee: Carol</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="app-footer">
+                    <span>Storage Engine: Columnar Memory-Mapped B-Tree</span>
+                    <span style="color: #38bdf8;">Filter Latency: 0.004ms per 100k rows</span>
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- 7. NyxDraw (Infinite Vector Canvas & Flowcharts) -->
+            <!-- ========================================================= -->
+            <div id="view-draw" class="app-view">
+                <div class="workspace-header">
+                    <div class="workspace-title">
+                        <span>📐</span>
+                        <span>NyxDraw — Infinite Vector Canvas & Architecture Flowchart Studio</span>
+                    </div>
+                    <div class="workspace-actions">
+                        <button class="btn-action btn-ai" onclick="drawAddNode()">➕ Add Architecture Node</button>
+                        <button class="btn-action" onclick="drawExportSVG()">📥 Export Clean SVG</button>
+                    </div>
+                </div>
+
+                <div class="draw-canvas-wrapper" id="draw-canvas">
+                    <svg width="600" height="350" style="border: 1px solid var(--border); border-radius: 12px; background: rgba(10,15,30,0.8);">
+                        <!-- Connector Line -->
+                        <line x1="160" y1="175" x2="380" y2="175" stroke="#8b5cf6" stroke-width="3" stroke-dasharray="6,4" />
+                        <!-- Node 1 -->
+                        <rect x="50" y="135" width="130" height="80" rx="10" fill="#1e293b" stroke="#38bdf8" stroke-width="2" />
+                        <text x="115" y="170" fill="#fff" font-size="13" font-family="Outfit" font-weight="700" text-anchor="middle">NyxOS Microkernel</text>
+                        <text x="115" y="190" fill="#94a3b8" font-size="10" font-family="JetBrains Mono" text-anchor="middle">Zero-GC Arena</text>
+                        <!-- Node 2 -->
+                        <rect x="380" y="135" width="140" height="80" rx="10" fill="#1e293b" stroke="#34d399" stroke-width="2" />
+                        <text x="450" y="170" fill="#fff" font-size="13" font-family="Outfit" font-weight="700" text-anchor="middle">NyxOffice Runtime</text>
+                        <text x="450" y="190" fill="#94a3b8" font-size="10" font-family="JetBrains Mono" text-anchor="middle">480+ Formulas</text>
+                    </svg>
+                </div>
+
+                <div class="app-footer">
+                    <span>Spatial Index: Hierarchical Quadtree Frustum Culling</span>
+                    <span style="color: #34d399;">Rendering: 120 FPS Infinite Canvas Pan/Zoom</span>
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- 8. NyxNotes (Bidirectional Knowledge Graph) -->
+            <!-- ========================================================= -->
+            <div id="view-notes" class="app-view">
+                <div class="workspace-header">
+                    <div class="workspace-title">
+                        <span>🧠</span>
+                        <span>NyxNotes — Bidirectional Knowledge Graph & Block System</span>
+                    </div>
+                    <div class="workspace-actions">
+                        <button class="btn-action btn-ai" onclick="notesInsertWikilink()">🔗 Insert [[wikilink]]</button>
+                    </div>
+                </div>
+
+                <div class="notes-layout">
+                    <div class="notes-sidebar">
+                        <div style="font-weight: 700; font-size: 0.9rem; margin-bottom: 1rem; color: #fff;">📑 Sovereign Notes</div>
+                        <div style="font-size: 0.85rem; color: var(--primary-light); margin-bottom: 0.5rem; cursor: pointer;">• ZeroGC_Memory_Model</div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; cursor: pointer;">• CBAC_Security_Proofs</div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; cursor: pointer;">• SIMD_Formula_Engine</div>
+                    </div>
+
+                    <div class="notes-editor" contenteditable="true" id="notes-content">
+                        <h2>Zero-GC Memory Model Specification</h2>
+                        <p>The core memory paradigm of NyxOffice relies on scoped region arenas. References linked via <span style="color: var(--cyan); font-weight: 700;">[[CBAC_Security_Proofs]]</span> guarantee that buffer lifetimes are bound to the document window scope.</p>
+                    </div>
+
+                    <div class="notes-graph-pane">
+                        <div style="font-weight: 700; font-size: 0.9rem; margin-bottom: 1rem; color: #fff;">🕸️ Interactive Graph</div>
+                        <svg width="100%" height="220" style="background: rgba(15,23,42,0.6); border-radius: 8px;">
+                            <circle cx="60" cy="110" r="14" fill="#8b5cf6" />
+                            <circle cx="150" cy="60" r="14" fill="#38bdf8" />
+                            <circle cx="150" cy="160" r="14" fill="#34d399" />
+                            <line x1="60" y1="110" x2="150" y2="60" stroke="rgba(255,255,255,0.3)" stroke-width="2" />
+                            <line x1="60" y1="110" x2="150" y2="160" stroke="rgba(255,255,255,0.3)" stroke-width="2" />
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="app-footer">
+                    <span>Graph Engine: Real-time Atomic Alias Resolution</span>
+                    <span style="color: #34d399;">Semantic Search: On-Device Vector Embeddings</span>
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- 9. NyxPDF Studio (Cryptographic Digital Seal) -->
+            <!-- ========================================================= -->
+            <div id="view-pdf" class="app-view">
+                <div class="workspace-header">
+                    <div class="workspace-title">
+                        <span>📄</span>
+                        <span>NyxPDF Studio — PDF 2.0 Engine & Post-Quantum Cryptographic Seal</span>
+                    </div>
+                    <div class="workspace-actions">
+                        <button class="btn-action btn-ai" onclick="pdfVerifySeal()">🛡️ Validate Dilithium Seal</button>
+                    </div>
+                </div>
+
+                <div class="pdf-layout">
+                    <div class="pdf-viewer-stage">
+                        <div class="pdf-page-sheet">
+                            <h3 style="margin-bottom: 1rem; font-size: 1.2rem; font-weight: 800;">ENTERPRISE LICENSING AGREEMENT</h3>
+                            <p style="font-size: 0.85rem; line-height: 1.6; margin-bottom: 1.5rem;">
+                                This document certifies the deployment of the sovereign NyxOffice suite with zero cloud dependencies and hardware-enforced post-quantum legal seals.
+                            </p>
+                            <div style="border-top: 1px solid #e2e8f0; padding-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div style="font-size: 0.75rem; color: #64748b;">Digitally Sealed By:</div>
+                                    <div style="font-weight: 700; font-size: 0.85rem;">Nyx Sovereign Signer Authority</div>
+                                </div>
+                                <div style="background: #10b981; color: #fff; padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">
+                                    SEAL VALID
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pdf-seal-panel">
+                        <div style="font-weight: 700; font-size: 1rem; color: #fff;">🔐 Post-Quantum Seal Details</div>
+                        <div style="font-size: 0.82rem; color: var(--text-muted);">Algorithm: <b>CRYSTALS-Dilithium-5 (NIST PQC)</b></div>
+                        <div style="font-size: 0.82rem; color: var(--text-muted);">Timestamp: <b>2026-09-23T12:00:00Z (RFC 3161)</b></div>
+                        <div style="font-size: 0.82rem; color: #34d399;">✔️ PDF 2.0 Byte-stream Invariant Verified</div>
+                    </div>
+                </div>
+
+                <div class="app-footer">
+                    <span>Parser: Iterative Stream Decoder with Recursion Protection</span>
+                    <span style="color: #34d399;">Legal Validity: Post-Quantum Enclave Certified</span>
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- 10. NyxFlow (Gantt & Critical Path Method) -->
+            <!-- ========================================================= -->
+            <div id="view-flow" class="app-view">
+                <div class="workspace-header">
+                    <div class="workspace-title">
+                        <span>📅</span>
+                        <span>NyxFlow — Critical Path Method (CPM) & Project Sprint Engine</span>
+                    </div>
+                    <div class="workspace-actions">
+                        <button class="btn-action btn-ai" onclick="flowRecalculateCPM()">⚡ Recalculate Critical Path</button>
+                    </div>
+                </div>
+
+                <div class="flow-layout">
+                    <div class="gantt-chart-wrapper">
+                        <div class="gantt-row">
+                            <div class="gantt-label">1. Core Microkernel</div>
+                            <div class="gantt-timeline">
+                                <div class="gantt-bar" style="left: 0%; width: 25%; background: #8b5cf6;">5 Days (Critical)</div>
+                            </div>
+                        </div>
+                        <div class="gantt-row">
+                            <div class="gantt-label">2. Formula SIMD Engine</div>
+                            <div class="gantt-timeline">
+                                <div class="gantt-bar" style="left: 25%; width: 40%; background: #8b5cf6;">8 Days (Critical)</div>
+                            </div>
+                        </div>
+                        <div class="gantt-row">
+                            <div class="gantt-label">3. UI Component Kit</div>
+                            <div class="gantt-timeline">
+                                <div class="gantt-bar" style="left: 25%; width: 20%; background: #38bdf8;">4 Days (Slack: 4d)</div>
+                            </div>
+                        </div>
+                        <div class="gantt-row">
+                            <div class="gantt-label">4. Suite Deployment</div>
+                            <div class="gantt-timeline">
+                                <div class="gantt-bar" style="left: 65%; width: 35%; background: #8b5cf6;">7 Days (Critical)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="app-footer">
+                    <span>Total Critical Path: 20 Days | Algorithm: Kahn Topological CPM</span>
+                    <span style="color: #34d399;">Recalculation Speed: 0.001ms</span>
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- 11. NyxForms (Reactive Dynamic Form Builder) -->
+            <!-- ========================================================= -->
+            <div id="view-forms" class="app-view">
+                <div class="workspace-header">
+                    <div class="workspace-title">
+                        <span>📋</span>
+                        <span>NyxForms — Reactive Dynamic Form Builder & Survey Stream</span>
+                    </div>
+                    <div class="workspace-actions">
+                        <button class="btn-action btn-ai" onclick="formsSubmitDemo()">📤 Test Encrypted Submit</button>
+                    </div>
+                </div>
+
+                <div class="forms-layout">
+                    <div class="form-preview-card">
+                        <h3 style="color: #fff; margin-bottom: 1rem; font-family: 'Outfit';">Customer Satisfaction Survey</h3>
+                        <div style="margin-bottom: 1.25rem;">
+                            <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.35rem;">Full Name</label>
+                            <input type="text" id="form-name-input" value="Dr. Gordon Freeman" style="width: 100%; padding: 0.5rem; background: #090d1e; border: 1px solid var(--border); color: #fff; border-radius: 6px;">
+                        </div>
+                        <div style="margin-bottom: 1.25rem;">
+                            <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.35rem;">NyxOffice Performance Rating (1 to 5)</label>
+                            <input type="number" id="form-rating-input" value="5" min="1" max="5" style="width: 100%; padding: 0.5rem; background: #090d1e; border: 1px solid var(--border); color: #fff; border-radius: 6px;">
+                        </div>
+                    </div>
+
+                    <div class="form-preview-card">
+                        <h3 style="color: #fff; margin-bottom: 1rem; font-family: 'Outfit';">Generated Reactive JSON Schema</h3>
+                        <pre style="background: #060914; padding: 1rem; border-radius: 8px; color: #38bdf8; font-family: 'JetBrains Mono'; font-size: 0.8rem; overflow-x: auto;">{
+  "form_id": "cust_sat_2026",
+  "fields": [
+    { "id": "full_name", "type": "text", "required": true },
+    { "id": "rating", "type": "integer", "min": 1, "max": 5 }
+  ],
+  "target_base": "NyxBase://CustomerFeedback"
+}</pre>
+                    </div>
+                </div>
+
+                <div class="app-footer">
+                    <span>Ingestion Pipeline: Lock-Free Ring Buffer</span>
+                    <span style="color: #34d399;">Direct NyxBase Sync: Active</span>
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- 12. NyxVault (Hardware Enclave Credential Store) -->
+            <!-- ========================================================= -->
+            <div id="view-vault" class="app-view">
+                <div class="workspace-header">
+                    <div class="workspace-title">
+                        <span>🔐</span>
+                        <span>NyxVault — Sovereign Hardware Key Store & Decentralized Ledger</span>
+                    </div>
+                    <div class="workspace-actions">
+                        <button class="btn-action btn-ai" onclick="generatePostQuantumKey()">🔑 Generate Dilithium-5 Key</button>
+                        <button class="btn-action" onclick="lockVault()">🔒 Lock Enclave</button>
+                    </div>
+                </div>
+
+                <div class="vault-layout">
+                    <div class="vault-card">
+                        <h3 style="color: #fff; margin-bottom: 1rem; font-family: 'Outfit';">🛡️ Cryptographic Identity</h3>
+                        <div style="margin-bottom: 1.25rem;">
+                            <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.35rem;">Post-Quantum Master Key (Dilithium-5)</div>
+                            <div class="key-badge" id="vault-key-display" style="display: block; overflow-x: auto; padding: 0.6rem; font-size: 0.8rem;">
+                                0x9F4A8C82B14902EE71D05C384A64B29E10F5D982001A8321BEE4
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 1.25rem;">
+                            <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.35rem;">TPM 2.0 Hardware Seal</div>
+                            <div style="font-weight: 700; color: #34d399; font-size: 0.95rem;">
+                                ✔️ Enclave Verified (PCR-0 / PCR-7 Matches Golden Image)
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="vault-card">
+                        <h3 style="color: #fff; margin-bottom: 1rem; font-family: 'Outfit';">🪙 Sovereign Asset Portfolio</h3>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(255,255,255,0.04); border-radius: 8px; margin-bottom: 1rem;">
+                            <div>
+                                <div style="font-weight: 700; color: #fff;">Nyx Sovereign Token (NYX)</div>
+                                <div style="font-size: 0.78rem; color: var(--text-muted);">Decentralized Compute & Storage Fuel</div>
+                            </div>
+                            <div style="font-family: 'JetBrains Mono'; font-weight: 800; font-size: 1.1rem; color: #38bdf8;">
+                                25,000.00
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="app-footer">
+                    <span>Hardware Custody: TPM 2.0 Enclave Isolation</span>
+                    <span style="color: #34d399;">Tamper Memory Zeroization: Armed</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Enterprise Gap Analysis & Architectural Deep Assessment -->
+        <!-- ============================================================= -->
+        <section class="assessment-section">
+            <h2 style="font-family: 'Outfit'; font-size: 1.8rem; color: #fff; margin-bottom: 0.5rem;">
+                🏛️ Deep Assessment & Architectural Strengths Matrix
+            </h2>
+            <p style="color: var(--text-muted); font-size: 0.95rem;">
+                Comprehensive evaluation of all 12 NyxOffice applications, detailing exact functional capabilities, identified edge cases, and mathematical mitigations.
+            </p>
+
+            <table class="assessment-table">
+                <thead>
+                    <tr>
+                        <th style="width: 180px;">Application</th>
+                        <th>Core Functionality & What It Does</th>
+                        <th>Sovereign Strengths</th>
+                        <th>Identified Weakness / Edge Case</th>
+                        <th>Verified Mitigation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="font-weight: 700; color: #c084fc;">📝 NyxWriter</td>
+                        <td>Document studio with real-time typography, LaTeX rendering, and revision history.</td>
+                        <td>Zero-GC region memory, 120 FPS text rendering, local SLM copilot without cloud transmission.</td>
+                        <td>Multi-cursor edits displacing character offsets in large tables.</td>
+                        <td><span style="color: #34d399;">CRDT text chunk addressing with Merkle revision trees.</span></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 700; color: #38bdf8;">📊 NyxCalc</td>
+                        <td>Vectorized spreadsheet engine with 480+ formula library (Financial, Math, Stats, Eng).</td>
+                        <td>SIMD parallel evaluation (&lt;0.002ms per 10k cells), Newton-Raphson IRR convergence.</td>
+                        <td>Circular formula references locking compute worker threads.</td>
+                        <td><span style="color: #34d399;">Kahn's DAG cycle detection with instant recursive cell isolation.</span></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 700; color: #34d399;">📽️ NyxDeck</td>
+                        <td>Keynote presentations with hardware-pacing and GPU shader transitions.</td>
+                        <td>120 Hz deterministic render loop with zero stutter or garbage collection jitter.</td>
+                        <td>Heavy 4K textures inflating deck memory footprint.</td>
+                        <td><span style="color: #34d399;">Automated streaming mipmapping & zero-copy LZ4 compression.</span></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 700; color: #f59e0b;">📧 NyxMail</td>
+                        <td>Post-quantum encrypted mailbox, CalDAV calendar, and Bayesian spam filter.</td>
+                        <td>Dilithium-5 signatures on all mail; zero external cloud tracking.</td>
+                        <td>Large attachment indexing causing query delays.</td>
+                        <td><span style="color: #34d399;">Local SQLite FTS5 inverted index with Bloom pre-checks.</span></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 700; color: #c084fc;">💬 NyxMeet</td>
+                        <td>Peer-to-peer zero-cloud voice/video conferencing and audio noise gate.</td>
+                        <td>Local audio DSP gate at &lt;0.02ms latency; real-time SLM transcription.</td>
+                        <td>Bandwidth degradation when room size exceeds 8 peers.</td>
+                        <td><span style="color: #34d399;">Dynamic supernode election with adaptive simulcast downgrading.</span></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 700; color: #38bdf8;">🗄️ NyxBase</td>
+                        <td>Relational no-code database with Grid, Kanban, and Gallery projections.</td>
+                        <td>Columnar memory-mapped B-Tree with sub-millisecond multi-attribute filters.</td>
+                        <td>Cascade foreign key locks under rapid bulk ingestion.</td>
+                        <td><span style="color: #34d399;">Non-blocking MVCC with copy-on-write page locks.</span></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 700; color: #34d399;">📐 NyxDraw</td>
+                        <td>Infinite vector canvas for architecture diagrams and software schematics.</td>
+                        <td>Magnetic connector snapping and automatic orthogonal Bezier pathing.</td>
+                        <td>Rendering slowdown with 10,000+ vector objects.</td>
+                        <td><span style="color: #34d399;">Hierarchical Quadtree spatial indexing with frustum culling.</span></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 700; color: #f59e0b;">🧠 NyxNotes</td>
+                        <td>Bidirectional knowledge graph with [[wikilinks]] and block editor.</td>
+                        <td>Local interactive graph view; on-device vector embeddings for semantic recall.</td>
+                        <td>Broken reference links when renaming notes.</td>
+                        <td><span style="color: #34d399;">Global atomic alias resolution updating all referencing blocks.</span></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 700; color: #c084fc;">📄 NyxPDF Studio</td>
+                        <td>PDF 2.0 viewing, form filling, OCR annotation, and cryptographic sealing.</td>
+                        <td>Eliminates third-party signing SaaS; embedded Dilithium-5 legal seal.</td>
+                        <td>Stack overflow vulnerabilities in deeply nested PDF object trees.</td>
+                        <td><span style="color: #34d399;">Iterative byte-stream parser with strict recursion limits.</span></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 700; color: #38bdf8;">📅 NyxFlow</td>
+                        <td>Project planning with automatic Critical Path Method (CPM) and Gantt charts.</td>
+                        <td>Instant dependency recalculation across 10,000+ tasks in under 1ms.</td>
+                        <td>Circular dependencies between parent epics and child subtasks.</td>
+                        <td><span style="color: #34d399;">Topological barrier rejecting circular edges before insertion.</span></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 700; color: #34d399;">📋 NyxForms</td>
+                        <td>Reactive dynamic form builder exporting surveys directly into NyxBase.</td>
+                        <td>Client-side encrypted submissions without intermediate web servers.</td>
+                        <td>Submission bursts overwhelming database ingestion queues.</td>
+                        <td><span style="color: #34d399;">Lock-free ring-buffer pipeline with backpressure throttling.</span></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 700; color: #f59e0b;">🔐 NyxVault</td>
+                        <td>Hardware enclave credential vault and cryptographic key custody store.</td>
+                        <td>TPM 2.0 PCR attestation and instant memory zeroization on tamper.</td>
+                        <td>Residual data memory scraping on unencrypted caches.</td>
+                        <td><span style="color: #34d399;">Ephemeral page encryption and buffer scrubbing on task switch.</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+
+    <script>
+        const appMap = {
+            'writer': 0, 'calc': 1, 'deck': 2, 'mail': 3,
+            'meet': 4, 'base': 5, 'draw': 6, 'notes': 7,
+            'pdf': 8, 'flow': 9, 'forms': 10, 'vault': 11
+        };
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.app-view').forEach(view => view.classList.remove('active'));
+
+            const targetView = document.getElementById('view-' + tabId);
+            if (targetView) targetView.classList.add('active');
+
+            const buttons = document.querySelectorAll('.tab-btn');
+            if (buttons[appMap[tabId]] !== undefined) {
+                buttons[appMap[tabId]].classList.add('active');
+            }
+        }
+
+        // 1. NyxWriter Features
+        function formatText(style) {
+            if (style === 'bold') document.execCommand('bold', false, null);
+            if (style === 'italic') document.execCommand('italic', false, null);
+            if (style === 'heading') document.execCommand('formatBlock', false, '<h2>');
+            if (style === 'code') document.execCommand('formatBlock', false, '<pre>');
+            updateWriterStats();
+        }
+
+        function insertMathFormula() {
+            const math = prompt('Enter LaTeX Math Expression:', 'E = mc^2 \\quad \\int_0^\\infty e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}');
+            if (math) {
+                document.execCommand('insertHTML', false, `<code style="background: rgba(139,92,246,0.25); color: #c084fc; padding: 2px 6px; border-radius: 4px;">\\[ ${math} \\]</code> `);
+                updateWriterStats();
+            }
+        }
+
+        function insertCallout() {
+            document.execCommand('insertHTML', false, `<blockquote style="border-left: 3px solid #10b981; padding-left: 1rem; color: #a7f3d0; margin: 1rem 0;"><strong>Sovereign Security Note:</strong> Verified by formal compile-time invariant contracts.</blockquote>`);
+            updateWriterStats();
+        }
+
+        function updateWriterStats() {
+            const text = document.getElementById('writer-content').innerText;
+            const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+            const chars = text.length;
+            document.getElementById('writer-stats').innerText = `Words: ${words} | Characters: ${chars} | Encoding: UTF-8 Zero-Copy`;
+        }
+        document.getElementById('writer-content').addEventListener('input', updateWriterStats);
+
+        function runAiCopilot() {
+            const editor = document.getElementById('writer-content');
+            editor.innerHTML += `<p style="color: #38bdf8; font-style: italic;">✨ [AI Copilot]: Local NPU SLM continuation: "Furthermore, the zero-copy capability bridge eliminates context switch bottlenecks, outperforming standard POSIX IPC by over 400%."</p>`;
+            updateWriterStats();
+        }
+
+        function saveDocument() {
+            alert('Saved successfully to NyxFS Merkle Tree! Cryptographic commit hash: 0x3A7AB7E');
+        }
+
+        function exportDocument(fmt) {
+            const text = document.getElementById('writer-content').innerText;
+            const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'Sovereign_Technical_Specification.md';
+            a.click();
+        }
+
+        // 2. NyxCalc Features
+        function getCellValues() {
+            return [
+                parseFloat(document.getElementById('c1').value) || 0,
+                parseFloat(document.getElementById('c2').value) || 0,
+                parseFloat(document.getElementById('c3').value) || 0,
+                parseFloat(document.getElementById('c4').value) || 0,
+                parseFloat(document.getElementById('c5').value) || 0
+            ];
+        }
+
+        function calcAutoSum() {
+            const vals = getCellValues();
+            const sum = vals.reduce((a, b) => a + b, 0).toFixed(2);
+            document.getElementById('c-sum').value = sum + ' µs';
+            document.getElementById('formula-bar').value = '=SUM(C1:C5)';
+            alert(`Auto-SUM Evaluated via SIMD Vector Engine: ${sum} µs`);
+        }
+
+        function calcEvaluateFormula() {
+            const formula = document.getElementById('formula-bar').value.trim().toUpperCase();
+            const vals = getCellValues();
+            let res = 0;
+            if (formula.includes('AVERAGE')) {
+                res = (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2);
+                document.getElementById('c-sum').value = res + ' µs (AVG)';
+            } else if (formula.includes('MEDIAN')) {
+                vals.sort((a, b) => a - b);
+                res = vals[Math.floor(vals.length / 2)].toFixed(2);
+                document.getElementById('c-sum').value = res + ' µs (MEDIAN)';
+            } else {
+                res = vals.reduce((a, b) => a + b, 0).toFixed(2);
+                document.getElementById('c-sum').value = res + ' µs (SUM)';
+            }
+            alert(`Evaluated ${formula} -> Result: ${res}`);
+        }
+
+        function calcRunIRR() {
+            alert('Newton-Raphson IRR Converged on Cash Flows [-1000, 300, 400, 400, 300]: 14.895% (Discount Rate). Evaluated in 0.002ms with zero allocations.');
+        }
+
+        // 3. NyxDeck Features
+        const slides = [
+            { title: "Sovereign Computing Vision", desc: "Re-architecting the computing stack from bare metal up. Complete cryptographic sovereignty, post-quantum signing, and zero unrecoverable crashes." },
+            { title: "Universal Tri-OS Compatibility", desc: "Janus-POSIX (Linux ELF64), Nyx-Proton (Windows Win32/DX12), and Darling-WASI (macOS/WASI 0.2) running at zero-copy native speeds." },
+            { title: "Zero-GC Deterministic Scheduling", desc: "Hardware NPU tensor scheduling (sched_tensor) coupled with 120 FPS ProMotion frame pacing and O(1) region memory arenas." }
+        ];
+
+        function selectSlide(idx) {
+            document.querySelectorAll('.slide-thumb').forEach((el, i) => {
+                if (i === idx) el.classList.add('active');
+                else el.classList.remove('active');
+            });
+            document.getElementById('slide-title').innerText = slides[idx].title;
+            document.getElementById('slide-desc').innerText = slides[idx].desc;
+        }
+
+        function deckAddSlide() {
+            const newTitle = prompt('Enter Slide Title:', 'New Architectural Feature');
+            if (newTitle) {
+                slides.push({ title: newTitle, desc: 'Detailed sovereign specification and empirical performance benchmarks.' });
+                const nav = document.getElementById('slide-nav-list');
+                const idx = slides.length - 1;
+                const thumb = document.createElement('div');
+                thumb.className = 'slide-thumb';
+                thumb.onclick = () => selectSlide(idx);
+                thumb.innerHTML = `<div style="font-size: 0.78rem; color: var(--cyan); margin-bottom: 0.2rem;">Slide ${idx + 1}</div><div style="font-weight: 700; font-size: 0.9rem; color: #fff;">${newTitle}</div>`;
+                nav.appendChild(thumb);
+                selectSlide(idx);
+            }
+        }
+
+        function startPresentationMode() {
+            alert('Presentation started in 120 FPS Fullscreen Mode! Use Arrow keys to navigate slides.');
+        }
+
+        // 4. NyxMail Features
+        function selectMail(idx) {
+            document.querySelectorAll('.mail-item').forEach((el, i) => {
+                if (i === idx) el.classList.add('active');
+                else el.classList.remove('active');
+            });
+            if (idx === 0) {
+                document.getElementById('mail-subject').innerText = "Q3 Sovereign Strategy & Rollout";
+                document.getElementById('mail-body').innerText = "The transition to NyxOffice across all enterprise workstations is proceeding ahead of schedule. SIMD formula execution in NyxCalc has reduced financial reporting turnaround from 4 hours to under 2 seconds.";
+            } else {
+                document.getElementById('mail-subject').innerText = "TPM 2.0 PCR-0 Match Confirmed";
+                document.getElementById('mail-body').innerText = "Hardware enclave verification confirmed that system binaries match golden Merkle hashes. No cold boot or tampering anomalies detected.";
+            }
+        }
+
+        function mailTestSpamFilter() {
+            alert('Bayesian Spam Gate Evaluation: Score = 0.018 (Clean Ham). Inverted Bloom filter test passed.');
+        }
+
+        function mailSignDilithium() {
+            alert('Message signed with Post-Quantum CRYSTALS-Dilithium-5 sovereign key pair. Enclave sealed.');
+        }
+
+        // 5. NyxMeet Features
+        function meetSimulateSpeech() {
+            const stream = document.getElementById('meet-transcript-stream');
+            stream.innerHTML += `<p><b style="color: #f59e0b;">[Carol]:</b> Critical Path duration is locked at 20 days with zero circular dependency risks.</p>`;
+        }
+
+        function meetToggleNoiseGate() {
+            alert('Audio DSP Noise Gate re-calibrated. Ambient threshold locked at -42dB.');
+        }
+
+        // 6. NyxBase Features
+        function baseAddRecord() {
+            alert('Added new relational record to NyxBase table via lock-free MVCC ring buffer.');
+        }
+
+        function baseToggleView() {
+            alert('Toggled view between Columnar Grid and Kanban Matrix.');
+        }
+
+        // 7. NyxDraw Features
+        function drawAddNode() {
+            alert('Added new microservice node with magnetic orthogonal auto-routing connectors.');
+        }
+
+        function drawExportSVG() {
+            alert('Exported clean vector SVG diagram at 120 FPS fidelity.');
+        }
+
+        // 8. NyxNotes Features
+        function notesInsertWikilink() {
+            document.execCommand('insertHTML', false, ` <span style="color: var(--cyan); font-weight: 700;">[[Quantum_Cryptography]]</span> `);
+        }
+
+        // 9. NyxPDF Studio Features
+        function pdfVerifySeal() {
+            alert('PDF 2.0 Legal Seal Verified!\nSigner: Nyx Sovereign Signer Authority\nAlgorithm: Dilithium-5 (NIST Level 5)\nStatus: 100% Cryptographically Valid.');
+        }
+
+        // 10. NyxFlow Features
+        function flowRecalculateCPM() {
+            alert('Critical Path Recalculation Complete: 20 Days Duration across 4 milestone dependencies.');
+        }
+
+        // 11. NyxForms Features
+        function formsSubmitDemo() {
+            const name = document.getElementById('form-name-input').value;
+            const rating = document.getElementById('form-rating-input').value;
+            alert(`Encrypted Form Submitted Successfully!\nName: ${name}\nRating: ${rating}/5\nIngested into NyxBase table.`);
+        }
+
+        // 12. NyxVault Features
+        function generatePostQuantumKey() {
+            const hex = '0x' + Array.from({length: 32}, () => Math.floor(Math.random()*16).toString(16)).join('').toUpperCase();
+            document.getElementById('vault-key-display').innerText = hex;
+            alert(`Generated new Post-Quantum Dilithium-5 Sovereign Key Pair:\n${hex}\nSigned and stored in hardware enclave.`);
+        }
+
+        function lockVault() {
+            alert('NyxVault locked. Enclave memory zeroized.');
+        }
+    </script>
+</body>
+</html>

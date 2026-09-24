@@ -1,0 +1,284 @@
+module fs
+
+extern "C" {
+    fn fopen(path: *const u8, mode: *const u8) -> *File
+    fn fclose(file: *File) -> i32
+    fn fread(buf: *mut u8, size: u64, count: u64, file: *File) -> u64
+    fn fwrite(buf: *const u8, size: u64, count: u64, file: *File) -> u64
+    fn fseek(file: *File, offset: i64, origin: i32) -> i32
+    fn ftell(file: *File) -> i64
+    fn access(path: *const u8, mode: i32) -> i32
+    fn mkdir(path: *const u8) -> i32
+    fn rmdir(path: *const u8) -> i32
+    fn remove(path: *const u8) -> i32
+    fn rename(old: *const u8, new: *const u8) -> i32
+    fn stat_size(path: *const u8) -> i64
+    fn opendir(path: *const u8) -> *Dir
+    fn readdir(dir: *Dir) -> *DirEntry_C
+    fn closedir(dir: *Dir) -> i32
+    fn dirent_name(entry: *DirEntry_C) -> *const u8
+    fn dirent_is_dir(entry: *DirEntry_C) -> i32
+}
+
+type File = *()
+type Dir = *()
+type DirEntry_C = *()
+
+pub struct DirEntry {
+    pub path: String,
+    pub is_dir: Bool,
+}
+
+pub fn exists(path: String) -> Bool {
+    access(path.as_ptr(), 0) == 0
+}
+
+pub fn is_file(path: String) -> Bool {
+    access(path.as_ptr(), 0) == 0
+}
+
+pub fn is_dir(path: String) -> Bool {
+    access(path.as_ptr(), 0) == 0
+}
+
+pub fn stat(path: String) -> Result<(), String> {
+    if access(path.as_ptr(), 0) == 0 {
+        Result.Ok(())
+    } else {
+        Result.Err("Not found: " + path)
+    }
+}
+
+pub fn file_size(path: String) -> Result<i64, String> {
+    let size = stat_size(path.as_ptr())
+    if size >= 0 {
+        Result.Ok(size)
+    } else {
+        Result.Err("Cannot stat: " + path)
+    }
+}
+
+pub fn read_to_string(path: String) -> Result<String, String> {
+    let f = fopen(path.as_ptr(), "rb")
+    if f == null {
+        return Result.Err("Cannot open: " + path)
+    }
+
+    fseek(f, 0, 2)
+    let size = ftell(f)
+    fseek(f, 0, 0)
+
+    if size <= 0 {
+        fclose(f)
+        return Result.Ok("".to_string())
+    }
+
+    let mut buf = [0u8; 65536]
+    let mut result = String.new()
+    let mut remaining = size as u64
+
+    while remaining > 0 {
+        let chunk = if remaining > 65536 { 65536 } else { remaining }
+        let read = fread(&mut buf[0], 1, chunk, f)
+        if read == 0 { break }
+        result = result + String.from_utf8(buf[0..read])
+        remaining = remaining - read
+    }
+
+    fclose(f)
+    Result.Ok(result)
+}
+
+pub fn read_bytes(path: String) -> Result<Vec<u8>, String> {
+    let f = fopen(path.as_ptr(), "rb")
+    if f == null {
+        return Result.Err("Cannot open: " + path)
+    }
+
+    fseek(f, 0, 2)
+    let size = ftell(f)
+    fseek(f, 0, 0)
+
+    if size <= 0 {
+        fclose(f)
+        return Result.Ok(Vec.new())
+    }
+
+    let mut data = Vec.new()
+    let mut buf = [0u8; 65536]
+    let mut remaining = size as u64
+
+    while remaining > 0 {
+        let chunk = if remaining > 65536 { 65536 } else { remaining }
+        let read = fread(&mut buf[0], 1, chunk, f)
+        if read == 0 { break }
+        for i in 0..read {
+            data.push(buf[i as u64])
+        }
+        remaining = remaining - read
+    }
+
+    fclose(f)
+    Result.Ok(data)
+}
+
+pub fn write_string(path: String, content: String) -> Result<(), String> {
+    let f = fopen(path.as_ptr(), "wb")
+    if f == null {
+        return Result.Err("Cannot write: " + path)
+    }
+    fwrite(content.as_ptr(), 1, content.len() as u64, f)
+    fclose(f)
+    Result.Ok(())
+}
+
+pub fn write_bytes(path: String, data: Vec<u8>) -> Result<(), String> {
+    let f = fopen(path.as_ptr(), "wb")
+    if f == null {
+        return Result.Err("Cannot write: " + path)
+    }
+    fwrite(data.as_ptr(), 1, data.len() as u64, f)
+    fclose(f)
+    Result.Ok(())
+}
+
+pub fn append(path: String, content: String) -> Result<(), String> {
+    let f = fopen(path.as_ptr(), "ab")
+    if f == null {
+        return Result.Err("Cannot append: " + path)
+    }
+    fwrite(content.as_ptr(), 1, content.len() as u64, f)
+    fclose(f)
+    Result.Ok(())
+}
+
+pub fn create_dir(path: String) -> Result<(), String> {
+    if mkdir(path.as_ptr()) == 0 {
+        Result.Ok(())
+    } else {
+        Result.Err("Cannot create dir: " + path)
+    }
+}
+
+pub fn create_dir_all(path: String) -> Result<(), String> {
+    if exists(path.clone()) {
+        return Result.Ok(())
+    }
+
+    let parts = path.split("/")
+    let mut current = String.new()
+    for part in parts {
+        if part.len() == 0 { continue }
+        if current.len() > 0 {
+            current = current + "/" + part
+        } else {
+            current = part.clone()
+        }
+        if !exists(current.clone()) {
+            if mkdir(current.as_ptr()) != 0 {
+                return Result.Err("Cannot create dir: " + current)
+            }
+        }
+    }
+    Result.Ok(())
+}
+
+pub fn read_dir(path: String) -> Result<Vec<DirEntry>, String> {
+    let dir = opendir(path.as_ptr())
+    if dir == null {
+        return Result.Err("Cannot open dir: " + path)
+    }
+
+    let mut entries = Vec.new()
+    loop {
+        let entry = readdir(dir)
+        if entry == null { break }
+        let name_ptr = dirent_name(entry)
+        if name_ptr == null { break }
+        let name = name_ptr.to_string()
+        if name == "." || name == ".." { continue }
+        let is_d = dirent_is_dir(entry) != 0
+        entries.push(DirEntry {
+            path: if path.ends_with("/") { path.clone() + name.clone() } else { path.clone() + "/" + name.clone() },
+            is_dir: is_d,
+        })
+    }
+
+    closedir(dir)
+    Result.Ok(entries)
+}
+
+pub fn read_dir_names(path: String) -> Result<Vec<String>, String> {
+    let entries = read_dir(path)?
+    let mut names = Vec.new()
+    for entry in entries {
+        names.push(entry.path)
+    }
+    Result.Ok(names)
+}
+
+pub fn remove_file(path: String) -> Result<(), String> {
+    if remove(path.as_ptr()) == 0 {
+        Result.Ok(())
+    } else {
+        Result.Err("Cannot remove: " + path)
+    }
+}
+
+pub fn remove_dir(path: String) -> Result<(), String> {
+    if rmdir(path.as_ptr()) == 0 {
+        Result.Ok(())
+    } else {
+        Result.Err("Cannot remove dir: " + path)
+    }
+}
+
+pub fn rename_file(old: String, new: String) -> Result<(), String> {
+    if rename(old.as_ptr(), new.as_ptr()) == 0 {
+        Result.Ok(())
+    } else {
+        Result.Err("Cannot rename: " + old + " -> " + new)
+    }
+}
+
+fn basename(path: String) -> String {
+    let mut last = 0
+    for i in 0..path.len() {
+        if path[i] == '/' || path[i] == '\\' { last = i + 1 }
+    }
+    path[last..]
+}
+
+pub fn copy(src: String, dst: String) -> Result<(), String> {
+    let data = read_bytes(src)?
+    write_bytes(dst, data)
+}
+
+pub fn copy_dir(src: String, dst: String) -> Result<(), String> {
+    create_dir(dst.clone())?
+    let entries = read_dir(src)?
+    for entry in entries {
+        if entry.is_dir {
+            copy_dir(entry.path.clone(), dst.clone() + "/" + basename(entry.path))?
+        } else {
+            copy(entry.path, dst.clone() + "/" + basename(entry.path))?
+        }
+    }
+    Result.Ok(())
+}
+
+pub fn temp_dir() -> String {
+    "/tmp".to_string()
+}
+
+pub fn home_dir() -> String {
+    extern "C" {
+        fn getenv(name: *const u8) -> *const u8
+    }
+    let ptr = getenv("HOME".as_ptr())
+    if ptr != null {
+        ptr.to_string()
+    } else {
+        "/tmp".to_string()
+    }
+}

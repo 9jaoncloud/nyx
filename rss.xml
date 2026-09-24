@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+    <title>The Nyx Programming Language &amp; Sovereign OS — Engineering &amp; Research Updates</title>
+    <link>https://nyx.9jaoncloud.com.ng</link>
+    <description>Official technical articles, architectural breakthroughs, benchmark reports, and roadmap milestones for Nyx, NyxOS, and NyxMobile by Simeon Bala and 9jaonCloud Sovereign Systems.</description>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 05 Sep 2026 08:00:00 +0000</lastBuildDate>
+    <atom:link href="https://nyx.9jaoncloud.com.ng/rss.xml" rel="self" type="application/rss+xml" />
+
+    <item>
+        <title>Public Source Release: Calculator, Snake 60 FPS Arcade, Nigerian Whot Game Engine &amp; Sovereign Browser</title>
+        <link>https://nyx.9jaoncloud.com.ng/docs/tutorial/building-calculator.html</link>
+        <guid>https://nyx.9jaoncloud.com.ng/docs/tutorial/building-calculator.html</guid>
+        <pubDate>Sat, 05 Sep 2026 08:00:00 +0000</pubDate>
+        <description><![CDATA[
+            We have released full public open-source implementations and in-depth engineering tutorials for standard desktop apps in Nyx: Zero-GC Calculator, 60 FPS Snake Arcade, the complete Nigerian Whot 54-card deck engine (with Hold On, Pick Two, General Market, and Whot 20 AI rules), and the Capability-Secured Sovereign Sandbox Browser.
+        ]]></description>
+    </item>
+
+    <item>
+        <title>NyxOS &amp; NyxMobile Architectural Guide: Memory Invariance, Microkernel Isolation &amp; Zero-Execution APK Sandboxing</title>
+        <link>https://nyx.9jaoncloud.com.ng/about-nyxos.html</link>
+        <guid>https://nyx.9jaoncloud.com.ng/about-nyxos.html</guid>
+        <pubDate>Sat, 05 Sep 2026 06:30:00 +0000</pubDate>
+        <description><![CDATA[
+            Explore how NyxOS achieves high-throughput zero-GC determinism via Compile-Time Region Inference without garbage collection pauses, coupled with a 42ns capability-based microkernel, and how NyxMobile safely inspects untrusted Android APKs via zero-execution static analysis.
+        ]]></description>
+    </item>
+
+    <item>
+        <title>Nyx v1.0 Enterprise Milestone: Formal Verification (SMT-LIB2/Lean 4) &amp; Global Decentralized Registry</title>
+        <link>https://nyx.9jaoncloud.com.ng/docs/features/formal_verification.html</link>
+        <guid>https://nyx.9jaoncloud.com.ng/docs/features/formal_verification.html</guid>
+        <pubDate>Mon, 31 Aug 2026 13:00:00 +0000</pubDate>
+        <description><![CDATA[
+            Nyx achieves mathematical region safety soundness proofs via SMT-LIB2 / Lean 4 theorem generators, first-class Hoare logic contracts (@requires, @ensures, @invariant), and an air-gapped Ed25519 digitally signed Decentralized Package Registry with IPFS/Raft peer-to-peer replication.
+        ]]></description>
+    </item>
+
+    <item>
+        <title>Empirical Systems Benchmark: 15-Language Evaluation &amp; High-Entropy Memory Stress Testing</title>
+        <link>https://nyx.9jaoncloud.com.ng/docs/benchmarks.html</link>
+        <guid>https://nyx.9jaoncloud.com.ng/docs/benchmarks.html</guid>
+        <pubDate>Mon, 31 Aug 2026 10:00:00 +0000</pubDate>
+        <description><![CDATA[
+            We evaluate the Nyx region-based memory model against 15 industry runtimes (Rust 1.97, C GCC 14, Zig, Mojo, Vale, Go, Node.js, Python 3.13) across 7 rigorous real-world workloads, including 8.38M high-entropy 64-bit PRNG allocations with non-linear stride access and 1M key-value hash map lookups. Nyx achieves a 17.2x speedup over Rust in randomized allocation and 0.00 ms GC pause times.
+        ]]></description>
+    </item>
+
+    <item>
+        <title>2026 Viability Assessment &amp; The Four Architectural Breakthroughs</title>
+        <link>https://nyx.9jaoncloud.com.ng/docs/assessment.html</link>
+        <guid>https://nyx.9jaoncloud.com.ng/docs/assessment.html</guid>
+        <pubDate>Sun, 30 Aug 2026 14:00:00 +0000</pubDate>
+        <description><![CDATA[
+            How peer-review criticism transformed Nyx: A deep dive into the 2-Tier Standard Library, Escape Diagnostics Engine (--explain-escape), @must_region real-time assertions, and the Zero-Cost Typing Boundary.
+        ]]></description>
+    </item>
+</channel>
+</rss>
