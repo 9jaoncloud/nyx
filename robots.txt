@@ -1,0 +1,33 @@
+# robots.txt for https://nyx.9jaoncloud.com.ng/
+# Allow public pages while strictly locking private AI vaults and admin APIs
+
+User-agent: *
+Allow: /
+Disallow: /projects/sophia/
+Disallow: /api/sophia/
+Disallow: /data/
+Disallow: /projects/nyx-ai-engine/
+Disallow: /nyxprivate/
+
+# Dedicated search engine bot directives
+User-agent: Googlebot
+Allow: /
+Disallow: /projects/sophia/
+Disallow: /api/sophia/
+Disallow: /data/
+
+User-agent: Bingbot
+Allow: /
+Disallow: /projects/sophia/
+Disallow: /api/sophia/
+Disallow: /data/
+
+User-agent: DuckDuckBot
+Allow: /
+Disallow: /projects/sophia/
+Disallow: /api/sophia/
+Disallow: /data/
+
+# XML Sitemap and RSS Feeds
+Sitemap: https://nyx.9jaoncloud.com.ng/sitemap.xml
+Sitemap: https://nyx.9jaoncloud.com.ng/rss.xml

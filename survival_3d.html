@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nyx Sovereign 4D — 3D/4D Immersive Action, Shooting & Survival Engine</title>
+    <style>
+        :root {
+            --bg-dark: #07090e;
+            --panel-bg: rgba(13, 17, 23, 0.88);
+            --neon-cyan: #00f2ff;
+            --neon-gold: #ffd700;
+            --neon-red: #ff3366;
+            --neon-green: #00ff88;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #e6edf3;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            cursor: crosshair;
+        }
+
+        /* 4D Temporal Indicator & Vignette */
+        #temporal-vignette {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            box-shadow: inset 0 0 100px rgba(0, 242, 255, 0);
+            transition: box-shadow 0.3s ease;
+            z-index: 5;
+        }
+
+        #temporal-vignette.slowmo {
+            box-shadow: inset 0 0 150px rgba(0, 242, 255, 0.4), inset 0 0 50px rgba(0, 242, 255, 0.8);
+        }
+
+        #temporal-vignette.rewind {
+            box-shadow: inset 0 0 150px rgba(255, 51, 102, 0.5), inset 0 0 50px rgba(255, 51, 102, 0.9);
+        }
+
+        /* Crosshair */
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 24px;
+            height: 24px;
+            pointer-events: none;
+            z-index: 20;
+            transition: all 0.1s ease;
+        }
+
+        #crosshair::before, #crosshair::after {
+            content: '';
+            position: absolute;
+            background: var(--neon-cyan);
+            box-shadow: 0 0 6px var(--neon-cyan);
+        }
+
+        #crosshair::before {
+            top: 11px;
+            left: 0;
+            width: 24px;
+            height: 2px;
+        }
+
+        #crosshair::after {
+            top: 0;
+            left: 11px;
+            width: 2px;
+            height: 24px;
+        }
+
+        #crosshair.aiming {
+            width: 12px;
+            height: 12px;
+        }
+
+        #crosshair.aiming::before {
+            top: 5px;
+            width: 12px;
+            background: var(--neon-gold);
+            box-shadow: 0 0 8px var(--neon-gold);
+        }
+
+        #crosshair.aiming::after {
+            left: 5px;
+            height: 12px;
+            background: var(--neon-gold);
+            box-shadow: 0 0 8px var(--neon-gold);
+        }
+
+        /* 3D Action HUD */
+        .hud-panel {
+            position: absolute;
+            background: var(--panel-bg);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            padding: 14px 18px;
+            backdrop-filter: blur(12px);
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        #hud-top-left {
+            top: 20px;
+            left: 20px;
+            min-width: 320px;
+        }
+
+        #hud-bottom-right {
+            bottom: 20px;
+            right: 20px;
+            min-width: 280px;
+            text-align: right;
+        }
+
+        #hud-4d-status {
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
+        }
+
+        .meter-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 4px 0 10px 0;
+        }
+
+        .meter-fill {
+            height: 100%;
+            transition: width 0.1s ease;
+        }
+
+        .fill-health { background: linear-gradient(90deg, #ff3366, #ff6b6b); width: 100%; }
+        .fill-stamina { background: linear-gradient(90deg, #ffd700, #ffea79); width: 100%; }
+        .fill-chrono { background: linear-gradient(90deg, #00f2ff, #00ff88); width: 100%; }
+
+        .hud-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #8b949e;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .ammo-display {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--neon-cyan);
+            font-family: monospace;
+            text-shadow: 0 0 12px rgba(0, 242, 255, 0.5);
+        }
+
+        .weapon-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--neon-gold);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* 4D Temporal Controls Badge */
+        .chrono-badge {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            background: rgba(0, 242, 255, 0.15);
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+        }
+
+        /* Click to Start Overlay */
+        #blocker {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            cursor: pointer;
+        }
+
+        #instructions {
+            text-align: center;
+            max-width: 650px;
+            padding: 40px;
+            background: rgba(13, 17, 23, 0.95);
+            border: 1px solid var(--neon-cyan);
+            border-radius: 16px;
+            box-shadow: 0 0 40px rgba(0, 242, 255, 0.3);
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 12px;
+            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .key-tag {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-weight: bold;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Killfeed / Harvest Notification */
+        #action-banner {
+            position: absolute;
+            top: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(13, 17, 23, 0.92);
+            border: 1px solid var(--neon-gold);
+            padding: 8px 24px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--neon-gold);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            z-index: 15;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        /* Floating 3D Hit Markers */
+        .hit-marker {
+            position: absolute;
+            color: #ff3366;
+            font-weight: 900;
+            font-size: 20px;
+            pointer-events: none;
+            text-shadow: 0 0 8px #ff3366;
+            animation: floatUp 0.8s ease-out forwards;
+            z-index: 25;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(1.2); }
+            100% { opacity: 0; transform: translateY(-40px) scale(0.8); }
+        }
+    </style>
+    <!-- Three.js 3D/WebGL Engine -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- PointerLockControls -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
+</head>
+<body>
+
+    <div id="canvas-container"></div>
+    <div id="temporal-vignette"></div>
+    <div id="crosshair"></div>
+    <div id="action-banner">🎯 CRITICAL HEADSHOT! +4 VENISON</div>
+
+    <!-- Top Left: Survival Homeostasis -->
+    <div class="hud-panel" id="hud-top-left">
+        <div style="font-weight: 800; color: #fff; margin-bottom: 8px; font-size: 13px; letter-spacing: 1px;">
+            NYX PIONEER VITALITY
+        </div>
+        <div class="hud-label"><span>Health</span><span id="txtHealth">100 / 100</span></div>
+        <div class="meter-bar"><div class="meter-fill fill-health" id="barHealth"></div></div>
+
+        <div class="hud-label"><span>Stamina</span><span id="txtStamina">100 / 100</span></div>
+        <div class="meter-bar"><div class="meter-fill fill-stamina" id="barStamina"></div></div>
+
+        <div class="hud-label"><span>Chrono-Energy (4D)</span><span id="txtChrono">100%</span></div>
+        <div class="meter-bar"><div class="meter-fill fill-chrono" id="barChrono"></div></div>
+
+        <div style="font-size: 12px; color: #7ee787; margin-top: 6px;">
+            🪵 Wood: <span id="valWood">14</span> | 🪨 Stone: <span id="valStone">8</span> | 🥩 Meat: <span id="valMeat">4</span>
+        </div>
+    </div>
+
+    <!-- Center Top: 4D Temporal Matrix -->
+    <div class="hud-panel" id="hud-4d-status">
+        <span class="chrono-badge" id="badgeTimeMode">TIME-VECTOR: 1.0x NORMAL</span>
+        <span style="font-size: 12px; color: #8b949e;">[T] Slow-Mo | [R] Rewind | [V] Toggle 1st/3rd Person</span>
+    </div>
+
+    <!-- Bottom Right: Weapon & Ammo HUD -->
+    <div class="hud-panel" id="hud-bottom-right">
+        <div class="weapon-name" id="weaponName">PLASMA HUNTING RIFLE</div>
+        <div class="ammo-display"><span id="curAmmo">8</span> / <span id="maxAmmo">32</span></div>
+        <div style="font-size: 11px; color: #8b949e;">[Left Click] Shoot | [Right Click] Aim | [1-3] Switch</div>
+    </div>
+
+    <!-- Click-to-Play Overlay -->
+    <div id="blocker">
+        <div id="instructions">
+            <h1>NYX SOVEREIGN 4D</h1>
+            <p style="color: #8b949e; margin-bottom: 24px; font-size: 14px;">
+                High-Immersive 3D/4D Action, Hunting, Shooting & Survival Engine
+            </p>
+            <div style="text-align: left; background: rgba(0,0,0,0.4); padding: 16px; border-radius: 8px; margin-bottom: 24px; font-size: 13px; line-height: 1.8;">
+                <div><span class="key-tag">W A S D</span> — 3D Locomotion (Walk / Sprint)</div>
+                <div><span class="key-tag">MOUSE</span> — 3D Aim & View Pitch / Yaw</div>
+                <div><span class="key-tag">LEFT CLICK</span> — Shoot Weapon / Fire Projectile</div>
+                <div><span class="key-tag">RIGHT CLICK</span> — Aim Down Sights (ADS Zoom)</div>
+                <div><span class="key-tag">T</span> — <b>4D Bullet-Time (0.2x Slow Motion)</b></div>
+                <div><span class="key-tag">R</span> — <b>4D Temporal Rewind (Time-Reversal)</b> / Reload</div>
+                <div><span class="key-tag">V</span> — Toggle 1st-Person FPS / 3rd-Person TPS View</div>
+                <div><span class="key-tag">1 - 3</span> — Weapon Select (Rifle / Plasma Bow / War Axe)</div>
+                <div><span class="key-tag">E</span> — Interact / Harvest / Cook</div>
+            </div>
+            <p style="font-weight: 700; color: var(--neon-cyan); letter-spacing: 1px;">
+                CLICK ANYWHERE TO ENTER 3D/4D REALITY
+            </p>
+        </div>
+    </div>
+
+    <script>
+        /* ── Audio Engine (3D Positional Synthesizer) ────────────────────────────── */
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound3D(type, x = 0, y = 0, z = 0) {
+            if (!audioCtx) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            const panner = audioCtx.createPanner();
+
+            panner.panningModel = 'HRTF';
+            panner.distanceModel = 'inverse';
+            panner.refDistance = 5;
+            panner.maxDistance = 100;
+            panner.rolloffFactor = 1;
+            panner.positionX.setValueAtTime(x, now);
+            panner.positionY.setValueAtTime(y, now);
+            panner.positionZ.setValueAtTime(z, now);
+
+            osc.connect(gain);
+            gain.connect(panner);
+            panner.connect(audioCtx.destination);
+
+            if (type === 'gunshot') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(40, now + 0.25);
+                gain.gain.setValueAtTime(0.6, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            } else if (type === 'bow') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(520, now);
+                osc.frequency.exponentialRampToValueAtTime(110, now + 0.18);
+                gain.gain.setValueAtTime(0.4, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.18);
+                osc.start(now);
+                osc.stop(now + 0.18);
+            } else if (type === 'hit') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.exponentialRampToValueAtTime(30, now + 0.2);
+                gain.gain.setValueAtTime(0.5, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } else if (type === 'slowmo') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.linearRampToValueAtTime(80, now + 0.4);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            }
+        }
+
+        /* ── Three.js 3D/4D World Initialization ─────────────────────────────────── */
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87ceeb); // Sky blue
+        scene.fog = new THREE.FogExp2(0x87ceeb, 0.008);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        container.appendChild(renderer.domElement);
+
+        // PointerLock Controls
+        const controls = new THREE.PointerLockControls(camera, document.body);
+        const blocker = document.getElementById('blocker');
+        blocker.addEventListener('click', () => controls.lock());
+        controls.addEventListener('lock', () => blocker.style.display = 'none');
+        controls.addEventListener('unlock', () => blocker.style.display = 'flex');
+
+        /* ── 4D Lighting & Atmosphere ────────────────────────────────────────────── */
+        const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.6);
+        hemiLight.position.set(0, 200, 0);
+        scene.add(hemiLight);
+
+        const sunLight = new THREE.DirectionalLight(0xfffaed, 1.2);
+        sunLight.position.set(80, 120, 60);
+        sunLight.castShadow = true;
+        sunLight.shadow.mapSize.width = 2048;
+        sunLight.shadow.mapSize.height = 2048;
+        sunLight.shadow.camera.near = 0.5;
+        sunLight.shadow.camera.far = 400;
+        const d = 100;
+        sunLight.shadow.camera.left = -d;
+        sunLight.shadow.camera.right = d;
+        sunLight.shadow.camera.top = d;
+        sunLight.shadow.camera.bottom = -d;
+        scene.add(sunLight);
+
+        /* ── Procedural 3D Terrain & Multi-Biome Synthesis ───────────────────────── */
+        const terrainSize = 400;
+        const terrainSegments = 128;
+        const terrainGeo = new THREE.PlaneGeometry(terrainSize, terrainSize, terrainSegments, terrainSegments);
+        terrainGeo.rotateX(-Math.PI / 2);
+
+        const pos = terrainGeo.attributes.position;
+        for (let i = 0; i < pos.count; i++) {
+            const vx = pos.getX(i);
+            const vz = pos.getZ(i);
+            // Multi-frequency Perlin style elevation
+            const elevation = Math.sin(vx * 0.03) * Math.cos(vz * 0.03) * 4.0 +
+                              Math.sin(vx * 0.08 + vz * 0.05) * 1.8 +
+                              Math.sin(vx * 0.01) * 8.0;
+            
+            // Meandering river canyon carving
+            const riverDist = Math.abs(vx - Math.sin(vz * 0.04) * 25.0);
+            let finalY = elevation;
+            if (riverDist < 12.0) {
+                finalY -= (1.0 - riverDist / 12.0) * 5.0;
+            }
+            pos.setY(i, finalY);
+        }
+        terrainGeo.computeVertexNormals();
+
+        const terrainMat = new THREE.MeshStandardMaterial({
+            color: 0x4caf50,
+            roughness: 0.85,
+            metalness: 0.1,
+            flatShading: false
+        });
+        const terrainMesh = new THREE.Mesh(terrainGeo, terrainMat);
+        terrainMesh.receiveShadow = true;
+        scene.add(terrainMesh);
+
+        // 3D River Water Plane
+        const waterGeo = new THREE.PlaneGeometry(35, terrainSize);
+        waterGeo.rotateX(-Math.PI / 2);
+        const waterMat = new THREE.MeshStandardMaterial({
+            color: 0x0088ff,
+            roughness: 0.1,
+            metalness: 0.8,
+            transparent: true,
+            opacity: 0.75
+        });
+        const waterMesh = new THREE.Mesh(waterGeo, waterMat);
+        waterMesh.position.set(0, -2.2, 0);
+        scene.add(waterMesh);
+
+        /* ── 3D Structures (Cabins, Coops, Kilns, Firepits) ───────────────────────── */
+        function createLogCabin(x, z) {
+            const group = new THREE.Group();
+            // Timber Walls
+            const bodyGeo = new THREE.BoxGeometry(12, 6, 10);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x6d4c41, roughness: 0.9 });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.position.y = 3;
+            body.castShadow = true;
+            body.receiveShadow = true;
+            group.add(body);
+
+            // Thatched Triangular Roof
+            const roofGeo = new THREE.ConeGeometry(9, 4, 4);
+            roofGeo.rotateY(Math.PI / 4);
+            const roofMat = new THREE.MeshStandardMaterial({ color: 0x8d6e63, roughness: 0.8 });
+            const roof = new THREE.Mesh(roofGeo, roofMat);
+            roof.position.y = 8;
+            roof.castShadow = true;
+            group.add(roof);
+
+            // Stone Chimney
+            const chimGeo = new THREE.BoxGeometry(1.6, 9, 1.6);
+            const chimMat = new THREE.MeshStandardMaterial({ color: 0x78909c, roughness: 0.9 });
+            const chim = new THREE.Mesh(chimGeo, chimMat);
+            chim.position.set(4, 4.5, 3);
+            chim.castShadow = true;
+            group.add(chim);
+
+            group.position.set(x, 0, z);
+            scene.add(group);
+            return group;
+        }
+
+        function createCampfire(x, z) {
+            const group = new THREE.Group();
+            // Stones Ring
+            for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * Math.PI * 2;
+                const stoneGeo = new THREE.DodecahedronGeometry(0.5);
+                const stoneMat = new THREE.MeshStandardMaterial({ color: 0x455a64 });
+                const stone = new THREE.Mesh(stoneGeo, stoneMat);
+                stone.position.set(Math.cos(angle) * 1.8, 0.3, Math.sin(angle) * 1.8);
+                stone.castShadow = true;
+                group.add(stone);
+            }
+            // Glowing Fire Core
+            const fireGeo = new THREE.ConeGeometry(0.8, 1.5, 6);
+            const fireMat = new THREE.MeshBasicMaterial({ color: 0xff5500 });
+            const fire = new THREE.Mesh(fireGeo, fireMat);
+            fire.position.y = 0.8;
+            group.add(fire);
+
+            // Dynamic Point Light
+            const fireLight = new THREE.PointLight(0xff7700, 2.5, 30);
+            fireLight.position.set(0, 1.5, 0);
+            fireLight.castShadow = true;
+            group.add(fireLight);
+
+            group.position.set(x, 0, z);
+            scene.add(group);
+            return { group, fireLight };
+        }
+
+        createLogCabin(15, -20);
+        createLogCabin(-25, 30);
+        const campfire = createCampfire(0, -10);
+
+        // 3D Procedural Trees
+        const treeList = [];
+        for (let i = 0; i < 80; i++) {
+            const tx = (Math.random() - 0.5) * 320;
+            const tz = (Math.random() - 0.5) * 320;
+            if (Math.hypot(tx, tz) < 25) continue; // Keep village center open
+
+            const group = new THREE.Group();
+            const trunk = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.5, 0.8, 6, 8),
+                new THREE.MeshStandardMaterial({ color: 0x4e342e })
+            );
+            trunk.position.y = 3;
+            trunk.castShadow = true;
+            group.add(trunk);
+
+            const foliage = new THREE.Mesh(
+                new THREE.ConeGeometry(4, 9, 8),
+                new THREE.MeshStandardMaterial({ color: 0x2e7d32, roughness: 0.7 })
+            );
+            foliage.position.y = 9;
+            foliage.castShadow = true;
+            group.add(foliage);
+
+            group.position.set(tx, 0, tz);
+            scene.add(group);
+            treeList.push(group);
+        }
+
+        /* ── 3D Wildlife Entities (Deer, Bears, Jaguars) ─────────────────────────── */
+        const wildlifeList = [];
+
+        function spawnWildlife(type, x, z) {
+            const group = new THREE.Group();
+            let bodyColor = 0xa16207;
+            let scale = 1.0;
+
+            if (type === 'bear') { bodyColor = 0xf1f5f9; scale = 1.6; }
+            if (type === 'jaguar') { bodyColor = 0xd97706; scale = 1.2; }
+
+            // Body Mesh
+            const body = new THREE.Mesh(
+                new THREE.BoxGeometry(2 * scale, 1.6 * scale, 3.5 * scale),
+                new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.8 })
+            );
+            body.position.y = 1.6 * scale;
+            body.castShadow = true;
+            group.add(body);
+
+            // Head Mesh (Weak Point / Headshot Hitbox)
+            const head = new THREE.Mesh(
+                new THREE.BoxGeometry(1.2 * scale, 1.2 * scale, 1.5 * scale),
+                new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.8 })
+            );
+            head.position.set(0, 2.4 * scale, 2.0 * scale);
+            head.castShadow = true;
+            head.userData = { isHead: true };
+            group.add(head);
+
+            // Antlers if deer
+            if (type === 'deer') {
+                const antlerMat = new THREE.MeshStandardMaterial({ color: 0xd6d3d1 });
+                const antlerL = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 1.5), antlerMat);
+                antlerL.position.set(-0.6, 3.4, 2.0);
+                antlerL.rotation.z = -0.4;
+                group.add(antlerL);
+                const antlerR = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 1.5), antlerMat);
+                antlerR.position.set(0.6, 3.4, 2.0);
+                antlerR.rotation.z = 0.4;
+                group.add(antlerR);
+            }
+
+            group.position.set(x, 0, z);
+            scene.add(group);
+
+            const entity = {
+                type,
+                mesh: group,
+                health: type === 'bear' ? 250 : 100,
+                maxHealth: type === 'bear' ? 250 : 100,
+                vx: 0, vz: 0,
+                speed: 4.0,
+                dead: false,
+                aiTimer: 0
+            };
+            wildlifeList.push(entity);
+            return entity;
+        }
+
+        spawnWildlife('deer', 20, 20);
+        spawnWildlife('deer', -35, -40);
+        spawnWildlife('bear', 50, -60);
+        spawnWildlife('jaguar', -60, 50);
+
+        /* ── 3D First / Third Person Player Model & Weapon Sockets ───────────────── */
+        const player = {
+            mesh: new THREE.Group(),
+            speed: 12.0,
+            health: 100,
+            stamina: 100,
+            chronoEnergy: 100,
+            isAiming: false,
+            isThirdPerson: true,
+            weaponIdx: 0,
+            weapons: [
+                { name: "Plasma Hunting Rifle", damage: 95, ammo: 8, maxAmmo: 32, fireRate: 0.35, lastFire: 0 },
+                { name: "Compound Plasma Bow", damage: 130, ammo: 15, maxAmmo: 45, fireRate: 0.6, lastFire: 0 },
+                { name: "Tactical War Axe", damage: 180, ammo: Infinity, maxAmmo: Infinity, fireRate: 0.5, lastFire: 0 }
+            ],
+            history: [] // 4D Quantum Time-Reversal History Buffer
+        };
+
+        // Human-like Articulated Humanoid Rig (fixes candle look: proportions + limbs + joints)
+        const charMat = new THREE.MeshStandardMaterial({ color: 0x7c2d12, roughness: 0.8 });
+        const pantsMat = new THREE.MeshStandardMaterial({ color: 0x3b3a2e, roughness: 0.9 });
+        const skinMat = new THREE.MeshStandardMaterial({ color: 0xc68863, roughness: 0.6 });
+        const bootMat = new THREE.MeshStandardMaterial({ color: 0x292524, roughness: 0.9 });
+        const armorMat = new THREE.MeshStandardMaterial({ color: 0x57534e, metalness: 0.4, roughness: 0.5 });
+
+        function limb(w, h, d, mat) {
+            const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+            m.castShadow = true;
+            return m;
+        }
+        // Pelvis + torso (2 segments, not one long candle)
+        const pelvis = limb(0.62, 0.28, 0.36, pantsMat);
+        pelvis.position.y = 1.02;
+        player.mesh.add(pelvis);
+        const torso = limb(0.66, 0.62, 0.38, charMat);
+        torso.position.y = 1.47;
+        player.mesh.add(torso);
+        const chestPad = limb(0.5, 0.3, 0.42, armorMat);
+        chestPad.position.y = 1.5;
+        player.mesh.add(chestPad);
+        // Neck + head with face direction (nose + hood, not blank box)
+        const neck = limb(0.18, 0.12, 0.18, skinMat);
+        neck.position.y = 1.84;
+        player.mesh.add(neck);
+        const headGrp = new THREE.Group();
+        headGrp.position.y = 2.08;
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.24, 16, 12), skinMat);
+        head.castShadow = true;
+        headGrp.add(head);
+        const nose = limb(0.08, 0.1, 0.1, skinMat);
+        nose.position.set(0, -0.02, 0.24);
+        headGrp.add(nose);
+        const hood = new THREE.Mesh(new THREE.ConeGeometry(0.32, 0.5, 8), charMat);
+        hood.position.set(0, 0.14, -0.06);
+        hood.castShadow = true;
+        headGrp.add(hood);
+        player.mesh.add(headGrp);
+        player.headGrp = headGrp;
+
+        // Arms with shoulder pivots + elbows, legs with hip pivots + knees
+        function makeArm(side) {
+            const shoulder = new THREE.Group();
+            shoulder.position.set(0.42 * side, 1.68, 0);
+            const upper = limb(0.18, 0.42, 0.2, charMat);
+            upper.position.y = -0.2;
+            shoulder.add(upper);
+            const elbow = new THREE.Group();
+            elbow.position.y = -0.42;
+            const fore = limb(0.15, 0.38, 0.17, skinMat);
+            fore.position.y = -0.18;
+            elbow.add(fore);
+            const hand = limb(0.14, 0.14, 0.15, skinMat);
+            hand.position.y = -0.42;
+            elbow.add(hand);
+            shoulder.add(elbow);
+            player.mesh.add(shoulder);
+            return { shoulder, elbow };
+        }
+        function makeLeg(side) {
+            const hip = new THREE.Group();
+            hip.position.set(0.17 * side, 0.9, 0);
+            const thigh = limb(0.21, 0.45, 0.23, pantsMat);
+            thigh.position.y = -0.22;
+            hip.add(thigh);
+            const knee = new THREE.Group();
+            knee.position.y = -0.46;
+            const shin = limb(0.18, 0.42, 0.2, pantsMat);
+            shin.position.y = -0.2;
+            knee.add(shin);
+            const boot = limb(0.2, 0.14, 0.32, bootMat);
+            boot.position.set(0, -0.44, 0.05);
+            knee.add(boot);
+            hip.add(knee);
+            player.mesh.add(hip);
+            return { hip, knee };
+        }
+        const armL = makeArm(-1), armR = makeArm(1);
+        const legL = makeLeg(-1), legR = makeLeg(1);
+        player.rig = { armL, armR, legL, legR, walkPhase: 0 };
+
+        // 3D Weapon Model Socket attached to RIGHT HAND (not floating torso)
+        const weaponGroup = new THREE.Group();
+        weaponGroup.position.set(0, -0.46, 0.12);
+        const rifleBody = new THREE.Mesh(
+            new THREE.BoxGeometry(0.12, 0.16, 1.4),
+            new THREE.MeshStandardMaterial({ color: 0x111827, metalness: 0.8, roughness: 0.2 })
+        );
+        rifleBody.position.set(0, 0, 0.5);
+        rifleBody.castShadow = true;
+        weaponGroup.add(rifleBody);
+        armR.elbow.add(weaponGroup);
+
+        // Muzzle Flash Light at barrel tip
+        const muzzleLight = new THREE.PointLight(0x00f2ff, 0, 15);
+        muzzleLight.position.set(0, 0, 1.3);
+        weaponGroup.add(muzzleLight);
+
+        player.mesh.position.set(0, 0, 5);
+        scene.add(player.mesh);
+
+        /* ── 4D Temporal Mechanics (Bullet-Time & Quantum Rewind) ─────────────────── */
+        const timeMatrix = {
+            scale: 1.0,
+            targetScale: 1.0,
+            isRewinding: false,
+            isSlowMo: false
+        };
+
+        /* ── 3D Projectiles & Particles ──────────────────────────────────────────── */
+        const projectiles = [];
+        const particles3D = [];
+
+        function shootWeapon() {
+            const wp = player.weapons[player.weaponIdx];
+            const now = performance.now() / 1000;
+            if (now - wp.lastFire < wp.fireRate) return;
+            if (wp.ammo <= 0) return;
+
+            wp.lastFire = now;
+            if (wp.ammo !== Infinity) wp.ammo--;
+
+            // Weapon Muzzle Flash
+            muzzleLight.intensity = 4.0;
+            setTimeout(() => muzzleLight.intensity = 0, 50);
+
+            // Direction from Camera Raycast
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+
+            // Projectile Tracer
+            const projGeo = new THREE.SphereGeometry(0.15, 8, 8);
+            const projMat = new THREE.MeshBasicMaterial({ color: 0x00f2ff });
+            const proj = new THREE.Mesh(projGeo, projMat);
+            proj.position.copy(camera.position).add(raycaster.ray.direction.clone().multiplyScalar(1.5));
+            scene.add(proj);
+
+            projectiles.push({
+                mesh: proj,
+                dir: raycaster.ray.direction.clone(),
+                speed: 160.0,
+                damage: wp.damage,
+                life: 2.0
+            });
+
+            playSound3D('gunshot', camera.position.x, camera.position.y, camera.position.z);
+            updateHUD();
+        }
+
+        /* ── Input & Event Listeners ─────────────────────────────────────────────── */
+        const keys = {};
+        window.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+
+            if (e.key.toLowerCase() === 't') {
+                // 4D Slow-Motion Bullet-Time
+                timeMatrix.isSlowMo = !timeMatrix.isSlowMo;
+                timeMatrix.targetScale = timeMatrix.isSlowMo ? 0.2 : 1.0;
+                document.getElementById('temporal-vignette').className = timeMatrix.isSlowMo ? 'slowmo' : '';
+                document.getElementById('badgeTimeMode').textContent = timeMatrix.isSlowMo ? 'TIME-VECTOR: 0.2x SLOW-MO' : 'TIME-VECTOR: 1.0x NORMAL';
+                playSound3D('slowmo');
+            }
+
+            if (e.key.toLowerCase() === 'r') {
+                // 4D Time Rewind
+                timeMatrix.isRewinding = true;
+                document.getElementById('temporal-vignette').className = 'rewind';
+                document.getElementById('badgeTimeMode').textContent = 'TIME-VECTOR: << QUANTUM REWIND';
+            }
+
+            if (e.key.toLowerCase() === 'v') {
+                // Toggle 1st / 3rd Person View
+                player.isThirdPerson = !player.isThirdPerson;
+                document.getElementById('action-banner').textContent = player.isThirdPerson ? "📷 THIRD-PERSON TPS CAMERA" : "📷 FIRST-PERSON FPS CAMERA";
+                document.getElementById('action-banner').style.opacity = '1';
+                setTimeout(() => document.getElementById('action-banner').style.opacity = '0', 2000);
+            }
+
+            if (e.key === '1') { player.weaponIdx = 0; updateHUD(); }
+            if (e.key === '2') { player.weaponIdx = 1; updateHUD(); }
+            if (e.key === '3') { player.weaponIdx = 2; updateHUD(); }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+            if (e.key.toLowerCase() === 'r') {
+                timeMatrix.isRewinding = false;
+                document.getElementById('temporal-vignette').className = timeMatrix.isSlowMo ? 'slowmo' : '';
+                document.getElementById('badgeTimeMode').textContent = timeMatrix.isSlowMo ? 'TIME-VECTOR: 0.2x SLOW-MO' : 'TIME-VECTOR: 1.0x NORMAL';
+            }
+        });
+
+        window.addEventListener('mousedown', (e) => {
+            if (!controls.isLocked) return;
+            if (e.button === 0) shootWeapon(); // Left click
+            if (e.button === 2) { // Right click ADS
+                player.isAiming = true;
+                camera.fov = 45;
+                camera.updateProjectionMatrix();
+                document.getElementById('crosshair').classList.add('aiming');
+            }
+        });
+
+        window.addEventListener('mouseup', (e) => {
+            if (e.button === 2) {
+                player.isAiming = false;
+                camera.fov = 75;
+                camera.updateProjectionMatrix();
+                document.getElementById('crosshair').classList.remove('aiming');
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        function showHitMarker(text) {
+            const el = document.createElement('div');
+            el.className = 'hit-marker';
+            el.textContent = text;
+            el.style.left = (window.innerWidth / 2 + (Math.random() - 0.5) * 60) + 'px';
+            el.style.top = (window.innerHeight / 2 + (Math.random() - 0.5) * 60) + 'px';
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 800);
+        }
+
+        function updateHUD() {
+            const wp = player.weapons[player.weaponIdx];
+            document.getElementById('weaponName').textContent = wp.name;
+            document.getElementById('curAmmo').textContent = wp.ammo === Infinity ? '∞' : wp.ammo;
+            document.getElementById('maxAmmo').textContent = wp.maxAmmo === Infinity ? '∞' : wp.maxAmmo;
+        }
+
+        /* ── Main 60 FPS 3D/4D Simulation Loop ───────────────────────────────────── */
+        let lastFrameTime = performance.now();
+
+        function animate(now) {
+            requestAnimationFrame(animate);
+
+            let dt = (now - lastFrameTime) / 1000;
+            lastFrameTime = now;
+            if (dt > 0.1) dt = 0.1;
+
+            // 4D Time Matrix Scaling
+            timeMatrix.scale += (timeMatrix.targetScale - timeMatrix.scale) * 10 * dt;
+            const simDt = dt * timeMatrix.scale;
+
+            if (controls.isLocked) {
+                // 4D Time Rewind Playback
+                if (timeMatrix.isRewinding && player.history.length > 0) {
+                    const snap = player.history.pop();
+                    player.mesh.position.copy(snap.pos);
+                    camera.position.copy(snap.camPos);
+                } else {
+                    // Normal 3D Simulation
+                    // Movement
+                    const moveDir = new THREE.Vector3();
+                    if (keys['w']) moveDir.z -= 1;
+                    if (keys['s']) moveDir.z += 1;
+                    if (keys['a']) moveDir.x -= 1;
+                    if (keys['d']) moveDir.x += 1;
+                    moveDir.normalize();
+
+                    const forward = new THREE.Vector3();
+                    camera.getWorldDirection(forward);
+                    forward.y = 0;
+                    forward.normalize();
+
+                    const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+
+                    const velocity = new THREE.Vector3();
+                    velocity.addScaledVector(forward, -moveDir.z);
+                    velocity.addScaledVector(right, moveDir.x);
+                    velocity.multiplyScalar(player.speed * simDt);
+
+                    player.mesh.position.add(velocity);
+                    // Face movement + human walk cycle (arms/legs swing opposite)
+                    const moving = velocity.lengthSq() > 0.0001;
+                    if (moving) {
+                        player.mesh.rotation.y = Math.atan2(velocity.x, velocity.z);
+                        player.rig.walkPhase += simDt * 9.0;
+                    } else {
+                        player.rig.walkPhase *= 0.9;
+                    }
+                    const sw = Math.sin(player.rig.walkPhase) * (moving ? 0.65 : 0.03);
+                    player.rig.legL.hip.rotation.x = sw;
+                    player.rig.legR.hip.rotation.x = -sw;
+                    player.rig.legL.knee.rotation.x = Math.max(0, -sw) * 0.9;
+                    player.rig.legR.knee.rotation.x = Math.max(0, sw) * 0.9;
+                    player.rig.armL.shoulder.rotation.x = -sw * 0.8;
+                    player.rig.armR.shoulder.rotation.x = moving ? -0.35 : sw * 0.8;
+                    player.rig.armL.elbow.rotation.x = -0.25 - Math.abs(sw) * 0.3;
+                    player.rig.armR.elbow.rotation.x = -0.35;
+                    player.headGrp.rotation.y *= 0.9;
+
+                    // Camera Orbit / 1st/3rd Person Rig
+                    if (player.isThirdPerson) {
+                        const camOffset = forward.clone().multiplyScalar(-6.5).add(new THREE.Vector3(1.2, 3.2, 0));
+                        camera.position.copy(player.mesh.position).add(camOffset);
+                    } else {
+                        camera.position.copy(player.mesh.position).add(new THREE.Vector3(0, 2.1, 0.3));
+                    }
+
+                    // Record 4D Quantum History Snapshot
+                    player.history.push({
+                        pos: player.mesh.position.clone(),
+                        camPos: camera.position.clone()
+                    });
+                    if (player.history.length > 300) player.history.shift(); // 5 seconds buffer
+                }
+
+                // Update Projectiles & Ballistics
+                for (let i = projectiles.length - 1; i >= 0; i--) {
+                    const p = projectiles[i];
+                    p.mesh.position.addScaledVector(p.dir, p.speed * simDt);
+                    p.life -= simDt;
+
+                    // Hit Detection against 3D Wildlife
+                    for (const w of wildlifeList) {
+                        if (w.dead) continue;
+                        const dist = p.mesh.position.distanceTo(w.mesh.position);
+                        if (dist < 3.2) {
+                            w.health -= p.damage;
+                            p.life = 0;
+                            playSound3D('hit', p.mesh.position.x, p.mesh.position.y, p.mesh.position.z);
+                            showHitMarker(`-${p.damage}`);
+
+                            if (w.health <= 0) {
+                                w.dead = true;
+                                w.mesh.rotation.z = Math.PI / 2; // Ragdoll knockdown
+                                document.getElementById('action-banner').textContent = `🎯 HARVESTED ${w.type.toUpperCase()}! +4 MEAT`;
+                                document.getElementById('action-banner').style.opacity = '1';
+                                setTimeout(() => document.getElementById('action-banner').style.opacity = '0', 2500);
+                            }
+                            break;
+                        }
+                    }
+
+                    if (p.life <= 0) {
+                        scene.remove(p.mesh);
+                        projectiles.splice(i, 1);
+                    }
+                }
+
+                // Update Wildlife AI (Roaming & Fleeing)
+                for (const w of wildlifeList) {
+                    if (w.dead) continue;
+                    w.aiTimer += simDt;
+                    if (w.aiTimer > 2.0) {
+                        w.aiTimer = 0;
+                        w.vx = (Math.random() - 0.5) * w.speed;
+                        w.vz = (Math.random() - 0.5) * w.speed;
+                        w.mesh.rotation.y = Math.atan2(w.vx, w.vz);
+                    }
+                    w.mesh.position.x += w.vx * simDt;
+                    w.mesh.position.z += w.vz * simDt;
+                }
+
+                // Dynamic Campfire Flame Light Flicker
+                campfire.fireLight.intensity = 2.5 + Math.sin(now * 0.01) * 0.5;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        requestAnimationFrame(animate);
+    </script>
+</body>
+</html>

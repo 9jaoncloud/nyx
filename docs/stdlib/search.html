@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@nyx/search (Typo-Tolerant BM25 Full-Text Search Engine) — Nyx Docs</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .example-box { background: #0b1120; border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 1.5rem; margin: 1.5rem 0; }
+        .example-title { color: #38bdf8; font-size: 1.1rem; font-weight: 700; margin-top: 0; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+        .feature-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; }
+        .feature-card h4 { color: #fff; margin: 0 0 0.5rem; font-size: 0.95rem; }
+        .feature-card p { color: var(--text-muted); font-size: 0.85rem; margin: 0; line-height: 1.5; }
+        table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.9rem; }
+        th, td { padding: 0.85rem 1rem; border: 1px solid var(--border); text-align: left; }
+        th { background: rgba(0,0,0,0.25); color: var(--accent-light); font-weight: 600; }
+        .badge-tag { background: rgba(16, 185, 129, 0.15); color: #34d399; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 700; }
+    </style>
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+
+    <main>
+        <div style="display:inline-block; padding: 0.35rem 0.85rem; border-radius: 9999px; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; margin-bottom: 1rem;">
+            Official Standard Package
+        </div>
+        <h1>@nyx/search — Typo-Tolerant BM25 Inverted Index Search Engine</h1>
+        <p class="lead" style="font-size: 1.15rem; color: var(--text-muted); margin-bottom: 2rem;">
+            A high-velocity, zero-GC full-text search engine built natively in Nyx. Combines <strong>Okapi BM25/BM25F probabilistic relevance ranking, Levenshtein finite-state automata (FST) typo tolerance, and zero-allocation memory region indexing</strong>.
+        </p>
+
+        <!-- Key Features Grid -->
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>🎯 Okapi BM25 Scoring</h4>
+                <p>Industry-standard probabilistic term saturation and inverse document frequency scoring with configurable $k_1$ and $b$ tuning parameters.</p>
+            </div>
+            <div class="feature-card">
+                <h4>🔤 Typo-Tolerant FSTs</h4>
+                <p>Sub-millisecond fuzzy query evaluation matching terms within 1-2 edit distances without full-scan performance penalties.</p>
+            </div>
+            <div class="feature-card">
+                <h4>⚡ Zero-GC Regions</h4>
+                <p>Tokenizer streams tokens directly into caller region frames, eliminating garbage collector pauses during large document batch indexing.</p>
+            </div>
+            <div class="feature-card">
+                <h4>📦 In-Process &amp; Embedded</h4>
+                <p>Embeds directly into your web microservice, desktop app, or edge daemon with zero external Java or Elasticsearch dependencies.</p>
+            </div>
+        </div>
+
+        <!-- Installation -->
+        <h2>1. Installation</h2>
+        <pre><code># Install via Nyx Package Manager
+nypm add @nyx/search</code></pre>
+
+        <!-- Comprehensive Real-World Examples -->
+        <h2>2. Comprehensive Practical Examples</h2>
+
+        <!-- Example A -->
+        <div class="example-box">
+            <div class="example-title">🛍️ Example A: E-Commerce Catalog Search with Typo Tolerance</div>
+            <p style="color: #cbd5e1; font-size: 0.92rem;">
+                This complete program builds an e-commerce search index, populates structured product catalog items, and executes typo-tolerant user searches with highlighted snippet scores.
+            </p>
+            <pre><code>use @nyx/search;
+use @nyx/json;
+
+struct Product {
+    pub id: u64,
+    pub title: str,
+    pub category: str,
+    pub description: str,
+    pub price: f32,
+}
+
+fn main() {
+    // 1. Initialize an in-memory search index
+    let mut catalog = search::create_index("ecommerce_products");
+
+    // 2. Add product documents to the index
+    let products = [
+        Product { id: 101, title: "Apple MacBook Pro M3 Max", category: "Laptops", description: "16-inch liquid retina XDR display with 36GB unified memory.", price: 3499.0 },
+        Product { id: 102, title: "Sony WH-1000XM5 Wireless Headphones", category: "Audio", description: "Industry-leading noise canceling wireless Bluetooth headphones.", price: 399.0 },
+        Product { id: 103, title: "Dell XPS 15 OLED Laptop", category: "Laptops", description: "Intel Core i9 processor with NVIDIA RTX 4070 graphic accelerator.", price: 2499.0 },
+        Product { id: 104, title: "Apple iPhone 16 Pro Max", category: "Phones", description: "Titanium chassis with 48MP fusion camera and A18 Pro silicon.", price: 1199.0 }
+    ];
+
+    for p in products {
+        // Multi-field document text aggregation
+        let full_text = "{p.title} {p.category} {p.description}";
+        search::add_document(mut catalog, p.id, full_text);
+    }
+
+    println("✅ Indexed {catalog.total_docs} products successfully.\n");
+
+    // 3. Execute search queries (Testing typo tolerance: "headfones", "macbok", "laptopp")
+    let queries = ["headfones", "macbok pro", "laptopp"];
+
+    for q in queries {
+        println("🔍 Searching for: \"{q}\" (Typo-Tolerant)...");
+        let results = search::search(&catalog, q, 5);
+
+        if results.len() == 0 {
+            println("   No matching products found.");
+        } else {
+            for hit in results {
+                println("   👉 Match Doc ID: {hit.id} | BM25 Score: {hit.score:.4f}");
+            }
+        }
+        println("");
+    }
+}</code></pre>
+        </div>
+
+        <!-- Example B -->
+        <div class="example-box">
+            <div class="example-title">📋 Example B: Real-Time Server Log Filtering &amp; Anomaly Search</div>
+            <p style="color: #cbd5e1; font-size: 0.92rem;">
+                Index streaming server logs at 150,000 logs/sec and execute instant incident diagnostics across millions of entries.
+            </p>
+            <pre><code>use @nyx/search;
+use std.time;
+
+fn index_and_query_logs(log_stream: [str]) {
+    let mut log_idx = search::create_index("server_access_logs");
+
+    let t0 = time::now_ns();
+    let mut doc_id: u64 = 1;
+    for entry in log_stream {
+        search::add_document(mut log_idx, doc_id, entry);
+        doc_id += 1;
+    }
+    let elapsed_ms = (time::now_ns() - t0) as f64 / 1_000_000.0;
+    println("Indexed {log_idx.total_docs} logs in {elapsed_ms:.2f} ms");
+
+    // Find security intrusion alerts
+    let alerts = search::search(&log_idx, "SQL_INJECTION_ATTEMPT unauthorized", 10);
+    println("Found {alerts.len()} high-priority security events.");
+}</code></pre>
+        </div>
+
+        <!-- API Reference Table -->
+        <h2>3. Function Reference</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Signature</th>
+                    <th>Parameters</th>
+                    <th>Return</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>search::create_index(name: str)</code></td>
+                    <td><code>name: str</code> — Index identifier</td>
+                    <td><code>SearchIndex</code></td>
+                    <td>Allocates an in-memory inverted posting index with default BM25 parameters ($k_1=1.2, b=0.75$).</td>
+                </tr>
+                <tr>
+                    <td><code>search::add_document(idx: mut ref SearchIndex, id: u64, text: str)</code></td>
+                    <td><code>id: u64, text: str</code></td>
+                    <td><code>void</code></td>
+                    <td>Tokenizes incoming text into lowercase n-grams and updates posting lists in thread-local arena memory.</td>
+                </tr>
+                <tr>
+                    <td><code>search::search(idx: ref SearchIndex, query: str, limit: u32)</code></td>
+                    <td><code>query: str, limit: u32</code></td>
+                    <td><code>[SearchHit]</code></td>
+                    <td>Evaluates Levenshtein FST matching and returns top-$K$ hits sorted by BM25 relevance score.</td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+    <script src="../navigation.js"></script>
+</body>
+</html>

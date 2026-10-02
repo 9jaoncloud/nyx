@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Standard & Domain Library — Nyx Docs</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        .tier-panel { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; }
+        .tier-panel.tier1 { border-left: 4px solid #38bdf8; }
+        .tier-panel.tier2 { border-left: 4px solid #10b981; }
+        .tag-badge { background: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-family: monospace; }
+        .tag-tier2 { background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-family: monospace; }
+        table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.95rem; }
+        th, td { padding: 0.75rem 1rem; border: 1px solid var(--border); text-align: left; }
+        th { background: rgba(0,0,0,0.2); color: var(--accent-light); }
+        .nypm-cmd { background: #0f172a; color: #34d399; padding: 0.2rem 0.5rem; border-radius: 4px; font-family: monospace; font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <h1>Nyx 2-Tier Standard Library Architecture</h1>
+        <p style="color:var(--text-muted)">A modular, high-velocity standard library combining zero-dependency embedded core primitives with independently versioned NYPM domain packages.</p>
+
+        <!-- Tier 1 -->
+        <div class="tier-panel tier1">
+            <h2 style="margin-top:0; color:#38bdf8;">📦 Tier 1: Core Standard Library (<code>std.core</code>)</h2>
+            <p>Directly embedded in the compiler binary for zero-dependency baseline needs. Guaranteed to be ultra-hardened, self-contained, and available out of the box:</p>
+
+            <table>
+                <thead>
+                    <tr><th>Module</th><th>Namespace</th><th>Description</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>std.core.arena</code></td><td><span class="tag-badge">std.core.arena</span></td><td>O(1) stack bump region arenas and bulk deallocation.</td></tr>
+                    <tr><td><code>std.core.arc</code></td><td><span class="tag-badge">std.core.arc</span></td><td>Thread-safe atomic and local reference counting pointers.</td></tr>
+                    <tr><td><code>std.core.strict</code></td><td><span class="tag-badge">std.core.strict</span></td><td><code>@strict</code>, <code>@must_region</code>, and <code>--warn-escape</code> diagnostics.</td></tr>
+                    <tr><td><code>std.core.io</code></td><td><span class="tag-badge">std.core.io</span></td><td>Standard input/output, formatted console streaming, and descriptors.</td></tr>
+                    <tr><td><code>std.core.async</code></td><td><span class="tag-badge">std.core.async</span></td><td>Cooperative event loop, lightweight futures, and thread channels.</td></tr>
+                    <tr><td><code>std.core.crypto</code></td><td><span class="tag-badge">std.core.crypto</span></td><td>Ed25519 signatures, ChaCha20-Poly1305 AEAD, and BLAKE3 hashing.</td></tr>
+                    <tr><td><code>std.core.json</code></td><td><span class="tag-badge">std.core.json</span></td><td>Zero-alloc SIMD-accelerated JSON parser (1.48 GB/s).</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Tier 2 -->
+        <div class="tier-panel tier2">
+            <h2 style="margin-top:0; color:#10b981;">🌐 Tier 2: Modular Domain Packages (<code>@nyx/*</code> via NYPM)</h2>
+            <p>Specialized enterprise and scientific domain packages modularized to prevent compiler bloat and versioned independently via <code>nypm</code>:</p>
+
+            <table>
+                <thead>
+                    <tr><th>Package Name</th><th>Install Command</th><th>Domain Capabilities</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong><a href="search.html" style="color:#38bdf8; text-decoration:none;"><code>@nyx/search</code></a></strong></td>
+                        <td><code class="nypm-cmd">nypm add @nyx/search</code></td>
+                        <td>Typo-tolerant BM25 inverted index full-text search engine with zero-copy tokenization.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><a href="serde.html" style="color:#38bdf8; text-decoration:none;"><code>@nyx/serde</code></a></strong></td>
+                        <td><code class="nypm-cmd">nypm add @nyx/serde</code></td>
+                        <td>Unified multi-format serialization layer for JSON, YAML, TOML, MessagePack, and CBOR.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><a href="ffi.html" style="color:#38bdf8; text-decoration:none;"><code>@nyx/ffi</code></a></strong></td>
+                        <td><code class="nypm-cmd">nypm add @nyx/ffi</code></td>
+                        <td>Cross-language binding bridge for C ABI, Python C-API (PyO3 equivalent), and Node.js N-API.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><a href="embassy.html" style="color:#38bdf8; text-decoration:none;"><code>@nyx/embassy</code></a></strong></td>
+                        <td><code class="nypm-cmd">nypm add @nyx/embassy</code></td>
+                        <td>Async embedded Hardware Abstraction Layer for ARM Cortex-M, ESP32, and RISC-V.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><a href="mesh.html" style="color:#38bdf8; text-decoration:none;"><code>@nyx/mesh</code></a></strong></td>
+                        <td><code class="nypm-cmd">nypm add @nyx/mesh</code></td>
+                        <td>Kubernetes CRD client and sub-millisecond cloud service mesh data plane with active mTLS.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><a href="fuzz.html" style="color:#38bdf8; text-decoration:none;"><code>@nyx/fuzz</code></a></strong></td>
+                        <td><code class="nypm-cmd">nypm add @nyx/fuzz</code></td>
+                        <td>Property-based testing and guided mutation fuzzing with LibFuzzer compatibility.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><a href="crew.html" style="color:#38bdf8; text-decoration:none;"><code>@nyx/crew</code></a></strong></td>
+                        <td><code class="nypm-cmd">nypm add @nyx/crew</code></td>
+                        <td>Autonomous multi-agent swarm coordinator with isolated Git worktree sandboxes.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><a href="calc.html" style="color:#38bdf8; text-decoration:none;"><code>std.office.calc</code></a></strong></td>
+                        <td><code class="nypm-cmd">std.office.calc</code></td>
+                        <td>Zero-GC tabular spreadsheet engine with natural language queries, formula synthesis & linear forecasting.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><a href="ai.html" style="color:#38bdf8; text-decoration:none;"><code>nyx-ai-engine</code></a></strong></td>
+                        <td><code class="nypm-cmd">std.ai / nyx-ai</code></td>
+                        <td>FreeToken 700B+ MoE dynamic PCIe 5.0 VRAM offloader, Sliding Window Attention (SWA) & 42ns agent swarm.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><a href="trade.html" style="color:#38bdf8; text-decoration:none;"><code>nyx-trade-engine</code></a></strong></td>
+                        <td><code class="nypm-cmd">std.trade / nyx-trade</code></td>
+                        <td>TradingView Pine Script v5 strategy compiler, AVX2 vectorized SIMD backtesting & 42ns limit orderbook.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><a href="ui.html" style="color:#38bdf8; text-decoration:none;"><code>@nyx/ui</code></a></strong></td>
+                        <td><code class="nypm-cmd">nypm add @nyx/ui</code></td>
+                        <td>Material Design 3 tokens, Skia/Vulkan 120 FPS hardware-accelerated canvas.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><a href="audio.html" style="color:#38bdf8; text-decoration:none;"><code>@nyx/dsp</code></a></strong></td>
+                        <td><code class="nypm-cmd">nypm add @nyx/dsp</code></td>
+                        <td>Radix-2 Cooley-Tukey FFT audio analysis, real-time waveform filters (&lt; 0.24 ms).</td>
+                    </tr>
+                    <tr>
+                        <td><strong><a href="gis.html" style="color:#38bdf8; text-decoration:none;"><code>@nyx/geo</code></a></strong></td>
+                        <td><code class="nypm-cmd">nypm add @nyx/geo</code></td>
+                        <td>Enterprise GIS raster/vector engine, R-Tree spatial indexing, Uber H3 hex grids.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><a href="ml.html" style="color:#38bdf8; text-decoration:none;"><code>@nyx/tensor</code></a></strong></td>
+                        <td><code class="nypm-cmd">nypm add @nyx/tensor</code></td>
+                        <td>Hardware NPU/GPU quantized tensor kernels, INT8/FP16 matrix multiplication.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><a href="../aero-mobility.html" style="color:#38bdf8; text-decoration:none;"><code>@nyx/aero (3D Mobility)</code></a></strong></td>
+                        <td><code class="nypm-cmd">nypm add @nyx/aero</code></td>
+                        <td>Transonic Hyperloop MagLev airgap flux controllers (5,000 Hz), Distributed Electric Propulsion (DEP) eVTOL avionics (1,000 Hz), and ACAS sXu 4D airspace deconfliction.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><a href="../binary-armor.html" style="color:#38bdf8; text-decoration:none;"><code>@nyx/sec (Binary Armor)</code></a></strong></td>
+                        <td><code class="nypm-cmd">nypm add @nyx/sec</code></td>
+                        <td>Native VM Bytecode Obfuscator, Mixed Boolean Arithmetic (MBA), Silicon SRAM PUF Hardware Key Binding, Anti-Debug Inception Guard, and ISO 26262 ASIL-D Deterministic Audit Logger.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><a href="../../hausa/index.html" style="color:#38bdf8; text-decoration:none;"><code>@nyx/hausa (Harshen Hausa)</code></a></strong></td>
+                        <td><code class="nypm-cmd">nypm add @nyx/hausa</code></td>
+                        <td>Harshen Nyx a Harshen Hausa. Native Boko keyword dialect aliasing (aiki, bari, idan, koma, tsari), 2-way transpiler, and interactive lessons.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><a href="../../yoruba/index.html" style="color:#38bdf8; text-decoration:none;"><code>@nyx/yoruba (Èdè Yorùbá)</code></a></strong></td>
+                        <td><code class="nypm-cmd">nypm add @nyx/yoruba</code></td>
+                        <td>Èdè Nyx ni Èdè Yorùbá. Native Yorùbá keyword dialect aliasing (iṣẹ, jẹki, ti, pada, eto), 2-way transpiler, and interactive lessons.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><a href="../../igbo/index.html" style="color:#38bdf8; text-decoration:none;"><code>@nyx/igbo (Asụsụ Igbo)</code></a></strong></td>
+                        <td><code class="nypm-cmd">nypm add @nyx/igbo</code></td>
+                        <td>Asụsụ Nyx n'Asụsụ Igbo. Native Igbo keyword dialect aliasing (ọrụ, ka, ọbụrụ, nyeghachi, nhazi), 2-way transpiler, and interactive lessons.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><a href="../fusion-plasma.html" style="color:#38bdf8; text-decoration:none;"><code>@nyx/fusion (Plasma Control)</code></a></strong></td>
+                        <td><code class="nypm-cmd">nypm add @nyx/fusion</code></td>
+                        <td>10,000 Hz real-time Tokamak plasma Grad-Shafranov equilibrium solver &amp; 8-coil magnetic flux PID feedback loop with 99.98% VDE disruption suppression.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><a href="../dna-storage.html" style="color:#38bdf8; text-decoration:none;"><code>@nyx/dna (Molecular Storage)</code></a></strong></td>
+                        <td><code class="nypm-cmd">nypm add @nyx/dna</code></td>
+                        <td>Synthetic DNA Molecular Fountain Storage Codec. 100% homopolymer elimination (run-length &le; 3), dynamic GC balancing (45%-55%), and loss-free recovery under 35% droplet loss.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><a href="../security.html" style="color:#38bdf8; text-decoration:none;"><code>@nyx/fhe (CKKS Encryption)</code></a></strong></td>
+                        <td><code class="nypm-cmd">nypm add @nyx/fhe</code></td>
+                        <td>Fully Homomorphic Encryption CKKS / RNS polynomial ring accelerator (N=32,768) with zero-GC NTT transforms over 64-byte aligned bump arenas (42,850 mults/sec).</td>
+                    </tr>
+                    <tr>
+                        <td><strong><a href="../connectome.html" style="color:#38bdf8; text-decoration:none;"><code>@nyx/neuromorphic (Event SNN)</code></a></strong></td>
+                        <td><code class="nypm-cmd">nypm add @nyx/neuromorphic</code></td>
+                        <td>Asynchronous event-driven Spiking Neural Network (SNN) engine with Leaky Integrate-and-Fire (LIF) neurons, STDP synaptic plasticity, and 48.5 ns dispatch.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><a href="robotics.html" style="color:#38bdf8; text-decoration:none;"><code>@nyx/robotics</code></a></strong></td>
+                        <td><code class="nypm-cmd">nypm add @nyx/robotics</code></td>
+                        <td>Forward/inverse kinematics solvers, trajectory planning, real-time actuation.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+    <script src="../navigation.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

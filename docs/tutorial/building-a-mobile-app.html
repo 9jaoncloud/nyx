@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building Android Apps with Nyx & Nyx App Studio — Official Guide</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            margin-bottom: 0.75rem;
+        }
+        .flow-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin: 1.25rem 0;
+        }
+        .flow-card h4 {
+            color: #38bdf8;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #1e293b;
+            padding: 0.4rem 1rem;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            font-size: 0.78rem;
+            font-family: monospace;
+            color: #94a3b8;
+        }
+        .code-header + pre {
+            margin-top: 0;
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        .feature-box {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 1rem;
+        }
+        .feature-box h4 {
+            color: #10b981;
+            margin-bottom: 0.4rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+    </style>
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <div class="badge-pill"><i class="fas fa-mobile-screen"></i> Nyx Mobile Infrastructure v2.0</div>
+        <h1>Building Production Android Apps (.APK & .AAB) in Nyx</h1>
+        <p class="lead">Complete engineering guide to authoring zero-GC mobile logic in Nyx, testing in the live phone simulator, and compiling directly into native Android APKs and Google Play AAB bundles via CLI and the Nyx App Studio IDE.</p>
+
+        <div class="flow-card">
+            <h4><i class="fas fa-sitemap"></i> High-Level Architecture</h4>
+            <p>Nyx mobile applications combine high-performance, deterministic core engines compiled with <code>nyx.exe</code> with an automated headless Android Shell pipeline. This delivers native hardware capabilities (BiometricPrompt, hardware Keystores, camera/file choosers, haptics) while preserving 0.00ms GC pause jitter.</p>
+        </div>
+
+        <h2>1. Authoring Native App Logic in Nyx (.nyx)</h2>
+        <p>Every mobile application starts with a clean, strongly-typed Nyx source file located under <code>nyxmobile/apps/&lt;category&gt;/</code>. Here is a production financial ledger and budget planner:</p>
+
+        <div class="code-header"><span>nyxmobile/apps/budget/sovereign_budget.nyx</span><span>Nyx v0.50.0</span></div>
+<pre><code>module nyxmobile.apps.budget.sovereign_budget;
+
+pub struct Transaction {
+    pub title: String,
+    pub category: String,
+    pub amount: f64,
+    pub vat_amount: f64,
+    pub is_income: bool
+}
+
+pub struct BudgetLedger {
+    pub monthly_income: f64,
+    pub monthly_expenses: f64,
+    pub total_tax_withheld: f64,
+    pub is_biometric_locked: bool
+}
+
+impl BudgetLedger {
+    pub fn new() -> BudgetLedger {
+        BudgetLedger {
+            monthly_income: 0.0,
+            monthly_expenses: 0.0,
+            total_tax_withheld: 0.0,
+            is_biometric_locked: true
+        }
+    }
+
+    pub fn record_expense(self: &mut BudgetLedger, title: String, category: String, amount: f64) -> Transaction {
+        let vat: f64 = amount * 0.075; // 7.5% Statutory VAT
+        self.monthly_expenses = self.monthly_expenses + amount + vat;
+        self.total_tax_withheld = self.total_tax_withheld + vat;
+        return Transaction {
+            title: title,
+            category: category,
+            amount: amount,
+            vat_amount: vat,
+            is_income: false
+        };
+    }
+}
+
+pub fn main() -> i64 {
+    let mut ledger: BudgetLedger = BudgetLedger::new();
+    let tx = ledger.record_expense("Server Colocation", "Infrastructure", 350000.0);
+    println("[Ledger] Recorded: " + tx.title + " (VAT: NGN 26,250.00)");
+    return 0;
+}</code></pre>
+
+        <p>Compile and verify your native application logic locally with <code>nyx.exe</code>:</p>
+<pre><code>.\nyx.exe -i nyxmobile\apps\budget\sovereign_budget.nyx -o nyxmobile\apps\budget\sovereign_budget.exe -r</code></pre>
+
+        <h2>2. Building the Mobile Web Interface</h2>
+        <p>For cross-platform fluid UI, create a responsive mobile viewport in <code>apps/&lt;app_name&gt;/index.html</code>. Nyx mobile apps natively integrate with the Android hardware bridge through <code>window.NyxNative</code>:</p>
+
+        <div class="code-header"><span>apps/nyx_vault_budget/index.html (Hardware Bridge Integration)</span><span>JavaScript</span></div>
+<pre><code>// Trigger Android Hardware Biometric Authentication
+function authenticateUser() {
+    if (window.NyxNative && window.NyxNative.showBiometricPrompt) {
+        window.NyxNative.showBiometricPrompt("Authenticate Vault", "Scan fingerprint to unlock");
+    } else {
+        console.log("Running in browser fallback mode.");
+    }
+}
+
+// Trigger Android Hardware Haptic Vibration
+function onButtonPress() {
+    if (window.NyxNative && window.NyxNative.vibrate) {
+        window.NyxNative.vibrate(35); // 35ms haptic pulse
+    }
+}</code></pre>
+
+        <h2>3. Method A: The Nyx App Studio (Visual IDE)</h2>
+        <p>Nyx includes a full-featured web-based visual mobile IDE at <code>/nyx/studio/index.html</code>. It allows anyone to design, live-test, and package apps without opening Android Studio:</p>
+
+        <div class="feature-grid">
+            <div class="feature-box">
+                <h4><i class="fas fa-layer-group"></i> 1. Template Catalog</h4>
+                <p>Choose from pre-built archetypes: Nyx Vault, Nyx Brain, Sovereign Messenger, Ninja Jumper 2D, Word Connect, or any custom URL.</p>
+            </div>
+            <div class="feature-box">
+                <h4><i class="fas fa-mobile-screen"></i> 2. Live Phone Simulator</h4>
+                <p>Interactive Google Pixel 8 Pro / Galaxy S24 phone simulator with realistic notch, dynamic safe areas, and instant frame reloads.</p>
+            </div>
+            <div class="feature-box">
+                <h4><i class="fas fa-fingerprint"></i> 3. Hardware Toggles</h4>
+                <p>Easily enable Android BiometricPrompt, offline connection banners, and the <code>window.NyxNative</code> bridge with one switch.</p>
+            </div>
+            <div class="feature-box">
+                <h4><i class="fas fa-bolt"></i> 4. 1-Click Build Dispatch</h4>
+                <p>Click <strong>Build Android APK</strong> or <strong>Build Google Play AAB</strong> to trigger automated headless Gradle packaging.</p>
+            </div>
+        </div>
+
+        <h2>4. Method B: Automated Headless CLI Pipeline</h2>
+        <p>For CI/CD scripts and automated workflows, use the Nyx Mobile Wrap pipeline directly:</p>
+
+<pre><code># Generate & compile NyxVault into APK and AAB
+python scripts/nyx_mobile_wrap.py \
+  --url "http://localhost/nyx/apps/nyx_vault_budget/index.html" \
+  --name "NyxVault" \
+  --package "com.nyx.vault" \
+  --theme "#10B981" \
+  --biometrics
+
+# Generate & compile NyxBrain Challenge into APK and AAB
+python scripts/nyx_mobile_wrap.py \
+  --url "http://localhost/nyx/apps/nyx_brain_challenge/index.html" \
+  --name "NyxBrain" \
+  --package "com.nyx.brain" \
+  --theme "#38BDF8"</code></pre>
+
+        <h3>Build Flags Reference:</h3>
+        <ul>
+            <li><code>--url</code>: The web/WASM application entry URL (local or remote HTTPS).</li>
+            <li><code>--name</code>: The human-readable application name displayed on the Android launcher.</li>
+            <li><code>--package</code>: The unique Android Application ID (e.g. <code>com.company.app</code>).</li>
+            <li><code>--theme</code>: Primary hex brand color for Android status bar, splash screen, and loader.</li>
+            <li><code>--biometrics</code>: Injects Android <code>androidx.biometric:biometric</code> dependency and biometric activity code.</li>
+        </ul>
+
+        <h2>5. Output Binaries & Distribution</h2>
+        <p>When the headless Gradle build finishes, your binaries are placed in <code>projects/mobile_&lt;AppName&gt;/bin/</code>:</p>
+
+        <div class="flow-card">
+            <h4><i class="fab fa-android"></i> 1. Android APK (.apk)</h4>
+            <p><strong>Use Case:</strong> Direct sideloading, enterprise internal distribution, and instant testing on any Android device or emulator.</p>
+            <p><strong>Install via ADB:</strong></p>
+            <pre><code>adb install -r projects/mobile_NyxVault/bin/NyxVault.apk</code></pre>
+        </div>
+
+        <div class="flow-card">
+            <h4><i class="fab fa-google-play"></i> 2. Google Play Android App Bundle (.aab)</h4>
+            <p><strong>Use Case:</strong> Production release on Google Play Console.</p>
+            <p>The <code>.aab</code> package is optimized with dynamic feature delivery, allowing Google Play to serve device-specific splits (density, CPU ABI) reducing download sizes to under 4MB.</p>
+        </div>
+
+        <h2>6. Native Hardware Features Reference</h2>
+        <div class="feature-grid">
+            <div class="feature-box">
+                <h4><i class="fas fa-fingerprint"></i> BiometricPrompt Gateway</h4>
+                <p>Authenticates users via biometric sensors (fingerprint, face unlock) with automatic PIN/pattern fallback. Blocks screenshots when enabled.</p>
+            </div>
+            <div class="feature-box">
+                <h4><i class="fas fa-arrows-rotate"></i> Swipe-to-Refresh</h4>
+                <p>Integrated Android <code>SwipeRefreshLayout</code> allowing intuitive pull-down page refresh matching native apps.</p>
+            </div>
+            <div class="feature-box">
+                <h4><i class="fas fa-camera"></i> File & Camera Chooser</h4>
+                <p>Custom <code>WebChromeClient</code> supporting HTML5 <code>&lt;input type="file"&gt;</code> with direct Android camera and file gallery capture.</p>
+            </div>
+            <div class="feature-box">
+                <h4><i class="fas fa-wifi"></i> Offline Reconnect Banner</h4>
+                <p>Monitors network connectivity with Android <code>ConnectivityManager</code>; shows clean Material Snackbar when offline and auto-reconnects when network returns.</p>
+            </div>
+        </div>
+
+        <div class="next-prev-links">
+            <a href="building-a-desktop-app.html">&larr; Building a Desktop App</a>
+            <a href="/nyx/mobile-roadmap.html">Mobile Engineering Roadmap &rarr;</a>
+        </div>
+    </main>
+    <script src="../navigation.js"></script>
+</body>
+</html>

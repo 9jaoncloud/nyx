@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@nyx/mesh (Cloud-Native Kubernetes Client & Service Mesh) — Nyx Docs</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .example-box { background: #0b1120; border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 1.5rem; margin: 1.5rem 0; }
+        .example-title { color: #38bdf8; font-size: 1.1rem; font-weight: 700; margin-top: 0; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+        .feature-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; }
+        .feature-card h4 { color: #fff; margin: 0 0 0.5rem; font-size: 0.95rem; }
+        .feature-card p { color: var(--text-muted); font-size: 0.85rem; margin: 0; line-height: 1.5; }
+        table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.9rem; }
+        th, td { padding: 0.85rem 1rem; border: 1px solid var(--border); text-align: left; }
+        th { background: rgba(0,0,0,0.25); color: var(--accent-light); font-weight: 600; }
+    </style>
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+
+    <main>
+        <div style="display:inline-block; padding: 0.35rem 0.85rem; border-radius: 9999px; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; margin-bottom: 1rem;">
+            Official Standard Package
+        </div>
+        <h1>@nyx/mesh — Kubernetes Client &amp; Cloud Service Mesh Data Plane</h1>
+        <p class="lead" style="font-size: 1.15rem; color: var(--text-muted); margin-bottom: 2rem;">
+            A cloud-native framework delivering <strong>direct Kubernetes CRD orchestration, zero-overhead sidecar data planes, transparent mutual TLS (mTLS) certificate rotation, and distributed load balancing</strong>.
+        </p>
+
+        <!-- Feature Grid -->
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>☸️ Direct Kubernetes API</h4>
+                <p>Native client watching Pods, Deployments, and Custom Resource Definitions (CRDs) with WebSocket chunk streaming.</p>
+            </div>
+            <div class="feature-card">
+                <h4>🛡️ Automatic mTLS 1.3</h4>
+                <p>Zero-trust sidecar encryption with automatic SPIFFE/SPIRE certificate rotation and hardware key isolation.</p>
+            </div>
+            <div class="feature-card">
+                <h4>⚡ Microsecond Hop Latency</h4>
+                <p>Sub-microsecond request routing without Envoy proxy memory bloat (operates at &lt;3MB RAM per proxy node).</p>
+            </div>
+            <div class="feature-card">
+                <h4>🔀 Active Circuit Breaking</h4>
+                <p>Real-time outlier detection, adaptive retry policies, and automated failover traffic shifting.</p>
+            </div>
+        </div>
+
+        <h2>1. Installation</h2>
+        <pre><code># Install via Nyx Package Manager
+nypm add @nyx/mesh</code></pre>
+
+        <!-- Practical Examples -->
+        <h2>2. Comprehensive Practical Examples</h2>
+
+        <!-- Example A: Kubernetes Pod Watcher -->
+        <div class="example-box">
+            <div class="example-title">☸️ Example A: Building a Real-Time Kubernetes Pod Auto-Scaler</div>
+            <p style="color: #cbd5e1; font-size: 0.92rem;">
+                Connect to the in-cluster Kubernetes API server, watch pod health status events, and trigger scaling actions.
+            </p>
+            <pre><code>use @nyx/mesh;
+use @nyx/http;
+
+fn main() {
+    // 1. Connect to Kubernetes API using in-cluster ServiceAccount token
+    let k8s = mesh::connect_in_cluster();
+
+    println("Connected to Kubernetes cluster: {k8s.cluster_name}");
+
+    // 2. Query active pods in production namespace
+    let pods = mesh::list_pods(&k8s, "production");
+    println("Found {pods.len()} active pods running.");
+
+    for p in pods {
+        println(" - Pod: {p.name} | Status: {p.phase} | IP: {p.pod_ip}");
+        if p.restart_count > 5 {
+            println("   ⚠️ Alert: Pod {p.name} has restarted {p.restart_count} times!");
+        }
+    }
+}</code></pre>
+        </div>
+
+        <!-- Example B: Sidecar Proxy with mTLS -->
+        <div class="example-box">
+            <div class="example-title">🛡️ Example B: Spawning a Sub-Millisecond Sidecar Proxy with mTLS</div>
+            <p style="color: #cbd5e1; font-size: 0.92rem;">
+                Intercept inbound HTTP requests, enforce TLS 1.3 encryption, and route to backend microservices with automatic circuit breaking.
+            </p>
+            <pre><code>use @nyx/mesh;
+
+fn start_proxy() {
+    let sidecar = mesh::create_sidecar(
+        8080, // Ingress Port
+        "http://127.0.0.1:3000" // Upstream service
+    );
+
+    println("🛡️ Zero-Trust mTLS Mesh Proxy active on :8080 -> :3000");
+    mesh::run_sidecar(&sidecar);
+}</code></pre>
+        </div>
+
+        <!-- API Reference -->
+        <h2>3. Function Reference</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Signature</th>
+                    <th>Parameters</th>
+                    <th>Return</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>mesh::connect_in_cluster()</code></td>
+                    <td><code>void</code></td>
+                    <td><code>K8sClient</code></td>
+                    <td>Initializes authenticated Kubernetes client from <code>/var/run/secrets/kubernetes.io/serviceaccount/</code>.</td>
+                </tr>
+                <tr>
+                    <td><code>mesh::list_pods(client: ref K8sClient, namespace: str)</code></td>
+                    <td><code>client: ref K8sClient, namespace: str</code></td>
+                    <td><code>[PodInfo]</code></td>
+                    <td>Queries Kubernetes API and deserializes pod metadata into structured region records.</td>
+                </tr>
+                <tr>
+                    <td><code>mesh::create_sidecar(port: u16, upstream: str)</code></td>
+                    <td><code>port: u16, upstream: str</code></td>
+                    <td><code>MeshProxy</code></td>
+                    <td>Spawns a high-throughput async reverse proxy with mTLS encryption and active health checks.</td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+    <script src="../navigation.js"></script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+module path
+
+pub fn dirname(path: String) -> String {
+    let mut last = 0
+    for i in 0..path.len() {
+        if path[i] == '/' || path[i] == '\\' { last = i }
+    }
+    if last == 0 { ".".to_string() } else { path[0..last] }
+}
+
+pub fn basename(path: String) -> String {
+    let mut last = 0
+    for i in 0..path.len() {
+        if path[i] == '/' || path[i] == '\\' { last = i + 1 }
+    }
+    path[last..]
+}
+
+pub fn ext(path: String) -> String {
+    let name = basename(path)
+    let mut last_dot = name.len()
+    for i in (0..name.len()).rev() {
+        if name[i] == '.' {
+            last_dot = i
+            break
+        }
+    }
+    if last_dot < name.len() {
+        name[last_dot + 1..]
+    } else {
+        "".to_string()
+    }
+}
+
+pub fn stem(path: String) -> String {
+    let name = basename(path)
+    let mut last_dot = name.len()
+    for i in (0..name.len()).rev() {
+        if name[i] == '.' {
+            last_dot = i
+            break
+        }
+    }
+    name[0..last_dot]
+}
+
+pub fn join(a: String, b: String) -> String {
+    if a.len() == 0 { return b }
+    let last_char = a[a.len() - 1]
+    if last_char == '/' || last_char == '\\' {
+        a + b
+    } else {
+        a + "/" + b
+    }
+}
+
+pub fn strip_prefix(path: String, prefix: String) -> Option<String> {
+    if path.starts_with(prefix.clone()) {
+        let rest = path[prefix.len()..]
+        if rest.len() > 0 && rest[0] == '/' {
+            Option.Some(rest[1..])
+        } else {
+            Option.Some(rest)
+        }
+    } else {
+        Option.None
+    }
+}
+
+pub fn parent(path: String) -> Option<String> {
+    let dir = dirname(path)
+    if dir == "." { Option.None } else { Option.Some(dir) }
+}
+
+pub fn normalize(path: String) -> String {
+    let parts = path.split("/")
+    let mut result = Vec.new()
+    for part in parts {
+        if part == ".." {
+            if result.len() > 0 { result.pop() }
+        } else if part != "." && part.len() > 0 {
+            result.push(part)
+        }
+    }
+    let mut out = String.new()
+    for i in 0..result.len() {
+        if i > 0 { out = out + "/" }
+        out = out + result[i]
+    }
+    if out.len() == 0 { ".".to_string() } else { out }
+}
+
+pub fn absolute(path: String) -> String {
+    if path.starts_with("/") || path.starts_with("\\") {
+        return normalize(path)
+    }
+    let cwd = std.env.current_dir()
+    normalize(join(cwd, path))
+}
+
+pub fn with_ext(path: String, new_ext: String) -> String {
+    let s = stem(path)
+    let mut dir = dirname(path)
+    if dir != "." {
+        dir = dir + "/"
+    }
+    if new_ext.len() > 0 && new_ext[0] == '.' {
+        dir + s + new_ext
+    } else if new_ext.len() > 0 {
+        dir + s + "." + new_ext
+    } else {
+        dir + s
+    }
+}

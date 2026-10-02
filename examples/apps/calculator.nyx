@@ -1,0 +1,94 @@
+module std.apps.calculator
+
+import std.math
+import std.string
+
+pub enum Operation {
+    None,
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
+    Power,
+    Modulo,
+}
+
+pub struct CalculatorState {
+    pub display: String,
+    pub previous_val: Float,
+    pub current_op: Operation,
+    pub should_reset_on_next_input: Bool,
+    pub history: Vec[String],
+}
+
+impl CalculatorState {
+    pub fn new() -> CalculatorState {
+        CalculatorState {
+            display: "0".to_string(),
+            previous_val: 0.0,
+            current_op: Operation.None,
+            should_reset_on_next_input: false,
+            history: Vec.new(),
+        }
+    }
+
+    pub fn input_digit(self: &mut Self, digit: String) {
+        if self.should_reset_on_next_input || self.display == "0" {
+            self.display = digit;
+            self.should_reset_on_next_input = false;
+        } else {
+            self.display = self.display + digit;
+        }
+    }
+
+    pub fn input_decimal(self: &mut Self) {
+        if self.should_reset_on_next_input {
+            self.display = "0.".to_string();
+            self.should_reset_on_next_input = false;
+        } else if !self.display.contains(".") {
+            self.display = self.display + ".";
+        }
+    }
+
+    pub fn set_operation(self: &mut Self, op: Operation) {
+        self.previous_val = self.display.to_float();
+        self.current_op = op;
+        self.should_reset_on_next_input = true;
+    }
+
+    pub fn compute_result(self: &mut Self) -> Float {
+        let current = self.display.to_float();
+        let mut result = current;
+
+        match self.current_op {
+            Operation.Add => { result = self.previous_val + current; },
+            Operation.Subtract => { result = self.previous_val - current; },
+            Operation.Multiply => { result = self.previous_val * current; },
+            Operation.Divide => {
+                if current != 0.0 {
+                    result = self.previous_val / current;
+                } else {
+                    self.display = "Error: Div by 0".to_string();
+                    return 0.0;
+                }
+            },
+            Operation.Power => { result = math.pow(self.previous_val, current); },
+            Operation.Modulo => { result = (self.previous_val as Int % current as Int) as Float; },
+            Operation.None => {},
+        }
+
+        let entry = self.previous_val.to_string() + " op " + current.to_string() + " = " + result.to_string();
+        self.history.push(entry);
+        self.display = result.to_string();
+        self.current_op = Operation.None;
+        self.should_reset_on_next_input = true;
+        result
+    }
+
+    pub fn clear(self: &mut Self) {
+        self.display = "0".to_string();
+        self.previous_val = 0.0;
+        self.current_op = Operation.None;
+        self.should_reset_on_next_input = false;
+    }
+}

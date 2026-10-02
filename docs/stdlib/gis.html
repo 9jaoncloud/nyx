@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>std.gis & GeoLibre (Cloud-Native GIS & Sophia Spatial AI Copilot) — Nyx Docs</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=JetBrains+Mono:wght@400;600;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .geolibre-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: #10b981;
+            padding: 0.35rem 0.85rem;
+            border-radius: 9999px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        .geolibre-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        .geolibre-card {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(12px);
+        }
+        .geolibre-card h3 {
+            margin-top: 0;
+            color: #38bdf8;
+            font-size: 1.15rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <div class="geolibre-badge">🌍 Cloud-Native GeoLibre × Sophia Spatial AI Engine</div>
+        <h1>std.gis — Sovereign Geospatial Intelligence &amp; GeoLibre Platform</h1>
+        <p style="color:var(--text-muted); font-size: 1.1rem; line-height: 1.6;">
+            Local-first, zero-surveillance geospatial operating system. Native support for <strong>Uber H3 Hexagonal Grids</strong>, <strong>DuckDB-WASM Spatial SQL</strong>, <strong>Cloud-Optimized GeoTIFF (COG)</strong>, <strong>GeoParquet / FlatGeobuf / PMTiles</strong>, <strong>Sentinel-2 NDVI Raster Analytics</strong>, and <strong>Sophia AI Geospatial Reasoning</strong>.
+        </p>
+
+        <div class="note" style="background: rgba(56, 189, 248, 0.1); border-left: 3px solid #38bdf8; margin: 1.5rem 0; padding: 1rem 1.25rem;">
+            <strong>Module Namespaces:</strong> 
+            <code>import std.gis.geolibre</code> | <code>import std.gis.h3</code> | <code>import std.gis.raster</code> | <code>import std.gis.sophia_copilot</code>
+        </div>
+
+        <h2>Core GeoLibre Architectural Pillars</h2>
+        <div class="geolibre-grid">
+            <div class="geolibre-card" style="border-top: 3px solid #10b981;">
+                <h3><span>⬡</span> Uber H3 Hexagonal Grid</h3>
+                <p style="color:#cbd5e1; font-size:0.9rem;">
+                    Discrete Global Grid System partitioning the planet into hierarchical hexagonal cells (Resolutions 0–15). Sub-millisecond k-ring neighbor search, boundary generation, and spatial aggregation with 0.00ms GC pauses.
+                </p>
+                <div style="font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:#10b981; margin-top:0.5rem;">
+                    latlng_to_h3(lat, lon, 8) → 0.737 km² cell
+                </div>
+            </div>
+
+            <div class="geolibre-card" style="border-top: 3px solid #38bdf8;">
+                <h3><span>⚡</span> Spatial SQL &amp; GeoParquet</h3>
+                <p style="color:#cbd5e1; font-size:0.9rem;">
+                    Zero-copy querying of million-row GeoParquet, FlatGeobuf, and PMTiles datasets via DuckDB-WASM. Native execution of <code>ST_Intersects</code>, <code>ST_Contains</code>, <code>ST_Buffer</code>, and <code>ST_DWithin</code>.
+                </p>
+                <div style="font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:#38bdf8; margin-top:0.5rem;">
+                    read_parquet() with microsecond region bump arenas
+                </div>
+            </div>
+
+            <div class="geolibre-card" style="border-top: 3px solid #c084fc;">
+                <h3><span>🛰️</span> Earth Observation &amp; NDVI</h3>
+                <p style="color:#cbd5e1; font-size:0.9rem;">
+                    Multi-spectral remote sensing engine for Sentinel-2 / Landsat imagery. Calculates Normalized Difference Vegetation Index (NDVI), NDWI, and Digital Elevation Model (DEM) solar hillshade.
+                </p>
+                <div style="font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:#c084fc; margin-top:0.5rem;">
+                    NDVI = (NIR - RED) / (NIR + RED)
+                </div>
+            </div>
+
+            <div class="geolibre-card" style="border-top: 3px solid #f43f5e;">
+                <h3><span>🧠</span> Sophia AI Spatial Copilot</h3>
+                <p style="color:#cbd5e1; font-size:0.9rem;">
+                    Natural language to spatial intelligence. Sophia parses complex geographic queries, plans H3 grid resolutions, runs spatial DBSCAN clustering, and generates GPU-accelerated Deck.gl / MapLibre visualization layers.
+                </p>
+                <div style="font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:#f43f5e; margin-top:0.5rem;">
+                    "Find all vegetation clusters near Abuja" → Live Deck.gl
+                </div>
+            </div>
+        </div>
+
+        <h2>API Reference: <code>std.gis.geolibre</code></h2>
+        <table>
+            <tr><th>Function / Struct</th><th>Description</th></tr>
+            <tr><td><code>fn latlng_to_h3(lat: f64, lon: f64, res: u32) -> u64</code></td><td>Encodes WGS84 coordinate into Uber H3 64-bit hexagonal index.</td></tr>
+            <tr><td><code>fn h3_k_ring(origin: u64, k: i32) -> Vec&lt;u64&gt;</code></td><td>Returns concentric hexagonal neighbor cells up to distance <em>k</em>.</td></tr>
+            <tr><td><code>fn distance_haversine(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> f64</code></td><td>Computes high-precision geodetic distance in meters.</td></tr>
+            <tr><td><code>fn calculate_ndvi(nir: &[f32], red: &[f32]) -> Vec&lt;f32&gt;</code></td><td>Calculates surface reflectance vegetation index array across raster scene.</td></tr>
+            <tr><td><code>fn spatial_dbscan(points: &mut [Point], eps_km: f64, min_pts: usize) -> usize</code></td><td>Performs density-based spatial clustering with Haversine distance metric.</td></tr>
+            <tr><td><code>fn sophia_execute_spatial_intent(prompt: &str) -> SpatialResult</code></td><td>Executes end-to-end Sophia spatial reasoning, SQL compilation, and Deck.gl generation.</td></tr>
+        </table>
+
+        <h2>End-to-End Example: H3 Grid + NDVI + Sophia AI</h2>
+        <pre><code>import std.io
+import std.gis.geolibre
+import std.gis.sophia_copilot
+
+fn main() {
+    // 1. Index Lagos & Abuja under Uber H3 Discrete Global Grid
+    let lagos_h3 = geolibre.latlng_to_h3(6.5244, 3.3792, 8)
+    let abuja_h3 = geolibre.latlng_to_h3(9.0765, 7.3986, 8)
+    println("Lagos H3 Index: 0x" + lagos_h3.to_hex())
+
+    // 2. Geodesic Distance
+    let dist_m = geolibre.distance_haversine(6.5244, 3.3792, 9.0765, 7.3986)
+    println("Lagos to Abuja Distance: " + (dist_m / 1000.0).to_string() + " km")
+
+    // 3. Sophia Natural Language Spatial Reasoning
+    let prompt = "Sophia, find high-canopy agricultural parcels and density clusters in FCT Abuja"
+    let query_result = sophia_copilot.execute_intent(prompt)
+    println("Sophia Reasoning: " + query_result.reasoning_summary)
+    println("Compiled Spatial SQL: " + query_result.generated_spatial_sql)
+    println("Deck.gl Visualizer Config: " + query_result.deckgl_json)
+}</code></pre>
+    </main>
+    <script src="../navigation.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

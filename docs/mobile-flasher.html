@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nyx Mobile OS — WebUSB Flasher & Live Simulator [Interactive Mockup]</title>
+    <meta name="description" content="Interactive browser simulation and WebUSB deployer mockup for Nyx Sovereign Hardened Mobile OS featuring hardware kill switches, verified boot, and zero telemetry.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #07090e;
+            --surface: #0e131f;
+            --surface-hover: #151c2d;
+            --border: #1e293b;
+            --primary: #3b82f6;
+            --accent: #8b5cf6;
+            --emerald: #10b981;
+            --rose: #f43f5e;
+            --amber: #f59e0b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Disclaimer Notice Bar */
+        .disclaimer-bar {
+            background: linear-gradient(90deg, rgba(245, 158, 11, 0.15), rgba(59, 130, 246, 0.15));
+            border-bottom: 1px solid rgba(245, 158, 11, 0.3);
+            padding: 8px 20px;
+            font-size: 12px;
+            text-align: center;
+            color: #fbbf24;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+        .disclaimer-badge {
+            background: rgba(245, 158, 11, 0.25);
+            border: 1px solid #f59e0b;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        header {
+            background: rgba(14, 19, 31, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--text-main);
+        }
+        .brand-logo {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #10b981, #3b82f6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 20px;
+        }
+        .brand-title { font-size: 18px; font-weight: 800; }
+        .brand-title span { color: var(--emerald); }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 420px;
+            gap: 28px;
+            flex-grow: 1;
+        }
+        @media (max-width: 1024px) {
+            .container { grid-template-columns: 1fr; }
+        }
+
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border);
+        }
+        .panel-title {
+            font-size: 17px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Stepper */
+        .stepper {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .step-item {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            transition: all 0.2s;
+        }
+        .step-item.active {
+            border-color: var(--primary);
+            background: var(--surface-hover);
+        }
+        .step-num {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+        .step-content { flex-grow: 1; }
+        .step-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+        .step-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+        .btn {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border: none;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn:hover { opacity: 0.9; }
+        .btn-emerald { background: linear-gradient(135deg, #10b981, #06b6d4); }
+
+        /* Progress Bar */
+        .progress-box {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .progress-bar-bg {
+            height: 8px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #10b981, #3b82f6);
+            transition: width 0.3s;
+        }
+
+        /* Fastboot Console */
+        .console-box {
+            background: #05070a;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            height: 180px;
+            overflow-y: auto;
+            color: #38bdf8;
+            line-height: 1.6;
+        }
+
+        /* Phone Simulator Frame */
+        .phone-mockup {
+            width: 360px;
+            height: 720px;
+            background: #000;
+            border: 12px solid #1e293b;
+            border-radius: 46px;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 25px 60px -15px rgba(0,0,0,0.8), 0 0 30px rgba(59, 130, 246, 0.15);
+            display: flex;
+            flex-direction: column;
+        }
+        .phone-camera-hole {
+            width: 14px;
+            height: 14px;
+            background: #05070a;
+            border: 2px solid #1e293b;
+            border-radius: 50%;
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+        .phone-status-bar {
+            height: 38px;
+            padding: 8px 18px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            font-weight: 700;
+            color: #fff;
+            z-index: 5;
+        }
+        .phone-screen {
+            flex-grow: 1;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            background: radial-gradient(circle at top, #111827, #07090e);
+        }
+        .mockup-badge {
+            display: inline-block;
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid #f59e0b;
+            color: #fbbf24;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .kill-switch-row {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toggle-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 36px;
+            height: 20px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #334155; transition: .3s; border-radius: 20px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px;
+            background-color: white; transition: .3s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--emerald); }
+        input:checked + .slider:before { transform: translateX(16px); }
+
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-top: 10px;
+        }
+        .app-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .app-icon-box {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
+        }
+        .app-icon:hover .app-icon-box { transform: scale(1.08); border-color: var(--primary); }
+        .app-name { font-size: 11px; font-weight: 600; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+    <!-- Notice Bar -->
+    <div class="disclaimer-bar">
+        <span class="disclaimer-badge">Interactive Simulation</span>
+        This page is an interactive web demonstration of the Nyx Mobile OS flashing pipeline and AMOLED UI. Native OS source resides in the <code>nyxmobile/</code> engine.
+    </div>
+
+    <header>
+        <a href="../index.html" class="brand">
+            <div class="brand-logo">📱</div>
+            <div>
+                <div class="brand-title">Nyx <span>Sovereign Mobile OS</span></div>
+                <div style="font-size: 11px; color: var(--text-dim);">Zero-GC Microkernel • WebUSB Fastboot Deployer [Simulation]</div>
+            </div>
+        </a>
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <a href="sophia-autonomous-learning.html" style="color: var(--text-muted); font-size: 13px; font-weight: 600; text-decoration: none; padding: 6px 12px; border: 1px solid var(--border); border-radius: 8px;">Sophia Nexus &rarr;</a>
+        </div>
+    </header>
+
+    <div class="container">
+        
+        <!-- Left: WebUSB Flasher Workflow -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <span>⚡</span> WebUSB Fastboot Flasher [Simulation Interface]
+                </div>
+                <span style="font-size: 12px; color: var(--emerald); font-weight: 700;">AVB 2.0 VERIFIED BOOT</span>
+            </div>
+
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+                Demonstrates one-click browser flashing of Nyx Sovereign Mobile OS images to supported Pixel and Snapdragon hardware over WebUSB.
+            </p>
+
+            <div class="stepper">
+                <div class="step-item active" id="step1">
+                    <div class="step-num">1</div>
+                    <div class="step-content">
+                        <div class="step-title">Connect Fastboot Device</div>
+                        <div class="step-desc">Power off your phone and hold Power + Volume Down into bootloader mode, then connect via USB-C.</div>
+                        <button class="btn" style="margin-top: 10px;" onclick="connectWebUSB()">
+                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M15 7v4h1v2h-3V5h2l-3-4-3 4h2v8H8v-2h1V7H5v4h1v3h5v4H9l3 4 3-4h-2v-4h5v-3h1v-4h-4z"/></svg>
+                            Connect via WebUSB
+                        </button>
+                    </div>
+                </div>
+
+                <div class="step-item" id="step2">
+                    <div class="step-num">2</div>
+                    <div class="step-content">
+                        <div class="step-title">Unlock Bootloader & Flash Partitions</div>
+                        <div class="step-desc">Flashing <code>boot_a</code>, <code>system_a</code>, <code>vendor_boot</code>, and Nyx Sovereign sandboxes.</div>
+                        <button class="btn btn-emerald" id="flashBtn" style="margin-top: 10px; display: none;" onclick="startFlashing()">
+                            Start Nyx OS Flash &rarr;
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-box" id="progressBox">
+                <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700;">
+                    <span id="flashStatusText">Flashing partition: system_a...</span>
+                    <span id="flashPercentText">0%</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="progressFill"></div>
+                </div>
+            </div>
+
+            <!-- Fastboot Console Output -->
+            <div class="console-box" id="fastbootConsole">
+[WebUSB Flasher Simulation Ready]
+Awaiting device handshake via navigator.usb...
+Supported: Pixel 6/7/8/9, Snapdragon 8 Gen 2/3 devices.
+AVB 2.0 Root of Trust: Enabled.
+            </div>
+        </div>
+
+        <!-- Right: Live Interactive Phone Simulator -->
+        <div>
+            <div class="phone-mockup">
+                <div class="phone-camera-hole"></div>
+                <div class="phone-status-bar">
+                    <span>9:41</span>
+                    <span style="display: flex; gap: 6px; align-items: center;">
+                        <span style="font-size: 10px; color: var(--emerald);">🔒 ENCRYPTED</span>
+                        <span>5G</span>
+                        <span>100%</span>
+                    </span>
+                </div>
+
+                <div class="phone-screen">
+                    <div style="text-align: center; margin-top: 6px;">
+                        <span class="mockup-badge">Live Interactive Mockup</span>
+                        <div style="font-size: 20px; font-weight: 800;">Nyx Sovereign OS</div>
+                        <div style="font-size: 11px; color: var(--emerald); font-weight: 700;">Zero-Tracker Hardened Kernel</div>
+                    </div>
+
+                    <!-- Hardware Kill-Switches -->
+                    <div class="kill-switch-row">
+                        <div style="font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">Hardware Kill Switches</div>
+                        <div class="toggle-item">
+                            <span>📷 Camera Hardware Cut</span>
+                            <label class="switch"><input type="checkbox" checked onchange="toggleFeature('Camera', this.checked)"><span class="slider"></span></label>
+                        </div>
+                        <div class="toggle-item">
+                            <span>🎤 Microphone Cut</span>
+                            <label class="switch"><input type="checkbox" checked onchange="toggleFeature('Microphone', this.checked)"><span class="slider"></span></label>
+                        </div>
+                        <div class="toggle-item">
+                            <span>📡 Network Scrambler</span>
+                            <label class="switch"><input type="checkbox" checked onchange="toggleFeature('Network Scrambler', this.checked)"><span class="slider"></span></label>
+                        </div>
+                    </div>
+
+                    <!-- App Icons -->
+                    <div class="app-grid">
+                        <div class="app-icon" onclick="launchApp('Sophia AI')">
+                            <div class="app-icon-box" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: #fff;">Σ</div>
+                            <span class="app-name">Sophia AI</span>
+                        </div>
+                        <div class="app-icon" onclick="launchApp('Sovereign Browser')">
+                            <div class="app-icon-box" style="background: linear-gradient(135deg, #10b981, #06b6d4); color: #fff;">🛡️</div>
+                            <span class="app-name">Browser</span>
+                        </div>
+                        <div class="app-icon" onclick="launchApp('GeoLibre')">
+                            <div class="app-icon-box" style="background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff;">🗺️</div>
+                            <span class="app-name">GeoLibre</span>
+                        </div>
+                        <div class="app-icon" onclick="launchApp('Camera')">
+                            <div class="app-icon-box">📷</div>
+                            <span class="app-name">Hardened Cam</span>
+                        </div>
+                        <div class="app-icon" onclick="launchApp('Terminal')">
+                            <div class="app-icon-box">💻</div>
+                            <span class="app-name">Nyx Shell</span>
+                        </div>
+                        <div class="app-icon" onclick="launchApp('Settings')">
+                            <div class="app-icon-box">⚙️</div>
+                            <span class="app-name">Security</span>
+                        </div>
+                    </div>
+
+                    <!-- Status Display -->
+                    <div id="simLog" style="margin-top: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--emerald); background: rgba(0,0,0,0.5); padding: 8px; border-radius: 8px;">
+                        Simulation Status: UI Active • Zero Telemetry
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function logFastboot(msg) {
+            const box = document.getElementById('fastbootConsole');
+            box.textContent += `\n${msg}`;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        async function connectWebUSB() {
+            logFastboot('[WebUSB] Requesting USB device in Fastboot mode (0x18d1)...');
+            try {
+                if (navigator.usb) {
+                    logFastboot('[WebUSB] WebUSB interface ready in browser.');
+                }
+                setTimeout(() => {
+                    logFastboot('[Handshake] Simulated device detected: Pixel 8 Pro (Fastboot Mode)');
+                    logFastboot('[Handshake] Bootloader version: g1k-0.4-1049281');
+                    logFastboot('[Handshake] Current slot: _a (Active)');
+                    document.getElementById('step1').classList.remove('active');
+                    document.getElementById('step2').classList.add('active');
+                    document.getElementById('flashBtn').style.display = 'inline-flex';
+                }, 1000);
+            } catch (err) {
+                logFastboot('[Error] ' + err.message);
+            }
+        }
+
+        function startFlashing() {
+            document.getElementById('progressBox').style.display = 'flex';
+            document.getElementById('flashBtn').disabled = true;
+            logFastboot('\n--- INITIATING NYX MOBILE OS FLASH SIMULATION ---');
+            
+            const partitions = [
+                { name: 'boot_a', size: '64MB' },
+                { name: 'vendor_boot_a', size: '32MB' },
+                { name: 'vbmeta_a (AVB 2.0 Key)', size: '4KB' },
+                { name: 'system_a (Nyx Zero-GC Kernel)', size: '2.4GB' },
+                { name: 'product_a (Sophia AI + Security Sandbox)', size: '1.2GB' }
+            ];
+
+            let index = 0;
+            const fill = document.getElementById('progressFill');
+            const statusText = document.getElementById('flashStatusText');
+            const percentText = document.getElementById('flashPercentText');
+
+            const interval = setInterval(() => {
+                if (index >= partitions.length) {
+                    clearInterval(interval);
+                    statusText.textContent = 'Flashing Complete! Device Rebooting...';
+                    percentText.textContent = '100%';
+                    fill.style.width = '100%';
+                    logFastboot('[Complete] Verified boot signature match: SUCCESS.');
+                    logFastboot('[Reboot] fastboot reboot -> Booting Nyx Mobile OS!');
+                    return;
+                }
+
+                const p = partitions[index];
+                const pct = Math.round(((index + 1) / partitions.length) * 100);
+                statusText.textContent = `Writing partition: ${p.name} (${p.size})...`;
+                percentText.textContent = `${pct}%`;
+                fill.style.width = `${pct}%`;
+                logFastboot(`[Flash] Sending '${p.name}' (${p.size})... OKAY [0.42s]`);
+                logFastboot(`[Flash] Writing '${p.name}'... OKAY [0.18s]`);
+                index++;
+            }, 900);
+        }
+
+        function toggleFeature(name, state) {
+            const log = document.getElementById('simLog');
+            log.textContent = `${name}: ${state ? 'ENABLED' : 'HARDWARE CUT'}`;
+        }
+
+        function launchApp(name) {
+            const log = document.getElementById('simLog');
+            log.textContent = `Launched: ${name} (Isolated Sandbox)`;
+        }
+    </script>
+</body>
+</html>

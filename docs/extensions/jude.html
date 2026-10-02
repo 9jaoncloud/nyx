@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jude (.jude) — SMT Formal Mathematical Verification Dialect for Nyx</title>
+    <meta name="description" content="Jude embeds machine-checked SMT formal proof contracts (@verify) into Nyx systems code. Zero runtime assertion tax, Z3/CVC5 theorem proving, and cryptographic certificates.">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        window.MathJax = {
+            tex: { 
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root {
+            --bg-dark: #050814;
+            --bg-card: rgba(13, 20, 38, 0.85);
+            --accent-purple: #a855f7;
+            --border-glow: rgba(168, 85, 247, 0.3);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.7;
+        }
+
+        .doc-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem 5rem;
+        }
+
+        .hero-box {
+            background: linear-gradient(135deg, rgba(46, 16, 101, 0.85) 0%, rgba(6, 15, 25, 0.98) 100%);
+            border: 1px solid var(--border-glow);
+            border-radius: 16px;
+            padding: 2.5rem 2rem;
+            margin-bottom: 2.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(168, 85, 247, 0.15);
+            color: #c084fc;
+            border: 1px solid rgba(168, 85, 247, 0.35);
+            padding: 0.35rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            letter-spacing: 0.05em;
+        }
+
+        .doc-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.4rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 0.75rem;
+            line-height: 1.2;
+        }
+
+        pre.code-block {
+            background: #030712 !important;
+            border: 1px solid rgba(168, 85, 247, 0.2) !important;
+            border-radius: 10px !important;
+            padding: 1.25rem !important;
+            font-family: 'JetBrains Mono', monospace !important;
+            font-size: 0.88rem !important;
+            color: #d8b4fe !important;
+            overflow-x: auto !important;
+            margin: 1.25rem 0 !important;
+            line-height: 1.6 !important;
+            white-space: pre !important;
+            word-wrap: normal !important;
+            tab-size: 4 !important;
+        }
+
+        pre.code-block code {
+            font-family: inherit !important;
+            font-size: inherit !important;
+            color: inherit !important;
+            white-space: pre !important;
+            display: block !important;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 1.75rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        h2 {
+            font-family: 'Outfit', sans-serif;
+            color: #f1f5f9;
+            font-size: 1.5rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        h3 {
+            font-family: 'Outfit', sans-serif;
+            color: #c084fc;
+            font-size: 1.2rem;
+            margin: 1.5rem 0 0.5rem;
+        }
+
+        .math-box {
+            background: #060312;
+            border: 1px solid rgba(168, 85, 247, 0.25);
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776; Menu</button>
+    <nav id="sidebar"></nav>
+
+    <main>
+        <div class="doc-container">
+            <div class="hero-box">
+                <div class="badge-pill">
+                    <i class="fa-solid fa-square-root-variable"></i> Nyx Dialect 3 &bull; Formal Verification Axis
+                </div>
+                <h1 class="doc-title">Jude: SMT Formal Mathematical Verification</h1>
+                <p style="color:#cbd5e1; font-size:1.1rem; max-width:880px;">
+                    Eliminate runtime assertion overhead by mathematically proving system invariants at compile-time. Embed first-order logic pre/post-condition contracts discharged by Z3 and CVC5 SMT solvers.
+                </p>
+                <div style="display:flex; gap:1.25rem; flex-wrap:wrap; margin-top:1.25rem; font-family:'JetBrains Mono', monospace; font-size:0.85rem; color:#e9d5ff;">
+                    <span><strong>File Extension:</strong> <code>.jude</code></span>
+                    <span>&bull;</span>
+                    <span><strong>Compiler Flag:</strong> <code>nyxc --verify</code></span>
+                    <span>&bull;</span>
+                    <span><strong>SMT Backends:</strong> <code>Z3 &bull; CVC5</code></span>
+                    <span>&bull;</span>
+                    <span><strong>Runtime Overhead:</strong> <code>0.00 ns (Erased at Compile Time)</code></span>
+                </div>
+            </div>
+
+            <!-- Core Rationale -->
+            <div class="card">
+                <h2><i class="fa-solid fa-graduation-cap" style="color:var(--accent-purple);"></i> 1. The Power of Jude</h2>
+                <p>
+                    In safety-critical systems (flight control, medical firmware, banking transaction settling, and defense infrastructure), runtime checks (e.g. <code>assert()</code> or panics) happen too late.
+                </p>
+                <p>
+                    <strong>Jude proves correctness before the binary is even compiled:</strong>
+                </p>
+                <div class="math-box">
+                    $$\forall x \in \text{Domain}, \quad P(x) \implies Q(f(x))$$
+                </div>
+                <p>
+                    The compiler converts your <code>@verify</code> contract into SMT-LIB2 queries, invokes the Z3/CVC5 solver, and emits a cryptographically signed <code>.jude.cert</code> audit file. If the proof cannot be discharged, compilation halts with a counter-example trace.
+                </p>
+            </div>
+
+            <!-- Syntax & Code Example -->
+            <div class="card">
+                <h2><i class="fa-solid fa-code" style="color:var(--accent-purple);"></i> 2. Syntax &amp; Verification Contracts</h2>
+                <p>In Jude, functions declare mathematical pre-conditions (<code>requires</code>) and post-conditions (<code>ensures</code>):</p>
+
+<pre class="code-block"><code class="language-nyx">// file: flight_control.jude
+// Compile with: nyxc --verify flight_control.jude -o flight.exe
+
+@verify(
+    requires: pitch_rate >= -45.0 && pitch_rate <= 45.0 && delta_time > 0.0,
+    ensures: result.elevator_angle >= -30.0 && result.elevator_angle <= 30.0
+)
+pub fn calculate_elevator(pitch_rate: f64, delta_time: f64) -> ActuatorCommand {
+    let desired_trim = pitch_rate * delta_time * 0.85;
+    let clamped_angle = clamp(desired_trim, -30.0, 30.0);
+    
+    ActuatorCommand { elevator_angle: clamped_angle }
+}</code></pre>
+            </div>
+
+            <!-- Cryptographic Certificates -->
+            <div class="card">
+                <h2><i class="fa-solid fa-certificate" style="color:var(--accent-purple);"></i> 3. Cryptographic Proof Certificates (.jude.cert)</h2>
+                <p>
+                    Every successful verification pass outputs a reproducible audit certificate:
+                </p>
+                <div style="background:#02040a; padding:1rem 1.25rem; border-radius:8px; font-family:'JetBrains Mono', monospace; font-size:0.85rem; color:#c084fc; border:1px solid rgba(168,85,247,0.3);">
+                    [JUDE-VERIFY] Proof obligation discharged in 14.2ms.<br>
+                    [SMT-SOLVER] Z3 v4.12.2 &bull; 0 counter-examples.<br>
+                    [CERTIFICATE] Emitted: <code>flight_control.jude.cert</code> (SHA-256: <code>8f4a9b2c3d4e5f6...</code>)
+                </div>
+            </div>
+
+            <!-- 4 Concrete Industrial Use Cases -->
+            <div class="card">
+                <h2><i class="fa-solid fa-shield-halved" style="color:var(--accent-purple);"></i> 4. Concrete Industrial Use Cases</h2>
+
+                <!-- Use Case 1 -->
+                <h3>Use Case 1: DO-178C Level-A Aerospace Autothrottle Safety Governor</h3>
+                <p>
+                    Commercial aircraft engines require rigorous proof that digital engine controllers (FADEC) never command thrust exceeding structural limits or dropping below aerodynamic stall thresholds:
+                </p>
+<pre class="code-block"><code class="language-nyx">import avionics.safety;
+
+struct EngineState {
+    n1_rpm_percent: f64,
+    altitude_feet: f64,
+    airspeed_knots: f64,
+}
+
+@verify(
+    requires: state.airspeed_knots >= 80.0 && state.altitude_feet <= 45000.0,
+    ensures: result.thrust_percentage >= 15.0 && result.thrust_percentage <= 100.0
+)
+pub fn compute_autothrottle_demand(state: EngineState, pilot_command: f64) -> ThrottleDemand {
+    let unconstrained = pilot_command * 1.05;
+    
+    // Provably clamped within aerodynamic envelope
+    let safe_thrust = if unconstrained < 15.0 {
+        15.0 // Anti-stall minimum flight idle
+    } else if unconstrained > 100.0 {
+        100.0 // Maximum takeoff thrust limit
+    } else {
+        unconstrained
+    };
+
+    ThrottleDemand { thrust_percentage: safe_thrust }
+}</code></pre>
+
+                <!-- Use Case 2 -->
+                <h3>Use Case 2: ISO 26262 ASIL-D Automotive Brake-by-Wire Deceleration Governor</h3>
+                <p>
+                    Electric vehicle regenerative braking must never exceed road-tire friction limits ($\mu \cdot g$) to prevent unrecoverable skids:
+                </p>
+<pre class="code-block"><code class="language-nyx">import automotive.safety;
+
+@verify(
+    requires: wheel_speed >= 0.0 && mu_friction >= 0.1 && mu_friction <= 1.2,
+    ensures: result.braking_force_newtons <= (mu_friction * 9.81 * vehicle_mass_kg)
+)
+pub fn compute_anti_skid_braking(
+    requested_force: f64,
+    wheel_speed: f64,
+    mu_friction: f64,
+    vehicle_mass_kg: f64
+) -> BrakeActuatorCommand {
+    let max_friction_force = mu_friction * 9.81 * vehicle_mass_kg;
+    let safe_force = if requested_force > max_friction_force {
+        max_friction_force
+    } else {
+        requested_force
+    };
+
+    BrakeActuatorCommand { braking_force_newtons: safe_force }
+}</code></pre>
+
+                <!-- Use Case 3 -->
+                <h3>Use Case 3: DeFi &amp; RTGS Banking Zero-Overflow Invariant Ledger</h3>
+                <p>
+                    Financial settlement engines must mathematically guarantee non-negative balances and strict conservation of funds across multi-party debits and credits:
+                </p>
+<pre class="code-block"><code class="language-nyx">import fintech.ledger;
+
+struct Account {
+    balance_kobo: u64,
+}
+
+@verify(
+    requires: sender.balance_kobo >= amount_kobo && amount_kobo > 0,
+    ensures: result.sender.balance_kobo == sender.balance_kobo - amount_kobo &&
+             result.receiver.balance_kobo == receiver.balance_kobo + amount_kobo
+)
+pub fn execute_atomic_transfer(
+    mut sender: Account,
+    mut receiver: Account,
+    amount_kobo: u64
+) -> TransferResult {
+    sender.balance_kobo -= amount_kobo;
+    receiver.balance_kobo += amount_kobo;
+
+    TransferResult { sender, receiver }
+}</code></pre>
+
+                <!-- Use Case 4 -->
+                <h3>Use Case 4: Medical Infusion Pump Continuous Dosage Rate Prover</h3>
+                <p>
+                    Intravenous drug pumps must satisfy absolute dosage bounds to prevent toxic overdoses regardless of UI input glitches:
+                </p>
+<pre class="code-block"><code class="language-nyx">import medical.device;
+
+@verify(
+    requires: patient_weight_kg >= 2.0 && patient_weight_kg <= 250.0 && input_rate_ml_hr >= 0.0,
+    ensures: result.dispense_rate_ml_hr <= (patient_weight_kg * 0.5) // Safe upper toxicity ceiling
+)
+pub fn calculate_iv_infusion_rate(patient_weight_kg: f64, input_rate_ml_hr: f64) -> PumpCommand {
+    let max_safe_rate = patient_weight_kg * 0.5;
+    let actual_rate = if input_rate_ml_hr > max_safe_rate {
+        max_safe_rate
+    } else {
+        input_rate_ml_hr
+    };
+
+    PumpCommand { dispense_rate_ml_hr: actual_rate }
+}</code></pre>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; margin-top:2rem;">
+                <a href="havilah.html" class="btn" style="background:rgba(245,158,11,0.2); color:#fbbf24; text-decoration:none; padding:0.6rem 1.2rem; border-radius:8px; border:1px solid rgba(245,158,11,0.4);">&larr; Previous: Havilah (.hav)</a>
+                <a href="seraphim.html" class="btn" style="background:rgba(56,189,248,0.2); color:#38bdf8; text-decoration:none; padding:0.6rem 1.2rem; border-radius:8px; border:1px solid rgba(56,189,248,0.4);">Next: SERAPHIM Robotics &rarr;</a>
+            </div>
+        </div>
+    </main>
+
+    <script src="../navigation.js"></script>
+    <script src="../header_footer.js"></script>
+</body>
+</html>

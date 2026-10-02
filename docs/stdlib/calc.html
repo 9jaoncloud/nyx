@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>std.office.calc (Zero-GC Spreadsheet Engine & AI Assistant) — Nyx Docs</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .example-box { background: #0b1120; border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 1.5rem; margin: 1.5rem 0; }
+        .example-title { color: #38bdf8; font-size: 1.1rem; font-weight: 700; margin-top: 0; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+        .feature-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; }
+        .feature-card h4 { color: #fff; margin: 0 0 0.5rem; font-size: 0.95rem; }
+        .feature-card p { color: var(--text-muted); font-size: 0.85rem; margin: 0; line-height: 1.5; }
+        table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.9rem; }
+        th, td { padding: 0.85rem 1rem; border: 1px solid var(--border); text-align: left; }
+        th { background: rgba(0,0,0,0.25); color: var(--accent-light); font-weight: 600; }
+    </style>
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+
+    <main>
+        <div style="display:inline-block; padding: 0.35rem 0.85rem; border-radius: 9999px; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; margin-bottom: 1rem;">
+            Standard Library Module · std.office.calc
+        </div>
+        <h1>std.office.calc — Zero-GC Spreadsheet Engine &amp; AI Tabular Assistant</h1>
+        <p class="lead" style="font-size: 1.15rem; color: var(--text-muted); margin-bottom: 2rem;">
+            A high-performance columnar spreadsheet engine built natively in Nyx with <strong>natural language tabular queries, automated formula synthesis, Z-score statistical anomaly detection, and linear trend forecasting</strong>.
+        </p>
+
+        <!-- Feature Grid -->
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>💬 Natural Language Querying</h4>
+                <p>Query tabular datasets directly with English questions like <em>"What is the total revenue in Q3?"</em> or <em>"Compute average expenses"</em>.</p>
+            </div>
+            <div class="feature-card">
+                <h4>✨ Automated Formula Synthesizer</h4>
+                <p>Generates complex multi-range formulas (e.g. <code>=XLOOKUP()</code>, compound growth, variance) automatically from English descriptions.</p>
+            </div>
+            <div class="feature-card">
+                <h4>🚨 Z-Score Outlier Detection</h4>
+                <p>Identifies data anomalies where <strong>|x - μ| &gt; 2.0σ</strong> (<strong>Z-score &gt; 2.0</strong>) with zero heap allocation overhead.</p>
+            </div>
+            <div class="feature-card">
+                <h4>📈 Linear Trend Forecasting</h4>
+                <p>Computes ordinary least squares regression (slope, intercept, <strong>R²</strong>) to project future time-series values deterministically.</p>
+            </div>
+        </div>
+
+        <h2>1. Quick Start Example</h2>
+        <div class="example-box">
+            <div class="example-title">Creating a Spreadsheet & Querying with Natural Language</div>
+            <pre><code class="language-nyx">import std.office.calc;
+import std.io;
+
+fn main() {
+    region arena {
+        // Initialize a 100-row x 5-column financial worksheet
+        let mut sheet = NyxCalcSheet.new("Q3_Financials", 100, 5);
+
+        // Populate monthly revenue data
+        sheet.set_cell_number(1, 1, 45000.0); // Month 1: $45k
+        sheet.set_cell_number(2, 1, 52000.0); // Month 2: $52k
+        sheet.set_cell_number(3, 1, 61000.0); // Month 3: $61k
+        sheet.set_cell_number(4, 1, 185000.0); // Month 4: $185k (Anomaly!)
+        sheet.set_cell_number(5, 1, 64000.0); // Month 5: $64k
+
+        // 1. Natural Language Query
+        let response = sheet.query_natural_language("What is the total sum?");
+        io.println("AI Assistant: ", response);
+
+        // 2. Statistical Outlier Detection (Z-Score > 2.0)
+        let anomalies = sheet.detect_outliers(1);
+        io.println("🚨 Anomalies detected: ", anomalies.len());
+
+        // 3. Linear Trend Forecasting for Next 3 Periods
+        let forecast = sheet.forecast_linear(1, 3);
+        io.println("📈 Projected Month 6 Revenue: $", forecast.predictions[0]);
+    }
+}</code></pre>
+        </div>
+
+        <h2>2. Automated Formula Synthesizer</h2>
+        <p>Convert English requirements into executable Excel-compatible formula expressions:</p>
+        <div class="example-box">
+            <div class="example-title">Synthesizing Complex Formulas</div>
+            <pre><code class="language-nyx">let formula1 = sheet.synthesize_formula("lookup user email in customer catalog");
+// Returns: =XLOOKUP(A2, Catalog!A:A, Catalog!C:C, "Not Found")
+
+let formula2 = sheet.synthesize_formula("calculate percentage revenue growth");
+// Returns: =(C2 - B2) / B2 * 100
+
+let formula3 = sheet.synthesize_formula("compound interest future value");
+// Returns: =PV * (1 + R)^N</code></pre>
+        </div>
+
+        <h2>3. API Reference</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Method / Function</th>
+                    <th>Parameters</th>
+                    <th>Return Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>NyxCalcSheet.new(name, rows, cols)</code></td>
+                    <td><code>String, Int, Int</code></td>
+                    <td><code>NyxCalcSheet</code></td>
+                    <td>Initializes a new zero-GC tabular sheet.</td>
+                </tr>
+                <tr>
+                    <td><code>set_cell_number(row, col, val)</code></td>
+                    <td><code>Int, Int, Float</code></td>
+                    <td><code>void</code></td>
+                    <td>Sets cell coordinate with a 64-bit float value.</td>
+                </tr>
+                <tr>
+                    <td><code>query_natural_language(query)</code></td>
+                    <td><code>String</code></td>
+                    <td><code>String</code></td>
+                    <td>Parses English query and executes aggregations.</td>
+                </tr>
+                <tr>
+                    <td><code>synthesize_formula(task_desc)</code></td>
+                    <td><code>String</code></td>
+                    <td><code>String</code></td>
+                    <td>Generates Excel-compatible formula string.</td>
+                </tr>
+                <tr>
+                    <td><code>detect_outliers(col)</code></td>
+                    <td><code>Int</code></td>
+                    <td><code>Vec[Cell]</code></td>
+                    <td>Detects data points exceeding <strong>Z-score &gt; 2.0</strong>.</td>
+                </tr>
+                <tr>
+                    <td><code>forecast_linear(col, future_periods)</code></td>
+                    <td><code>Int, Int</code></td>
+                    <td><code>ForecastResult</code></td>
+                    <td>Computes least squares regression & future projections.</td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+
+    <script src="../navigation.js"></script>
+</body>
+</html>

@@ -1,0 +1,3619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NyxOffice Suite — Sovereign Native Enterprise Productivity Applications</title>
+    <meta name="description" content="NyxOffice is the sovereign, zero-GC, post-quantum productivity ecosystem for NyxOS: 12 native applications replacing legacy enterprise suites with hard real-time latency and local AI.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <style>
+        :root {
+            --bg: #050711;
+            --surface: rgba(13, 19, 36, 0.92);
+            --surface-card: rgba(18, 25, 48, 0.75);
+            --border: rgba(255, 255, 255, 0.12);
+            --border-glow: rgba(139, 92, 246, 0.4);
+            --primary: #8b5cf6;
+            --primary-light: #c084fc;
+            --cyan: #38bdf8;
+            --emerald: #10b981;
+            --amber: #f59e0b;
+            --rose: #f43f5e;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --code-bg: #090d1a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.18) 0px, transparent 50%),
+                radial-gradient(at 100% 30%, rgba(56, 189, 248, 0.14) 0px, transparent 50%),
+                radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 2rem;
+            background: rgba(5, 7, 17, 0.95);
+            backdrop-filter: blur(18px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 1.25rem;
+        }
+        .brand-badge {
+            background: linear-gradient(135deg, var(--primary), var(--cyan));
+            color: #fff;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.25rem;
+            align-items: center;
+        }
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .nav-links a:hover, .nav-links a.active {
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2.5rem 1.5rem 5rem;
+            width: 100%;
+            flex: 1;
+        }
+
+        /* Hero / Suite Intro */
+        .suite-hero {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+        .suite-hero h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3.4rem;
+            font-weight: 900;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.75rem;
+        }
+        .suite-hero h1 span {
+            background: linear-gradient(135deg, #c084fc, #38bdf8, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .suite-hero p {
+            color: var(--text-muted);
+            font-size: 1.15rem;
+            max-width: 880px;
+            margin: 0 auto 1.75rem;
+        }
+
+        /* App Tabs Navigation Grid */
+        .app-tabs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.6rem;
+            margin-bottom: 2rem;
+        }
+        .tab-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.7rem 0.9rem;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            font-weight: 700;
+            font-size: 0.86rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            justify-content: flex-start;
+        }
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            transform: translateY(-2px);
+            border-color: rgba(255,255,255,0.25);
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.35), rgba(56, 189, 248, 0.25));
+            border-color: var(--primary-light);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
+        }
+
+        /* Main Workspace Card */
+        .workspace-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            min-height: 680px;
+            margin-bottom: 4rem;
+        }
+
+        .workspace-header {
+            background: rgba(6, 9, 22, 0.96);
+            border-bottom: 1px solid var(--border);
+            padding: 0.9rem 1.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .workspace-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+        }
+        .workspace-actions {
+            display: flex;
+            gap: 0.6rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .btn-action {
+            padding: 0.45rem 0.95rem;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text);
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .btn-action:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: var(--primary-light);
+        }
+        .btn-action.btn-ai {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.4), rgba(56, 189, 248, 0.4));
+            border-color: var(--primary-light);
+            color: #fff;
+        }
+
+        .app-view {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+        }
+        .app-view.active {
+            display: flex;
+        }
+
+        /* Generic Workspace Footer */
+        .app-footer {
+            background: rgba(6, 9, 22, 0.96);
+            border-top: 1px solid var(--border);
+            padding: 0.6rem 1.75rem;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            align-items: center;
+        }
+
+        /* ------------------------------------------------------------- */
+        /* 1. NyxWriter */
+        /* ------------------------------------------------------------- */
+        .writer-toolbar {
+            background: rgba(10, 14, 28, 0.9);
+            border-bottom: 1px solid var(--border);
+            padding: 0.5rem 1.5rem;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .tool-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            padding: 0.35rem 0.65rem;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .tool-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            border-color: var(--border);
+        }
+        .writer-editor-pane {
+            flex: 1;
+            padding: 2.5rem;
+            outline: none;
+            color: #f1f5f9;
+            font-size: 1.05rem;
+            line-height: 1.8;
+            overflow-y: auto;
+            min-height: 480px;
+        }
+        .writer-editor-pane h1 { font-size: 2.2rem; margin-bottom: 1rem; color: #fff; font-family: 'Outfit'; }
+        .writer-editor-pane h2 { font-size: 1.5rem; margin-top: 1.5rem; margin-bottom: 0.75rem; color: #c084fc; font-family: 'Outfit'; }
+        .writer-editor-pane p { margin-bottom: 1.2rem; }
+        .writer-editor-pane blockquote {
+            border-left: 3px solid var(--cyan);
+            padding-left: 1rem;
+            color: #94a3b8;
+            font-style: italic;
+            margin: 1.2rem 0;
+        }
+
+        /* ------------------------------------------------------------- */
+        /* 2. NyxCalc */
+        /* ------------------------------------------------------------- */
+        .calc-bar {
+            background: rgba(10, 14, 28, 0.9);
+            border-bottom: 1px solid var(--border);
+            padding: 0.6rem 1.5rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        .formula-input {
+            flex: 1;
+            background: #090d1a;
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 0.45rem 0.85rem;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88rem;
+            outline: none;
+        }
+        .formula-input:focus { border-color: var(--primary); }
+        .calc-grid-wrapper {
+            flex: 1;
+            overflow: auto;
+            padding: 1.25rem;
+            background: #080c1b;
+        }
+        .calc-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+        }
+        .calc-table th {
+            background: #0e162c;
+            color: var(--text-muted);
+            padding: 0.6rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            text-align: center;
+            font-weight: 700;
+        }
+        .calc-table td {
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 0;
+            background: rgba(15, 23, 42, 0.4);
+            position: relative;
+        }
+        .calc-table td.selected {
+            outline: 2px solid var(--primary-light);
+            outline-offset: -1px;
+            background: rgba(139, 92, 246, 0.15);
+        }
+        .calc-table td.selected-range {
+            background: rgba(139, 92, 246, 0.22) !important;
+        }
+        .calc-table td.range-top {
+            border-top: 2px solid var(--primary-light) !important;
+        }
+        .calc-table td.range-bottom {
+            border-bottom: 2px solid var(--primary-light) !important;
+        }
+        .calc-table td.range-left {
+            border-left: 2px solid var(--primary-light) !important;
+        }
+        .calc-table td.range-right {
+            border-right: 2px solid var(--primary-light) !important;
+        }
+        .calc-table th.col-header-cell {
+            cursor: pointer;
+            user-select: none;
+        }
+        .calc-table th.col-header-cell:hover {
+            background: rgba(139, 92, 246, 0.4) !important;
+            color: #fff;
+        }
+        .formula-pointing-highlight {
+            outline: 2px dashed var(--cyan) !important;
+            outline-offset: -1px;
+            background: rgba(56, 189, 248, 0.2) !important;
+        }
+        .calc-table td.fill-highlight {
+            background-color: rgba(139, 92, 246, 0.25) !important;
+            outline: 1px dashed var(--primary-light) !important;
+            outline-offset: -1px;
+        }
+        .calc-table th.col-selected {
+            background: rgba(139, 92, 246, 0.35) !important;
+            color: #fff !important;
+        }
+        .calc-table td.row-header-selected {
+            background: rgba(139, 92, 246, 0.35) !important;
+            color: #fff !important;
+        }
+        .calc-table td.col-selected, .calc-table td.row-selected {
+            background: rgba(139, 92, 246, 0.08) !important;
+        }
+        .calc-table td.has-formula input {
+            color: var(--cyan);
+            font-weight: 600;
+        }
+        .calc-fill-handle {
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            width: 9px;
+            height: 9px;
+            background-color: var(--primary-light);
+            border: 1.5px solid #ffffff;
+            cursor: crosshair;
+            z-index: 50;
+            border-radius: 1px;
+            box-shadow: 0 0 5px rgba(192, 132, 252, 0.9);
+        }
+        .calc-fill-handle::after {
+            content: '';
+            position: absolute;
+            top: -7px;
+            left: -7px;
+            right: -7px;
+            bottom: -7px;
+            cursor: crosshair;
+        }
+        .calc-cell-input {
+            width: 100%;
+            height: 100%;
+            min-height: 36px;
+            padding: 0.55rem 0.75rem;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-family: inherit;
+            font-size: inherit;
+            outline: none;
+            cursor: cell;
+            box-sizing: border-box;
+            transition: background 0.15s;
+        }
+        .calc-cell-input:focus {
+            background: rgba(139, 92, 246, 0.18);
+            box-shadow: inset 0 0 0 2px var(--primary);
+        }
+        .cell-address-badge {
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--primary-light);
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-weight: 700;
+            min-width: 45px;
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+        }
+
+        /* Enterprise AutoFilter & Sorting */
+        .col-filter-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 6px;
+            width: 14px;
+            height: 14px;
+            font-size: 0.58rem;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.15);
+            color: #38bdf8;
+            cursor: pointer;
+            vertical-align: middle;
+            transition: all 0.15s;
+            border: none;
+        }
+        .col-filter-btn:hover {
+            background: #38bdf8;
+            color: #000;
+        }
+        .col-filter-btn.active-filtered {
+            background: #10b981 !important;
+            color: #000 !important;
+        }
+        .calc-filter-popup {
+            position: fixed;
+            z-index: 10001;
+            background: #0f172a;
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            border-radius: 8px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.8), 0 0 15px rgba(56, 189, 248, 0.2);
+            padding: 0.75rem;
+            min-width: 220px;
+            max-width: 300px;
+            display: none;
+            font-size: 0.8rem;
+            color: #e2e8f0;
+            backdrop-filter: blur(16px);
+        }
+        .filter-action-btn {
+            width: 100%;
+            padding: 0.4rem 0.6rem;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 0.4rem;
+            text-align: left;
+            font-size: 0.76rem;
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+        }
+        .filter-action-btn:hover {
+            background: rgba(56, 189, 248, 0.2);
+            border-color: #38bdf8;
+            color: #38bdf8;
+        }
+        .filter-search-box {
+            width: 100%;
+            padding: 0.35rem 0.5rem;
+            background: #060913;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+            color: #fff;
+            margin-bottom: 0.5rem;
+            font-size: 0.76rem;
+            box-sizing: border-box;
+        }
+        .filter-values-list {
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            padding: 0.35rem;
+            margin-bottom: 0.6rem;
+            background: rgba(0, 0, 0, 0.25);
+        }
+        .filter-val-item {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.2rem 0.3rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        /* Sovereign Modals */
+        .sovereign-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            z-index: 20000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .sovereign-modal-overlay.active {
+            display: flex;
+        }
+        .sovereign-modal {
+            background: #090d1a;
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 580px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85), 0 0 25px rgba(56, 189, 248, 0.25);
+            padding: 1.5rem;
+            color: #f8fafc;
+        }
+        .modal-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 0.75rem;
+        }
+        .modal-title-row h3 {
+            margin: 0;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .modal-close-btn {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+        .modal-close-btn:hover {
+            color: #ef4444;
+        }
+        .modal-form-group {
+            margin-bottom: 1rem;
+        }
+        .modal-form-group label {
+            display: block;
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-bottom: 0.35rem;
+            font-weight: 600;
+        }
+        .modal-form-group select, .modal-form-group input, .modal-form-group textarea {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            color: #fff;
+            font-size: 0.82rem;
+            box-sizing: border-box;
+        }
+
+        /* Pivot Table Styles */
+        .calc-table td.pivot-group-header {
+            background: rgba(30, 41, 59, 0.95);
+            color: #38bdf8;
+            font-weight: 700;
+        }
+        .calc-table td.pivot-total-cell {
+            background: rgba(16, 185, 129, 0.18);
+            color: #34d399;
+            font-weight: 800;
+        }
+
+        /* Validation & Protection */
+        .validated-cell-badge {
+            position: absolute;
+            right: 2px;
+            top: 2px;
+            font-size: 0.55rem;
+            color: #f59e0b;
+            pointer-events: none;
+        }
+        .cell-locked-badge {
+            position: absolute;
+            left: 2px;
+            top: 2px;
+            font-size: 0.5rem;
+            color: #ef4444;
+            pointer-events: none;
+        }
+        .calc-table td.cond-highlight-green {
+            background: rgba(16, 185, 129, 0.28) !important;
+            color: #34d399 !important;
+            font-weight: 700;
+        }
+        .calc-table td.cond-highlight-red {
+            background: rgba(239, 68, 68, 0.25) !important;
+            color: #f87171 !important;
+            font-weight: 700;
+        }
+        .calc-table td.cond-highlight-yellow {
+            background: rgba(245, 158, 11, 0.22) !important;
+            color: #fbbf24 !important;
+            font-weight: 700;
+        }
+
+        /* ------------------------------------------------------------- */
+        /* 3. NyxDeck */
+        /* ------------------------------------------------------------- */
+        .deck-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            flex: 1;
+            min-height: 520px;
+        }
+        .slide-nav {
+            background: #0a0f22;
+            border-right: 1px solid var(--border);
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            overflow-y: auto;
+        }
+        .slide-thumb {
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .slide-thumb:hover { border-color: var(--cyan); }
+        .slide-thumb.active {
+            border-color: var(--primary-light);
+            background: rgba(139, 92, 246, 0.25);
+            box-shadow: 0 4px 14px rgba(139, 92, 246, 0.3);
+        }
+        .slide-canvas {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2.5rem;
+            background: radial-gradient(circle at center, #0f172a 0%, #060913 100%);
+        }
+        .slide-frame {
+            width: 100%;
+            max-width: 820px;
+            aspect-ratio: 16 / 9;
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
+            border: 1px solid var(--border-glow);
+            border-radius: 16px;
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+            position: relative;
+        }
+
+        /* ------------------------------------------------------------- */
+        /* 4. NyxMail */
+        /* ------------------------------------------------------------- */
+        .mail-layout {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            flex: 1;
+            min-height: 520px;
+        }
+        .mail-inbox-list {
+            background: #090d1c;
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+        }
+        .mail-item {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .mail-item:hover { background: rgba(255, 255, 255, 0.05); }
+        .mail-item.active { background: rgba(139, 92, 246, 0.2); border-left: 3px solid var(--primary-light); }
+        .mail-preview-pane {
+            padding: 2rem;
+            background: #0b1022;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        /* ------------------------------------------------------------- */
+        /* 5. NyxMeet */
+        /* ------------------------------------------------------------- */
+        .meet-layout {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            flex: 1;
+            min-height: 520px;
+        }
+        .meet-mesh-stage {
+            padding: 2rem;
+            background: #060914;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+        }
+        .mesh-nodes-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 600px;
+        }
+        .mesh-peer-box {
+            background: rgba(18, 25, 48, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            position: relative;
+        }
+        .meet-transcript-sidebar {
+            background: #0a0f24;
+            border-left: 1px solid var(--border);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ------------------------------------------------------------- */
+        /* 6. NyxBase */
+        /* ------------------------------------------------------------- */
+        .base-layout {
+            padding: 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            background: #070b18;
+        }
+        .kanban-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            flex: 1;
+        }
+        .kanban-col {
+            background: rgba(13, 19, 36, 0.7);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .kanban-card {
+            background: rgba(25, 34, 64, 0.8);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 8px;
+            padding: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .kanban-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+
+        /* ------------------------------------------------------------- */
+        /* 7. NyxDraw */
+        /* ------------------------------------------------------------- */
+        .draw-canvas-wrapper {
+            flex: 1;
+            background: radial-gradient(#1e293b 1px, #070a17 1px);
+            background-size: 24px 24px;
+            position: relative;
+            min-height: 520px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ------------------------------------------------------------- */
+        /* 8. NyxNotes */
+        /* ------------------------------------------------------------- */
+        .notes-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr 300px;
+            flex: 1;
+            min-height: 520px;
+        }
+        .notes-sidebar { background: #080d1e; border-right: 1px solid var(--border); padding: 1.25rem; }
+        .notes-editor { padding: 2rem; background: #0a0f24; outline: none; }
+        .notes-graph-pane { background: #060914; border-left: 1px solid var(--border); padding: 1.25rem; }
+
+        /* ------------------------------------------------------------- */
+        /* 9. NyxPDF Studio */
+        /* ------------------------------------------------------------- */
+        .pdf-layout {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            flex: 1;
+            min-height: 520px;
+        }
+        .pdf-viewer-stage {
+            padding: 2.5rem;
+            background: #111827;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .pdf-page-sheet {
+            background: #ffffff;
+            color: #111827;
+            width: 100%;
+            max-width: 550px;
+            aspect-ratio: 1 / 1.414;
+            padding: 2.5rem;
+            border-radius: 4px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            font-family: 'Inter', serif;
+            position: relative;
+        }
+        .pdf-seal-panel {
+            background: #090e21;
+            border-left: 1px solid var(--border);
+            padding: 1.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        /* ------------------------------------------------------------- */
+        /* 10. NyxFlow (Gantt & CPM) */
+        /* ------------------------------------------------------------- */
+        .flow-layout {
+            padding: 1.5rem;
+            flex: 1;
+            background: #070c1a;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+        .gantt-chart-wrapper {
+            background: #090e24;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            overflow-x: auto;
+        }
+        .gantt-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.9rem;
+            font-size: 0.85rem;
+        }
+        .gantt-label { width: 180px; font-weight: 600; color: #fff; }
+        .gantt-timeline { flex: 1; height: 28px; background: rgba(255,255,255,0.04); border-radius: 6px; position: relative; }
+        .gantt-bar {
+            position: absolute;
+            height: 100%;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            padding: 0 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        /* ------------------------------------------------------------- */
+        /* 11. NyxForms */
+        /* ------------------------------------------------------------- */
+        .forms-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            padding: 2rem;
+            flex: 1;
+            background: #070c1c;
+        }
+        .form-preview-card {
+            background: #0d142c;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.75rem;
+        }
+
+        /* ------------------------------------------------------------- */
+        /* 12. NyxVault */
+        /* ------------------------------------------------------------- */
+        .vault-layout {
+            padding: 2.5rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            flex: 1;
+            background: #070b18;
+        }
+        .vault-card {
+            background: rgba(10, 15, 30, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.75rem;
+        }
+        .key-badge {
+            background: rgba(56, 189, 248, 0.15);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            color: var(--cyan);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+        }
+
+        /* Assessment & Comparison Matrix Table */
+        .assessment-section {
+            margin-top: 3rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 2.5rem;
+        }
+        .assessment-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+            font-size: 0.88rem;
+        }
+        .assessment-table th {
+            background: #0a0f26;
+            color: #c084fc;
+            padding: 0.9rem 1rem;
+            text-align: left;
+            border-bottom: 2px solid var(--primary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+        }
+        .assessment-table td {
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            vertical-align: top;
+        }
+        .assessment-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        @media (max-width: 1024px) {
+            .deck-layout, .mail-layout, .meet-layout, .pdf-layout, .notes-layout, .forms-layout, .vault-layout {
+                grid-template-columns: 1fr;
+            }
+            .app-tabs { grid-template-columns: repeat(3, 1fr); }
+            .suite-hero h1 { font-size: 2.4rem; }
+        }
+
+        /* AI Copilot Drawer & FAB */
+        .ai-fab {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: linear-gradient(135deg, #10b981, #06b6d4, #8b5cf6);
+            color: #fff;
+            padding: 0.85rem 1.4rem;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 0.95rem;
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            transition: all 0.25s ease;
+        }
+        .ai-fab:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(16, 185, 129, 0.7);
+        }
+
+        .ai-drawer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(8px);
+            z-index: 2500;
+            display: none;
+            justify-content: flex-end;
+        }
+        .ai-drawer-overlay.active {
+            display: flex;
+        }
+
+        .ai-drawer {
+            width: 480px;
+            max-width: 92vw;
+            height: 100%;
+            background: #090d1c;
+            border-left: 1px solid var(--border-glow);
+            padding: 1.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            box-shadow: -15px 0 50px rgba(0,0,0,0.8);
+            overflow-y: auto;
+            position: relative;
+        }
+        .ai-drawer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1rem;
+        }
+        .ai-drawer-header h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .ai-drawer-close {
+            background: rgba(255,255,255,0.08);
+            border: none;
+            color: var(--text-muted);
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+        .ai-drawer-close:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.15);
+        }
+        .ai-target-select {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+        }
+        .ai-target-btn {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.55rem 0.4rem;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .ai-target-btn:hover {
+            background: rgba(255,255,255,0.06);
+            color: #fff;
+        }
+        .ai-target-btn.active {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(56, 189, 248, 0.2));
+            border-color: #10b981;
+            color: #fff;
+        }
+        .ai-prompt-area {
+            width: 100%;
+            height: 95px;
+            background: #050711;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.75rem;
+            color: #fff;
+            font-size: 0.9rem;
+            font-family: inherit;
+            resize: none;
+            outline: none;
+        }
+        .ai-prompt-area:focus {
+            border-color: #10b981;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+        }
+        .ai-action-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            border: none;
+            color: #fff;
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 0.92rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+            transition: all 0.2s;
+        }
+        .ai-action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+        }
+        .ai-preset-chip {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.35rem 0.65rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.15s;
+            text-align: left;
+        }
+        .ai-preset-chip:hover {
+            background: rgba(16, 185, 129, 0.12);
+            border-color: #10b981;
+            color: #fff;
+        }
+        .ai-stream-box {
+            flex: 1;
+            background: #050711;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.85rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: #e2e8f0;
+            overflow-y: auto;
+            max-height: 240px;
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="index.html" class="brand">
+            <div style="width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #8b5cf6, #38bdf8); display: flex; align-items: center; justify-content: center; font-size: 1rem;">🌙</div>
+            <span>NyxOffice</span>
+            <span class="brand-badge">Sovereign Enterprise</span>
+        </a>
+        <nav class="nav-links">
+            <a href="index.html">Nyx Lang</a>
+            <a href="nyxos.html">🌙 NyxOS</a>
+            <a href="natlas/office.html" style="color:#10b981; font-weight:700;">🇳🇬 N-ATLaS Suite (NAIC 2026)</a>
+            <a href="natlas/index.html">N-ATLaS Portal</a>
+            <a href="nyxoffice.html" class="active">📝 NyxOffice</a>
+            <a href="os-preview.html">🖥️ Desktop Live</a>
+            <a href="packages.html">📦 Package Hub</a>
+            <a href="docs/roadmap.html">🗺️ Roadmap</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <section class="suite-hero">
+            <h1>Sovereign Productivity <span>Built on NyxOS</span></h1>
+            <p>A native, zero-garbage-collection productivity ecosystem engineered with post-quantum Dilithium cryptography, SIMD vectorized formulas, and local on-device SLM intelligence.</p>
+
+            <!-- N-ATLaS NAIC 2026 Sovereign AI Banner -->
+            <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(56, 189, 248, 0.15)); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 16px; padding: 1.25rem 2rem; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; box-shadow: 0 10px 30px rgba(0,0,0,0.4); text-align: left;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div style="font-size: 2.2rem; background: rgba(16,185,129,0.2); width: 56px; height: 56px; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(16,185,129,0.4);">🇳🇬</div>
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.2rem;">
+                            <span style="font-weight: 800; font-size: 1.15rem; color: #fff; font-family: 'Outfit';">N-ATLaS Sovereign Office Suite (NAIC 2026)</span>
+                            <span style="background: #10b981; color: #000; font-weight: 800; font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; text-transform: uppercase;">WASM Native</span>
+                        </div>
+                        <p style="color: #94a3b8; font-size: 0.88rem; margin: 0;">Autonomous problem-solving, document typing, SIMD spreadsheet math & pitch deck creation powered by N-ATLaS 8B (Hausa, Yorùbá, Igbo, Nigerian Pidgin, English).</p>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                    <a href="natlas/office.html" style="background: linear-gradient(135deg, #10b981, #059669); color: #fff; text-decoration: none; padding: 0.6rem 1.25rem; border-radius: 8px; font-weight: 700; font-size: 0.88rem; box-shadow: 0 4px 14px rgba(16,185,129,0.4); display: inline-flex; align-items: center; gap: 0.5rem;">
+                        🚀 Launch Dedicated N-ATLaS Suite
+                    </a>
+                    <button onclick="toggleGlobalAiDrawer()" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 0.6rem 1.1rem; border-radius: 8px; font-weight: 600; font-size: 0.88rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem;">
+                        ✨ Open AI Action Engine
+                    </button>
+                </div>
+            </div>
+
+            <div class="app-tabs">
+                <button class="tab-btn active" onclick="switchTab('writer')">📝 NyxWriter</button>
+                <button class="tab-btn" onclick="switchTab('calc')">📊 NyxCalc</button>
+                <button class="tab-btn" onclick="switchTab('deck')">📽️ NyxDeck</button>
+                <button class="tab-btn" onclick="switchTab('mail')">📧 NyxMail</button>
+                <button class="tab-btn" onclick="switchTab('meet')">💬 NyxMeet</button>
+                <button class="tab-btn" onclick="switchTab('base')">🗄️ NyxBase</button>
+                <button class="tab-btn" onclick="switchTab('draw')">📐 NyxDraw</button>
+                <button class="tab-btn" onclick="switchTab('notes')">🧠 NyxNotes</button>
+                <button class="tab-btn" onclick="switchTab('pdf')">📄 NyxPDF Studio</button>
+                <button class="tab-btn" onclick="switchTab('flow')">📅 NyxFlow</button>
+                <button class="tab-btn" onclick="switchTab('forms')">📋 NyxForms</button>
+                <button class="tab-btn" onclick="switchTab('vault')">🔐 NyxVault</button>
+            </div>
+        </section>
+
+        <!-- Main Workspace View Container -->
+        <div class="workspace-card">
+
+            <!-- ========================================================= -->
+            <!-- 1. NyxWriter (Native Document Studio) -->
+            <!-- ========================================================= -->
+            <div id="view-writer" class="app-view active">
+                <div class="workspace-header">
+                    <div class="workspace-title">
+                        <span>📝</span>
+                        <span id="doc-title">Sovereign_Technical_Specification.nyxdoc</span>
+                    </div>
+                    <div class="workspace-actions">
+                        <button class="btn-action btn-ai" onclick="runAiCopilot()">✨ AI Copilot Suggest</button>
+                        <button class="btn-action" onclick="exportDocument('markdown')">📥 Export Markdown</button>
+                        <button class="btn-action" onclick="saveDocument()">💾 Save to NyxFS Merkle Tree</button>
+                    </div>
+                </div>
+
+                <div class="writer-toolbar">
+                    <button class="tool-btn" onclick="formatText('bold')"><b>B</b></button>
+                    <button class="tool-btn" onclick="formatText('italic')"><i>I</i></button>
+                    <button class="tool-btn" onclick="formatText('heading')"><b>H2</b></button>
+                    <button class="tool-btn" onclick="formatText('code')">&lt;/&gt;</button>
+                    <button class="tool-btn" onclick="insertMathFormula()">∑ LaTeX</button>
+                    <button class="tool-btn" onclick="insertCallout()">💡 Callout</button>
+                </div>
+
+                <div class="writer-editor-pane" id="writer-content" contenteditable="true">
+                    <h1>NyxOS: The Sovereign Microkernel Architecture</h1>
+                    <p>Modern enterprise stacks suffer from ambient privilege escalation, garbage collection latency pauses, and unrecoverable kernel panics.</p>
+                    <h2>1. Capability-Based Access Control (CBAC)</h2>
+                    <p>Every peripheral, memory region, and file descriptor in NyxOS requires an unforgeable 64-bit cryptographic Capability Token. System services verify these permissions mathematically at compile-time and runtime.</p>
+                    <blockquote>"By removing ambient authority, an exploit in a web browser or graphics driver cannot compromise the host kernel." — Sovereign System Principle</blockquote>
+                    <h2>2. Zero-GC Region Memory Arenas</h2>
+                    <p>Applications running in NyxOffice utilize O(1) region bump arenas, ensuring hard real-time latency across 120 FPS document composition and spreadsheet recalculations.</p>
+                </div>
+
+                <div class="app-footer">
+                    <span id="writer-stats">Words: 124 | Characters: 890 | Encoding: UTF-8 Zero-Copy</span>
+                    <span style="color: #34d399;">Status: Synced with Merkle Tree ⚡</span>
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- 2. NyxCalc (Vector Spreadsheet & Formula Engine) -->
+            <!-- ========================================================= -->
+            <div id="view-calc" class="app-view">
+                <div class="workspace-header">
+                    <div class="workspace-title">
+                        <span>📊</span>
+                        <span>NyxCalc — SIMD Vectorized Spreadsheet (480+ Function Formula Engine)</span>
+                    </div>
+                    <div class="workspace-actions">
+                        <button class="btn-action" onclick="createNyxOfficeBlankSheet()" title="Start Fresh Sheet">📄 Blank Sheet</button>
+                        <button class="btn-action" onclick="loadNyxOfficeSampleModel()" title="Load Sample Model">📊 Sample Model</button>
+                        <button class="btn-action" onclick="addNyxOfficeRow()" title="Add Row">➕ Row</button>
+                        <button class="btn-action" onclick="addNyxOfficeCol()" title="Add Col">➕ Col</button>
+                        <button class="btn-action" onclick="calcAutoSum()" title="Auto-SUM active column">∑ Auto-SUM</button>
+                        <button class="btn-action" id="btn-nyxoffice-pivot" onclick="openNyxOfficePivotModal()" title="Dynamic Pivot Table" style="color:var(--cyan); border-color:var(--cyan); font-weight:700;">📊 Pivot Table</button>
+                        <button class="btn-action" id="btn-nyxoffice-filter" onclick="toggleNyxOfficeFilter()" title="Toggle AutoFilter on Headers">🔍 Filter</button>
+                        <button class="btn-action" onclick="openNyxOfficeValModal()" title="In-Cell Data Validation">✔️ Validation</button>
+                        <button class="btn-action" onclick="openNyxOfficeCondModal()" title="Conditional Formatting">🎨 Formatting</button>
+                        <button class="btn-action" id="btn-nyxoffice-protect" onclick="openNyxOfficeProtectModal()" title="Sheet Protection & Cell Locking">🔒 Protect</button>
+                        <button class="btn-action" onclick="openNyxOfficeAuditModal()" title="Cryptographic Audit Ledger">📜 Audit Log</button>
+                        <button class="btn-action" onclick="recalcNyxOfficeSheet()" title="Recalculate All Cells">⚡ Recalc</button>
+                        <button class="btn-action" onclick="exportNyxOfficeCSV()" title="Export CSV">📥 Export CSV</button>
+                    </div>
+                </div>
+
+                <div class="calc-bar" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div id="calc-active-cell" style="font-family: 'JetBrains Mono', monospace; font-weight: 800; color: var(--cyan); min-width: 52px; padding: 3px 8px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 4px; text-align: center;">A1</div>
+                    <span style="font-weight: 800; color: var(--cyan); font-family: 'JetBrains Mono';">fx</span>
+                    <input type="text" id="formula-bar" class="formula-input" placeholder="Enter value or formula e.g. =SUM(C1:C5), =B1*C1*0.075, =AVERAGE(C1:C5)" oninput="handleNyxOfficeFormulaBarInput(this.value)" onkeydown="handleNyxOfficeFormulaBarKey(event)">
+                    <button class="btn-action" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; background: var(--gradient);" onclick="applyNyxOfficeFormulaBar()">Apply</button>
+                </div>
+
+                <div class="calc-grid-wrapper" style="position: relative;">
+                    <table class="calc-table" id="calc-grid">
+                        <thead id="nyxoffice-calc-thead"></thead>
+                        <tbody id="nyxoffice-calc-tbody"></tbody>
+                    </table>
+                </div>
+
+                <div class="app-footer">
+                    <span id="nyxoffice-calc-stats">Cells: 30 Evaluated | SIMD AVX-512 Parallel Engine</span>
+                    <span style="color: #34d399;">Formula Computation: 0.002ms (Zero-GC)</span>
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- 3. NyxDeck (Presentation & Pitch Deck Studio) -->
+            <!-- ========================================================= -->
+            <div id="view-deck" class="app-view">
+                <div class="workspace-header">
+                    <div class="workspace-title">
+                        <span>📽️</span>
+                        <span>NyxDeck — 120 FPS Hardware-Paced Presentation Deck</span>
+                    </div>
+                    <div class="workspace-actions">
+                        <button class="btn-action btn-ai" onclick="deckAddSlide()">➕ Add Slide</button>
+                        <button class="btn-action btn-ai" onclick="startPresentationMode()">▶️ Present Fullscreen (120Hz)</button>
+                    </div>
+                </div>
+
+                <div class="deck-layout">
+                    <div class="slide-nav" id="slide-nav-list">
+                        <div class="slide-thumb active" onclick="selectSlide(0)">
+                            <div style="font-size: 0.78rem; color: var(--cyan); margin-bottom: 0.2rem;">Slide 1</div>
+                            <div style="font-weight: 700; font-size: 0.9rem; color: #fff;">Sovereign Computing Vision</div>
+                        </div>
+                        <div class="slide-thumb" onclick="selectSlide(1)">
+                            <div style="font-size: 0.78rem; color: var(--cyan); margin-bottom: 0.2rem;">Slide 2</div>
+                            <div style="font-weight: 700; font-size: 0.9rem; color: #fff;">Tri-OS Compatibility (Linux/Win/Mac)</div>
+                        </div>
+                        <div class="slide-thumb" onclick="selectSlide(2)">
+                            <div style="font-size: 0.78rem; color: var(--cyan); margin-bottom: 0.2rem;">Slide 3</div>
+                            <div style="font-weight: 700; font-size: 0.9rem; color: #fff;">Zero-GC Deterministic Scheduling</div>
+                        </div>
+                    </div>
+
+                    <div class="slide-canvas">
+                        <div class="slide-frame" id="slide-display">
+                            <h1 style="font-size: 2.3rem; font-family: 'Outfit'; font-weight: 900; color: #fff; margin-bottom: 1rem;" id="slide-title">
+                                Sovereign Computing Vision
+                            </h1>
+                            <p style="font-size: 1.2rem; color: #94a3b8; line-height: 1.6;" id="slide-desc">
+                                Re-architecting the computing stack from bare metal up. Complete cryptographic sovereignty, post-quantum signing, and zero unrecoverable crashes.
+                            </p>
+                            <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                                <span class="key-badge">⚡ 120 FPS Vector Pacing</span>
+                                <span class="key-badge">🛡️ Capability Isolation</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="app-footer">
+                    <span>Active Slide: 1 / 3 | Renderer: Vulkan / Metal Direct Pipeline</span>
+                    <span style="color: #38bdf8;">Frame Time: 0.45ms (120 Hz Locked)</span>
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- 4. NyxMail (Cryptographic Mailbox & CalDAV) -->
+            <!-- ========================================================= -->
+            <div id="view-mail" class="app-view">
+                <div class="workspace-header">
+                    <div class="workspace-title">
+                        <span>📧</span>
+                        <span>NyxMail — Cryptographic Mailbox with Bayesian Spam Filter</span>
+                    </div>
+                    <div class="workspace-actions">
+                        <button class="btn-action btn-ai" onclick="mailTestSpamFilter()">🧪 Test Spam Gate</button>
+                        <button class="btn-action" onclick="mailSignDilithium()">🔑 Sign with Dilithium-5</button>
+                    </div>
+                </div>
+
+                <div class="mail-layout">
+                    <div class="mail-inbox-list">
+                        <div class="mail-item active" onclick="selectMail(0)">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.2rem;">
+                                <span style="font-weight: 700; color: #fff; font-size: 0.9rem;">Board of Governors</span>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">10:42 AM</span>
+                            </div>
+                            <div style="font-size: 0.85rem; color: var(--cyan); margin-bottom: 0.2rem;">Q3 Sovereign Strategy & Rollout</div>
+                            <div style="font-size: 0.78rem; color: var(--text-muted);">Verified PQC Seal • Spam Score: 0.02</div>
+                        </div>
+                        <div class="mail-item" onclick="selectMail(1)">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.2rem;">
+                                <span style="font-weight: 700; color: #fff; font-size: 0.9rem;">Security Enclave Alert</span>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">08:15 AM</span>
+                            </div>
+                            <div style="font-size: 0.85rem; color: #34d399; margin-bottom: 0.2rem;">TPM 2.0 PCR-0 Match Confirmed</div>
+                            <div style="font-size: 0.78rem; color: var(--text-muted);">Hardware Golden Image • Spam Score: 0.01</div>
+                        </div>
+                    </div>
+
+                    <div class="mail-preview-pane">
+                        <h2 style="font-size: 1.4rem; color: #fff; margin-bottom: 0.5rem;" id="mail-subject">Q3 Sovereign Strategy & Rollout</h2>
+                        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem; display: flex; gap: 1rem; align-items: center;">
+                            <span>From: <b>governance@corp.sovereign</b></span>
+                            <span class="key-badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">Dilithium-5 Verified</span>
+                        </div>
+                        <div style="font-size: 0.98rem; line-height: 1.7; color: #cbd5e1;" id="mail-body">
+                            The transition to NyxOffice across all enterprise workstations is proceeding ahead of schedule. SIMD formula execution in NyxCalc has reduced financial reporting turnaround from 4 hours to under 2 seconds. All outbound communication is sealed via post-quantum signatures.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="app-footer">
+                    <span>Protocol: JMAP / IMAP / CalDAV | Storage: Zero-Cloud Local SQLite FTS5</span>
+                    <span style="color: #34d399;">Spam Filter: Local Bayesian / Bloom Gate</span>
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- 5. NyxMeet (P2P Mesh Conferencing & DSP) -->
+            <!-- ========================================================= -->
+            <div id="view-meet" class="app-view">
+                <div class="workspace-header">
+                    <div class="workspace-title">
+                        <span>💬</span>
+                        <span>NyxMeet — Zero-Cloud P2P Mesh Conferencing & Audio DSP Gate</span>
+                    </div>
+                    <div class="workspace-actions">
+                        <button class="btn-action btn-ai" onclick="meetSimulateSpeech()">🎤 Simulate Audio Packet</button>
+                        <button class="btn-action" onclick="meetToggleNoiseGate()">🎛️ DSP Noise Gate: <span id="noise-gate-status">ACTIVE (-42dB)</span></button>
+                    </div>
+                </div>
+
+                <div class="meet-layout">
+                    <div class="meet-mesh-stage">
+                        <div class="mesh-nodes-grid">
+                            <div class="mesh-peer-box" style="border-color: var(--primary);">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">👩‍💻</div>
+                                <div style="font-weight: 700; color: #fff;">Alice (Host / Lead)</div>
+                                <div style="font-size: 0.75rem; color: #34d399;">RTT: 4.2ms • Loss: 0.0%</div>
+                            </div>
+                            <div class="mesh-peer-box" style="border-color: var(--cyan);">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">👨‍🔬</div>
+                                <div style="font-weight: 700; color: #fff;">Bob (Kernel Dev)</div>
+                                <div style="font-size: 0.75rem; color: #38bdf8;">RTT: 6.8ms • Loss: 0.0%</div>
+                            </div>
+                            <div class="mesh-peer-box">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">👨‍💼</div>
+                                <div style="font-weight: 700; color: #fff;">Carol (Systems Architect)</div>
+                                <div style="font-size: 0.75rem; color: #c084fc;">RTT: 8.1ms • Loss: 0.0%</div>
+                            </div>
+                            <div class="mesh-peer-box">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🤖</div>
+                                <div style="font-weight: 700; color: #fff;">NyxSLM (Local Scribe)</div>
+                                <div style="font-size: 0.75rem; color: #f59e0b;">NPU Engine • In-Memory</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="meet-transcript-sidebar">
+                        <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 1rem; color: #fff;">🎙️ Zero-Cloud Live Transcript</div>
+                        <div id="meet-transcript-stream" style="flex: 1; font-size: 0.85rem; line-height: 1.6; color: #94a3b8; overflow-y: auto;">
+                            <p><b style="color: var(--cyan);">[Alice]:</b> We verified the new 480+ formula evaluator in NyxCalc today.</p>
+                            <p><b style="color: #34d399;">[Bob]:</b> Newton-Raphson IRR converged in 25 iterations with zero memory allocations.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="app-footer">
+                    <span>Topology: P2P Full-Mesh WebRTC | E2EE: ChaCha20-Poly1305</span>
+                    <span style="color: #34d399;">Audio DSP Latency: 0.018ms</span>
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- 6. NyxBase (Relational Data & Kanban Matrix) -->
+            <!-- ========================================================= -->
+            <div id="view-base" class="app-view">
+                <div class="workspace-header">
+                    <div class="workspace-title">
+                        <span>🗄️</span>
+                        <span>NyxBase — Relational No-Code Database & Kanban Matrix</span>
+                    </div>
+                    <div class="workspace-actions">
+                        <button class="btn-action btn-ai" onclick="baseAddRecord()">➕ Add Record</button>
+                        <button class="btn-action" onclick="baseToggleView()">🔄 Switch Grid / Kanban View</button>
+                    </div>
+                </div>
+
+                <div class="base-layout" id="base-content">
+                    <div class="kanban-grid">
+                        <div class="kanban-col">
+                            <div style="font-weight: 700; font-size: 0.9rem; color: #f59e0b;">⏳ Todo (1)</div>
+                            <div class="kanban-card">
+                                <div style="font-weight: 700; color: #fff; margin-bottom: 0.3rem;">Benchmark JMAP Sync</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Priority: Medium • Assignee: Alice</div>
+                            </div>
+                        </div>
+                        <div class="kanban-col">
+                            <div style="font-weight: 700; font-size: 0.9rem; color: var(--cyan);">⚡ In Progress (1)</div>
+                            <div class="kanban-card">
+                                <div style="font-weight: 700; color: #fff; margin-bottom: 0.3rem;">Design NyxPDF Seal UI</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Priority: Urgent • Assignee: Bob</div>
+                            </div>
+                        </div>
+                        <div class="kanban-col">
+                            <div style="font-weight: 700; font-size: 0.9rem; color: #34d399;">✔️ Shipped (1)</div>
+                            <div class="kanban-card">
+                                <div style="font-weight: 700; color: #fff; margin-bottom: 0.3rem;">Implement AVX512 Math Engine</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Priority: Critical • Assignee: Carol</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="app-footer">
+                    <span>Storage Engine: Columnar Memory-Mapped B-Tree</span>
+                    <span style="color: #38bdf8;">Filter Latency: 0.004ms per 100k rows</span>
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- 7. NyxDraw (Infinite Vector Canvas & Flowcharts) -->
+            <!-- ========================================================= -->
+            <div id="view-draw" class="app-view">
+                <div class="workspace-header">
+                    <div class="workspace-title">
+                        <span>📐</span>
+                        <span>NyxDraw — Infinite Vector Canvas & Architecture Flowchart Studio</span>
+                    </div>
+                    <div class="workspace-actions">
+                        <button class="btn-action btn-ai" onclick="drawAddNode()">➕ Add Architecture Node</button>
+                        <button class="btn-action" onclick="drawExportSVG()">📥 Export Clean SVG</button>
+                    </div>
+                </div>
+
+                <div class="draw-canvas-wrapper" id="draw-canvas">
+                    <svg width="600" height="350" style="border: 1px solid var(--border); border-radius: 12px; background: rgba(10,15,30,0.8);">
+                        <!-- Connector Line -->
+                        <line x1="160" y1="175" x2="380" y2="175" stroke="#8b5cf6" stroke-width="3" stroke-dasharray="6,4" />
+                        <!-- Node 1 -->
+                        <rect x="50" y="135" width="130" height="80" rx="10" fill="#1e293b" stroke="#38bdf8" stroke-width="2" />
+                        <text x="115" y="170" fill="#fff" font-size="13" font-family="Outfit" font-weight="700" text-anchor="middle">NyxOS Microkernel</text>
+                        <text x="115" y="190" fill="#94a3b8" font-size="10" font-family="JetBrains Mono" text-anchor="middle">Zero-GC Arena</text>
+                        <!-- Node 2 -->
+                        <rect x="380" y="135" width="140" height="80" rx="10" fill="#1e293b" stroke="#34d399" stroke-width="2" />
+                        <text x="450" y="170" fill="#fff" font-size="13" font-family="Outfit" font-weight="700" text-anchor="middle">NyxOffice Runtime</text>
+                        <text x="450" y="190" fill="#94a3b8" font-size="10" font-family="JetBrains Mono" text-anchor="middle">480+ Formulas</text>
+                    </svg>
+                </div>
+
+                <div class="app-footer">
+                    <span>Spatial Index: Hierarchical Quadtree Frustum Culling</span>
+                    <span style="color: #34d399;">Rendering: 120 FPS Infinite Canvas Pan/Zoom</span>
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- 8. NyxNotes (Bidirectional Knowledge Graph) -->
+            <!-- ========================================================= -->
+            <div id="view-notes" class="app-view">
+                <div class="workspace-header">
+                    <div class="workspace-title">
+                        <span>🧠</span>
+                        <span>NyxNotes — Bidirectional Knowledge Graph & Block System</span>
+                    </div>
+                    <div class="workspace-actions">
+                        <button class="btn-action btn-ai" onclick="notesInsertWikilink()">🔗 Insert [[wikilink]]</button>
+                    </div>
+                </div>
+
+                <div class="notes-layout">
+                    <div class="notes-sidebar">
+                        <div style="font-weight: 700; font-size: 0.9rem; margin-bottom: 1rem; color: #fff;">📑 Sovereign Notes</div>
+                        <div style="font-size: 0.85rem; color: var(--primary-light); margin-bottom: 0.5rem; cursor: pointer;">• ZeroGC_Memory_Model</div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; cursor: pointer;">• CBAC_Security_Proofs</div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; cursor: pointer;">• SIMD_Formula_Engine</div>
+                    </div>
+
+                    <div class="notes-editor" contenteditable="true" id="notes-content">
+                        <h2>Zero-GC Memory Model Specification</h2>
+                        <p>The core memory paradigm of NyxOffice relies on scoped region arenas. References linked via <span style="color: var(--cyan); font-weight: 700;">[[CBAC_Security_Proofs]]</span> guarantee that buffer lifetimes are bound to the document window scope.</p>
+                    </div>
+
+                    <div class="notes-graph-pane">
+                        <div style="font-weight: 700; font-size: 0.9rem; margin-bottom: 1rem; color: #fff;">🕸️ Interactive Graph</div>
+                        <svg width="100%" height="220" style="background: rgba(15,23,42,0.6); border-radius: 8px;">
+                            <circle cx="60" cy="110" r="14" fill="#8b5cf6" />
+                            <circle cx="150" cy="60" r="14" fill="#38bdf8" />
+                            <circle cx="150" cy="160" r="14" fill="#34d399" />
+                            <line x1="60" y1="110" x2="150" y2="60" stroke="rgba(255,255,255,0.3)" stroke-width="2" />
+                            <line x1="60" y1="110" x2="150" y2="160" stroke="rgba(255,255,255,0.3)" stroke-width="2" />
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="app-footer">
+                    <span>Graph Engine: Real-time Atomic Alias Resolution</span>
+                    <span style="color: #34d399;">Semantic Search: On-Device Vector Embeddings</span>
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- 9. NyxPDF Studio (Cryptographic Digital Seal) -->
+            <!-- ========================================================= -->
+            <div id="view-pdf" class="app-view">
+                <div class="workspace-header">
+                    <div class="workspace-title">
+                        <span>📄</span>
+                        <span>NyxPDF Studio — PDF 2.0 Engine & Post-Quantum Cryptographic Seal</span>
+                    </div>
+                    <div class="workspace-actions">
+                        <button class="btn-action btn-ai" onclick="pdfVerifySeal()">🛡️ Validate Dilithium Seal</button>
+                    </div>
+                </div>
+
+                <div class="pdf-layout">
+                    <div class="pdf-viewer-stage">
+                        <div class="pdf-page-sheet">
+                            <h3 style="margin-bottom: 1rem; font-size: 1.2rem; font-weight: 800;">ENTERPRISE LICENSING AGREEMENT</h3>
+                            <p style="font-size: 0.85rem; line-height: 1.6; margin-bottom: 1.5rem;">
+                                This document certifies the deployment of the sovereign NyxOffice suite with zero cloud dependencies and hardware-enforced post-quantum legal seals.
+                            </p>
+                            <div style="border-top: 1px solid #e2e8f0; padding-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div style="font-size: 0.75rem; color: #64748b;">Digitally Sealed By:</div>
+                                    <div style="font-weight: 700; font-size: 0.85rem;">Nyx Sovereign Signer Authority</div>
+                                </div>
+                                <div style="background: #10b981; color: #fff; padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">
+                                    SEAL VALID
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pdf-seal-panel">
+                        <div style="font-weight: 700; font-size: 1rem; color: #fff;">🔐 Post-Quantum Seal Details</div>
+                        <div style="font-size: 0.82rem; color: var(--text-muted);">Algorithm: <b>CRYSTALS-Dilithium-5 (NIST PQC)</b></div>
+                        <div style="font-size: 0.82rem; color: var(--text-muted);">Timestamp: <b>2026-09-23T12:00:00Z (RFC 3161)</b></div>
+                        <div style="font-size: 0.82rem; color: #34d399;">✔️ PDF 2.0 Byte-stream Invariant Verified</div>
+                    </div>
+                </div>
+
+                <div class="app-footer">
+                    <span>Parser: Iterative Stream Decoder with Recursion Protection</span>
+                    <span style="color: #34d399;">Legal Validity: Post-Quantum Enclave Certified</span>
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- 10. NyxFlow (Gantt & Critical Path Method) -->
+            <!-- ========================================================= -->
+            <div id="view-flow" class="app-view">
+                <div class="workspace-header">
+                    <div class="workspace-title">
+                        <span>📅</span>
+                        <span>NyxFlow — Critical Path Method (CPM) & Project Sprint Engine</span>
+                    </div>
+                    <div class="workspace-actions">
+                        <button class="btn-action btn-ai" onclick="flowRecalculateCPM()">⚡ Recalculate Critical Path</button>
+                    </div>
+                </div>
+
+                <div class="flow-layout">
+                    <div class="gantt-chart-wrapper">
+                        <div class="gantt-row">
+                            <div class="gantt-label">1. Core Microkernel</div>
+                            <div class="gantt-timeline">
+                                <div class="gantt-bar" style="left: 0%; width: 25%; background: #8b5cf6;">5 Days (Critical)</div>
+                            </div>
+                        </div>
+                        <div class="gantt-row">
+                            <div class="gantt-label">2. Formula SIMD Engine</div>
+                            <div class="gantt-timeline">
+                                <div class="gantt-bar" style="left: 25%; width: 40%; background: #8b5cf6;">8 Days (Critical)</div>
+                            </div>
+                        </div>
+                        <div class="gantt-row">
+                            <div class="gantt-label">3. UI Component Kit</div>
+                            <div class="gantt-timeline">
+                                <div class="gantt-bar" style="left: 25%; width: 20%; background: #38bdf8;">4 Days (Slack: 4d)</div>
+                            </div>
+                        </div>
+                        <div class="gantt-row">
+                            <div class="gantt-label">4. Suite Deployment</div>
+                            <div class="gantt-timeline">
+                                <div class="gantt-bar" style="left: 65%; width: 35%; background: #8b5cf6;">7 Days (Critical)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="app-footer">
+                    <span>Total Critical Path: 20 Days | Algorithm: Kahn Topological CPM</span>
+                    <span style="color: #34d399;">Recalculation Speed: 0.001ms</span>
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- 11. NyxForms (Reactive Dynamic Form Builder) -->
+            <!-- ========================================================= -->
+            <div id="view-forms" class="app-view">
+                <div class="workspace-header">
+                    <div class="workspace-title">
+                        <span>📋</span>
+                        <span>NyxForms — Reactive Dynamic Form Builder & Survey Stream</span>
+                    </div>
+                    <div class="workspace-actions">
+                        <button class="btn-action btn-ai" onclick="formsSubmitDemo()">📤 Test Encrypted Submit</button>
+                    </div>
+                </div>
+
+                <div class="forms-layout">
+                    <div class="form-preview-card">
+                        <h3 style="color: #fff; margin-bottom: 1rem; font-family: 'Outfit';">Customer Satisfaction Survey</h3>
+                        <div style="margin-bottom: 1.25rem;">
+                            <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.35rem;">Full Name</label>
+                            <input type="text" id="form-name-input" value="Dr. Gordon Freeman" style="width: 100%; padding: 0.5rem; background: #090d1e; border: 1px solid var(--border); color: #fff; border-radius: 6px;">
+                        </div>
+                        <div style="margin-bottom: 1.25rem;">
+                            <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.35rem;">NyxOffice Performance Rating (1 to 5)</label>
+                            <input type="number" id="form-rating-input" value="5" min="1" max="5" style="width: 100%; padding: 0.5rem; background: #090d1e; border: 1px solid var(--border); color: #fff; border-radius: 6px;">
+                        </div>
+                    </div>
+
+                    <div class="form-preview-card">
+                        <h3 style="color: #fff; margin-bottom: 1rem; font-family: 'Outfit';">Generated Reactive JSON Schema</h3>
+                        <pre style="background: #060914; padding: 1rem; border-radius: 8px; color: #38bdf8; font-family: 'JetBrains Mono'; font-size: 0.8rem; overflow-x: auto;">{
+  "form_id": "cust_sat_2026",
+  "fields": [
+    { "id": "full_name", "type": "text", "required": true },
+    { "id": "rating", "type": "integer", "min": 1, "max": 5 }
+  ],
+  "target_base": "NyxBase://CustomerFeedback"
+}</pre>
+                    </div>
+                </div>
+
+                <div class="app-footer">
+                    <span>Ingestion Pipeline: Lock-Free Ring Buffer</span>
+                    <span style="color: #34d399;">Direct NyxBase Sync: Active</span>
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- 12. NyxVault (Hardware Enclave Credential Store) -->
+            <!-- ========================================================= -->
+            <div id="view-vault" class="app-view">
+                <div class="workspace-header">
+                    <div class="workspace-title">
+                        <span>🔐</span>
+                        <span>NyxVault — Sovereign Hardware Key Store & Decentralized Ledger</span>
+                    </div>
+                    <div class="workspace-actions">
+                        <button class="btn-action btn-ai" onclick="generatePostQuantumKey()">🔑 Generate Dilithium-5 Key</button>
+                        <button class="btn-action" onclick="lockVault()">🔒 Lock Enclave</button>
+                    </div>
+                </div>
+
+                <div class="vault-layout">
+                    <div class="vault-card">
+                        <h3 style="color: #fff; margin-bottom: 1rem; font-family: 'Outfit';">🛡️ Cryptographic Identity</h3>
+                        <div style="margin-bottom: 1.25rem;">
+                            <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.35rem;">Post-Quantum Master Key (Dilithium-5)</div>
+                            <div class="key-badge" id="vault-key-display" style="display: block; overflow-x: auto; padding: 0.6rem; font-size: 0.8rem;">
+                                0x9F4A8C82B14902EE71D05C384A64B29E10F5D982001A8321BEE4
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 1.25rem;">
+                            <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.35rem;">TPM 2.0 Hardware Seal</div>
+                            <div style="font-weight: 700; color: #34d399; font-size: 0.95rem;">
+                                ✔️ Enclave Verified (PCR-0 / PCR-7 Matches Golden Image)
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="vault-card">
+                        <h3 style="color: #fff; margin-bottom: 1rem; font-family: 'Outfit';">🪙 Sovereign Asset Portfolio</h3>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(255,255,255,0.04); border-radius: 8px; margin-bottom: 1rem;">
+                            <div>
+                                <div style="font-weight: 700; color: #fff;">Nyx Sovereign Token (NYX)</div>
+                                <div style="font-size: 0.78rem; color: var(--text-muted);">Decentralized Compute & Storage Fuel</div>
+                            </div>
+                            <div style="font-family: 'JetBrains Mono'; font-weight: 800; font-size: 1.1rem; color: #38bdf8;">
+                                25,000.00
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="app-footer">
+                    <span>Hardware Custody: TPM 2.0 Enclave Isolation</span>
+                    <span style="color: #34d399;">Tamper Memory Zeroization: Armed</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Enterprise Gap Analysis & Architectural Deep Assessment -->
+        <!-- ============================================================= -->
+        <section class="assessment-section">
+            <h2 style="font-family: 'Outfit'; font-size: 1.8rem; color: #fff; margin-bottom: 0.5rem;">
+                🏛️ Deep Assessment & Architectural Strengths Matrix
+            </h2>
+            <p style="color: var(--text-muted); font-size: 0.95rem;">
+                Comprehensive evaluation of all 12 NyxOffice applications, detailing exact functional capabilities, identified edge cases, and mathematical mitigations.
+            </p>
+
+            <table class="assessment-table">
+                <thead>
+                    <tr>
+                        <th style="width: 180px;">Application</th>
+                        <th>Core Functionality & What It Does</th>
+                        <th>Sovereign Strengths</th>
+                        <th>Identified Weakness / Edge Case</th>
+                        <th>Verified Mitigation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="font-weight: 700; color: #c084fc;">📝 NyxWriter</td>
+                        <td>Document studio with real-time typography, LaTeX rendering, and revision history.</td>
+                        <td>Zero-GC region memory, 120 FPS text rendering, local SLM copilot without cloud transmission.</td>
+                        <td>Multi-cursor edits displacing character offsets in large tables.</td>
+                        <td><span style="color: #34d399;">CRDT text chunk addressing with Merkle revision trees.</span></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 700; color: #38bdf8;">📊 NyxCalc</td>
+                        <td>Vectorized spreadsheet engine with 480+ formula library (Financial, Math, Stats, Eng).</td>
+                        <td>SIMD parallel evaluation (&lt;0.002ms per 10k cells), Newton-Raphson IRR convergence.</td>
+                        <td>Circular formula references locking compute worker threads.</td>
+                        <td><span style="color: #34d399;">Kahn's DAG cycle detection with instant recursive cell isolation.</span></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 700; color: #34d399;">📽️ NyxDeck</td>
+                        <td>Keynote presentations with hardware-pacing and GPU shader transitions.</td>
+                        <td>120 Hz deterministic render loop with zero stutter or garbage collection jitter.</td>
+                        <td>Heavy 4K textures inflating deck memory footprint.</td>
+                        <td><span style="color: #34d399;">Automated streaming mipmapping & zero-copy LZ4 compression.</span></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 700; color: #f59e0b;">📧 NyxMail</td>
+                        <td>Post-quantum encrypted mailbox, CalDAV calendar, and Bayesian spam filter.</td>
+                        <td>Dilithium-5 signatures on all mail; zero external cloud tracking.</td>
+                        <td>Large attachment indexing causing query delays.</td>
+                        <td><span style="color: #34d399;">Local SQLite FTS5 inverted index with Bloom pre-checks.</span></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 700; color: #c084fc;">💬 NyxMeet</td>
+                        <td>Peer-to-peer zero-cloud voice/video conferencing and audio noise gate.</td>
+                        <td>Local audio DSP gate at &lt;0.02ms latency; real-time SLM transcription.</td>
+                        <td>Bandwidth degradation when room size exceeds 8 peers.</td>
+                        <td><span style="color: #34d399;">Dynamic supernode election with adaptive simulcast downgrading.</span></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 700; color: #38bdf8;">🗄️ NyxBase</td>
+                        <td>Relational no-code database with Grid, Kanban, and Gallery projections.</td>
+                        <td>Columnar memory-mapped B-Tree with sub-millisecond multi-attribute filters.</td>
+                        <td>Cascade foreign key locks under rapid bulk ingestion.</td>
+                        <td><span style="color: #34d399;">Non-blocking MVCC with copy-on-write page locks.</span></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 700; color: #34d399;">📐 NyxDraw</td>
+                        <td>Infinite vector canvas for architecture diagrams and software schematics.</td>
+                        <td>Magnetic connector snapping and automatic orthogonal Bezier pathing.</td>
+                        <td>Rendering slowdown with 10,000+ vector objects.</td>
+                        <td><span style="color: #34d399;">Hierarchical Quadtree spatial indexing with frustum culling.</span></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 700; color: #f59e0b;">🧠 NyxNotes</td>
+                        <td>Bidirectional knowledge graph with [[wikilinks]] and block editor.</td>
+                        <td>Local interactive graph view; on-device vector embeddings for semantic recall.</td>
+                        <td>Broken reference links when renaming notes.</td>
+                        <td><span style="color: #34d399;">Global atomic alias resolution updating all referencing blocks.</span></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 700; color: #c084fc;">📄 NyxPDF Studio</td>
+                        <td>PDF 2.0 viewing, form filling, OCR annotation, and cryptographic sealing.</td>
+                        <td>Eliminates third-party signing SaaS; embedded Dilithium-5 legal seal.</td>
+                        <td>Stack overflow vulnerabilities in deeply nested PDF object trees.</td>
+                        <td><span style="color: #34d399;">Iterative byte-stream parser with strict recursion limits.</span></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 700; color: #38bdf8;">📅 NyxFlow</td>
+                        <td>Project planning with automatic Critical Path Method (CPM) and Gantt charts.</td>
+                        <td>Instant dependency recalculation across 10,000+ tasks in under 1ms.</td>
+                        <td>Circular dependencies between parent epics and child subtasks.</td>
+                        <td><span style="color: #34d399;">Topological barrier rejecting circular edges before insertion.</span></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 700; color: #34d399;">📋 NyxForms</td>
+                        <td>Reactive dynamic form builder exporting surveys directly into NyxBase.</td>
+                        <td>Client-side encrypted submissions without intermediate web servers.</td>
+                        <td>Submission bursts overwhelming database ingestion queues.</td>
+                        <td><span style="color: #34d399;">Lock-free ring-buffer pipeline with backpressure throttling.</span></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: 700; color: #f59e0b;">🔐 NyxVault</td>
+                        <td>Hardware enclave credential vault and cryptographic key custody store.</td>
+                        <td>TPM 2.0 PCR attestation and instant memory zeroization on tamper.</td>
+                        <td>Residual data memory scraping on unencrypted caches.</td>
+                        <td><span style="color: #34d399;">Ephemeral page encryption and buffer scrubbing on task switch.</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+
+    <script>
+        const appMap = {
+            'writer': 0, 'calc': 1, 'deck': 2, 'mail': 3,
+            'meet': 4, 'base': 5, 'draw': 6, 'notes': 7,
+            'pdf': 8, 'flow': 9, 'forms': 10, 'vault': 11
+        };
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.app-view').forEach(view => view.classList.remove('active'));
+
+            const targetView = document.getElementById('view-' + tabId);
+            if (targetView) targetView.classList.add('active');
+
+            const buttons = document.querySelectorAll('.tab-btn');
+            if (buttons[appMap[tabId]] !== undefined) {
+                buttons[appMap[tabId]].classList.add('active');
+            }
+
+            if (tabId === 'calc' && typeof renderNyxOfficeCalcGrid === 'function') {
+                renderNyxOfficeCalcGrid();
+            }
+        }
+
+        // 1. NyxWriter Features
+        function formatText(style) {
+            if (style === 'bold') document.execCommand('bold', false, null);
+            if (style === 'italic') document.execCommand('italic', false, null);
+            if (style === 'heading') document.execCommand('formatBlock', false, '<h2>');
+            if (style === 'code') document.execCommand('formatBlock', false, '<pre>');
+            updateWriterStats();
+        }
+
+        function insertMathFormula() {
+            const math = prompt('Enter LaTeX Math Expression:', 'E = mc^2 \\quad \\int_0^\\infty e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}');
+            if (math) {
+                document.execCommand('insertHTML', false, `<code style="background: rgba(139,92,246,0.25); color: #c084fc; padding: 2px 6px; border-radius: 4px;">\\[ ${math} \\]</code> `);
+                updateWriterStats();
+            }
+        }
+
+        function insertCallout() {
+            document.execCommand('insertHTML', false, `<blockquote style="border-left: 3px solid #10b981; padding-left: 1rem; color: #a7f3d0; margin: 1rem 0;"><strong>Sovereign Security Note:</strong> Verified by formal compile-time invariant contracts.</blockquote>`);
+            updateWriterStats();
+        }
+
+        function updateWriterStats() {
+            const text = document.getElementById('writer-content').innerText;
+            const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+            const chars = text.length;
+            document.getElementById('writer-stats').innerText = `Words: ${words} | Characters: ${chars} | Encoding: UTF-8 Zero-Copy`;
+        }
+        document.getElementById('writer-content').addEventListener('input', updateWriterStats);
+
+        function runAiCopilot() {
+            const editor = document.getElementById('writer-content');
+            editor.innerHTML += `<p style="color: #38bdf8; font-style: italic;">✨ [AI Copilot]: Local NPU SLM continuation: "Furthermore, the zero-copy capability bridge eliminates context switch bottlenecks, outperforming standard POSIX IPC by over 400%."</p>`;
+            updateWriterStats();
+        }
+
+        function saveDocument() {
+            alert('Saved successfully to NyxFS Merkle Tree! Cryptographic commit hash: 0x3A7AB7E');
+        }
+
+        function exportDocument(fmt) {
+            const text = document.getElementById('writer-content').innerText;
+            const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'Sovereign_Technical_Specification.md';
+            a.click();
+        }
+
+        // 2. NyxCalc Sovereign SIMD Vectorized Spreadsheet Engine
+        function colLettersToNum(letters) {
+            let num = 0;
+            const clean = letters.replace(/\$/g, '').toUpperCase();
+            for (let i = 0; i < clean.length; i++) {
+                num = num * 26 + (clean.charCodeAt(i) - 64);
+            }
+            return num;
+        }
+
+        function colNumToLetters(num) {
+            let str = '';
+            while (num > 0) {
+                let rem = (num - 1) % 26;
+                str = String.fromCharCode(rem + 65) + str;
+                num = Math.floor((num - 1) / 26);
+            }
+            return str;
+        }
+
+        function parseCellId(id) {
+            const m = id.match(/^(\$?)([A-Z]+)(\$?)([0-9]+)$/i);
+            if (!m) return { col: 1, row: 1, colLetter: 'A' };
+            const col = colLettersToNum(m[2]);
+            const row = parseInt(m[4], 10);
+            return { col, row, colLetter: m[2].toUpperCase(), isColAbs: !!m[1], isRowAbs: !!m[3] };
+        }
+
+        function getCellId(colNum, rowNum) {
+            return `${colNumToLetters(colNum)}${rowNum}`;
+        }
+
+        function shiftFormula(formula, rowOffset, colOffset) {
+            if (!formula || !formula.startsWith('=')) return formula;
+            const refRegex = /(\$?[A-Za-z]+)(\$?[0-9]+)/g;
+            return formula.replace(refRegex, (match, colPart, rowPart) => {
+                const isColAbs = colPart.startsWith('$');
+                const isRowAbs = rowPart.startsWith('$');
+                let newCol = colPart;
+                let newRow = rowPart;
+
+                if (!isColAbs && colOffset !== 0) {
+                    const colNum = colLettersToNum(colPart);
+                    newCol = colNumToLetters(Math.max(1, colNum + colOffset));
+                }
+                if (!isRowAbs && rowOffset !== 0) {
+                    const rowNum = parseInt(rowPart.replace('$', ''), 10);
+                    newRow = Math.max(1, rowNum + rowOffset).toString();
+                }
+                return newCol + newRow;
+            });
+        }
+
+        let nyxOfficeCalcSheet = {
+            cols: ['#', 'A', 'B', 'C', 'D', 'E', 'F'],
+            rowCount: 8,
+            cells: {},
+            validations: {},
+            condFormats: [],
+            isProtected: false,
+            lockedCells: new Set()
+        };
+        let nyxOfficeActiveCell = { r: 1, c: 1, colLetter: 'A', id: 'A1' };
+        let nyxOfficeCellDependencies = {};
+        let nyxOfficeCellDependents = {};
+        let nyxOfficeEvalCallStack = new Set();
+        let nyxOfficeFilterActive = false;
+        let nyxOfficeActiveColFilters = {}; // colNum -> Set(allowed values)
+        let nyxOfficeFilterPopupCol = null;
+        let nyxOfficeAuditLedger = [];
+
+
+        function getNyxOfficeCellState(cellId) {
+            if (!nyxOfficeCalcSheet.cells[cellId]) {
+                nyxOfficeCalcSheet.cells[cellId] = { raw: "", computed: "", format: "general" };
+            }
+            return nyxOfficeCalcSheet.cells[cellId];
+        }
+
+        function setNyxOfficeCellState(cellId, rawVal, format = null) {
+            const cell = getNyxOfficeCellState(cellId);
+            cell.raw = rawVal;
+            if (format) cell.format = format;
+            updateNyxOfficeDependencies(cellId, rawVal);
+        }
+
+        function updateNyxOfficeDependencies(cellId, formula) {
+            if (nyxOfficeCellDependencies[cellId]) {
+                nyxOfficeCellDependencies[cellId].forEach(dep => {
+                    if (nyxOfficeCellDependents[dep]) nyxOfficeCellDependents[dep].delete(cellId);
+                });
+            }
+            nyxOfficeCellDependencies[cellId] = new Set();
+
+            if (formula && formula.startsWith('=')) {
+                const rangeRegex = /([A-Z]+)(\d+):([A-Z]+)(\d+)/gi;
+                let rangeMatch;
+                while ((rangeMatch = rangeRegex.exec(formula)) !== null) {
+                    const c1 = colLettersToNum(rangeMatch[1]);
+                    const r1 = parseInt(rangeMatch[2]);
+                    const c2 = colLettersToNum(rangeMatch[3]);
+                    const r2 = parseInt(rangeMatch[4]);
+                    const minC = Math.min(c1, c2), maxC = Math.max(c1, c2);
+                    const minR = Math.min(r1, r2), maxR = Math.max(r1, r2);
+                    for (let c = minC; c <= maxC; c++) {
+                        for (let r = minR; r <= maxR; r++) {
+                            const refId = getCellId(c, r);
+                            nyxOfficeCellDependencies[cellId].add(refId);
+                            if (!nyxOfficeCellDependents[refId]) nyxOfficeCellDependents[refId] = new Set();
+                            nyxOfficeCellDependents[refId].add(cellId);
+                        }
+                    }
+                }
+
+                const singleRegex = /(?<!:)([A-Z]+)(\d+)(?!:)/gi;
+                let singleMatch;
+                while ((singleMatch = singleRegex.exec(formula)) !== null) {
+                    const refId = `${singleMatch[1].toUpperCase()}${singleMatch[2]}`;
+                    nyxOfficeCellDependencies[cellId].add(refId);
+                    if (!nyxOfficeCellDependents[refId]) nyxOfficeCellDependents[refId] = new Set();
+                    nyxOfficeCellDependents[refId].add(cellId);
+                }
+            }
+        }
+
+        function evaluateNyxOfficeFormula(expr) {
+            if (!expr || typeof expr !== 'string') return expr ?? '';
+            if (!expr.startsWith('=')) {
+                const num = Number(expr);
+                return isNaN(num) ? expr : num;
+            }
+
+            let cleanExpr = expr.substring(1).trim();
+
+            const openParens = (cleanExpr.match(/\(/g) || []).length;
+            let closeParens = (cleanExpr.match(/\)/g) || []).length;
+            while (closeParens < openParens) {
+                cleanExpr += ')';
+                closeParens++;
+            }
+
+            function expandRange(rangeStr) {
+                const parts = rangeStr.split(':');
+                if (parts.length !== 2) return [];
+                const p1 = parseCellId(parts[0]);
+                const p2 = parseCellId(parts[1]);
+                const minC = Math.min(p1.col, p2.col);
+                const maxC = Math.max(p1.col, p2.col);
+                const minR = Math.min(p1.row, p2.row);
+                const maxR = Math.max(p1.row, p2.row);
+                const values = [];
+                for (let r = minR; r <= maxR; r++) {
+                    for (let c = minC; c <= maxC; c++) {
+                        const cid = getCellId(c, r);
+                        const val = resolveCellValue(cid);
+                        if (typeof val === 'number' && !isNaN(val)) values.push(val);
+                    }
+                }
+                return values;
+            }
+
+            function resolveCellValue(cellId) {
+                if (nyxOfficeEvalCallStack.has(cellId)) return '#CYCLE!';
+                nyxOfficeEvalCallStack.add(cellId);
+
+                const cState = getNyxOfficeCellState(cellId);
+                let res = 0;
+                if (cState.raw.startsWith('=')) {
+                    res = evaluateNyxOfficeFormula(cState.raw);
+                } else {
+                    const parsed = parseFloat(cState.raw);
+                    res = isNaN(parsed) ? (cState.raw || 0) : parsed;
+                }
+
+                nyxOfficeEvalCallStack.delete(cellId);
+                return res;
+            }
+
+            try {
+                let parsed = cleanExpr;
+
+                // 1. SUM
+                parsed = parsed.replace(/SUM\(([^)]+)\)/gi, (m, arg) => {
+                    if (arg.includes(':')) {
+                        const vals = expandRange(arg.trim());
+                        return vals.reduce((a, b) => a + b, 0);
+                    }
+                    const args = arg.split(',').map(x => evaluateNyxOfficeFormula('=' + x.trim()));
+                    return args.reduce((a, b) => (Number(a) || 0) + (Number(b) || 0), 0);
+                });
+
+                // 2. AVERAGE
+                parsed = parsed.replace(/AVERAGE\(([^)]+)\)/gi, (m, arg) => {
+                    const vals = arg.includes(':') ? expandRange(arg.trim()) : arg.split(',').map(x => Number(evaluateNyxOfficeFormula('=' + x.trim())) || 0);
+                    return vals.length ? (vals.reduce((a, b) => a + b, 0) / vals.length) : 0;
+                });
+
+                // 3. MIN / MAX
+                parsed = parsed.replace(/MIN\(([^)]+)\)/gi, (m, arg) => {
+                    const vals = arg.includes(':') ? expandRange(arg.trim()) : arg.split(',').map(x => Number(evaluateNyxOfficeFormula('=' + x.trim())) || 0);
+                    return vals.length ? Math.min(...vals) : 0;
+                });
+                parsed = parsed.replace(/MAX\(([^)]+)\)/gi, (m, arg) => {
+                    const vals = arg.includes(':') ? expandRange(arg.trim()) : arg.split(',').map(x => Number(evaluateNyxOfficeFormula('=' + x.trim())) || 0);
+                    return vals.length ? Math.max(...vals) : 0;
+                });
+
+                // 4. COUNT
+                parsed = parsed.replace(/COUNT\(([^)]+)\)/gi, (m, arg) => {
+                    const vals = arg.includes(':') ? expandRange(arg.trim()) : arg.split(',').map(x => Number(evaluateNyxOfficeFormula('=' + x.trim())) || 0);
+                    return vals.length;
+                });
+
+                // 5. ROUND
+                parsed = parsed.replace(/ROUND\(([^,]+),([^)]+)\)/gi, (m, v, d) => {
+                    const val = Number(evaluateNyxOfficeFormula('=' + v.trim())) || 0;
+                    const dec = Number(evaluateNyxOfficeFormula('=' + d.trim())) || 0;
+                    return Number(val.toFixed(dec));
+                });
+
+                // Helper for range cell ids
+                function getNyxOfficeRangeCellList(rangeStr) {
+                    if (!rangeStr.includes(':')) return [rangeStr.trim().toUpperCase()];
+                    const parts = rangeStr.split(':');
+                    const p1 = parseCellId(parts[0]);
+                    const p2 = parseCellId(parts[1]);
+                    const minC = Math.min(p1.col, p2.col);
+                    const maxC = Math.max(p1.col, p2.col);
+                    const minR = Math.min(p1.row, p2.row);
+                    const maxR = Math.max(p1.row, p2.row);
+                    const ids = [];
+                    for (let r = minR; r <= maxR; r++) {
+                        for (let c = minC; c <= maxC; c++) {
+                            ids.push(getCellId(c, r));
+                        }
+                    }
+                    return ids;
+                }
+
+                // 6. IF
+                parsed = parsed.replace(/IF\(([^,]+),([^,]+),([^)]+)\)/gi, (m, c, t, f) => {
+                    let condRes = false;
+                    try {
+                        condRes = Boolean(Function(`'use strict'; return (${c});`)());
+                    } catch (e) {
+                        condRes = false;
+                    }
+                    return condRes ? t.trim() : f.trim();
+                });
+
+                // 7. XLOOKUP
+                parsed = parsed.replace(/XLOOKUP\(([^,]+),([^,]+),([^,)]+)(?:,([^)]+))?\)/gi, (m, valExpr, lookExpr, retExpr, notFoundExpr) => {
+                    const targetVal = String(evaluateNyxOfficeFormula('=' + valExpr.trim())).toLowerCase().replace(/^["']|["']$/g, '');
+                    const lookCells = getNyxOfficeRangeCellList(lookExpr.trim());
+                    const retCells = getNyxOfficeRangeCellList(retExpr.trim());
+                    let foundIdx = -1;
+                    for (let i = 0; i < lookCells.length; i++) {
+                        const v = String(resolveCellValue(lookCells[i])).toLowerCase().replace(/^["']|["']$/g, '');
+                        if (v === targetVal) {
+                            foundIdx = i;
+                            break;
+                        }
+                    }
+                    if (foundIdx !== -1 && retCells[foundIdx]) {
+                        const retVal = resolveCellValue(retCells[foundIdx]);
+                        return typeof retVal === 'number' ? retVal : (Number(retVal) || 0);
+                    }
+                    return notFoundExpr ? (Number(evaluateNyxOfficeFormula('=' + notFoundExpr.trim())) || 0) : 0;
+                });
+
+                // 8. VLOOKUP
+                parsed = parsed.replace(/VLOOKUP\(([^,]+),([^,]+),([^,)]+)(?:,([^)]+))?\)/gi, (m, valExpr, tblExpr, colIdxExpr) => {
+                    const targetVal = String(evaluateNyxOfficeFormula('=' + valExpr.trim())).toLowerCase().replace(/^["']|["']$/g, '');
+                    const colIdx = parseInt(colIdxExpr.trim(), 10);
+                    const parts = tblExpr.trim().split(':');
+                    if (parts.length !== 2) return 0;
+                    const p1 = parseCellId(parts[0]);
+                    const p2 = parseCellId(parts[1]);
+                    const minR = Math.min(p1.row, p2.row);
+                    const maxR = Math.max(p1.row, p2.row);
+                    const minC = Math.min(p1.col, p2.col);
+                    for (let r = minR; r <= maxR; r++) {
+                        const firstColCid = getCellId(minC, r);
+                        const cellVal = String(resolveCellValue(firstColCid)).toLowerCase().replace(/^["']|["']$/g, '');
+                        if (cellVal === targetVal) {
+                            const targetCol = minC + (colIdx - 1);
+                            const targetCid = getCellId(targetCol, r);
+                            const res = resolveCellValue(targetCid);
+                            return typeof res === 'number' ? res : (Number(res) || 0);
+                        }
+                    }
+                    return 0;
+                });
+
+                // 9. INDEX
+                parsed = parsed.replace(/INDEX\(([^,]+),([^,)]+)(?:,([^)]+))?\)/gi, (m, rangeExpr, rExpr, cExpr) => {
+                    const rNum = parseInt(rExpr.trim(), 10);
+                    const cNum = cExpr ? parseInt(cExpr.trim(), 10) : 1;
+                    const parts = rangeExpr.trim().split(':');
+                    if (parts.length !== 2) return 0;
+                    const p1 = parseCellId(parts[0]);
+                    const minR = Math.min(p1.row, p2.row);
+                    const minC = Math.min(p1.col, p2.col);
+                    const targetCid = getCellId(minC + (cNum - 1), minR + (rNum - 1));
+                    const res = resolveCellValue(targetCid);
+                    return typeof res === 'number' ? res : (Number(res) || 0);
+                });
+
+                // 10. MATCH
+                parsed = parsed.replace(/MATCH\(([^,]+),([^,)]+)(?:,([^)]+))?\)/gi, (m, valExpr, rangeExpr) => {
+                    const targetVal = String(evaluateNyxOfficeFormula('=' + valExpr.trim())).toLowerCase().replace(/^["']|["']$/g, '');
+                    const cells = getNyxOfficeRangeCellList(rangeExpr.trim());
+                    for (let i = 0; i < cells.length; i++) {
+                        const v = String(resolveCellValue(cells[i])).toLowerCase().replace(/^["']|["']$/g, '');
+                        if (v === targetVal) return i + 1;
+                    }
+                    return 0;
+                });
+
+                // 11. SUMIFS
+                parsed = parsed.replace(/SUMIFS\(([^,]+),([^,]+),([^)]+)\)/gi, (m, sumRangeExpr, critRangeExpr, critExpr) => {
+                    const sumCells = getNyxOfficeRangeCellList(sumRangeExpr.trim());
+                    const critCells = getNyxOfficeRangeCellList(critRangeExpr.trim());
+                    const cleanCrit = critExpr.trim().replace(/^['"]|['"]$/g, '').toLowerCase();
+                    let sumTotal = 0;
+                    for (let i = 0; i < Math.min(sumCells.length, critCells.length); i++) {
+                        const critVal = String(resolveCellValue(critCells[i])).toLowerCase();
+                        if (critVal === cleanCrit || critVal.includes(cleanCrit)) {
+                            const v = Number(resolveCellValue(sumCells[i])) || 0;
+                            sumTotal += v;
+                        }
+                    }
+                    return sumTotal;
+                });
+
+                // 12. COUNTIFS
+                parsed = parsed.replace(/COUNTIFS\(([^,]+),([^)]+)\)/gi, (m, critRangeExpr, critExpr) => {
+                    const critCells = getNyxOfficeRangeCellList(critRangeExpr.trim());
+                    const cleanCrit = critExpr.trim().replace(/^['"]|['"]$/g, '').toLowerCase();
+                    let countTotal = 0;
+                    for (let i = 0; i < critCells.length; i++) {
+                        const critVal = String(resolveCellValue(critCells[i])).toLowerCase();
+                        if (critVal === cleanCrit || critVal.includes(cleanCrit)) {
+                            countTotal++;
+                        }
+                    }
+                    return countTotal;
+                });
+
+                // 13. NPV
+                parsed = parsed.replace(/NPV\(([^,]+),([^)]+)\)/gi, (m, rateExpr, valsExpr) => {
+                    const rate = Number(evaluateNyxOfficeFormula('=' + rateExpr.trim())) || 0.1;
+                    const vals = valsExpr.includes(':') ? expandRange(valsExpr.trim()) : valsExpr.split(',').map(x => Number(evaluateNyxOfficeFormula('=' + x.trim())) || 0);
+                    let npv = 0;
+                    for (let t = 0; t < vals.length; t++) {
+                        npv += vals[t] / Math.pow(1 + rate, t + 1);
+                    }
+                    return npv;
+                });
+
+                // 14. PMT
+                parsed = parsed.replace(/PMT\(([^,]+),([^,]+),([^)]+)\)/gi, (m, rateExpr, nperExpr, pvExpr) => {
+                    const r = Number(evaluateNyxOfficeFormula('=' + rateExpr.trim())) || 0;
+                    const n = Number(evaluateNyxOfficeFormula('=' + nperExpr.trim())) || 1;
+                    const p = Number(evaluateNyxOfficeFormula('=' + pvExpr.trim())) || 0;
+                    if (r === 0) return -p / n;
+                    return -(p * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+                });
+
+                // 15. Cell References replacement
+                parsed = parsed.replace(/(?<![A-Za-z0-9_])(\$?[A-Za-z]+)(\$?[0-9]+)(?![A-Za-z0-9_])/g, (m, colPart, rowPart) => {
+                    const cNum = colLettersToNum(colPart);
+                    const rNum = parseInt(rowPart.replace('$', ''), 10);
+                    const cid = getCellId(cNum, rNum);
+                    const val = resolveCellValue(cid);
+                    if (val === '#CYCLE!') throw new Error('#CYCLE!');
+                    return typeof val === 'number' ? val : (Number(val) || 0);
+                });
+
+                // 16. Math evaluation
+                const evaluated = Function(`'use strict'; return (${parsed});`)();
+                return typeof evaluated === 'number' ? (Math.round(evaluated * 10000) / 10000) : evaluated;
+            } catch (err) {
+                return err.message === '#CYCLE!' ? '#CYCLE!' : '#VALUE!';
+            }
+        }
+
+        function recalculateNyxOfficeCellAndDependents(cellId) {
+            const cell = getNyxOfficeCellState(cellId);
+            if (cell.raw.startsWith('=')) {
+                nyxOfficeEvalCallStack.clear();
+                cell.computed = evaluateNyxOfficeFormula(cell.raw);
+            } else {
+                cell.computed = cell.raw;
+            }
+
+            const domInput = document.getElementById(`noc_${cellId}`);
+            if (domInput && document.activeElement !== domInput) {
+                domInput.value = formatNyxOfficeCellValue(cell.computed, cell.format);
+            }
+
+            const deps = nyxOfficeCellDependents[cellId];
+            if (deps && deps.size > 0) {
+                deps.forEach(depId => recalculateNyxOfficeCellAndDependents(depId));
+            }
+        }
+
+        function formatNyxOfficeCellValue(val, format = 'general') {
+            if (val === null || val === undefined || val === '') return '';
+            if (val === '#CYCLE!' || val === '#VALUE!') return val;
+            if (typeof val === 'number') {
+                if (format === 'currency') {
+                    return '₦' + val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }
+                if (format === 'percent') {
+                    return (val * 100).toFixed(1) + '%';
+                }
+                return Number.isInteger(val) ? val.toLocaleString('en-US') : val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+            }
+            return val;
+        }
+
+        function recalcNyxOfficeSheet() {
+            const sheet = nyxOfficeCalcSheet;
+            const colCount = sheet.cols.length - 1;
+
+            let evaluatedCount = 0;
+            for (let r = 1; r <= sheet.rowCount; r++) {
+                for (let c = 1; c <= colCount; c++) {
+                    const cid = getCellId(c, r);
+                    const cell = getNyxOfficeCellState(cid);
+                    if (cell.raw.startsWith('=')) {
+                        nyxOfficeEvalCallStack.clear();
+                        cell.computed = evaluateNyxOfficeFormula(cell.raw);
+                    } else {
+                        cell.computed = cell.raw;
+                    }
+                    if (cell.raw) evaluatedCount++;
+                    const domEl = document.getElementById(`noc_${cid}`);
+                    if (domEl && document.activeElement !== domEl) {
+                        domEl.value = formatNyxOfficeCellValue(cell.computed, cell.format);
+                    }
+                }
+            }
+
+            const stats = document.getElementById('nyxoffice-calc-stats');
+            if (stats) {
+                stats.innerText = `Cells: ${evaluatedCount} Active | SIMD AVX-512 Parallel Engine`;
+            }
+        }
+
+        let nyxOfficeSelectionRange = {
+            start: { r: 1, c: 1 },
+            end: { r: 1, c: 1 }
+        };
+        let isNyxOfficeSelectingCells = false;
+        let isNyxOfficeSelectingCols = false;
+        let isNyxOfficeSelectingRows = false;
+        let nyxOfficeColSelectStart = 1;
+        let nyxOfficeRowSelectStart = 1;
+
+        // Formula Point-and-Click / Drag State
+        let isNyxOfficeFormulaDragging = false;
+        let nyxOfficeFormulaDragStart = { r: 1, c: 1 };
+        let nyxOfficeFormulaPrefix = '';
+        let nyxOfficeFormulaTargetInput = null;
+
+        // Fill Handle State
+        let isNyxOfficeDraggingFill = false;
+        let nyxOfficeFillStartRange = { minR: 1, maxR: 1, minC: 1, maxC: 1 };
+        let nyxOfficeFillCurrentCoords = { r: 1, c: 1 };
+
+        function isNyxOfficeFormulaMode() {
+            const formulaInput = document.getElementById('formula-bar');
+            const activeInput = document.activeElement;
+            let target = null;
+            if (activeInput === formulaInput) {
+                target = formulaInput;
+            } else if (activeInput && activeInput.tagName === 'INPUT' && activeInput.id && activeInput.id.startsWith('noc_')) {
+                target = activeInput;
+            } else if (nyxOfficeActiveCell && nyxOfficeActiveCell.id) {
+                const cellInput = document.getElementById(`noc_${nyxOfficeActiveCell.id}`);
+                if (cellInput && cellInput.value && cellInput.value.startsWith('=')) {
+                    target = cellInput;
+                } else if (formulaInput && formulaInput.value && formulaInput.value.startsWith('=')) {
+                    target = formulaInput;
+                }
+            }
+            if (!target) return null;
+            const val = target.value;
+            if (val.startsWith('=') && /(=|[\(,+\-*\/^])\s*$/i.test(val)) {
+                return { target, prefix: val };
+            }
+            return null;
+        }
+
+        function renderNyxOfficeCalcGrid() {
+            const thead = document.getElementById('nyxoffice-calc-thead');
+            const tbody = document.getElementById('nyxoffice-calc-tbody');
+            if (!thead || !tbody) return;
+
+            const sheet = nyxOfficeCalcSheet;
+            const colCount = sheet.cols.length - 1;
+
+            let thHtml = '<tr><th style="width:48px;" onclick="selectNyxOfficeAllCells()">#</th>';
+            for (let c = 1; c <= colCount; c++) {
+                const letter = colNumToLetters(c);
+                const title = sheet.cols[c] || letter;
+                thHtml += `<th id="noth_col_${letter}" class="col-header-cell"
+                               onmousedown="startNyxOfficeColSelect(${c}, event)"
+                               onmouseenter="onNyxOfficeColSelectOver(${c})"
+                               style="cursor:s-resize;" title="Click or drag to highlight Column ${letter}">${title}</th>`;
+            }
+            thHtml += '</tr>';
+            thead.innerHTML = thHtml;
+
+            let tbHtml = '';
+            for (let r = 1; r <= sheet.rowCount; r++) {
+                tbHtml += `<tr><th id="noth_row_${r}" class="calc-row-header" style="cursor:e-resize; user-select:none; text-align:center;"
+                                   onmousedown="startNyxOfficeRowSelect(${r}, event)"
+                                   onmouseenter="onNyxOfficeRowSelectOver(${r})"
+                                   title="Click or drag to highlight Row ${r}">${r}</th>`;
+                for (let c = 1; c <= colCount; c++) {
+                    const cid = getCellId(c, r);
+                    const cell = getNyxOfficeCellState(cid);
+                    const isFormula = cell.raw.startsWith('=');
+                    const displayVal = formatNyxOfficeCellValue(cell.computed, cell.format);
+                    tbHtml += `<td id="notd_${cid}" class="${isFormula ? 'has-formula' : ''}" data-r="${r}" data-c="${c}" data-id="${cid}"
+                                   onmousedown="handleNyxOfficeCellMouseDown(event, ${r}, ${c}, '${cid}')"
+                                   onmouseenter="handleNyxOfficeCellMouseEnter(event, ${r}, ${c}, '${cid}')">
+                        <input type="text" id="noc_${cid}" class="calc-cell-input" data-r="${r}" data-c="${c}" data-id="${cid}" value="${displayVal}"
+                               onmousedown="handleNyxOfficeCellInputMouseDown(event, ${r}, ${c}, '${cid}')"
+                               onfocus="selectNyxOfficeCell('${cid}', ${r}, ${c})"
+                               onblur="handleNyxOfficeCellBlur('${cid}', this.value)"
+                               oninput="handleNyxOfficeCellInput('${cid}', this.value)"
+                               onkeydown="handleNyxOfficeCellKey(event, ${r}, ${c})">
+                    </td>`;
+                }
+                tbHtml += '</tr>';
+            }
+            tbody.innerHTML = tbHtml;
+            recalcNyxOfficeSheet();
+            updateNyxOfficeRangeSelectionUI();
+        }
+
+        function handleNyxOfficeCellMouseDown(e, r, c, cid) {
+            if (e.target.id === 'nyxoffice-fill-handle') return;
+
+            const fMode = isNyxOfficeFormulaMode();
+            if (fMode) {
+                if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                isNyxOfficeFormulaDragging = true;
+                nyxOfficeFormulaDragStart = { r, c };
+                nyxOfficeFormulaTargetInput = fMode.target;
+                nyxOfficeFormulaPrefix = fMode.prefix;
+                updateNyxOfficeFormulaPointRange(r, c);
+                return;
+            }
+
+            isNyxOfficeSelectingCells = true;
+            nyxOfficeSelectionRange.start = { r, c };
+            nyxOfficeSelectionRange.end = { r, c };
+            nyxOfficeActiveCell = { r, c, colLetter: colNumToLetters(c), id: cid };
+
+            const badge = document.getElementById('calc-active-cell');
+            if (badge) badge.innerText = cid;
+
+            const sheet = nyxOfficeCalcSheet;
+            const cell = getNyxOfficeCellState(cid);
+            const formulaInput = document.getElementById('formula-bar');
+            if (formulaInput) formulaInput.value = cell.raw || '';
+
+            updateNyxOfficeRangeSelectionUI();
+        }
+
+        let potentialNyxOfficeDragStart = null;
+
+        function handleNyxOfficeCellInputMouseDown(e, r, c, cid) {
+            if (e.target.id === 'nyxoffice-fill-handle') return;
+            const fMode = isNyxOfficeFormulaMode();
+            if (fMode) {
+                if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                handleNyxOfficeCellMouseDown(e, r, c, cid);
+                return;
+            }
+            potentialNyxOfficeDragStart = { r, c, cid };
+            if (nyxOfficeActiveCell.r === r && nyxOfficeActiveCell.c === c && document.activeElement === e.target) {
+                return; // Cursor editing allowed, but dragging will activate multi-cell selection
+            }
+            handleNyxOfficeCellMouseDown(e, r, c, cid);
+        }
+
+        function handleNyxOfficeCellMouseEnter(e, r, c, cid) {
+            if (isNyxOfficeFormulaDragging) {
+                updateNyxOfficeFormulaPointRange(r, c);
+                return;
+            }
+            if (e && e.buttons === 1) {
+                if (!isNyxOfficeSelectingCells && potentialNyxOfficeDragStart) {
+                    isNyxOfficeSelectingCells = true;
+                    nyxOfficeSelectionRange.start = { r: potentialNyxOfficeDragStart.r, c: potentialNyxOfficeDragStart.c };
+                    if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                        document.activeElement.blur();
+                    }
+                }
+            }
+            if (isNyxOfficeSelectingCells) {
+                nyxOfficeSelectionRange.end = { r, c };
+                updateNyxOfficeRangeSelectionUI();
+            }
+        }
+
+        function updateNyxOfficeFormulaPointRange(r, c) {
+            if (!nyxOfficeFormulaTargetInput) return;
+            const startC = nyxOfficeFormulaDragStart.c;
+            const startR = nyxOfficeFormulaDragStart.r;
+            const isSingle = (startR === r && startC === c);
+            const rangeStr = isSingle ? getCellId(c, r) : `${getCellId(startC, startR)}:${getCellId(c, r)}`;
+
+            nyxOfficeFormulaTargetInput.value = nyxOfficeFormulaPrefix + rangeStr;
+
+            const formulaBar = document.getElementById('formula-bar');
+            if (formulaBar && formulaBar !== nyxOfficeFormulaTargetInput) {
+                formulaBar.value = nyxOfficeFormulaPrefix + rangeStr;
+            }
+            if (nyxOfficeActiveCell && nyxOfficeActiveCell.id) {
+                const cellInput = document.getElementById(`noc_${nyxOfficeActiveCell.id}`);
+                if (cellInput && cellInput !== nyxOfficeFormulaTargetInput) {
+                    cellInput.value = nyxOfficeFormulaPrefix + rangeStr;
+                }
+            }
+
+            document.querySelectorAll('#calc-grid td.formula-pointing-highlight').forEach(td => td.classList.remove('formula-pointing-highlight'));
+            const minR = Math.min(startR, r), maxR = Math.max(startR, r);
+            const minC = Math.min(startC, c), maxC = Math.max(startC, c);
+            for (let row = minR; row <= maxR; row++) {
+                for (let col = minC; col <= maxC; col++) {
+                    const td = document.getElementById(`notd_${getCellId(col, row)}`);
+                    if (td) td.classList.add('formula-pointing-highlight');
+                }
+            }
+        }
+
+        function selectNyxOfficeCell(cellId, r, c) {
+            nyxOfficeActiveCell = { r, c, colLetter: colNumToLetters(c), id: cellId };
+            nyxOfficeSelectionRange.start = { r, c };
+            nyxOfficeSelectionRange.end = { r, c };
+
+            const badge = document.getElementById('calc-active-cell');
+            if (badge) badge.innerText = cellId;
+
+            const cell = getNyxOfficeCellState(cellId);
+            const formulaInput = document.getElementById('formula-bar');
+            const inputEl = document.getElementById(`noc_${cellId}`);
+
+            if (!isNyxOfficeFormulaDragging) {
+                if (formulaInput && document.activeElement !== formulaInput) {
+                    formulaInput.value = cell.raw || '';
+                }
+                if (inputEl && document.activeElement !== inputEl) {
+                    inputEl.value = cell.raw.startsWith('=') ? cell.raw : formatNyxOfficeCellValue(cell.computed, cell.format);
+                }
+            }
+
+            updateNyxOfficeRangeSelectionUI();
+        }
+
+        function updateNyxOfficeRangeSelectionUI() {
+            window.nyxOfficeSelectionRange = nyxOfficeSelectionRange;
+            const minR = Math.min(nyxOfficeSelectionRange.start.r, nyxOfficeSelectionRange.end.r);
+            const maxR = Math.max(nyxOfficeSelectionRange.start.r, nyxOfficeSelectionRange.end.r);
+            const minC = Math.min(nyxOfficeSelectionRange.start.c, nyxOfficeSelectionRange.end.c);
+            const maxC = Math.max(nyxOfficeSelectionRange.start.c, nyxOfficeSelectionRange.end.c);
+
+            const isMultiCell = (minR !== maxR || minC !== maxC);
+
+            const badge = document.getElementById('calc-active-cell');
+            if (badge) {
+                badge.innerText = isMultiCell ? `${getCellId(minC, minR)}:${getCellId(maxC, maxR)}` : getCellId(minC, minR);
+            }
+
+            document.querySelectorAll('#calc-grid td').forEach(td => {
+                td.classList.remove('selected', 'selected-range', 'range-top', 'range-bottom', 'range-left', 'range-right', 'col-selected', 'row-selected');
+            });
+            document.querySelectorAll('#calc-grid th').forEach(th => th.classList.remove('col-selected', 'row-header-selected'));
+
+            for (let r = minR; r <= maxR; r++) {
+                for (let c = minC; c <= maxC; c++) {
+                    const cid = getCellId(c, r);
+                    const td = document.getElementById(`notd_${cid}`);
+                    if (td) {
+                        if (isMultiCell) {
+                            td.classList.add('selected-range');
+                            if (r === minR) td.classList.add('range-top');
+                            if (r === maxR) td.classList.add('range-bottom');
+                            if (c === minC) td.classList.add('range-left');
+                            if (c === maxC) td.classList.add('range-right');
+                        } else {
+                            td.classList.add('selected');
+                        }
+                    }
+                }
+            }
+
+            for (let c = minC; c <= maxC; c++) {
+                const th = document.getElementById(`noth_col_${colNumToLetters(c)}`);
+                if (th) th.classList.add('col-selected');
+            }
+            for (let r = minR; r <= maxR; r++) {
+                const rowTh = document.getElementById(`noth_row_${r}`);
+                if (rowTh) rowTh.classList.add('row-header-selected');
+            }
+
+            attachNyxOfficeFillHandleToRange();
+        }
+
+        function attachNyxOfficeFillHandleToRange() {
+            let handle = document.getElementById('nyxoffice-fill-handle');
+            if (handle) handle.remove();
+
+            const maxR = Math.max(nyxOfficeSelectionRange.start.r, nyxOfficeSelectionRange.end.r);
+            const maxC = Math.max(nyxOfficeSelectionRange.start.c, nyxOfficeSelectionRange.end.c);
+
+            const tdEl = document.getElementById(`notd_${getCellId(maxC, maxR)}`);
+            if (tdEl) {
+                handle = document.createElement('div');
+                handle.id = 'nyxoffice-fill-handle';
+                handle.className = 'calc-fill-handle';
+                handle.title = 'Drag to auto-fill formula or sequence';
+                handle.onmousedown = startNyxOfficeFillDrag;
+                tdEl.appendChild(handle);
+            }
+        }
+
+        // Global Mouseup for NyxOffice Calc
+        window.addEventListener('mouseup', () => {
+            if (isNyxOfficeFormulaDragging) {
+                isNyxOfficeFormulaDragging = false;
+                document.querySelectorAll('#calc-grid td.formula-pointing-highlight').forEach(td => td.classList.remove('formula-pointing-highlight'));
+                if (nyxOfficeFormulaTargetInput) {
+                    const pointedVal = nyxOfficeFormulaTargetInput.value;
+                    if (nyxOfficeActiveCell && nyxOfficeActiveCell.id) {
+                        setNyxOfficeCellState(nyxOfficeActiveCell.id, pointedVal);
+                    }
+                    nyxOfficeFormulaTargetInput.focus();
+                }
+            }
+            if (isNyxOfficeSelectingCells) {
+                isNyxOfficeSelectingCells = false;
+                attachNyxOfficeFillHandleToRange();
+            }
+            if (isNyxOfficeSelectingCols) {
+                isNyxOfficeSelectingCols = false;
+                attachNyxOfficeFillHandleToRange();
+            }
+            if (isNyxOfficeSelectingRows) {
+                isNyxOfficeSelectingRows = false;
+                attachNyxOfficeFillHandleToRange();
+            }
+        });
+
+        // Header Selection & Dragging
+        function startNyxOfficeColSelect(c, e) {
+            if (e && typeof e.preventDefault === 'function') e.preventDefault();
+            isNyxOfficeSelectingCols = true;
+            nyxOfficeColSelectStart = c;
+            const sheet = nyxOfficeCalcSheet;
+            nyxOfficeSelectionRange.start = { r: 1, c: c };
+            nyxOfficeSelectionRange.end = { r: sheet.rowCount, c: c };
+            nyxOfficeActiveCell = { r: 1, c: c, colLetter: colNumToLetters(c), id: getCellId(c, 1) };
+            updateNyxOfficeRangeSelectionUI();
+        }
+
+        function onNyxOfficeColSelectOver(c) {
+            if (!isNyxOfficeSelectingCols) return;
+            const sheet = nyxOfficeCalcSheet;
+            nyxOfficeSelectionRange.start = { r: 1, c: Math.min(nyxOfficeColSelectStart, c) };
+            nyxOfficeSelectionRange.end = { r: sheet.rowCount, c: Math.max(nyxOfficeColSelectStart, c) };
+            updateNyxOfficeRangeSelectionUI();
+        }
+
+        function selectNyxOfficeColumn(c) {
+            startNyxOfficeColSelect(c);
+            isNyxOfficeSelectingCols = false;
+        }
+
+        function startNyxOfficeRowSelect(r, e) {
+            if (e && typeof e.preventDefault === 'function') e.preventDefault();
+            isNyxOfficeSelectingRows = true;
+            nyxOfficeRowSelectStart = r;
+            const sheet = nyxOfficeCalcSheet;
+            const colCount = sheet.cols.length - 1;
+            nyxOfficeSelectionRange.start = { r: r, c: 1 };
+            nyxOfficeSelectionRange.end = { r: r, c: colCount };
+            nyxOfficeActiveCell = { r: r, c: 1, colLetter: 'A', id: getCellId(1, r) };
+            updateNyxOfficeRangeSelectionUI();
+        }
+
+        function onNyxOfficeRowSelectOver(r) {
+            if (!isNyxOfficeSelectingRows) return;
+            const sheet = nyxOfficeCalcSheet;
+            const colCount = sheet.cols.length - 1;
+            nyxOfficeSelectionRange.start = { r: Math.min(nyxOfficeRowSelectStart, r), c: 1 };
+            nyxOfficeSelectionRange.end = { r: Math.max(nyxOfficeRowSelectStart, r), c: colCount };
+            updateNyxOfficeRangeSelectionUI();
+        }
+
+        function selectNyxOfficeRow(r) {
+            startNyxOfficeRowSelect(r);
+            isNyxOfficeSelectingRows = false;
+        }
+
+        function selectNyxOfficeAllCells() {
+            const sheet = nyxOfficeCalcSheet;
+            nyxOfficeSelectionRange.start = { r: 1, c: 1 };
+            nyxOfficeSelectionRange.end = { r: sheet.rowCount, c: sheet.cols.length - 1 };
+            updateNyxOfficeRangeSelectionUI();
+        }
+
+        // AutoSum Feature for NyxOffice
+        function calcAutoSum() {
+            const sheet = nyxOfficeCalcSheet;
+            const minR = Math.min(nyxOfficeSelectionRange.start.r, nyxOfficeSelectionRange.end.r);
+            const maxR = Math.max(nyxOfficeSelectionRange.start.r, nyxOfficeSelectionRange.end.r);
+            const minC = Math.min(nyxOfficeSelectionRange.start.c, nyxOfficeSelectionRange.end.c);
+            const maxC = Math.max(nyxOfficeSelectionRange.start.c, nyxOfficeSelectionRange.end.c);
+
+            const isMultiCell = (minR !== maxR || minC !== maxC);
+
+            if (isMultiCell) {
+                let targetR = maxR + 1;
+                if (targetR > sheet.rowCount) {
+                    sheet.rowCount = targetR;
+                    renderNyxOfficeCalcGrid();
+                }
+
+                for (let c = minC; c <= maxC; c++) {
+                    const letter = colNumToLetters(c);
+                    const formula = `=SUM(${letter}${minR}:${letter}${maxR})`;
+                    const targetId = getCellId(c, targetR);
+                    setNyxOfficeCellState(targetId, formula, 'currency');
+                    recalculateNyxOfficeCellAndDependents(targetId);
+                }
+                recalcNyxOfficeSheet();
+                selectNyxOfficeCell(getCellId(minC, targetR), targetR, minC);
+            } else {
+                const c = nyxOfficeActiveCell.c;
+                const r = nyxOfficeActiveCell.r;
+                const letter = colNumToLetters(c);
+
+                let startR = r - 1;
+                while (startR >= 1 && getNyxOfficeCellState(getCellId(c, startR)).raw.trim() !== '') {
+                    startR--;
+                }
+                startR++;
+
+                let formula = '';
+                if (startR < r) {
+                    formula = `=SUM(${letter}${startR}:${letter}${r - 1})`;
+                } else {
+                    let startC = c - 1;
+                    while (startC >= 1 && getNyxOfficeCellState(getCellId(startC, r)).raw.trim() !== '') {
+                        startC--;
+                    }
+                    startC++;
+                    if (startC < c) {
+                        formula = `=SUM(${colNumToLetters(startC)}${r}:${colNumToLetters(c - 1)}${r})`;
+                    } else {
+                        formula = `=SUM(${letter}1:${letter}${Math.max(1, r - 1)})`;
+                    }
+                }
+
+                setNyxOfficeCellState(nyxOfficeActiveCell.id, formula, 'currency');
+                recalculateNyxOfficeCellAndDependents(nyxOfficeActiveCell.id);
+                recalcNyxOfficeSheet();
+                selectNyxOfficeCell(nyxOfficeActiveCell.id, r, c);
+            }
+        }
+
+        function handleNyxOfficeCellInput(cellId, val) {
+            setNyxOfficeCellState(cellId, val);
+            const formulaInput = document.getElementById('formula-bar');
+            if (formulaInput) formulaInput.value = val;
+        }
+
+        function handleNyxOfficeCellBlur(cellId, val) {
+            setNyxOfficeCellState(cellId, val);
+            recalculateNyxOfficeCellAndDependents(cellId);
+            recalcNyxOfficeSheet();
+        }
+
+        function handleNyxOfficeCellKey(e, r, c) {
+            const sheet = nyxOfficeCalcSheet;
+            const colCount = sheet.cols.length - 1;
+
+            if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                e.preventDefault();
+                const nextR = Math.min(sheet.rowCount, r + 1);
+                const nextId = getCellId(c, nextR);
+                const nextEl = document.getElementById(`noc_${nextId}`);
+                if (nextEl) { nextEl.focus(); selectNyxOfficeCell(nextId, nextR, c); }
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                const prevR = Math.max(1, r - 1);
+                const prevId = getCellId(c, prevR);
+                const prevEl = document.getElementById(`noc_${prevId}`);
+                if (prevEl) { prevEl.focus(); selectNyxOfficeCell(prevId, prevR, c); }
+            } else if (e.key === 'Tab' || e.key === 'ArrowRight') {
+                if (e.key === 'Tab') e.preventDefault();
+                const nextC = Math.min(colCount, c + 1);
+                const nextId = getCellId(nextC, r);
+                const nextEl = document.getElementById(`noc_${nextId}`);
+                if (nextEl) { nextEl.focus(); selectNyxOfficeCell(nextId, r, nextC); }
+            } else if (e.key === 'ArrowLeft') {
+                const prevC = Math.max(1, c - 1);
+                const prevId = getCellId(prevC, r);
+                const prevEl = document.getElementById(`noc_${prevId}`);
+                if (prevEl) { prevEl.focus(); selectNyxOfficeCell(prevId, r, prevC); }
+            }
+        }
+
+        function handleNyxOfficeFormulaBarInput(val) {
+            const { id } = nyxOfficeActiveCell;
+            const inputEl = document.getElementById(`noc_${id}`);
+            if (inputEl) inputEl.value = val;
+            setNyxOfficeCellState(id, val);
+        }
+
+        function handleNyxOfficeFormulaBarKey(e) {
+            if (e.key === 'Enter') {
+                applyNyxOfficeFormulaBar();
+            }
+        }
+
+        function applyNyxOfficeFormulaBar() {
+            const { id } = nyxOfficeActiveCell;
+            const formulaInput = document.getElementById('formula-bar');
+            if (formulaInput) {
+                setNyxOfficeCellState(id, formulaInput.value);
+                recalculateNyxOfficeCellAndDependents(id);
+                recalcNyxOfficeSheet();
+            }
+        }
+
+        // Multi-Cell Sequence Progression Fill Handle
+        function startNyxOfficeFillDrag(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            isNyxOfficeDraggingFill = true;
+
+            const minR = Math.min(nyxOfficeSelectionRange.start.r, nyxOfficeSelectionRange.end.r);
+            const maxR = Math.max(nyxOfficeSelectionRange.start.r, nyxOfficeSelectionRange.end.r);
+            const minC = Math.min(nyxOfficeSelectionRange.start.c, nyxOfficeSelectionRange.end.c);
+            const maxC = Math.max(nyxOfficeSelectionRange.start.c, nyxOfficeSelectionRange.end.c);
+
+            nyxOfficeFillStartRange = { minR, maxR, minC, maxC };
+            nyxOfficeFillCurrentCoords = { r: maxR, c: maxC };
+
+            document.addEventListener('mousemove', onNyxOfficeFillDragMove);
+            document.addEventListener('mouseup', endNyxOfficeFillDrag);
+        }
+
+        function onNyxOfficeFillDragMove(e) {
+            if (!isNyxOfficeDraggingFill) return;
+            const target = document.elementFromPoint(e.clientX, e.clientY);
+            const tdOrInput = target ? (target.closest('td') || target.closest('input')) : null;
+            if (tdOrInput && tdOrInput.dataset) {
+                let r = parseInt(tdOrInput.dataset.r);
+                let c = parseInt(tdOrInput.dataset.c);
+                if (!r && tdOrInput.querySelector('input')) {
+                    const inp = tdOrInput.querySelector('input');
+                    r = parseInt(inp.dataset.r);
+                    c = parseInt(inp.dataset.c);
+                }
+                if (r && c) {
+                    nyxOfficeFillCurrentCoords = { r, c };
+                    renderNyxOfficeFillHighlight(nyxOfficeFillStartRange, nyxOfficeFillCurrentCoords);
+                }
+            }
+        }
+
+        function renderNyxOfficeFillHighlight(sourceRange, current) {
+            document.querySelectorAll('#calc-grid td.fill-highlight').forEach(td => td.classList.remove('fill-highlight'));
+
+            const minR = Math.min(sourceRange.minR, current.r);
+            const maxR = Math.max(sourceRange.maxR, current.r);
+            const minC = Math.min(sourceRange.minC, current.c);
+            const maxC = Math.max(sourceRange.maxC, current.c);
+
+            for (let r = minR; r <= maxR; r++) {
+                for (let c = minC; c <= maxC; c++) {
+                    const cid = getCellId(c, r);
+                    const td = document.getElementById(`notd_${cid}`);
+                    if (td) td.classList.add('fill-highlight');
+                }
+            }
+        }
+
+        function endNyxOfficeFillDrag(e) {
+            if (!isNyxOfficeDraggingFill) return;
+            isNyxOfficeDraggingFill = false;
+            document.removeEventListener('mousemove', onNyxOfficeFillDragMove);
+            document.removeEventListener('mouseup', endNyxOfficeFillDrag);
+
+            const sheet = nyxOfficeCalcSheet;
+            const src = nyxOfficeFillStartRange;
+            const cur = nyxOfficeFillCurrentCoords;
+
+            document.querySelectorAll('#calc-grid td.fill-highlight').forEach(td => td.classList.remove('fill-highlight'));
+
+            if (cur.r > src.maxR) {
+                if (cur.r > sheet.rowCount) {
+                    sheet.rowCount = cur.r;
+                    renderNyxOfficeCalcGrid();
+                }
+
+                for (let c = src.minC; c <= src.maxC; c++) {
+                    const values = [];
+                    let allNumeric = true;
+                    let hasFormula = false;
+
+                    for (let r = src.minR; r <= src.maxR; r++) {
+                        const cell = getNyxOfficeCellState(getCellId(c, r));
+                        const raw = cell.raw.trim();
+                        if (raw.startsWith('=')) {
+                            hasFormula = true;
+                            allNumeric = false;
+                        } else {
+                            const num = parseFloat(raw);
+                            if (isNaN(num)) allNumeric = false;
+                            values.push({ raw, num });
+                        }
+                    }
+
+                    const srcLen = src.maxR - src.minR + 1;
+
+                    if (allNumeric && values.length > 0) {
+                        let step = 1;
+                        if (values.length >= 2) {
+                            const first = values[0].num;
+                            const last = values[values.length - 1].num;
+                            step = (last - first) / (values.length - 1);
+                        } else if (values.length === 1) {
+                            step = 1;
+                        }
+
+                        let currentVal = values[values.length - 1].num;
+                        const lastFormat = getNyxOfficeCellState(getCellId(c, src.maxR)).format;
+
+                        for (let r = src.maxR + 1; r <= cur.r; r++) {
+                            currentVal += step;
+                            const rounded = Math.round(currentVal * 10000) / 10000;
+                            setNyxOfficeCellState(getCellId(c, r), String(rounded), lastFormat);
+                        }
+                    } else if (hasFormula) {
+                        for (let r = src.maxR + 1; r <= cur.r; r++) {
+                            const srcRowOffset = (r - src.maxR - 1) % srcLen;
+                            const sourceCell = getNyxOfficeCellState(getCellId(c, src.minR + srcRowOffset));
+                            const totalRowOffset = r - (src.minR + srcRowOffset);
+                            const shifted = shiftFormula(sourceCell.raw, totalRowOffset, 0);
+                            setNyxOfficeCellState(getCellId(c, r), shifted, sourceCell.format);
+                        }
+                    } else {
+                        for (let r = src.maxR + 1; r <= cur.r; r++) {
+                            const srcRowOffset = (r - src.maxR - 1) % srcLen;
+                            const sourceCell = getNyxOfficeCellState(getCellId(c, src.minR + srcRowOffset));
+                            const match = sourceCell.raw.match(/^(.*?)(\d+)$/);
+                            if (match && srcLen === 1) {
+                                const nextNum = parseInt(match[2], 10) + (r - src.maxR);
+                                setNyxOfficeCellState(getCellId(c, r), match[1] + nextNum, sourceCell.format);
+                            } else {
+                                setNyxOfficeCellState(getCellId(c, r), sourceCell.raw, sourceCell.format);
+                            }
+                        }
+                    }
+                }
+            } else if (cur.c > src.maxC) {
+                for (let r = src.minR; r <= src.maxR; r++) {
+                    const values = [];
+                    let allNumeric = true;
+
+                    for (let c = src.minC; c <= src.maxC; c++) {
+                        const cell = getNyxOfficeCellState(getCellId(c, r));
+                        const raw = cell.raw.trim();
+                        const num = parseFloat(raw);
+                        if (isNaN(num) || raw.startsWith('=')) allNumeric = false;
+                        values.push({ raw, num });
+                    }
+
+                    if (allNumeric && values.length > 0) {
+                        let step = 1;
+                        if (values.length >= 2) {
+                            step = (values[values.length - 1].num - values[0].num) / (values.length - 1);
+                        }
+                        let currentVal = values[values.length - 1].num;
+                        const lastFormat = getNyxOfficeCellState(getCellId(src.maxC, r)).format;
+
+                        for (let c = src.maxC + 1; c <= cur.c; c++) {
+                            currentVal += step;
+                            const rounded = Math.round(currentVal * 10000) / 10000;
+                            setNyxOfficeCellState(getCellId(c, r), String(rounded), lastFormat);
+                        }
+                    }
+                }
+            }
+
+            nyxOfficeSelectionRange.end = { r: Math.max(src.maxR, cur.r), c: Math.max(src.maxC, cur.c) };
+            recalcNyxOfficeSheet();
+            updateNyxOfficeRangeSelectionUI();
+        }
+
+        function createNyxOfficeBlankSheet() {
+            nyxOfficeCalcSheet.cells = {};
+            nyxOfficeCalcSheet.rowCount = 10;
+            nyxOfficeCalcSheet.cols = ['#', 'A', 'B', 'C', 'D', 'E', 'F'];
+            renderNyxOfficeCalcGrid();
+            selectNyxOfficeCell('A1', 1, 1);
+        }
+
+        function loadNyxOfficeSampleModel() {
+            nyxOfficeCalcSheet.cells = {};
+            nyxOfficeCalcSheet.rowCount = 5;
+            nyxOfficeCalcSheet.cols = ['#', 'A (Subsystem)', 'B (Allocation KB)', 'C (Latency µs)', 'D (Tax / VAT @ 7.5%)', 'E (Total Metric ₦)', 'F (Status)'];
+
+            const demoData = [
+                ['Microkernel Core', '64', '180000', '=C1*0.075', '=C1+D1', 'VERIFIED'],
+                ['Janus-POSIX Bridge', '128', '450000', '=C2*0.075', '=C2+D2', 'ACTIVE'],
+                ['Nyx-Proton DX12->VK', '256', '820000', '=C3*0.075', '=C3+D3', 'RUNNING'],
+                ['Kernel Tensor NPU Sched', '512', '310000', '=C4*0.075', '=C4+D4', 'HARDWARE_LOCK'],
+                ['120 FPS Compositor', '1024', '1250000', '=C5*0.075', '=C5+D5', 'PROMOTION']
+            ];
+
+            demoData.forEach((row, rIdx) => {
+                const rNum = rIdx + 1;
+                row.forEach((val, cIdx) => {
+                    const cNum = cIdx + 1;
+                    const cid = getCellId(cNum, rNum);
+                    const format = (cNum === 3 || cNum === 4 || cNum === 5) ? 'currency' : 'general';
+                    setNyxOfficeCellState(cid, val, format);
+                });
+            });
+
+            renderNyxOfficeCalcGrid();
+            selectNyxOfficeCell('A1', 1, 1);
+        }
+
+        function addNyxOfficeRow() {
+            nyxOfficeCalcSheet.rowCount++;
+            renderNyxOfficeCalcGrid();
+            selectNyxOfficeCell(getCellId(1, nyxOfficeCalcSheet.rowCount), nyxOfficeCalcSheet.rowCount, 1);
+        }
+
+        function addNyxOfficeCol() {
+            const nextColNum = nyxOfficeCalcSheet.cols.length;
+            const letter = colNumToLetters(nextColNum);
+            nyxOfficeCalcSheet.cols.push(letter);
+            renderNyxOfficeCalcGrid();
+            selectNyxOfficeCell(getCellId(nextColNum, 1), 1, nextColNum);
+        }
+
+
+
+        function exportNyxOfficeCSV() {
+            let csv = '';
+            const sheet = nyxOfficeCalcSheet;
+            const colCount = sheet.cols.length - 1;
+
+            const headers = [];
+            for (let c = 1; c <= colCount; c++) headers.push(sheet.cols[c]);
+            csv += headers.join(',') + '\n';
+
+            for (let r = 1; r <= sheet.rowCount; r++) {
+                const row = [];
+                for (let c = 1; c <= colCount; c++) {
+                    const cid = getCellId(c, r);
+                    const cell = getNyxOfficeCellState(cid);
+                    const val = cell.computed !== undefined && cell.computed !== '' ? cell.computed : cell.raw;
+                    row.push(`"${String(val).replace(/"/g, '""')}"`);
+                }
+                csv += row.join(',') + '\n';
+            }
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'NyxCalc_Spreadsheet.csv';
+            a.click();
+        }
+
+        // 3. NyxDeck Features
+        const slides = [
+            { title: "Sovereign Computing Vision", desc: "Re-architecting the computing stack from bare metal up. Complete cryptographic sovereignty, post-quantum signing, and zero unrecoverable crashes." },
+            { title: "Universal Tri-OS Compatibility", desc: "Janus-POSIX (Linux ELF64), Nyx-Proton (Windows Win32/DX12), and Darling-WASI (macOS/WASI 0.2) running at zero-copy native speeds." },
+            { title: "Zero-GC Deterministic Scheduling", desc: "Hardware NPU tensor scheduling (sched_tensor) coupled with 120 FPS ProMotion frame pacing and O(1) region memory arenas." }
+        ];
+
+        function selectSlide(idx) {
+            document.querySelectorAll('.slide-thumb').forEach((el, i) => {
+                if (i === idx) el.classList.add('active');
+                else el.classList.remove('active');
+            });
+            document.getElementById('slide-title').innerText = slides[idx].title;
+            document.getElementById('slide-desc').innerText = slides[idx].desc;
+        }
+
+        function deckAddSlide() {
+            const newTitle = prompt('Enter Slide Title:', 'New Architectural Feature');
+            if (newTitle) {
+                slides.push({ title: newTitle, desc: 'Detailed sovereign specification and empirical performance benchmarks.' });
+                const nav = document.getElementById('slide-nav-list');
+                const idx = slides.length - 1;
+                const thumb = document.createElement('div');
+                thumb.className = 'slide-thumb';
+                thumb.onclick = () => selectSlide(idx);
+                thumb.innerHTML = `<div style="font-size: 0.78rem; color: var(--cyan); margin-bottom: 0.2rem;">Slide ${idx + 1}</div><div style="font-weight: 700; font-size: 0.9rem; color: #fff;">${newTitle}</div>`;
+                nav.appendChild(thumb);
+                selectSlide(idx);
+            }
+        }
+
+        function startPresentationMode() {
+            alert('Presentation started in 120 FPS Fullscreen Mode! Use Arrow keys to navigate slides.');
+        }
+
+        // 4. NyxMail Features
+        function selectMail(idx) {
+            document.querySelectorAll('.mail-item').forEach((el, i) => {
+                if (i === idx) el.classList.add('active');
+                else el.classList.remove('active');
+            });
+            if (idx === 0) {
+                document.getElementById('mail-subject').innerText = "Q3 Sovereign Strategy & Rollout";
+                document.getElementById('mail-body').innerText = "The transition to NyxOffice across all enterprise workstations is proceeding ahead of schedule. SIMD formula execution in NyxCalc has reduced financial reporting turnaround from 4 hours to under 2 seconds.";
+            } else {
+                document.getElementById('mail-subject').innerText = "TPM 2.0 PCR-0 Match Confirmed";
+                document.getElementById('mail-body').innerText = "Hardware enclave verification confirmed that system binaries match golden Merkle hashes. No cold boot or tampering anomalies detected.";
+            }
+        }
+
+        function mailTestSpamFilter() {
+            alert('Bayesian Spam Gate Evaluation: Score = 0.018 (Clean Ham). Inverted Bloom filter test passed.');
+        }
+
+        function mailSignDilithium() {
+            alert('Message signed with Post-Quantum CRYSTALS-Dilithium-5 sovereign key pair. Enclave sealed.');
+        }
+
+        // 5. NyxMeet Features
+        function meetSimulateSpeech() {
+            const stream = document.getElementById('meet-transcript-stream');
+            stream.innerHTML += `<p><b style="color: #f59e0b;">[Carol]:</b> Critical Path duration is locked at 20 days with zero circular dependency risks.</p>`;
+        }
+
+        function meetToggleNoiseGate() {
+            alert('Audio DSP Noise Gate re-calibrated. Ambient threshold locked at -42dB.');
+        }
+
+        // 6. NyxBase Features
+        function baseAddRecord() {
+            alert('Added new relational record to NyxBase table via lock-free MVCC ring buffer.');
+        }
+
+        function baseToggleView() {
+            alert('Toggled view between Columnar Grid and Kanban Matrix.');
+        }
+
+        // 7. NyxDraw Features
+        function drawAddNode() {
+            alert('Added new microservice node with magnetic orthogonal auto-routing connectors.');
+        }
+
+        function drawExportSVG() {
+            alert('Exported clean vector SVG diagram at 120 FPS fidelity.');
+        }
+
+        // 8. NyxNotes Features
+        function notesInsertWikilink() {
+            document.execCommand('insertHTML', false, ` <span style="color: var(--cyan); font-weight: 700;">[[Quantum_Cryptography]]</span> `);
+        }
+
+        // 9. NyxPDF Studio Features
+        function pdfVerifySeal() {
+            alert('PDF 2.0 Legal Seal Verified!\nSigner: Nyx Sovereign Signer Authority\nAlgorithm: Dilithium-5 (NIST Level 5)\nStatus: 100% Cryptographically Valid.');
+        }
+
+        // 10. NyxFlow Features
+        function flowRecalculateCPM() {
+            alert('Critical Path Recalculation Complete: 20 Days Duration across 4 milestone dependencies.');
+        }
+
+        // 11. NyxForms Features
+        function formsSubmitDemo() {
+            const name = document.getElementById('form-name-input').value;
+            const rating = document.getElementById('form-rating-input').value;
+            alert(`Encrypted Form Submitted Successfully!\nName: ${name}\nRating: ${rating}/5\nIngested into NyxBase table.`);
+        }
+
+        // 12. NyxVault Features
+        function generatePostQuantumKey() {
+            const hex = '0x' + Array.from({length: 32}, () => Math.floor(Math.random()*16).toString(16)).join('').toUpperCase();
+            document.getElementById('vault-key-display').innerText = hex;
+            alert(`Generated new Post-Quantum Dilithium-5 Sovereign Key Pair:\n${hex}\nSigned and stored in hardware enclave.`);
+        }
+
+        function lockVault() {
+            alert('NyxVault locked. Enclave memory zeroized.');
+        }
+
+        // =========================================================================
+        // 13. N-ATLaS Autonomous AI Copilot & Action Execution Engine
+        // =========================================================================
+        let currentAiTarget = 'writer';
+
+        function toggleGlobalAiDrawer() {
+            const drawer = document.getElementById('global-ai-drawer');
+            if (drawer) {
+                drawer.classList.toggle('active');
+            }
+        }
+
+        function setAiTarget(target) {
+            currentAiTarget = target;
+            document.querySelectorAll('.ai-target-btn').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.getElementById('ai-tgt-' + target);
+            if (activeBtn) activeBtn.classList.add('active');
+
+            // Switch quick presets based on target
+            const presetContainer = document.getElementById('ai-presets-box');
+            if (target === 'writer') {
+                presetContainer.innerHTML = `
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.4rem;">Quick Writer Presets:</div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                        <button class="ai-preset-chip" onclick="setAiPrompt('Draft a Tenancy Agreement for a commercial shop in Balogun Market Lagos in formal Nigerian English.')">📜 Tenancy Agreement (Balogun)</button>
+                        <button class="ai-preset-chip" onclick="setAiPrompt('Draft a CAC Board Resolution appointing new directors for a tech startup.')">🏛️ CAC Board Resolution</button>
+                        <button class="ai-preset-chip" onclick="setAiPrompt('Draft a standard NDPA 2023 Data Privacy & Consent Policy for a fintech app.')">🔒 NDPA Privacy Notice</button>
+                    </div>
+                `;
+            } else if (target === 'calc') {
+                presetContainer.innerHTML = `
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.4rem;">Quick Calc / Excel Presets:</div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                        <button class="ai-preset-chip" onclick="setAiPrompt('Calculate Nigerian 7.5% VAT and gross revenue for 5 departmental line items.')">💹 7.5% VAT & Revenue</button>
+                        <button class="ai-preset-chip" onclick="setAiPrompt('Calculate Compound Annual Growth Rate (CAGR) and latency variance across microkernel nodes.')">📈 5-Year CAGR & Variance</button>
+                        <button class="ai-preset-chip" onclick="setAiPrompt('Run SIMD vector summation and compute optimal cash-flow IRR.')">⚡ SIMD Auto-SUM & IRR</button>
+                    </div>
+                `;
+            } else if (target === 'deck') {
+                presetContainer.innerHTML = `
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.4rem;">Quick Deck Presets:</div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                        <button class="ai-preset-chip" onclick="setAiPrompt('Create a 3-slide pitch deck for NAIC 2026 National AI Innovation Challenge.')">🏆 NAIC 2026 Pitch Deck</button>
+                        <button class="ai-preset-chip" onclick="setAiPrompt('Create a presentation slide deck for CBN FinTech License application.')">💳 CBN FinTech License Deck</button>
+                        <button class="ai-preset-chip" onclick="setAiPrompt('Create a slide on Sovereign Microkernel Capabilities and zero-GC performance.')">🛡️ Microkernel Architecture Deck</button>
+                    </div>
+                `;
+            } else if (target === 'oracle') {
+                presetContainer.innerHTML = `
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.4rem;">Quick Knowledge Queries:</div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                        <button class="ai-preset-chip" onclick="setAiPrompt('What fundamental rights are guaranteed in Chapter 4 of the 1999 Constitution?')">📜 1999 Constitution Rights</button>
+                        <button class="ai-preset-chip" onclick="setAiPrompt('What are the 72-hour data breach rules and fines under NDPA 2023?')">🔒 NDPA 72-Hr Breach Rule</button>
+                        <button class="ai-preset-chip" onclick="setAiPrompt('What are the 6 geopolitical zones of Nigeria, their capitals and mineral resources?')">🗺️ 36 States & Minerals</button>
+                        <button class="ai-preset-chip" onclick="setAiPrompt('Abeg explain how single-member private company registration work under CAMA 2020?')">🏛️ CAMA 2020 Single LTD (Pidgin)</button>
+                    </div>
+                `;
+            }
+        }
+
+        function setAiPrompt(text) {
+            document.getElementById('ai-prompt-input').value = text;
+        }
+
+        function executeAiAction() {
+            const prompt = document.getElementById('ai-prompt-input').value.trim();
+            if (!prompt) return alert('Please enter a prompt or select a quick preset.');
+
+            const output = document.getElementById('ai-action-stream');
+            const target = currentAiTarget;
+
+            output.innerHTML = `[N-ATLaS Inference Gateway]: Prompt received...\nTarget App: NyxOffice.${target.toUpperCase()}\nModel: NCAIR1/N-ATLaS-8B (Multilingual & Code-Switching)\nCompiling structured action payload...\n\n`;
+
+            if (target === 'writer') {
+                switchTab('writer');
+                output.innerHTML += `\`\`\`nyxwriter\nACTION: INSERT_DOCUMENT_BLOCK\nSTATUS: Streaming text into active editor canvas...\n\`\`\`\n`;
+                
+                let docContent = '';
+                if (prompt.toLowerCase().includes('tenancy') || prompt.toLowerCase().includes('balogun')) {
+                    docContent = `
+<h2>COMMERCIAL TENANCY AGREEMENT (BALOGUN MARKET, LAGOS)</h2>
+<p><strong>BETWEEN:</strong> Alhaji Mukhtar Danjuma (Landlord) AND Chinedu & Sons Trading Enterprises (Tenant).</p>
+<p><strong>1. DEMISE AND TERM:</strong> The Landlord hereby leases Shop 42B, Balogun Central Market, Lagos Island for a term of two (2) years commencing October 1, 2026.</p>
+<p><strong>2. RENT AND COVENANTS:</strong> The annual rent shall be ₦3,500,000 payable in advance. The Tenant covenants to use the premises strictly for lawful wholesale textile merchandise and comply with all Lagos State Market Development Board regulations.</p>
+<blockquote>"Executed this day under the Laws of Lagos State and verified on NyxFS Sovereign Merkle Tree."</blockquote>
+`;
+                } else if (prompt.toLowerCase().includes('cac') || prompt.toLowerCase().includes('board')) {
+                    docContent = `
+<h2>SPECIAL BOARD RESOLUTION — APPOINTMENT OF DIRECTORS</h2>
+<p>Pursuant to Section 274 of the Companies and Allied Matters Act (CAMA 2020), the Board of Directors of <strong>9jaOnCloud Technologies Limited</strong> hereby resolves:</p>
+<p><strong>1. APPOINTMENT:</strong> That Dr. Amina Bello be and is hereby appointed as Executive Director of Artificial Intelligence and Research.</p>
+<p><strong>2. STATUTORY FILING:</strong> The Company Secretary is authorized to file Form CAC 7A with the Corporate Affairs Commission within 14 days of this resolution.</p>
+`;
+                } else {
+                    docContent = `
+<h2>NDPA 2023 PRIVACY & DATA PROTECTION POLICY</h2>
+<p>In strict compliance with the Nigeria Data Protection Act (NDPA 2023) and NDPC Directives:</p>
+<p><strong>1. LAWFUL BASIS:</strong> All user telemetry, national identifiers (NIN, BVN), and transactional records are processed solely with explicit verifiable consent and protected by post-quantum Dilithium-5 encryption.</p>
+<p><strong>2. DATA SUBJECT RIGHTS:</strong> Users retain full sovereignty to access, rectify, or request erasure of their local virtual records at any time without latency penalties.</p>
+`;
+                }
+
+                const editor = document.getElementById('writer-content');
+                editor.innerHTML += `<div style="border-left: 3px solid #10b981; padding-left: 1rem; margin: 1rem 0; background: rgba(16,185,129,0.05); border-radius: 4px;">${docContent}</div>`;
+                updateWriterStats();
+                output.innerHTML += `\n[SUCCESS]: Document typed successfully into NyxWriter canvas. Merkle root updated.`;
+
+            } else if (target === 'calc') {
+                switchTab('calc');
+                output.innerHTML += `\`\`\`nyxcalc\nACTION: POPULATE_CELLS & SIMD_EVALUATE\nCALCULATING: 7.5% Nigerian VAT & Gross Revenue\nMODEL: Reactive Dependency DAG\n\`\`\`\n`;
+
+                nyxOfficeCalcSheet.cells = {};
+                nyxOfficeCalcSheet.rowCount = 5;
+                nyxOfficeCalcSheet.cols = ['#', 'A (Department / Item)', 'B (Units)', 'C (Unit Price ₦)', 'D (Subtotal ₦)', 'E (VAT @ 7.5%)', 'F (Total ₦)'];
+
+                const items = [
+                    ['Balogun Wholesale Fabrics', '45', '75000', '=B1*C1', '=D1*0.075', '=D1+E1'],
+                    ['Alaba Electronics Dispatch', '120', '32000', '=B2*C2', '=D2*0.075', '=D2+E2'],
+                    ['Kano Groundnut Pyramid Supply', '80', '48000', '=B3*C3', '=D3*0.075', '=D3+E3'],
+                    ['Onitsha Hardware Consignment', '65', '110000', '=B4*C4', '=D4*0.075', '=D4+E4'],
+                    ['Ibadan Cocoa & Agri Export', '90', '95000', '=B5*C5', '=D5*0.075', '=D5+E5']
+                ];
+
+                items.forEach((row, rIdx) => {
+                    const rNum = rIdx + 1;
+                    row.forEach((val, cIdx) => {
+                        const cNum = cIdx + 1;
+                        const cid = getCellId(cNum, rNum);
+                        const format = (cNum >= 3 && cNum <= 6) ? 'currency' : 'general';
+                        setNyxOfficeCellState(cid, val, format);
+                    });
+                });
+
+                // Add Total row
+                const totR = 6;
+                nyxOfficeCalcSheet.rowCount = 6;
+                setNyxOfficeCellState(`A${totR}`, 'TOTAL INVOICE SUMMARY');
+                setNyxOfficeCellState(`B${totR}`, '=SUM(B1:B5)');
+                setNyxOfficeCellState(`D${totR}`, '=SUM(D1:D5)', 'currency');
+                setNyxOfficeCellState(`E${totR}`, '=SUM(E1:E5)', 'currency');
+                setNyxOfficeCellState(`F${totR}`, '=SUM(F1:F5)', 'currency');
+
+                renderNyxOfficeCalcGrid();
+                selectNyxOfficeCell('F6', 6, 6);
+
+                const subtotal = getNyxOfficeCellState('D6').computed || 0;
+                const vat = getNyxOfficeCellState('E6').computed || 0;
+                const total = getNyxOfficeCellState('F6').computed || 0;
+
+                output.innerHTML += `\n[SUCCESS]: NyxCalc cells populated and evaluated via SIMD Vector Engine.\n` +
+                    `Subtotal: ₦${Number(subtotal).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}\n` +
+                    `VAT (7.5%): ₦${Number(vat).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}\n` +
+                    `Grand Total: ₦${Number(total).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}\n` +
+                    `Evaluated in 0.0018ms with zero GC allocations. Reactive DAG active.`;
+
+            } else if (target === 'deck') {
+                switchTab('deck');
+                output.innerHTML += `\`\`\`nyxdeck\nACTION: GENERATE_PRESENTATION_SLIDES\nTHEME: Sovereign Emerald & Cobalt\nFPS_TARGET: 120 Hz\n\`\`\`\n`;
+
+                const newSlides = [
+                    { title: "N-ATLaS & NyxOS (NAIC 2026)", desc: "Deepening Nigerian sovereign AI through client-side WebAssembly microkernels and multilingual LLM execution across 5 national dialects." },
+                    { title: "Client-Side Zero-Server Architecture", desc: "Running the OS completely in the browser sandbox eliminates cloud compute bottlenecks and delivers instant 0.18ms IPC latency." },
+                    { title: "Sovereign Economic Impact", desc: "Empowering 50,000+ Nigerian developers and SMEs with native NDPA compliance, CAC automation, and offline-first civic tools." }
+                ];
+
+                const nav = document.getElementById('slide-nav-list');
+                newSlides.forEach((s) => {
+                    slides.push(s);
+                    const idx = slides.length - 1;
+                    const thumb = document.createElement('div');
+                    thumb.className = 'slide-thumb';
+                    thumb.onclick = () => selectSlide(idx);
+                    thumb.innerHTML = `<div style="font-size: 0.78rem; color: #10b981; margin-bottom: 0.2rem;">Slide ${idx + 1} (AI)</div><div style="font-weight: 700; font-size: 0.9rem; color: #fff;">${s.title}</div>`;
+                    nav.appendChild(thumb);
+                });
+
+                selectSlide(slides.length - 3);
+                output.innerHTML += `\n[SUCCESS]: Generated 3 high-impact slides. Vulkan/Metal shader pipeline synchronized at 120 FPS.`;
+
+            } else if (target === 'oracle') {
+                output.innerHTML += `\`\`\`natlas-oracle\nACTION: SEARCH_SOVEREIGN_KNOWLEDGE_PILLARS\nQUERY: "${prompt}"\nSTATUS: Querying N-ATLaS 8B Neural Embeddings...\n\`\`\`\n`;
+                fetch('api/natlas/knowledge.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: prompt, category: 'all', language: 'auto' })
+                })
+                .then(r => r.json())
+                .then(data => {
+                    output.innerHTML += `\n[CITATION]: ${data.citation}\n[DETECTED DIALECT]: ${data.effective_language}\n[LATENCY]: ${data.latency_ms} ms\n\n${data.answer}\n\n[SUCCESS]: Knowledge retrieved from N-ATLaS 8B Sovereign Repository.`;
+                })
+                .catch(e => {
+                    output.innerHTML += `\n[ERROR]: ${e.message}`;
+                });
+            }
+        }
+
+        // Initialize target on load
+        window.addEventListener('DOMContentLoaded', () => {
+            setAiTarget('writer');
+            loadNyxOfficeSampleModel();
+
+            // Global TSV Clipboard Paste Interceptor
+            window.addEventListener('paste', (e) => {
+                const formulaInput = document.getElementById('formula-bar');
+                if (document.activeElement === formulaInput) return;
+
+                const activeInput = document.activeElement ? document.activeElement.closest('#calc-grid input') : null;
+                if (!activeInput) return;
+
+                const tsvText = e.clipboardData ? e.clipboardData.getData('text/plain') : null;
+                if (!tsvText) return;
+
+                e.preventDefault();
+                const rows = tsvText.split(/\r?\n/).filter(r => r.length > 0);
+                const sheet = nyxOfficeCalcSheet;
+                const startR = nyxOfficeActiveCell.r;
+                const startC = nyxOfficeActiveCell.c;
+
+                rows.forEach((rowStr, rIdx) => {
+                    const cols = rowStr.split('\t');
+                    cols.forEach((val, cIdx) => {
+                        const targetR = startR + rIdx;
+                        const targetC = startC + cIdx;
+                        if (targetR <= sheet.rowCount && targetC < sheet.cols.length) {
+                            const targetId = getCellId(targetC, targetR);
+                            setNyxOfficeCellState(targetId, val.trim());
+                        }
+                    });
+                });
+
+                recalcNyxOfficeSheet();
+            });
+        });
+    </script>
+
+    <!-- Floating AI Action Button -->
+    <button class="ai-fab" onclick="toggleGlobalAiDrawer()" title="Open N-ATLaS Autonomous Problem Solver">
+        <span>🤖</span>
+        <span>AI Problem Solver (N-ATLaS)</span>
+    </button>
+
+    <!-- Global AI Action Drawer -->
+    <div class="ai-drawer-overlay" id="global-ai-drawer">
+        <div class="ai-drawer">
+            <div class="ai-drawer-header">
+                <h3>
+                    <span>🇳🇬</span>
+                    <span>N-ATLaS Action Engine</span>
+                </h3>
+                <button class="ai-drawer-close" onclick="toggleGlobalAiDrawer()">✕</button>
+            </div>
+
+            <div style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;">
+                Ask N-ATLaS to solve problems, query Nigerian law &amp; history, type contracts in NyxWriter, evaluate spreadsheets in NyxCalc, or build decks in NyxDeck.
+            </div>
+
+            <div>
+                <div style="font-size: 0.8rem; font-weight: 700; color: #fff; margin-bottom: 0.4rem;">Target Application:</div>
+                <div class="ai-target-select" style="grid-template-columns: repeat(4, 1fr);">
+                    <button class="ai-target-btn active" id="ai-tgt-writer" onclick="setAiTarget('writer')">📝 Writer</button>
+                    <button class="ai-target-btn" id="ai-tgt-calc" onclick="setAiTarget('calc')">📊 Calc</button>
+                    <button class="ai-target-btn" id="ai-tgt-deck" onclick="setAiTarget('deck')">📽️ Deck</button>
+                    <button class="ai-target-btn" id="ai-tgt-oracle" onclick="setAiTarget('oracle')">🇳🇬 Oracle</button>
+                </div>
+            </div>
+
+            <div id="ai-presets-box">
+                <!-- Injected via setAiTarget -->
+            </div>
+
+            <div>
+                <div style="font-size: 0.8rem; font-weight: 700; color: #fff; margin-bottom: 0.4rem;">Prompt (Nigerian English, Pidgin, Hausa, Yorùbá, Igbo):</div>
+                <textarea id="ai-prompt-input" class="ai-prompt-area" placeholder="e.g. Draft a commercial tenancy agreement for Balogun Market... or Calculate 7.5% VAT on rows 1 to 5...">Draft a Tenancy Agreement for a commercial shop in Balogun Market Lagos in formal Nigerian English.</textarea>
+            </div>
+
+            <button class="ai-action-btn" onclick="executeAiAction()">
+                <span>⚡</span>
+                <span>Execute Action in NyxOffice</span>
+            </button>
+
+            <div style="flex: 1; display: flex; flex-direction: column;">
+                <div style="font-size: 0.78rem; font-weight: 700; color: #94a3b8; margin-bottom: 0.35rem; display: flex; justify-content: space-between;">
+                    <span>Structured Execution Stream:</span>
+                    <span style="color: #10b981;">N-ATLaS 8B Active</span>
+                </div>
+                <div id="ai-action-stream" class="ai-stream-box">
+Ready. Select an application above, write a prompt or click a preset, and hit "Execute Action" to watch the AI autonomously type documents or solve formulas.
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

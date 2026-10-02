@@ -1,0 +1,30 @@
+import std.io
+import std.audio.portaudio
+
+fn main() {
+    println("=================================================================")
+    println("  🎙️  NYX PORTAUDIO DSP & MEL SPECTROGRAM ENGINE (std.audio)     ")
+    println("=================================================================")
+
+    // 1. Audio Engine & Sample Stream Config
+    let engine = portaudio.create_audio_engine(16000, 1) // 16kHz Mono standard for Whisper AI
+    let rate = engine.sample_rate
+    println("✓ Low-Latency Audio Engine Configured: SampleRate=" + rate.to_string() + " Hz (Whisper Native)")
+
+    // 2. Frequency to Mel-Scale Spectrogram Conversion (Whisper AI Front-End)
+    let f1 = 1000.0
+    let mel1 = portaudio.hz_to_mel(f1)
+    println("✓ Hz to Mel Transformation: 1000 Hz -> " + mel1.to_string() + " Mel")
+
+    let back_f1 = portaudio.mel_to_hz(mel1)
+    println("✓ Inverse Mel Transformation: " + mel1.to_string() + " Mel -> " + back_f1.to_string() + " Hz")
+
+    // 3. Digital Signal Processing: Biquad Low-Pass Audio Filter
+    let filter = portaudio.create_lowpass_filter(4000.0, 0.707)
+    let processed = portaudio.process_sample(&filter, 0.82)
+    println("✓ Biquad Lowpass Filter Output (Input=0.82): " + processed.to_string())
+
+    println("=================================================================")
+    println("  ✓ AUDIO DSP & MEL SPECTROGRAM ENGINE COMPLETE - ALL OK         ")
+    println("=================================================================")
+}

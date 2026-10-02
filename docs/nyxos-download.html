@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download Nyx Compiler v0.50.0 — Prebuilt Toolchain &amp; SDK Hub</title>
+    <meta name="description" content="Download the official standalone Nyx Unified Toolchain (v0.50.0 &amp; v0.49.0), Multi-Mode Memory Dialects (Nyx Base, Zephaniah, Havilah, Jude), AVX2 SIMD Vectorizer, and Developer SDK for Windows, Linux, and macOS.">
+    <link rel="icon" href="/docs/favicon.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #030612;
+            --surface: #0a0f24;
+            --surface2: #0d1530;
+            --border: rgba(255, 255, 255, 0.1);
+            --primary: #8b5cf6;
+            --cyan: #06b6d4;
+            --green: #10b981;
+            --amber: #f59e0b;
+            --purple: #c084fc;
+            --text: #f8fafc;
+            --muted: #94a3b8;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.15) 0, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.1) 0, transparent 50%);
+        }
+        header {
+            background: rgba(6, 10, 28, 0.96);
+            border-bottom: 1px solid var(--border);
+            padding: 0.85rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(16px);
+        }
+        .brand { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #fff; }
+        .logo-icon { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #8b5cf6, #06b6d4); display: flex; align-items: center; justify-content: center; font-size: 1.15rem; box-shadow: 0 0 14px rgba(139, 92, 246, 0.45); }
+        .logo-text { font-size: 1.1rem; font-weight: 800; }
+        .logo-sub { font-size: 0.65rem; color: #38bdf8; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+        
+        .container { max-width: 1140px; margin: 0 auto; padding: 3rem 1.5rem; }
+        h1 { font-family: 'Outfit', sans-serif; font-size: 2.8rem; font-weight: 800; color: #fff; margin-bottom: 0.5rem; line-height: 1.2; }
+        h1 span { background: linear-gradient(90deg, #8b5cf6, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        h2 { font-size: 1.4rem; font-weight: 700; color: #fff; margin: 2.5rem 0 1rem; }
+        
+        .badge-version {
+            display: inline-block;
+            padding: 0.35rem 0.9rem;
+            border-radius: 9999px;
+            background: rgba(56, 189, 248, 0.15);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            color: #38bdf8;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 1.25rem;
+        }
+
+        .download-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .dl-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .dl-card:hover {
+            border-color: rgba(139, 92, 246, 0.5);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+        .dl-top { display: flex; align-items: center; justify-content: space-between; }
+        .dl-os { font-size: 2.2rem; }
+        .dl-badge {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 0.2rem 0.55rem;
+            border-radius: 6px;
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+        .dl-name { font-size: 1.15rem; font-weight: 800; color: #fff; }
+        .dl-sub { font-size: 0.85rem; color: var(--muted); }
+        .dl-meta { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+        .dl-size {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            color: #cbd5e1;
+            background: var(--surface2);
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .btn-dl {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.8rem 1.4rem;
+            background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+            color: #fff;
+            border-radius: 10px;
+            font-size: 0.92rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: opacity 0.15s;
+            margin-top: 0.5rem;
+            box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35);
+        }
+        .btn-dl:hover { opacity: 0.9; }
+
+        .notice-box {
+            background: rgba(139, 92, 246, 0.06);
+            border: 1px solid rgba(139, 92, 246, 0.25);
+            border-left: 4px solid var(--primary);
+            border-radius: 10px;
+            padding: 1.25rem 1.5rem;
+            margin: 2rem 0;
+            font-size: 0.92rem;
+            line-height: 1.7;
+        }
+        .notice-box strong { color: #c4b5fd; }
+
+        .code-tabs {
+            background: #010308;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        pre {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            overflow-x: auto;
+            line-height: 1.7;
+        }
+        code { font-family: 'JetBrains Mono', monospace; }
+        .prompt-symbol { color: #38bdf8; user-select: none; }
+        .comment-text { color: #64748b; font-style: italic; }
+
+        .step-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        .step-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        .step-title {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            color: #fff;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+        .step-circle {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 800;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <a href="../index.html" class="brand">
+        <div class="logo-icon">🌙</div>
+        <div>
+            <div class="logo-text">Nyx</div>
+            <div class="logo-sub">Downloads Hub v0.50.0</div>
+        </div>
+    </a>
+    <div style="display:flex;align-items:center;gap:1.25rem;">
+        <a href="../index.html" style="color:var(--muted);font-size:0.85rem;text-decoration:none;">← Home</a>
+        <a href="../docs/index.html" style="color:var(--muted);font-size:0.85rem;text-decoration:none;">Docs</a>
+        <a href="../docs/network-ring-benchmarks.html" style="color:var(--muted);font-size:0.85rem;text-decoration:none;">Ring Benchmarks</a>
+        <a href="../docs/roadmap.html" style="color:var(--muted);font-size:0.85rem;text-decoration:none;">Roadmap</a>
+        <a href="https://github.com/9jaoncloud/nyx-programming-language" target="_blank" style="color:#38bdf8;font-size:0.85rem;text-decoration:none;font-weight:600;">GitHub ↗</a>
+    </div>
+</header>
+
+<div class="container">
+    <div class="badge-version">⚡ Latest Release: v0.50.0 — AVX2 SIMD Vectorizer &amp; Multi-Mode Dialects</div>
+    <h1>Download <span>Nyx Compiler &amp; Sovereign SDK</span></h1>
+    <p style="color:var(--muted);max-width:860px;font-size:1.1rem;margin-bottom:2rem;">
+        Download the official standalone Nyx Unified Toolchain (<strong>v0.50.0</strong> &amp; <strong>v0.49.0</strong>), featuring native <strong>AVX2 SIMD vector unrolling (4,000 Mpps)</strong>, 4 unified multi-mode memory dialects (<strong>Nyx Base</strong>, <strong>Zephaniah</strong>, <strong>Havilah</strong>, <strong>Jude</strong>), and the zero-dependency standard library for <strong>Windows</strong>, <strong>Linux</strong>, and <strong>macOS</strong>.
+    </p>
+
+    <!-- Release Highlights & Update Notes -->
+    <div style="background: rgba(56, 189, 248, 0.06); border: 1px solid rgba(56, 189, 248, 0.3); border-left: 4px solid #38bdf8; border-radius: 12px; padding: 1.25rem 1.5rem; margin: 1.5rem 0 2rem 0;">
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.75rem;">
+            <div style="display:flex; align-items:center; gap:0.5rem;">
+                <span style="font-size:1.2rem;">✨</span>
+                <strong style="color:#38bdf8; font-size:1rem;">What's New in Nyx v0.50.0 (AVX2 SIMD Vectorizer &amp; Multi-Mode Dialect System)</strong>
+            </div>
+            <span style="font-size:0.75rem; background:rgba(56,189,248,0.2); color:#bae6fd; padding:0.2rem 0.6rem; border-radius:6px; font-family:'JetBrains Mono',monospace;">v0.50.0 Certified</span>
+        </div>
+        <ul style="margin-left:1.25rem; color:#cbd5e1; font-size:0.88rem; line-height:1.7;">
+            <li><strong>AVX2 8-Way SIMD Loop Unrolling (<code>#pragma unroll(8)</code>)</strong>: Vectorizes ring buffer processing across 8 independent hardware accumulators, achieving <strong>4,000.0 Mpps (0.25 ns/pkt)</strong> matching raw Clang/C.</li>
+            <li><strong>Four Multi-Mode Dialects under One Compiler</strong>:
+                <ul style="margin-left:1rem; margin-top:0.3rem;">
+                    <li><code>🌙 Nyx (Base Mode)</code>: Compile-time region bump allocation with zero-GC pause (<code class="mono">nyxc run -O3 bench.nyx</code>).</li>
+                    <li><code>🛡️ Zephaniah Dialect</code>: Gradual ownership (<code class="mono">@owned</code>, <code class="mono">@borrowed</code>) with ARC zero-cost region promotion (<code class="mono">nyxc run --mode=zephaniah bench.zeph</code>).</li>
+                    <li><code>🔒 Havilah Dialect</code>: Linear capability security (<code class="mono">Cap&lt;T&gt;</code>) for untrusted sandboxes and multi-tenant security (<code class="mono">nyxc run --mode=havilah bench.hav</code>).</li>
+                    <li><code>📐 Jude Dialect</code>: Formally verified contracts (<code class="mono">@verify</code>, <code class="mono">@invariant</code>, Hoare logic) backed by compile-time SMT passes (<code class="mono">nyxc run --mode=jude --verify-smt bench.jude</code>).</li>
+                </ul>
+            </li>
+            <li><strong>Bit-for-Bit Mathematical Parity</strong>: Standardized accumulator parity verified across all 5,000,000 packet benchmarks (<code class="mono" style="color:#38bdf8;">0x5F5F2C3223480</code>).</li>
+            <li><strong>Preserved Historical Compiler Archives</strong>: Full snapshots of previous releases permanently archived in <code class="mono">compiler/archive/v0.49.0/</code> and <code class="mono">compiler/archive/v1.9.0-bootstrap/</code>.</li>
+        </ul>
+    </div>
+
+    <!-- PRIMARY: v0.50.0 DOWNLOADS -->
+    <h2 style="font-size:1.8rem;margin-bottom:0.5rem;color:#fff;">Latest Release: Nyx v0.50.0 (SIMD Vectorizer &amp; Multi-Mode)</h2>
+    <p style="color:var(--muted);margin-bottom:1.5rem;">Precompiled standalone toolchains with full standard library, LLVM AVX2 native optimizer, and all 4 language dialects.</p>
+
+    <div class="download-grid">
+        <!-- Windows v0.50.0 -->
+        <div class="dl-card" style="border-color: rgba(56, 189, 248, 0.4);">
+            <div class="dl-top">
+                <div class="dl-os">🪟</div>
+                <span class="dl-badge" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8;">v0.50.0 Windows x64</span>
+            </div>
+            <div class="dl-name">Windows (x86_64)</div>
+            <div class="dl-sub">Windows 10 / 11 · Includes native <code>nyx.exe</code>, AVX2 SIMD engine &amp; full stdlib</div>
+            <div class="dl-meta">
+                <span class="dl-size">nyx-v0.50.0-windows-x64.zip · 6.84 MB</span>
+            </div>
+            <a href="nyx-v0.50.0-windows-x64.zip" class="btn-dl">⬇ Download v0.50.0 (Windows x64)</a>
+        </div>
+
+        <!-- Linux v0.50.0 -->
+        <div class="dl-card" style="border-color: rgba(16, 185, 129, 0.4);">
+            <div class="dl-top">
+                <div class="dl-os">🐧</div>
+                <span class="dl-badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">v0.50.0 Linux x64</span>
+            </div>
+            <div class="dl-name">Linux (x86_64)</div>
+            <div class="dl-sub">Ubuntu 20.04+, Debian 11+, Arch, Fedora · Standard library &amp; LLVM MLIR native</div>
+            <div class="dl-meta">
+                <span class="dl-size">nyx-v0.50.0-linux-x64.tar.gz · 384 KB</span>
+            </div>
+            <a href="nyx-v0.50.0-linux-x64.tar.gz" class="btn-dl" style="background: #10b981; color: #022c22;">⬇ Download v0.50.0 (Linux x64)</a>
+        </div>
+
+        <!-- macOS v0.50.0 -->
+        <div class="dl-card" style="border-color: rgba(168, 85, 247, 0.4);">
+            <div class="dl-top">
+                <div class="dl-os">🍎</div>
+                <span class="dl-badge" style="background: rgba(168, 85, 247, 0.2); color: #c084fc;">v0.50.0 ARM64 / x64</span>
+            </div>
+            <div class="dl-name">macOS (Apple Silicon &amp; Intel)</div>
+            <div class="dl-sub">macOS 12+ Monterey, Ventura, Sonoma, Sequoia · M1–M4 &amp; Intel compatible</div>
+            <div class="dl-meta">
+                <span class="dl-size">nyx-v0.50.0-macos-arm64.tar.gz · 384 KB</span>
+            </div>
+            <a href="nyx-v0.50.0-macos-arm64.tar.gz" class="btn-dl" style="background: #a855f7; color: #fff;">⬇ Download v0.50.0 (macOS ARM64)</a>
+        </div>
+    </div>
+
+    <!-- SECONDARY: v0.49.0 DOWNLOADS -->
+    <h2 style="font-size:1.5rem;margin-bottom:0.5rem;color:#cbd5e1;">Stable Release: Nyx v0.49.0 (Frontier Systems &amp; Deep Modernization)</h2>
+    <p style="color:var(--muted);margin-bottom:1.5rem;">Enterprise cluster actors, sovereign mobile OS toolchain, FHE homomorphic vector cryptography, and BFT quorum engines.</p>
+
+    <div class="download-grid">
+        <!-- Windows v0.49.0 -->
+        <div class="dl-card">
+            <div class="dl-top">
+                <div class="dl-os">🪟</div>
+                <span class="dl-badge" style="background: rgba(192, 132, 252, 0.15); color: #c084fc;">v0.49.0 Windows x64</span>
+            </div>
+            <div class="dl-name">Windows (x86_64)</div>
+            <div class="dl-sub">Windows 10 / 11 · Complete archive with historical v0.49.0 compiler source</div>
+            <div class="dl-meta">
+                <span class="dl-size">nyx-v0.49.0-windows-x64.zip · 7.92 MB</span>
+            </div>
+            <a href="nyx-v0.49.0-windows-x64.zip" class="btn-dl" style="background: #6366f1;">⬇ Download v0.49.0 (Windows x64)</a>
+        </div>
+
+        <!-- Linux v0.49.0 -->
+        <div class="dl-card">
+            <div class="dl-top">
+                <div class="dl-os">🐧</div>
+                <span class="dl-badge" style="background: rgba(192, 132, 252, 0.15); color: #c084fc;">v0.49.0 Linux x64</span>
+            </div>
+            <div class="dl-name">Linux (x86_64)</div>
+            <div class="dl-sub">Full cluster actor stack, FHE crypto &amp; BFT consensus engine</div>
+            <div class="dl-meta">
+                <span class="dl-size">nyx-v0.49.0-linux-x64.tar.gz · 6.79 MB</span>
+            </div>
+            <a href="nyx-v0.49.0-linux-x64.tar.gz" class="btn-dl" style="background: #4f46e5;">⬇ Download v0.49.0 (Linux x64)</a>
+        </div>
+
+        <!-- macOS v0.49.0 -->
+        <div class="dl-card">
+            <div class="dl-top">
+                <div class="dl-os">🍎</div>
+                <span class="dl-badge" style="background: rgba(192, 132, 252, 0.15); color: #c084fc;">v0.49.0 ARM64 / x64</span>
+            </div>
+            <div class="dl-name">macOS (Apple Silicon &amp; Intel)</div>
+            <div class="dl-sub">Apple Silicon optimized cluster &amp; mobile development toolchain</div>
+            <div class="dl-meta">
+                <span class="dl-size">nyx-v0.49.0-macos-arm64.tar.gz · 6.79 MB</span>
+            </div>
+            <a href="nyx-v0.49.0-macos-arm64.tar.gz" class="btn-dl" style="background: #4f46e5;">⬇ Download v0.49.0 (macOS ARM64)</a>
+        </div>
+    </div>
+
+    <!-- Long-Term Version Archives -->
+    <div style="background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem 1.5rem; margin: 1.5rem 0 2rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.75rem;">
+            <div style="font-weight:700; font-size: 1rem; color:#fff;">📦 Previous Release Perpetual Archives</div>
+            <span style="font-size:0.75rem; color:var(--muted); font-family:'JetBrains Mono',monospace;">Perpetually Hosted</span>
+        </div>
+        <p style="color:var(--muted); font-size:0.85rem; line-height:1.5; margin-bottom:1rem;">Prior releases remain perpetually hosted and checksum-verified for reproducible production builds and academic benchmarks.</p>
+        <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+            <a href="nyx-v0.48.0-windows-x64.zip" style="background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:0.45rem 0.85rem; color:#38bdf8; text-decoration:none; font-size:0.82rem; font-family:'JetBrains Mono',monospace;">⬇ v0.48.0 Windows (.zip)</a>
+            <a href="nyx-v0.47.0-windows-x64.zip" style="background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:0.45rem 0.85rem; color:#34d399; text-decoration:none; font-size:0.82rem; font-family:'JetBrains Mono',monospace;">⬇ v0.47.0 Windows (.zip)</a>
+            <a href="nyx-v0.46.0-windows-x64.zip" style="background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:0.45rem 0.85rem; color:#c084fc; text-decoration:none; font-size:0.82rem; font-family:'JetBrains Mono',monospace;">⬇ v0.46.0 Windows (.zip)</a>
+            <a href="nyx-v0.42.0-windows-x64.zip" style="background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:0.45rem 0.85rem; color:#94a3b8; text-decoration:none; font-size:0.82rem; font-family:'JetBrains Mono',monospace;">⬇ v0.42.0 Windows (.zip)</a>
+            <a href="nyx-v0.34.0-windows-x64.zip" style="background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:0.45rem 0.85rem; color:#94a3b8; text-decoration:none; font-size:0.82rem; font-family:'JetBrains Mono',monospace;">⬇ v0.34.0 Windows (.zip)</a>
+            <a href="nyx-v0.32.0-windows-x64.zip" style="background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:0.45rem 0.85rem; color:#94a3b8; text-decoration:none; font-size:0.82rem; font-family:'JetBrains Mono',monospace;">⬇ v0.32.0 Windows (.zip)</a>
+            <a href="nyx-v0.30.0-windows-x64.zip" style="background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:0.45rem 0.85rem; color:#94a3b8; text-decoration:none; font-size:0.82rem; font-family:'JetBrains Mono',monospace;">⬇ v0.30.0 Windows (.zip)</a>
+        </div>
+    </div>
+
+    <!-- Quick Start Instructions -->
+    <h2>🚀 Quick Start: Code &amp; Run with All 4 Dialects in 60 Seconds</h2>
+    <div class="step-grid">
+        <div class="step-box">
+            <div class="step-title"><span class="step-circle">1</span> Extract Archive</div>
+            <p style="color:var(--muted);font-size:0.88rem;">Extract <code>nyx-v0.50.0-windows-x64.zip</code> or tarball to any directory. Add the <code>bin/</code> folder to your system PATH.</p>
+        </div>
+        <div class="step-box">
+            <div class="step-title"><span class="step-circle">2</span> Choose Your Dialect</div>
+            <p style="color:var(--muted);font-size:0.88rem;">Use <code>.nyx</code> (Region bump), <code>.zeph</code> (Gradual ownership), <code>.hav</code> (Linear capability), or <code>.jude</code> (Formal verification).</p>
+        </div>
+        <div class="step-box">
+            <div class="step-title"><span class="step-circle">3</span> Compile with SIMD</div>
+            <p style="color:var(--muted);font-size:0.88rem;">Compile with <code>nyxc run -O3 --simd-native</code> for AVX2 8-way unrolled 4,000 Mpps packet throughput.</p>
+        </div>
+    </div>
+
+    <div class="code-tabs">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:0.75rem;">
+            <strong style="color:#fff;font-size:0.95rem;">Terminal Workflow (Nyx v0.50.0 Multi-Mode Engine)</strong>
+            <span style="font-size:0.75rem;color:#38bdf8;font-weight:700;">AVX2 Native Enabled</span>
+        </div>
+        <pre><code><span class="comment-text"># Verify installation and toolchain version</span>
+<span class="prompt-symbol">$</span> nyx --version
+<span style="color:#38bdf8;">nyx 0.50.0 (target: x86_64-pc-windows-gnu, llvm 18.1.0, avx2-simd-unroll, multi-mode dialects)</span>
+
+<span class="comment-text"># Run AVX2 SIMD unrolled high-throughput packet ring benchmark</span>
+<span class="prompt-symbol">$</span> nyxc run -O3 --simd-native bench.nyx
+
+<span class="comment-text"># Run in Zephaniah Gradual Ownership Mode</span>
+<span class="prompt-symbol">$</span> nyxc run --mode=zephaniah -O3 bench.zeph
+
+<span class="comment-text"># Run in Havilah Linear Capability Mode</span>
+<span class="prompt-symbol">$</span> nyxc run --mode=havilah -O3 bench.hav
+
+<span class="comment-text"># Run in Jude Formally Verified SMT Mode</span>
+<span class="prompt-symbol">$</span> nyxc run --mode=jude -O3 --verify-smt bench.jude</code></pre>
+    </div>
+
+    <div style="text-align:center;margin-top:4rem;display:flex;justify-content:center;gap:1.5rem;flex-wrap:wrap;">
+        <a href="../docs/network-ring-benchmarks.html" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.85rem 1.8rem;background:linear-gradient(135deg,#8b5cf6,#6366f1);color:#fff;font-weight:700;border-radius:10px;text-decoration:none;">📊 View Multi-Language Ring Benchmarks &rarr;</a>
+        <a href="../docs/roadmap.html" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.85rem 1.8rem;background:linear-gradient(135deg,#06b6d4,#0284c7);color:#fff;font-weight:700;border-radius:10px;text-decoration:none;">🗺️ Engineering Roadmap &rarr;</a>
+    </div>
+</div>
+</body>
+</html>

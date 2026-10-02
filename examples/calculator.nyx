@@ -1,0 +1,85 @@
+enum CalcOp {
+    None,
+    Add,
+    Subtract,
+    Multiply,
+    Divide
+}
+
+struct Calculator {
+    display: Int,
+    previous: Int,
+    op: CalcOp
+}
+
+impl Calculator {
+    fn new() -> Calculator {
+        Calculator {
+            display: 0,
+            previous: 0,
+            op: CalcOp.None
+        }
+    }
+
+    fn set_value(self: &mut Calculator, v: Int) {
+        self.display = v;
+    }
+
+    fn set_op(self: &mut Calculator, op: CalcOp) {
+        self.previous = self.display;
+        self.op = op;
+        self.display = 0;
+    }
+
+    fn compute(self: &mut Calculator) -> Int {
+        let current = self.display;
+        let mut res = current;
+        match self.op {
+            CalcOp.Add => { res = self.previous + current; },
+            CalcOp.Subtract => { res = self.previous - current; },
+            CalcOp.Multiply => { res = self.previous * current; },
+            CalcOp.Divide => {
+                if current != 0 {
+                    res = self.previous / current;
+                } else {
+                    res = 0;
+                }
+            },
+            CalcOp.None => { res = current; }
+        }
+        self.display = res;
+        self.op = CalcOp.None;
+        return res;
+    }
+}
+
+fn main() {
+    println("==================================================");
+    println("🧮 NYX SCIENTIFIC CALCULATOR ENGINE (CLI RUNNER)");
+    println("==================================================");
+
+    let mut calc = Calculator.new();
+    
+    // 12 + 28
+    calc.set_value(12);
+    calc.set_op(CalcOp.Add);
+    calc.set_value(28);
+    let sum = calc.compute();
+    println("Calculation 1 (12 + 28) = ", sum);
+
+    // 40 * 5
+    calc.set_op(CalcOp.Multiply);
+    calc.set_value(5);
+    let prod = calc.compute();
+    println("Calculation 2 (40 * 5) = ", prod);
+
+    // 200 / 4
+    calc.set_op(CalcOp.Divide);
+    calc.set_value(4);
+    let div = calc.compute();
+    println("Calculation 3 (200 / 4) = ", div);
+
+    println("==================================================");
+    println("✅ All calculations completed successfully!");
+    println("==================================================");
+}

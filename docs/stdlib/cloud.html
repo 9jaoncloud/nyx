@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>std.cloud (Multi-Cloud S3 & Distributed Raft Mesh) — Nyx Docs</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+
+    <main>
+        <div style="display:inline-block; padding: 0.35rem 0.85rem; border-radius: 9999px; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; margin-bottom: 1rem;">
+            Standard Library Module
+        </div>
+        <h1>std.cloud — Multi-Cloud Storage &amp; Distributed Raft Mesh</h1>
+        <p class="lead" style="font-size: 1.15rem; color: var(--text-muted); margin-bottom: 2rem;">
+            A complete function-by-function guide to <strong>multi-cloud object storage (AWS S3, GCP GCS, Azure Blob), peer-to-peer Raft consensus, and zero-copy RPC actor messaging</strong> in Nyx.
+        </p>
+
+        <!-- ── Part 1: Why This Module Exists ── -->
+        <h2>1. Why Does This Module Exist?</h2>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+            <div style="background: #111827; border: 1px solid rgba(239, 68, 68, 0.3); padding: 1.25rem; border-radius: 8px;">
+                <h4 style="color: #f87171; margin-top: 0;">🛑 The Real-World Problem</h4>
+                <p style="color: #94a3b8; font-size: 0.92rem; line-height: 1.6; margin-bottom: 0;">
+                    Writing cloud apps in Python or Node.js requires massive SDK bundles (AWS SDK is &gt; 100 MB), suffers from vendor lock-in with incompatible APIs between AWS, Google Cloud, and Azure, and building distributed high-availability services requires external heavy daemons (like Consul or etcd).
+                </p>
+            </div>
+            <div style="background: #111827; border: 1px solid rgba(16, 185, 129, 0.3); padding: 1.25rem; border-radius: 8px;">
+                <h4 style="color: #34d399; margin-top: 0;">🛡️ The Nyx Solution</h4>
+                <p style="color: #94a3b8; font-size: 0.92rem; line-height: 1.6; margin-bottom: 0;">
+                    <code>std.cloud</code> provides a <strong>single unified zero-dependency API</strong> across AWS S3, Google GCS, and Azure Blob with native HTTP/3 streaming, plus an <strong>embedded native Raft consensus engine</strong> so any Nyx binary can self-cluster across nodes with zero external servers.
+                </p>
+            </div>
+        </div>
+
+        <!-- ── Part 2: Functions Reference ── -->
+        <h2>2. Function Reference &amp; Tutorial</h2>
+
+        <!-- Function 1: create_client -->
+        <div style="background: #0f172a; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem;">
+            <h3 style="margin-top: 0; color: #38bdf8; font-family: 'JetBrains Mono', monospace;">cloud::create_client(provider: String, region: String) -&gt; CloudStorageClient</h3>
+            <p style="color: #cbd5e1;">Creates a cloud storage client configured for <code>"aws_s3"</code>, <code>"gcp_gcs"</code>, or <code>"azure_blob"</code>.</p>
+            <p><strong>Example:</strong></p>
+            <pre><code>import std.cloud;
+
+// Instantly connect without heavy external SDK dependencies:
+let s3_client = cloud::create_client("aws_s3", "us-east-1");
+let gcs_client = cloud::create_client("gcp_gcs", "europe-west3");</code></pre>
+        </div>
+
+        <!-- Function 2: put_object -->
+        <div style="background: #0f172a; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem;">
+            <h3 style="margin-top: 0; color: #38bdf8; font-family: 'JetBrains Mono', monospace;">cloud::put_object(client: &amp;CloudStorageClient, bucket: String, key: String, data: String) -&gt; bool</h3>
+            <p style="color: #cbd5e1;">Streams data directly to the specified cloud bucket and key location with zero-copy buffer pooling.</p>
+            <p><strong>Example:</strong></p>
+            <pre><code>import std.cloud;
+
+let client = cloud::create_client("aws_s3", "us-east-1");
+let ok = cloud::put_object(&amp;client, "telemetry-bucket", "metrics/2026-08.json", '{"status":"healthy"}');
+if ok {
+    print("Uploaded to S3 successfully!");
+}</code></pre>
+        </div>
+
+        <!-- Function 3: get_object -->
+        <div style="background: #0f172a; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem;">
+            <h3 style="margin-top: 0; color: #38bdf8; font-family: 'JetBrains Mono', monospace;">cloud::get_object(client: &amp;CloudStorageClient, bucket: String, key: String) -&gt; String</h3>
+            <p style="color: #cbd5e1;">Downloads object payload string directly into the caller's regional arena.</p>
+            <p><strong>Example:</strong></p>
+            <pre><code>import std.cloud;
+
+let client = cloud::create_client("aws_s3", "us-east-1");
+let content = cloud::get_object(&amp;client, "telemetry-bucket", "metrics/2026-08.json");
+print("Downloaded content: {content}");</code></pre>
+        </div>
+
+        <!-- Function 4: join_raft_cluster -->
+        <div style="background: #0f172a; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem;">
+            <h3 style="margin-top: 0; color: #a855f7; font-family: 'JetBrains Mono', monospace;">cloud::join_raft_cluster(node_id: String, peers: [String]) -&gt; RaftNode</h3>
+            <p style="color: #cbd5e1;">Initializes an embedded distributed Raft consensus state machine to replicate key-value state across servers with leader election and log replication.</p>
+            <p><strong>Example:</strong></p>
+            <pre><code>import std.cloud;
+
+let peers = ["10.0.0.1:9000", "10.0.0.2:9000", "10.0.0.3:9000"];
+let node = cloud::join_raft_cluster("node-1", peers);
+print("Raft cluster active! Leader: {node.get_leader()}");</code></pre>
+        </div>
+
+        <!-- ── Part 3: Complete Working Tutorial ── -->
+        <h2>3. Complete Tutorial: Distributed Multi-Cloud Backup Service</h2>
+        <div class="code-box">
+<pre><code>import std.cloud;
+import std.time;
+
+fn main() {
+    print("Initializing Multi-Cloud Sync Engine...");
+
+    let s3 = cloud::create_client("aws_s3", "us-east-1");
+    let gcs = cloud::create_client("gcp_gcs", "us-central1");
+
+    let backup_data = '{"database_snapshot":"2026-08-31T12:00:00Z","records":5000000}';
+
+    // 1. Upload primary snapshot to AWS S3
+    let s3_ok = cloud::put_object(&amp;s3, "primary-backups", "db/latest.json", backup_data);
+    print("AWS S3 Upload: {s3_ok ? 'SUCCESS' : 'FAILED'}");
+
+    // 2. Mirror snapshot to Google Cloud Storage (Cross-Cloud Disaster Recovery)
+    let gcs_ok = cloud::put_object(&amp;gcs, "dr-mirror-bucket", "db/latest.json", backup_data);
+    print("GCP GCS Mirror: {gcs_ok ? 'SUCCESS' : 'FAILED'}");
+
+    print("Zero-vendor-lockin multi-cloud synchronization complete!");
+}</code></pre>
+        </div>
+
+        <p style="margin-top: 2rem;">
+            <a href="sec.html">&larr; Previous: std.sec (Security)</a> | 
+            <a href="ui.html">Next: std.ui (Material UI Engine) &rarr;</a>
+        </p>
+    </main>
+
+    <script src="../navigation.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

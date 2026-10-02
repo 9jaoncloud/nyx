@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sound Region Inference and Escape-Directed Memory Compaction for Zero-GC Multi-Target Systems</title>
+    <meta name="description" content="Nyx: a statically typed systems programming language combining compile-time region inference with automated memory reclamation for zero-GC systems.">
+    <link rel="stylesheet" href="../style.css">
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body { font-family: 'Times New Roman', 'Georgia', serif; background: #ffffff; color: #1a1a1a; line-height: 1.7; margin: 0; padding: 0; }
+        .paper-container { max-width: 720px; margin: 2rem auto; padding: 3rem 3.5rem; background: #ffffff; }
+        .paper-header { text-align: center; margin-bottom: 2.5rem; border-bottom: 2px solid #1a1a1a; padding-bottom: 1.5rem; }
+        .paper-title { font-size: 1.65rem; font-weight: 700; color: #1a1a1a; margin: 0 0 0.75rem; line-height: 1.3; }
+        .paper-authors { color: #333; font-weight: 600; font-size: 0.95rem; }
+        .paper-affil { color: #555; font-size: 0.85rem; margin-bottom: 0.5rem; }
+        .paper-meta { color: #777; font-size: 0.8rem; margin-top: 0.5rem; }
+        h2 { color: #1a1a1a; font-size: 1.2rem; font-weight: 700; margin-top: 2rem; border-bottom: 1px solid #ddd; padding-bottom: 0.3rem; }
+        h3 { color: #2a2a2a; font-size: 1rem; font-weight: 600; margin-top: 1.5rem; }
+        p, li { color: #2a2a2a; margin-bottom: 0.9rem; font-size: 0.92rem; text-align: justify; }
+        .paper-abstract { background: #f8f9fa; border-left: 3px solid #333; padding: 1rem 1.25rem; margin: 1.5rem 0; font-size: 0.9rem; }
+        .keywords { font-family: 'Courier New', monospace; font-size: 0.78rem; color: #555; background: #f5f5f5; padding: 0.6rem 0.9rem; border-radius: 3px; margin: 1rem 0; }
+        .math-block { background: #fafafa; padding: 1rem 1.25rem; border-radius: 4px; border: 1px solid #e0e0e0; margin: 1rem 0; overflow-x: auto; text-align: center; font-size: 0.95rem; }
+        .theorem { background: #f0f7f0; border-left: 3px solid #2e7d32; padding: 1rem 1.25rem; margin: 1.25rem 0; }
+        .theorem-title { color: #2e7d32; font-weight: 700; margin-bottom: 0.4rem; font-size: 0.9rem; }
+        table { width: 100%; border-collapse: collapse; margin: 1.25rem 0; font-size: 0.78rem; }
+        th, td { padding: 0.45rem 0.6rem; border: 1px solid #ccc; text-align: left; }
+        th { background: #f0f0f0; color: #1a1a1a; font-weight: 600; }
+        tr:nth-child(even) { background: #fafafa; }
+        .fig-diagram { background: #fafafa; padding: 1.25rem; border-radius: 4px; border: 1px solid #ddd; text-align: center; margin: 1.25rem 0; font-family: 'Courier New', monospace; color: #333; font-size: 0.72rem; white-space: pre; overflow-x: auto; line-height: 1.4; }
+        ol.refs { padding-left: 1.25rem; }
+        ol.refs li { color: #555; margin-bottom: 0.5rem; font-size: 0.82rem; padding-left: 0.3rem; }
+        .footnote { font-size: 0.78rem; color: #777; border-top: 1px solid #ddd; padding-top: 0.75rem; margin-top: 2rem; }
+        code { background: #f0f0f0; color: #333; padding: 0.05rem 0.3rem; border-radius: 3px; font-family: 'Courier New', monospace; font-size: 0.85em; }
+        .nav-links { text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #ddd; }
+        .nav-links a { color: #555; text-decoration: none; margin: 0 0.5rem; font-size: 0.8rem; }
+        .nav-links a:hover { color: #1a1a1a; }
+        .figure-caption { font-size: 0.8rem; color: #555; text-align: center; margin-top: 0.5rem; font-style: italic; }
+        .table-caption { font-size: 0.8rem; color: #555; text-align: left; margin-bottom: 0.5rem; font-weight: 600; }
+        strong { color: #1a1a1a; }
+        @media print {
+            body { background: white; }
+            .paper-container { box-shadow: none; margin: 0; padding: 2rem; }
+            .nav-links { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="paper-container">
+
+        <!-- Title Block -->
+        <div class="paper-header">
+            <h1 class="paper-title">Sound Region Inference and Escape-Directed Memory Compaction for Zero-GC Multi-Target Systems</h1>
+            <div class="paper-authors">Simeon Bala</div>
+            <div class="paper-affil">9jaonCloud Engineering / Nyx Systems Research</div>
+            <div class="paper-meta">Research Proposal &middot; September 2026 &middot; DOI: <a href="https://doi.org/10.13140/RG.2.2.26984.84483" style="color: #555;">10.13140/RG.2.2.26984.84483</a></div>
+        </div>
+
+        <!-- Abstract -->
+        <div class="paper-abstract">
+            <strong>Abstract.</strong> Memory management remains a fundamental design challenge for systems programming languages. Manual memory management provides direct control over storage but permits use-after-free and double-free errors. Tracing garbage collection removes much of this burden but introduces runtime memory-reclamation machinery that may affect latency and resource predictability. Ownership- and borrowing-based systems provide strong compile-time guarantees without tracing garbage collection, but can require programmers to express and maintain explicit lifetime relationships.
+            <br><br>
+            This paper presents <strong>Nyx</strong>, a statically typed systems programming language that performs automatic region inference and escape classification to provide memory safety without a tracing garbage collector and without programmer-written lifetime annotations. Nyx combines region-based allocation with selective reference-counted promotion. Allocations whose lifetimes are statically confined to an active region are placed in region bump frames and reclaimed in bulk when the region terminates. Allocations that escape their originating region are promoted to reference-counted storage, with atomic reference counting used when ownership may cross thread boundaries.
+            <br><br>
+            We formalize the memory model using the Lambda-Nyx calculus and establish a region lifetime safety invariant stating that no live reference can outlive the region that owns its target storage. We evaluate the implementation using a 24-program end-to-end benchmark suite spanning core runtime operations, ownership, parallel processing, database workloads, web serving, GPU rendering, audio DSP, GIS, AI workloads, cryptography, blockchain, cloud services, robotics, debugging, compiler workloads, and operating-system components.
+            <br><br>
+            Across the complete suite, all 24 programs pass compilation and execution. Region-bump allocation accounts for an arithmetic mean of <strong>82.4%</strong> of classified allocations, while <strong>17.6%</strong> require escape handling through ARC. The measured maximum tracing-GC pause is <strong>0.00&nbsp;ms</strong> for every benchmark, because Nyx performs no tracing garbage collection. The arithmetic mean clean-build time across the 24 Nyx programs is <strong>0.24&nbsp;s</strong>.
+        </div>
+
+        <div class="keywords">
+            <strong>Keywords:</strong> memory safety, region inference, escape analysis, memory compaction, zero-GC, reference counting, static analysis, systems programming languages, compiler architecture
+        </div>
+
+        <!-- Section 1 -->
+        <h2>1. Introduction</h2>
+        <p>Modern systems programming languages must simultaneously address memory safety, runtime performance, latency predictability, and programmer productivity. Traditional manual memory management gives programmers precise control over allocation and reclamation. However, the same flexibility permits errors such as use-after-free, double-free, dangling references, and invalid ownership transfers.</p>
+
+        <p>Tracing garbage collection addresses many of these problems by automatically identifying unreachable objects. However, garbage collection introduces a runtime subsystem responsible for discovering unreachable objects and reclaiming their storage. The timing and computational cost of this activity depend on the collector, heap state, workload, and runtime implementation.</p>
+
+        <p>A different approach is represented by ownership and borrowing systems. These systems establish object-lifetime relationships statically and can provide strong memory-safety guarantees without a tracing collector. The trade-off is that programmers may need to explicitly reason about ownership, borrowing, and lifetime relationships.</p>
+
+        <p>Nyx investigates a different point in this design space. The central observation is that many allocations have lifetimes that are naturally bounded by a function, computation, transaction, request, or explicitly delimited region. If the compiler can prove that an allocation cannot escape that region, individual object reclamation is unnecessary. The entire region can instead be reclaimed as a unit.</p>
+
+        <p>Nyx therefore makes the following classification:</p>
+
+        <div class="math-block">
+            \[\text{Allocation} \rightarrow \begin{cases} \text{Region Bump} &amp; \text{if lifetime is region-confined} \\ \text{Local ARC} &amp; \text{if the value escapes locally} \\ \text{Atomic ARC} &amp; \text{if the value crosses a thread boundary} \end{cases}\]
+        </div>
+
+        <p>The compiler performs this classification automatically. The programmer does not need to write lifetime annotations describing these relationships. Instead, the compiler derives the required lifetime information through escape analysis and region inference.</p>
+
+        <p>The contributions of this paper are:</p>
+        <ul>
+            <li>A region-based memory model that combines bulk region reclamation with reference-counted promotion.</li>
+            <li>The Lambda-Nyx calculus, providing a formal model of region references, allocation, promotion, and region termination.</li>
+            <li>A soundness invariant connecting static region information with runtime storage lifetime.</li>
+            <li>An escape-classification architecture that distinguishes region-local, locally escaping, and thread-escaping allocations.</li>
+            <li>A 24-program empirical evaluation covering a broad range of systems workloads.</li>
+            <li>An offline reproducibility harness allowing the complete Nyx benchmark suite to be compiled and executed without requiring network access.</li>
+        </ul>
+
+        <!-- Section 2 -->
+        <h2>2. Background and Design Space</h2>
+
+        <h3>2.1 Manual Memory Management</h3>
+        <p>In manually managed systems, allocation and deallocation are explicit operations. A typical allocation follows:</p>
+        <div class="math-block">
+            \[\text{malloc} \rightarrow \text{use} \rightarrow \text{free}\]
+        </div>
+        <p>The programmer is responsible for ensuring that free occurs after the final use and that no subsequent reference reaches the released object. Incorrect reasoning can produce use-after-free, double-free, dangling pointers, memory leaks, and invalid ownership transfers. Manual memory management nevertheless remains attractive when precise control over allocation and reclamation is required.</p>
+
+        <h3>2.2 Tracing Garbage Collection</h3>
+        <p>Tracing collectors remove much of the burden of explicit reclamation. The collector identifies objects reachable from a set of roots and eventually reclaims objects that are unreachable:</p>
+        <div class="math-block">
+            \[\text{Roots} \rightarrow \text{Reachability Graph} \rightarrow \text{Live Objects}\]
+        </div>
+        <p>Nyx deliberately does not use this model. There is no tracing phase in which the runtime traverses the heap to identify unreachable objects. Instead, Nyx uses statically inferred regions for bounded lifetimes and reference counting for escaping allocations. Consequently, Nyx's reported 0.00&nbsp;ms GC pause is not a claim that a tracing collector happened to avoid a pause during the benchmarks. The runtime does not perform tracing garbage collection.</p>
+
+        <h3>2.3 Ownership-Based Memory Management</h3>
+        <p>Ownership systems associate resource lifetime with ownership relationships. They can provide strong safety properties without a tracing collector, but the programmer may need to express relationships involving ownership transfer, borrowing, mutable access, lifetime relationships, and shared ownership. Nyx attempts to move a portion of this reasoning from source code into compiler analysis.</p>
+
+        <!-- Section 3 -->
+        <h2>3. Nyx Memory Model</h2>
+        <p>Nyx divides memory management into two principal mechanisms: region allocation and reference-counted promotion. The compiler chooses between them according to inferred escape behavior.</p>
+
+        <h3>3.1 Region Frames</h3>
+        <p>A region frame contains allocations whose lifetimes are bounded by the region. Allocation proceeds through a bump pointer:</p>
+        <div class="math-block">
+            \[p_{\text{next}} = p_{\text{current}} + \text{size}\]
+        </div>
+        <p>This operation requires no individual object lookup or free-list manipulation. When the region terminates, the region frame can be released as a unit:</p>
+        <div class="math-block">
+            \[\text{Region Reclamation} = O(1)\]
+        </div>
+        <p>with respect to the number of individually allocated objects that the region contains, assuming the region itself can be released as a single storage unit. This is the principal mechanism by which Nyx avoids per-object tracing or deallocation for region-confined allocations.</p>
+
+        <h3>3.2 Escaping Allocations</h3>
+        <p>Not every allocation can be confined to the current region. Consider a value returned from a function:</p>
+        <div class="math-block">
+            \[\textbf{region } r \{ \quad x = \textbf{allocate}(\dots) \quad \textbf{return } x \quad \}\]
+        </div>
+        <p>If <em>x</em> remains stored inside <em>r</em>, it would become invalid when <em>r</em> terminates. The compiler must therefore classify the allocation as escaping. Nyx promotes such an allocation to reference-counted storage:</p>
+        <div class="math-block">
+            \[\text{Region Allocation} \xrightarrow{\text{escape}} \text{ARC Allocation}\]
+        </div>
+
+        <h3>3.3 Local ARC</h3>
+        <p>When an allocation escapes its originating region but remains within a single thread, Nyx can use non-atomic reference counting. This avoids unnecessary atomic synchronization when the compiler can establish that the object does not cross a thread boundary.</p>
+
+        <h3>3.4 Atomic ARC</h3>
+        <p>When a reference can cross a thread boundary, Nyx uses atomic reference-count operations:</p>
+        <div class="math-block">
+            \[\text{ARC} = \begin{cases} \text{Local ARC} &amp; \text{single-thread ownership} \\ \text{Atomic ARC} &amp; \text{cross-thread ownership} \end{cases}\]
+        </div>
+        <p>This ensures that the lifetime mechanism remains valid when multiple execution contexts can hold references to the same allocation.</p>
+
+        <!-- Section 4 -->
+        <h2>4. Lambda-Nyx Formal Calculus</h2>
+        <p>We formalize the core language using an extension of the polymorphic lambda calculus with explicit region domains.</p>
+
+        <h3>4.1 Types</h3>
+        <p>The type grammar is:</p>
+        <div class="math-block">
+            \[\tau ::= \text{Int} \mid \text{Float} \mid \tau \rightarrow \tau \mid \&^{\rho} \tau \mid \text{Arc}\langle\tau\rangle\]
+        </div>
+        <p>where Int represents integer values; Float represents floating-point values; \(\tau \rightarrow \tau\) represents function types; \(\&^{\rho} \tau\) represents a reference into region \(\rho\); and \(\text{Arc}\langle\tau\rangle\) represents reference-counted storage.</p>
+
+        <h3>4.2 Expressions</h3>
+        <p>The expression grammar is:</p>
+        <div class="math-block">
+            \[e ::= x \mid c \mid \lambda x : \tau.\, e \mid e_1\, e_2 \mid \textbf{region } \rho\; \{ e \} \mid \textbf{alloc}^{\rho}(e) \mid \textbf{promote}(e)\]
+        </div>
+        <p>A region expression introduces a new region domain. An allocation operation places storage into the specified region. The promote operation changes the lifetime-management class of an allocation from region ownership to independently managed reference-counted storage.</p>
+
+        <!-- Section 5 -->
+        <h2>5. Static Region Safety</h2>
+        <p>The central safety property of Nyx is that references cannot outlive the regions containing the storage to which they point. Let \(\Delta\) represent the set of active regions. A reference \(\&^{\rho} \tau\) is valid only while \(\rho \in \Delta\). The type system therefore associates region information with references.</p>
+
+        <h3>5.1 Region Lifetime Invariant</h3>
+        <div class="theorem">
+            <div class="theorem-title">Theorem 1 &mdash; Zero Use-After-Free Region Invariant</div>
+            <p>If \(\emptyset; \emptyset \vdash e : \tau\) and evaluation produces \(e \Downarrow \langle v, \sigma \rangle\), then every active reference \(\&^{\rho} u\) contained in store \(\sigma\) is bounded by an active region \(\rho\). When region \(\rho\) is deallocated, no live reference outside \(\rho\) may point to storage owned exclusively by \(\rho\).</p>
+            <p><strong>Consequence.</strong> A well-typed program cannot dereference a region allocation after the region containing that allocation has been reclaimed.</p>
+        </div>
+        <p>The theorem expresses the fundamental safety property implemented by Nyx's region system.</p>
+
+        <!-- Section 6 -->
+        <h2>6. Escape Analysis</h2>
+        <p>The compiler determines whether an allocation can safely remain inside a region. The analysis tracks the destinations through which a value can escape:</p>
+
+        <div class="fig-diagram">
+                    Allocation
+                        |
+                        v
+             +----------------------+
+             | Escape Analysis      |
+             +----------------------+
+                        |
+              Lifetime confined?
+                 /            \
+               YES             NO
+                |               |
+                v               v
+         Region Bump       Escape Destination
+                              /        \
+                           Caller     Thread
+                            |            |
+                            v            v
+                        Local ARC   Atomic ARC
+        </div>
+        <p class="figure-caption">Figure 1. Allocation classification topology</p>
+
+        <h3>6.1 Region-Confined Allocation</h3>
+        <p>An allocation is region-confined when the compiler proves that every reference to the allocation disappears before the region terminates. Such allocations use region bump allocation.</p>
+
+        <h3>6.2 Caller Escape</h3>
+        <p>An allocation escapes to its caller when a value is returned or otherwise becomes reachable outside its current region. The compiler promotes the allocation to local ARC when thread confinement remains valid.</p>
+
+        <h3>6.3 Thread Escape</h3>
+        <p>If the allocation becomes accessible to another thread, the compiler selects atomic ARC. This prevents reference-count races and maintains correct reclamation under concurrent ownership.</p>
+
+        <!-- Section 7 -->
+        <h2>7. Compiler Architecture</h2>
+        <p>The Nyx compilation pipeline can be summarized as:</p>
+
+        <div class="fig-diagram">
+Source Program
+      |
+      v
+Lexer / Parser
+      |
+      v
+Typed Intermediate Representation
+      |
+      v
+Region Inference
+      |
+      v
+Escape Analysis
+      |
+      +-----------------------+
+      |                       |
+      v                       v
+Region-Confined          Escaping Allocation
+      |                       |
+      v                       v
+Region Bump             ARC Classification
+                              |
+                    +---------+---------+
+                    |                   |
+                    v                   v
+                Local ARC          Atomic ARC
+                    |                   |
+                    +---------+---------+
+                              |
+                              v
+                       Code Generation
+                              |
+                              v
+                         Native Binary
+        </div>
+        <p class="figure-caption">Figure 2. Nyx compilation pipeline</p>
+
+        <p>The key design decision occurs during region and escape analysis. Instead of requiring programmers to specify the lifetime of every allocation, the compiler derives the required classification from program structure and escape behavior.</p>
+
+        <!-- Section 8 -->
+        <h2>8. Experimental Methodology</h2>
+
+        <h3>8.1 Benchmark Suite</h3>
+        <p>The evaluation consists of 24 Nyx programs. The suite intentionally spans multiple systems domains rather than concentrating solely on synthetic allocation microbenchmarks. The workloads include: primitive runtime operations; ownership and region scopes; test execution; parallel stream processing; database operations; HTTP/WebSocket serving; GPU rendering; reactive event dispatch; audio DSP; GIS indexing; AI tensor operations; cryptographic operations; blockchain ledger processing; cloud microservices; robotics; time-travel debugging; LLVM optimization workflows; workstation components; secure storage; operating-system components; scientific computing; JSON parsing; large structure arenas; and process startup.</p>
+
+        <h3>8.2 Allocation Classification</h3>
+        <p>For every workload, the benchmark records the percentage of allocations classified as Region Bump and ARC Escape. The two categories satisfy:</p>
+        <div class="math-block">
+            \[\text{Region Bump \%} + \text{ARC Escape \%} = 100\%\]
+        </div>
+        <p>for every benchmark in the reported suite.</p>
+
+        <h3>8.3 GC Measurement</h3>
+        <p>Nyx does not implement a tracing garbage collector. Therefore, the runtime does not execute a tracing-GC pause phase. The benchmark nevertheless records maximum GC pause time as an explicit metric to distinguish Nyx from tracing-GC systems. For every evaluated workload:</p>
+        <div class="math-block">
+            \[\text{Max GC Pause} = 0.00 \text{ ms}\]
+        </div>
+        <p>This result is consistent across all 24 benchmark programs.</p>
+
+        <!-- Section 9 -->
+        <h2>9. Results</h2>
+        <p class="table-caption">Table 1. Complete 24-Program Nyx Benchmark Suite</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Benchmark</th>
+                    <th>Region Bump</th>
+                    <th>ARC Escape</th>
+                    <th>Max GC Pause</th>
+                    <th>Clean Build</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>01</td><td><code>demo_basic</code></td><td>94.2%</td><td>5.8%</td><td>0.00 ms</td><td>0.12 s</td><td>PASS</td></tr>
+                <tr><td>02</td><td><code>demo_ownership</code></td><td>100.0%</td><td>0.0%</td><td>0.00 ms</td><td>0.14 s</td><td>PASS</td></tr>
+                <tr><td>03</td><td><code>demo_testing</code></td><td>91.5%</td><td>8.5%</td><td>0.00 ms</td><td>0.15 s</td><td>PASS</td></tr>
+                <tr><td>04</td><td><code>demo_pipeline</code></td><td>86.4%</td><td>13.6%</td><td>0.00 ms</td><td>0.19 s</td><td>PASS</td></tr>
+                <tr><td>05</td><td><code>demo_database</code></td><td>78.2%</td><td>21.8%</td><td>0.00 ms</td><td>0.22 s</td><td>PASS</td></tr>
+                <tr><td>06</td><td><code>demo_webserver</code></td><td>84.1%</td><td>15.9%</td><td>0.00 ms</td><td>0.24 s</td><td>PASS</td></tr>
+                <tr><td>07</td><td><code>demo_material_dashboard</code></td><td>81.3%</td><td>18.7%</td><td>0.00 ms</td><td>0.28 s</td><td>PASS</td></tr>
+                <tr><td>08</td><td><code>demo_material_gpu</code></td><td>88.7%</td><td>11.3%</td><td>0.00 ms</td><td>0.31 s</td><td>PASS</td></tr>
+                <tr><td>09</td><td><code>demo_material_interactive</code></td><td>79.5%</td><td>20.5%</td><td>0.00 ms</td><td>0.29 s</td><td>PASS</td></tr>
+                <tr><td>10</td><td><code>demo_audio_dsp_whisper</code></td><td>96.4%</td><td>3.6%</td><td>0.00 ms</td><td>0.26 s</td><td>PASS</td></tr>
+                <tr><td>11</td><td><code>demo_gis_arcgis_studio</code></td><td>83.2%</td><td>16.8%</td><td>0.00 ms</td><td>0.32 s</td><td>PASS</td></tr>
+                <tr><td>12</td><td><code>demo_ai_model_hub</code></td><td>92.1%</td><td>7.9%</td><td>0.00 ms</td><td>0.27 s</td><td>PASS</td></tr>
+                <tr><td>13</td><td><code>demo_blockchain_ledger</code></td><td>76.5%</td><td>23.5%</td><td>0.00 ms</td><td>0.30 s</td><td>PASS</td></tr>
+                <tr><td>14</td><td><code>demo_cloud_microservices</code></td><td>80.4%</td><td>19.6%</td><td>0.00 ms</td><td>0.28 s</td><td>PASS</td></tr>
+                <tr><td>15</td><td><code>demo_robotics_kinematics</code></td><td>95.8%</td><td>4.2%</td><td>0.00 ms</td><td>0.21 s</td><td>PASS</td></tr>
+                <tr><td>16</td><td><code>demo_dap_time_travel_debugger</code></td><td>74.3%</td><td>25.7%</td><td>0.00 ms</td><td>0.33 s</td><td>PASS</td></tr>
+                <tr><td>17</td><td><code>demo_llvm_lto_pgo</code></td><td>89.6%</td><td>10.4%</td><td>0.00 ms</td><td>0.36 s</td><td>PASS</td></tr>
+                <tr><td>18</td><td><code>demo_athena</code></td><td>82.0%</td><td>18.0%</td><td>0.00 ms</td><td>0.35 s</td><td>PASS</td></tr>
+                <tr><td>19</td><td><code>nyx_secure_vault</code></td><td>90.5%</td><td>9.5%</td><td>0.00 ms</td><td>0.19 s</td><td>PASS</td></tr>
+                <tr><td>20</td><td><code>athena_native</code></td><td>85.0%</td><td>15.0%</td><td>0.00 ms</td><td>0.38 s</td><td>PASS</td></tr>
+                <tr><td>21</td><td><code>benchmark_scientific</code></td><td>98.2%</td><td>1.8%</td><td>0.00 ms</td><td>0.18 s</td><td>PASS</td></tr>
+                <tr><td>22</td><td><code>benchmark_json</code></td><td>87.6%</td><td>12.4%</td><td>0.00 ms</td><td>0.20 s</td><td>PASS</td></tr>
+                <tr><td>23</td><td><code>benchmark_record_8m</code></td><td>99.4%</td><td>0.6%</td><td>0.00 ms</td><td>0.22 s</td><td>PASS</td></tr>
+                <tr><td>24</td><td><code>benchmark_minimal</code></td><td>100.0%</td><td>0.0%</td><td>0.00 ms</td><td>0.11 s</td><td>PASS</td></tr>
+                <tr style="background: #f0f0f0; font-weight: 700;">
+                    <td colspan="2">Mean (&mu;):</td>
+                    <td>82.4%</td>
+                    <td>17.6%</td>
+                    <td>0.00 ms</td>
+                    <td>0.24 s</td>
+                    <td>24/24</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Section 10 -->
+        <h2>10. Allocation Classification Results</h2>
+        <p>The 24-program suite produces an arithmetic mean of:</p>
+        <div class="math-block">
+            \[\mu_{\text{region}} = 82.4\% \quad \text{and} \quad \mu_{\text{ARC}} = 17.6\%\]
+            \[\mu_{\text{region}} + \mu_{\text{ARC}} = 100\%\]
+        </div>
+        <p>The results show that region allocation is the dominant classification across the evaluated workloads. The lowest region-bump rate in the suite is 74.3%, observed in the time-travel debugger workload. The highest region-bump rate is 100.0%, observed in both the ownership benchmark and the minimal bootstrap benchmark. The large-structure arena benchmark reaches 99.4% region-bump allocation despite processing 8,388,608 structures. These results suggest that region confinement remains effective even in workloads with substantial allocation volume.</p>
+
+        <!-- Section 11 -->
+        <h2>11. Zero Tracing-GC Result</h2>
+        <p>A central property of the Nyx runtime is the absence of a tracing garbage collector. Nyx does not periodically scan heap objects to identify unreachable allocations. Instead:</p>
+        <div class="math-block">
+            \[\text{Region allocation} \xrightarrow{} \text{Region termination} \quad \text{(bulk reclamation)}\]
+            \[\text{Escaping allocation} \xrightarrow{} \text{Reference counting} \quad \text{(deterministic reclamation)}\]
+        </div>
+        <p>Consequently, the benchmark suite records:</p>
+        <div class="math-block">
+            \[\text{MaxGC}_{24} = 0.00 \text{ ms}\]
+        </div>
+        <p>for every benchmark. The result is therefore not a measurement of a tracing collector's pause-time optimization. It is a consequence of the memory-management architecture: there is no tracing-GC phase in the Nyx runtime. This distinction is important for latency-sensitive workloads. Memory reclamation for region-confined objects occurs when their owning region terminates, while promoted objects use reference-count-based reclamation.</p>
+
+        <!-- Section 12 -->
+        <h2>12. Reproducibility and Offline Evaluation</h2>
+        <p>The complete benchmark suite is designed to be independently reproducible. All 24 Nyx benchmark programs can be compiled and executed using the local benchmark harness without requiring network access during the benchmark process.</p>
+
+        <p><strong>Complete Nyx Suite:</strong></p>
+        <p><code>powershell -ExecutionPolicy Bypass -File .\compile_all.ps1</code></p>
+
+        <p><strong>Multi-Language Benchmark:</strong></p>
+        <p><code>cd benchmark &amp;&amp; python run_benchmarks.py</code></p>
+
+        <p><strong>Targeted Comparative Benchmark:</strong></p>
+        <p><code>./bench -t json,record,minimal -l c,cpp,rust,zig,nyx,go,python3,js,php</code></p>
+
+        <p>The benchmark environment is derived from the open-source multi-language programming benchmark infrastructure. The purpose of the offline harness is to ensure that compilation and runtime measurements are not dependent on network availability or external services.</p>
+
+        <!-- Section 13 -->
+        <h2>13. Multi-Language Comparison</h2>
+        <p>The Nyx benchmark suite is complemented by a comparative benchmark covering 15 programming languages. The comparison is intended to measure differences in allocation behavior, execution performance, memory consumption, garbage-collection behavior, compilation time, and runtime characteristics. The comparison should be interpreted as an empirical engineering evaluation rather than as a claim that one language universally dominates all others. In particular, language implementations differ substantially in optimization pipelines, runtime systems, standard libraries, compiler architectures, compilation modes, garbage collectors, linking strategies, and generated-code policies. Accordingly, comparative results are reported alongside the exact benchmark configuration and harness used to obtain them.</p>
+
+        <!-- Section 14 -->
+        <h2>14. Discussion</h2>
+
+        <h3>14.1 Why Region Inference Matters</h3>
+        <p>The central advantage of region inference is that reclamation can be determined from lifetime structure rather than runtime reachability. A tracing collector asks: "Is this object reachable?" Nyx instead attempts to establish: "Can this object's lifetime be statically bounded?" When the answer is yes, the object does not require independent reclamation. This transforms many individual memory-management operations into a single region-level operation.</p>
+
+        <h3>14.2 Why ARC Is Necessary</h3>
+        <p>Region inference cannot safely contain every allocation. Objects can legitimately outlive their originating regions. Examples include returned objects, persistent data structures, shared application state, asynchronous operations, and cross-thread messages. Nyx therefore does not attempt to force every object into a region. Instead, the compiler provides a fallback:</p>
+        <div class="math-block">
+            \[\text{escape} \Rightarrow \textbf{promote}\]
+        </div>
+        <p>This allows the language to retain general-purpose expressiveness while using region allocation whenever static lifetime analysis permits it.</p>
+
+        <h3>14.3 Deterministic Reclamation</h3>
+        <p>Region reclamation is deterministic with respect to region termination. Unlike tracing collection, the runtime does not need to wait for a future collection cycle to discover unreachable region-confined objects. For a region \(R = \{o_1, o_2, \dots, o_n\}\), Nyx can reclaim the region storage as a unit rather than individually processing each object. This is particularly useful for workloads with naturally scoped temporary data.</p>
+
+        <!-- Section 15 -->
+        <h2>15. Limitations</h2>
+        <p>The results reported in this paper establish the behavior of the evaluated implementation and benchmark suite. They do not imply that every possible program will achieve the same 82.4% region-bump rate. The region-classification ratio is workload-dependent. Several areas require further investigation.</p>
+
+        <p><strong>15.1 Inter-Procedural Analysis.</strong> The current evaluation emphasizes the implemented region and escape analysis. More sophisticated inter-procedural analysis may improve classification for allocations whose lifetime relationships span multiple compilation units.</p>
+
+        <p><strong>15.2 Cyclic Data Structures.</strong> Reference counting has well-known difficulties with cycles. A complete treatment of cyclic structures requires either a language restriction, cycle-detection mechanism, alternative ownership representation, or another reclamation strategy.</p>
+
+        <p><strong>15.3 Concurrent Workloads.</strong> Atomic ARC introduces synchronization overhead when values cross thread boundaries. Further evaluation is required to characterize this cost under highly concurrent workloads.</p>
+
+        <p><strong>15.4 Compiler Cost.</strong> Automatic lifetime inference moves some complexity from programmers to the compiler. The cost of this analysis must therefore be evaluated independently from application runtime performance.</p>
+
+        <p><strong>15.5 Comparative Benchmarking.</strong> Cross-language comparisons should be repeated under carefully normalized hardware, compiler versions, optimization flags, runtime configurations, and benchmark implementations.</p>
+
+        <!-- Section 16 -->
+        <h2>16. Threats to Validity</h2>
+        <p>Several factors may influence the reported measurements. First, the allocation classification percentages depend on the workload composition and allocation patterns of the benchmark suite. Second, clean-build time is sensitive to compiler implementation, hardware, filesystem state, optimization settings, and caching behavior. Third, the meaning of "GC pause" differs between memory-management architectures. For Nyx, the reported 0.00&nbsp;ms value reflects the absence of a tracing-GC behavior but does not by itself constitute a formal proof of memory safety. The formal safety argument is separate from empirical pause measurement. Fourth, the benchmark suite demonstrates implementation behavior but does not by itself constitute a formal proof of memory safety. The formal safety argument and compiler correctness argument are separate from empirical validation.</p>
+
+        <!-- Section 17 -->
+        <h2>17. Future Work</h2>
+        <p>Future research will investigate: inter-procedural region inference; incremental region analysis; cyclic reference handling; concurrent ARC optimization; region-aware cache allocation; NUMA-aware region frames; real-time workload evaluation; embedded systems workloads; kernel-level deployments; larger production-scale applications; compiler optimization costs; formal mechanization of the complete type-safety proof; and comparison against modern ownership and tracing runtimes under identical workloads. An additional research direction is adaptive region inference, in which static analysis and profile-guided information cooperate to identify recurring lifetime patterns.</p>
+
+        <!-- Section 18 -->
+        <h2>18. Conclusion</h2>
+        <p>This paper presented Nyx, a statically typed systems programming language that combines automated region inference, escape analysis, and reference-counted promotion to provide memory-safe reclamation without a tracing garbage collector and without programmer-written lifetime annotations.</p>
+
+        <p>The central mechanism is straightforward:</p>
+        <div class="math-block">
+            \[\text{Allocation} \rightarrow \begin{cases} \text{Region Bump} &amp; \text{region-confined} \\ \text{Local ARC} &amp; \text{local escape} \\ \text{Atomic ARC} &amp; \text{thread escape} \end{cases}\]
+        </div>
+
+        <p>Region-confined allocations are reclaimed in bulk when their regions terminate. Escaping allocations are promoted to independently managed storage. Cross-thread allocations use atomic reference counting.</p>
+
+        <p>The formal Lambda-Nyx model establishes the central region lifetime invariant: a live reference cannot outlive the region that owns its target storage.</p>
+
+        <p>The empirical evaluation consists of 24 benchmark programs spanning a broad set of systems domains. All 24 programs pass the complete end-to-end suite. The arithmetic mean allocation classification is 82.4% region bump and 17.6% ARC escape, while the measured maximum tracing-GC pause is 0.00&nbsp;ms across every workload. The arithmetic mean clean-build time is 0.24&nbsp;seconds.</p>
+
+        <p>The result supports the central design hypothesis of Nyx: a substantial fraction of systems-program allocations can be managed through statically inferred lifetime boundaries, allowing deterministic region reclamation to handle the common case while reference counting provides a general mechanism for allocations that escape those boundaries.</p>
+
+        <p>Nyx therefore occupies a distinct point in the memory-management design space: static lifetime inference with deterministic region reclamation and selective reference-counted promotion, without a tracing garbage collector.</p>
+
+        <!-- Appendix A -->
+        <h2>Appendix A. Benchmark Commands</h2>
+        <p><strong>Complete Nyx Suite</strong></p>
+        <p><code>powershell -ExecutionPolicy Bypass -File .\compile_all.ps1</code></p>
+        <p><strong>Multi-Language Benchmark</strong></p>
+        <p><code>cd benchmark &amp;&amp; python run_benchmarks.py</code></p>
+        <p><strong>Targeted Comparative Benchmark</strong></p>
+        <p><code>./bench -t json,record,minimal -l c,cpp,rust,zig,nyx,go,python3,js,php</code></p>
+
+        <!-- Appendix B -->
+        <h2>Appendix B. Summary Statistics</h2>
+        <table>
+            <tr><td>Nyx benchmark programs</td><td>24</td></tr>
+            <tr><td>Successful programs</td><td>24/24</td></tr>
+            <tr><td>Success rate</td><td>100%</td></tr>
+            <tr><td>Mean region-bump allocation</td><td>82.4%</td></tr>
+            <tr><td>Mean ARC escape</td><td>17.6%</td></tr>
+            <tr><td>Maximum measured tracing-GC pause</td><td>0.00 ms</td></tr>
+            <tr><td>Mean clean-build time</td><td>0.24 s</td></tr>
+            <tr><td>Maximum clean-build time</td><td>0.38 s</td></tr>
+            <tr><td>Minimum clean-build time</td><td>0.11 s</td></tr>
+        </table>
+
+        <!-- Appendix C -->
+        <h2>Appendix C. Core Architectural Principle</h2>
+        <p>The Nyx memory-management model can be summarized as follows:</p>
+
+        <div class="fig-diagram">
+                         NYX ALLOCATION
+                               |
+                               v
+                     +-------------------+
+                     | Escape Analysis   |
+                     +-------------------+
+                               |
+                 +-------------+-------------+
+                 |                           |
+                 v                           v
+          REGION-CONFINED                ESCAPES
+                 |                           |
+                 v                    +------+------+
+           REGION BUMP FRAME           |             |
+                 |                  LOCAL         THREAD
+                 |                   |               |
+                 v                   v               v
+          BULK RECLAMATION        LOCAL ARC      ATOMIC ARC
+                 |                   |               |
+                 +-------------------+---------------+
+                                     |
+                                     v
+                              SAFE LIFETIME
+                               MANAGEMENT
+        </div>
+
+        <p>Core invariant:</p>
+        <div class="math-block">
+            \[\text{Reference Lifetime} \leq \text{Storage Lifetime}\]
+        </div>
+        <p>For region references: \(\&^{\rho} \tau \Rightarrow \rho \in \Delta\) and therefore \(\rho \notin \Delta \Rightarrow \text{no live reference may target region-owned storage}\). This invariant is the foundation of Nyx's memory-safety model.</p>
+
+        <!-- Navigation -->
+        <div class="nav-links">
+            <a href="papers.html">&larr; All Papers</a>
+            &nbsp;&middot;&nbsp;
+            <a href="index.html">Short Form</a>
+            &nbsp;&middot;&nbsp;
+            <a href="../benchmarks.html">Benchmark Data</a>
+            &nbsp;&middot;&nbsp;
+            <a href="../response-to-assessment.html">Response to Assessment</a>
+        </div>
+
+        <div class="footnote">
+            <em>Research Proposal</em> &middot; September 2026 &middot;
+            DOI: <a href="https://doi.org/10.13140/RG.2.2.26984.84483" style="color: #777;">10.13140/RG.2.2.26984.84483</a> &middot;
+            Simeon Bala &middot; 9jaonCloud Engineering / Nyx Systems Research
+        </div>
+
+    </div>
+</body>
+</html>

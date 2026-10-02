@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grammar Reference — Nyx Documentation</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <h1>Nyx Formal Grammar Reference</h1>
+        <p class="lead">Complete Extended Backus–Naur Form (EBNF) grammar specification for the Nyx Programming Language.</p>
+
+        <h2>1. Lexical Grammar</h2>
+        <pre><code>IDENTIFIER       ::= [a-zA-Z_][a-zA-Z0-9_]*
+INTEGER_LITERAL  ::= [0-9]+ | "0x" [0-9a-fA-F]+ | "0b" [01]+
+FLOAT_LITERAL    ::= [0-9]+ "." [0-9]+ ([eE][+-]?[0-9]+)?
+STRING_LITERAL   ::= '"' ( [^"\\] | '\\' . )* '"'
+CHAR_LITERAL     ::= "'" ( [^'\\] | '\\' . ) "'"
+BOOLEAN_LITERAL  ::= "true" | "false"
+
+COMMENT          ::= "//" [^\n]* | "/*" .*? "*/"</code></pre>
+
+        <h2>2. Program Structure</h2>
+        <pre><code>SourceFile       ::= ModuleDecl? ImportDecl* TopLevelDecl*
+
+ModuleDecl       ::= "module" IDENTIFIER ( "." IDENTIFIER )* ";" ?
+ImportDecl       ::= "import" IDENTIFIER ( "." IDENTIFIER )* ( "as" IDENTIFIER )? ";" ?
+
+TopLevelDecl     ::= StructDecl
+                   | EnumDecl
+                   | FunctionDecl
+                   | ImplBlock
+                   | TraitDecl
+                   | TypeAlias</code></pre>
+
+        <h2>3. Declarations</h2>
+        <pre><code>StructDecl       ::= "pub"? "struct" IDENTIFIER GenericParams? "{" StructField* "}"
+StructField      ::= "pub"? IDENTIFIER ":" Type ( "," )?
+
+EnumDecl         ::= "pub"? "enum" IDENTIFIER GenericParams? "{" EnumVariant* "}"
+EnumVariant      ::= IDENTIFIER ( "(" TypeList ")" )? ( "," )?
+
+FunctionDecl     ::= "pub"? "async"? "fn" IDENTIFIER GenericParams? 
+                     "(" ParamList? ")" ( "->" Type )? Block
+
+ParamList        ::= Param ( "," Param )*
+Param            ::= "mut"? IDENTIFIER ":" Type
+
+ImplBlock        ::= "impl" GenericParams? IDENTIFIER ( "for" Type )? "{" FunctionDecl* "}"</code></pre>
+
+        <h2>4. Statements and Expressions</h2>
+        <pre><code>Statement        ::= LetStmt
+                   | AssignmentStmt
+                   | ReturnStmt
+                   | ExprStmt
+
+LetStmt          ::= "let" "mut"? IDENTIFIER ( ":" Type )? ( "=" Expression )? ";" ?
+AssignmentStmt   ::= LValue "=" Expression ";" ?
+ReturnStmt       ::= "return" Expression? ";" ?
+
+Expression       ::= IfExpr
+                   | MatchExpr
+                   | WhileExpr
+                   | ForExpr
+                   | Block
+                   | BinaryExpr
+                   | UnaryExpr
+                   | CallExpr
+                   | FieldAccessExpr
+                   | MethodCallExpr
+                   | StructInitExpr
+                   | Literal
+
+IfExpr           ::= "if" Expression Block ( "else" "if" Expression Block )* ( "else" Block )?
+WhileExpr        ::= "while" Expression Block
+ForExpr          ::= "for" Pattern "in" Expression Block
+MatchExpr        ::= "match" Expression "{" MatchArm* "}"
+MatchArm         ::= Pattern ( "if" Expression )? "=>" ( Expression ","? | Block )</code></pre>
+
+        <h2>5. Type System</h2>
+        <pre><code>Type             ::= PrimitiveType
+                   | NominalType
+                   | TupleType
+                   | ReferenceType
+                   | ArrayType
+                   | FunctionType
+
+PrimitiveType    ::= "i8" | "i16" | "i32" | "i64" | "u8" | "u16" | "u32" | "u64"
+                   | "f32" | "f64" | "bool" | "char" | "String"
+
+NominalType      ::= IDENTIFIER ( "&lt;" TypeList "&gt;" )?
+ReferenceType    ::= "&" "mut"? ( "'" IDENTIFIER )? Type
+TupleType        ::= "(" Type ( "," Type )* ")"
+ArrayType        ::= "[" Type ( ";" INTEGER_LITERAL )? "]"
+FunctionType     ::= "fn" "(" TypeList? ")" "->" Type</code></pre>
+
+        <div class="next-prev-links">
+            <a href="concurrency.html">&larr; Concurrency</a>
+            <a href="../tutorial/getting-started.html">Tutorials: Getting Started &rarr;</a>
+        </div>
+    </main>
+    <script src="../navigation.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

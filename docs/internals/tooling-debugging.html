@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tooling & Debugging — Nyx Documentation</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <h1>Tooling &amp; Debugging</h1>
+
+        <p>Nyx treats tooling and debugging as <strong>first-class features</strong>, not afterthoughts. The compiler itself doubles as a language server, the runtime includes a time-travel debugger, and the standard library provides a built-in test framework and benchmarking.</p>
+
+        <h2>Development Tooling</h2>
+
+        <h3>Language Server Protocol (LSP) — <code>nyx-ls</code></h3>
+        <p>The Nyx LSP server reuses the compiler's incremental analysis engine, guaranteeing 100% consistency between editor diagnostics and actual compilation errors.</p>
+        <ul>
+            <li><strong>Real-time diagnostics</strong> — minimal re-typecheck of changed functions only, under 100ms</li>
+            <li><strong>Autocompletion</strong> — context-aware: struct fields, methods, traits, generic inference</li>
+            <li><strong>Hover</strong> — full type info, doc comments (<code>///</code>), region/ownership annotations</li>
+            <li><strong>Go-to-definition / Find references</strong> — across files and into dependencies via persistent symbol index</li>
+            <li><strong>Rename</strong> — safe, project-wide rename</li>
+            <li><strong>Inlay hints</strong> — inferred types, parameter names, lifetimes</li>
+            <li><strong>Code actions</strong> — "import missing module", "wrap in Option", "add mut"</li>
+        </ul>
+
+        <h3>Code Formatter — <code>nyx fmt</code></h3>
+        <p>Uses the lossless Concrete Syntax Tree (CST) to format code. Preserves intentional blank lines and custom line breaks while normalising indentation and spacing. Output is always idempotent.</p>
+
+        <h3>Documentation Generator — <code>nyx doc</code></h3>
+        <p>Parses doc comments (<code>///</code>) and generates static HTML documentation with cross-referenced types, search, and syntax-highlighted examples.</p>
+
+        <h3>Build System &amp; Package Manager — <code>nyx</code></h3>
+        <table>
+            <tr><th>Command</th><th>Purpose</th></tr>
+            <tr><td><code>nyx init</code></td><td>Scaffold a new project</td></tr>
+            <tr><td><code>nyx add &lt;pkg&gt;</code></td><td>Resolve, fetch, and lock a dependency</td></tr>
+            <tr><td><code>nyx build</code></td><td>Incremental compilation with file-hashing and caching</td></tr>
+            <tr><td><code>nyx run</code></td><td>Build and execute in one step</td></tr>
+            <tr><td><code>nyx test</code></td><td>Discover and run all <code>@test</code> functions</td></tr>
+            <tr><td><code>nyx publish</code></td><td>Package and upload to the registry</td></tr>
+            <tr><td><code>nyx install</code></td><td>Restore dependencies from lockfile</td></tr>
+        </table>
+        <p>The build system supports reproducible, byte-for-byte deterministic builds and cryptographic signing of artifacts.</p>
+
+        <h3>Profiling</h3>
+        <ul>
+            <li><code>nyx build --profile</code> injects instrumentation</li>
+            <li>Runtime emits pprof-compatible CPU and memory profiles</li>
+            <li>CI integrates with Grafana/Prometheus for long-term trend tracking</li>
+            <li>Hardware performance counters (via perf/Instruments) exposed through <code>nyx bench --profile</code></li>
+        </ul>
+
+        <h2>Debugging</h2>
+
+        <h3>Time-Travel Debugger</h3>
+        <p>When a Nyx program is run with <code>nyx run --record</code>, the runtime logs all non-deterministic events: I/O results, random numbers, task scheduling decisions, and thread interleavings. The recorded trace is fully deterministic.</p>
+
+        <p><code>nyx debug &lt;trace&gt;</code> launches an interactive debugger (CLI or GUI) that can step <strong>forward and backward</strong> through execution.</p>
+        <ul>
+            <li><strong>Reverse watchpoints</strong> — ask "when did this variable last change?" and get the exact instruction</li>
+            <li><strong>Call-stack inspection</strong> — works across <code>await</code> points, showing the full asynchronous call chain</li>
+            <li><strong>Task visualisation</strong> — graphical view of all live tasks, nurseries, and causal relationships</li>
+        </ul>
+        <p>Because Nyx's region allocation is deterministic and borrow-checked, the trace only records external inputs—not every memory operation—so overhead is manageable.</p>
+
+        <h3>Hot-Reload (Development Mode)</h3>
+        <p>For rapid iteration in UI code, changed modules compile to a shared library and patch into the running process. The widget tree automatically re-executes its build methods while preserving local state (text inputs, scroll positions, animation controllers). On the web, the WASM module is hot-swapped via the JS bridge.</p>
+
+        <h3>Structured Logging &amp; Tracing</h3>
+        <p><code>std.log</code> provides tamper-evident, capability-aware logging. Logs can be enriched with cryptographic chain of custody for audit. The async runtime integrates with <code>std.log</code> so every spawned task carries a trace ID for correlating logs across concurrent operations.</p>
+
+        <h2>Testing Framework</h2>
+        <ul>
+            <li><code>@test</code> annotates test functions; tests run in parallel, each in a fresh memory region</li>
+            <li>Assertions: <code>std.test.assert_eq</code>, <code>assert_true</code>, <code>assert_throws</code></li>
+            <li><code>@bench</code> marks benchmarks — multiple iterations, statistical regression detection, CI gating</li>
+            <li>Async tests are automatically awaited by the runner</li>
+            <li>Test failures print structured diffs for complex data structures (via auto-derivable <code>Diff</code> trait)</li>
+        </ul>
+
+        <h2>Unified Architecture</h2>
+        <p>All these tools work together. The LSP server uses the same incremental compilation database that drives <code>nyx build</code>, and the debugger replays traces that the profiler can also analyse. You never leave the Nyx ecosystem to develop, test, debug, and deploy your application.</p>
+    </main>
+    <script src="../navigation.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

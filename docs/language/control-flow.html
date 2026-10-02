@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control Flow — Nyx Documentation</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <button id="mobile-toggle" class="mobile-toggle">&#9776;</button>
+    <nav id="sidebar"></nav>
+    <main>
+        <h1>Control Flow in Nyx</h1>
+        <p class="lead">Nyx provides expressive, expression-oriented control flow primitives designed for predictable execution and high-performance compilation.</p>
+
+        <h2>1. If / Else Expressions</h2>
+        <p>In Nyx, <code>if</code> statements are expressions that evaluate to a value when used in assignment context:</p>
+<pre><code>let score = 85
+let grade = if score >= 90 {
+    "A".to_string()
+} else if score >= 80 {
+    "B".to_string()
+} else {
+    "C".to_string()
+}
+
+std.io.println("Grade: " + grade)</code></pre>
+
+        <h2>2. While Loops</h2>
+        <p>Use <code>while</code> loops to iterate as long as a boolean condition evaluates to <code>true</code>:</p>
+<pre><code>let mut count = 0
+while count < 5 {
+    std.io.println("Count: " + count.to_string())
+    count = count + 1
+}</code></pre>
+
+        <h2>3. For Loops & Iteration</h2>
+        <p>Nyx provides concise <code>for-in</code> syntax across numeric ranges, vectors, and collections:</p>
+
+        <h3>Range Iteration</h3>
+<pre><code>// Exclusive upper bound (0 to 9)
+for i in 0..10 {
+    std.io.println("Index: " + i.to_string())
+}</code></pre>
+
+        <h3>Vector & Collection Iteration</h3>
+<pre><code>let mut fruits = Vec.new()
+fruits.push("Apple".to_string())
+fruits.push("Banana".to_string())
+fruits.push("Cherry".to_string())
+
+for fruit in fruits {
+    std.io.println("Fruit: " + fruit)
+}</code></pre>
+
+        <h3>Tuple & Destructuring Iteration</h3>
+<pre><code>let mut coordinates = Vec.new()
+coordinates.push((37.7749, -122.4194))
+coordinates.push((34.0522, -118.2437))
+
+for (lat, lon) in coordinates {
+    std.io.println("Lat: " + lat.to_string() + ", Lon: " + lon.to_string())
+}</code></pre>
+
+        <h2>4. Pattern Matching with Match</h2>
+        <p>Pattern matching in Nyx is exhaustive and operates over integers, strings, tuples, and algebraic data types (enums):</p>
+
+        <h3>Enum Variant Matching</h3>
+<pre><code>enum HttpStatus {
+    Ok,
+    NotFound,
+    ServerError(String),
+}
+
+let status = HttpStatus.ServerError("Database connection timed out".to_string())
+
+match status {
+    HttpStatus.Ok => std.io.println("200 OK"),
+    HttpStatus.NotFound => std.io.println("404 Not Found"),
+    HttpStatus.ServerError(msg) => std.io.println("500 Error: " + msg),
+}</code></pre>
+
+        <h3>Or-Patterns & Wildcards</h3>
+<pre><code>let code = 403
+
+match code {
+    200 | 201 => std.io.println("Success"),
+    400 | 401 | 403 | 404 => std.io.println("Client Error"),
+    500 | 502 | 503 => std.io.println("Server Error"),
+    _ => std.io.println("Unknown Status Code"),
+}</code></pre>
+
+        <h2>5. Error Propagation with the Question Mark (?) Operator</h2>
+        <p>Functions returning <code>Result&lt;T, E&gt;</code> or <code>Option&lt;T&gt;</code> can propagate failures cleanly using the <code>?</code> operator:</p>
+<pre><code>import std.fs
+import std.json
+
+fn read_app_config(path: String) -> Result&lt;json.Value, String&gt; {
+    let content = fs.read_to_string(path)?
+    let parsed = json.parse(content)?
+    Result.Ok(parsed)
+}</code></pre>
+
+        <h2>6. Early Returns & Loop Controls</h2>
+        <p>Nyx supports standard <code>break</code>, <code>continue</code>, and <code>return</code> statements:</p>
+<pre><code>for i in 0..100 {
+    if i % 2 == 0 {
+        continue // Skip even numbers
+    }
+    if i > 15 {
+        break // Stop loop
+    }
+    std.io.println("Odd: " + i.to_string())
+}</code></pre>
+
+        <div class="next-prev-links">
+            <a href="functions.html">&larr; Functions</a>
+            <a href="modules.html">Modules & Imports &rarr;</a>
+        </div>
+    </main>
+    <script src="../navigation.js"></script>
+    <script src="https://specforge.9jaoncloud.com.ng/assets/js/specforge-widget.js" data-token="85ef1ac50900f8bff142c95c85287db4" defer></script>
+</body>
+</html>

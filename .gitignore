@@ -1,0 +1,24 @@
+# Build & Binary Artifacts
+*.o
+*.obj
+*.so
+*.dylib
+*.wasm
+bin/
+target/
+dist/
+build/
+.nyx_cache/
+
+# IDE & Editor Local Configs
+.vscode/
+.idea/
+*.suo
+*.user
+
+# Sensitive & Local Configuration
+.env
+.env.*
+credentials/
+scratch/
+backup-*/
