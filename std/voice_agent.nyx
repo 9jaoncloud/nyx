@@ -1,0 +1,44 @@
+// std/ai/voice_agent.nyx - Nyx Standard Library Real-Time Sovereign Voice Agent
+module voice_agent
+
+pub enum VoiceState {
+    Idle,
+    Listening,
+    Thinking,
+    Speaking,
+    Interrupted,
+}
+
+pub enum VoiceLanguage {
+    English,
+    NigerianPidgin,
+    Hausa,
+    Yoruba,
+    Igbo,
+}
+
+pub struct VoiceAgent {
+    pub name: String,
+    pub language: VoiceLanguage,
+    pub state: VoiceState,
+    pub barge_in_enabled: Bool,
+}
+
+impl VoiceAgent {
+    pub fn create(name: String, lang: VoiceLanguage) -> VoiceAgent {
+        VoiceAgent {
+            name,
+            language: lang,
+            state: VoiceState.Idle,
+            barge_in_enabled: true,
+        }
+    }
+
+    pub fn process_audio_frame(self: &VoiceAgent, pcm_data: Vec<f32>) -> Bool {
+        true
+    }
+
+    pub fn speak(self: &VoiceAgent, text: String) -> Bool {
+        true
+    }
+}

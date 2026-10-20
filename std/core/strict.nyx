@@ -1,0 +1,37 @@
+// ════════════════════════════════════════════════════════════════════════
+// Nyx Core Strict & Escape Diagnostics Primitives (std.core.strict)
+// Enforces zero-heap allocation constraints and zero-cost typing boundaries.
+// ════════════════════════════════════════════════════════════════════════
+
+module std.core.strict;
+
+pub enum EscapeReason {
+    NoEscapeLocal,
+    CallerHandoff,
+    GlobalStatic,
+    ClosureCapture,
+    CrossThreadChannel
+}
+
+pub struct EscapeDiagnostic {
+    pub variable_name: String,
+    pub source_line: Int,
+    pub reason: EscapeReason,
+    pub promoted_to_arc: Bool
+}
+
+// Compiler Pragma Assertions
+pub fn assert_must_region(diag: EscapeDiagnostic) -> Bool {
+    if diag.promoted_to_arc {
+        panic("COMPILER ERROR [@must_region violation]: Variable '" + diag.variable_name + "' escaped local region at line " + string(diag.source_line));
+    }
+    true
+}
+
+pub fn format_escape_warning(diag: EscapeDiagnostic) -> String {
+    if diag.promoted_to_arc {
+        "[Nyx Warn]: Variable '" + diag.variable_name + "' escaped region frame to Atomic ARC at line " + string(diag.source_line)
+    } else {
+        "[Nyx Info]: Variable '" + diag.variable_name + "' contained in O(1) stack region frame."
+    }
+}

@@ -1,0 +1,375 @@
+// Nyx Standard Library — @nyx/finance/ai_hedge_fund
+// Multi-Agent Quantitative Hedge Fund & Institutional Persona Consensus Council
+// Inspired by virattt/ai-hedge-fund & TauricResearch/TradingAgents
+// 100% Pure Native Nyx (Zero Python, Zero-GC Region Memory, Deterministic Precision)
+
+module std.finance.ai_hedge_fund
+
+// -----------------------------------------------------------------------------
+// 1. DATA STRUCTURES: COMPANY / ASSET FUNDAMENTALS & TECHNICAL TICK
+// -----------------------------------------------------------------------------
+pub struct AssetProfile {
+    pub symbol: String,
+    pub price: f64,
+    pub eps: f64,
+    pub book_value: f64,
+    pub pe_ratio: f64,
+    pub roic_pct: f64,
+    pub debt_to_equity: f64,
+    pub revenue_growth_pct: f64,
+    pub net_current_asset_value: f64, // Graham Net-Net
+    pub current_drawdown_pct: f64,
+    pub rsi_14: f64,
+    pub volume_velocity_zscore: f64
+}
+
+impl AssetProfile {
+    pub fn new(
+        sym: String,
+        p: f64,
+        earnings: f64,
+        bv: f64,
+        pe: f64,
+        roic: f64,
+        dte: f64,
+        growth: f64,
+        ncav: f64,
+        dd: f64,
+        rsi: f64,
+        v_zscore: f64
+    ) -> AssetProfile {
+        AssetProfile {
+            symbol: sym,
+            price: p,
+            eps: earnings,
+            book_value: bv,
+            pe_ratio: pe,
+            roic_pct: roic,
+            debt_to_equity: dte,
+            revenue_growth_pct: growth,
+            net_current_asset_value: ncav,
+            current_drawdown_pct: dd,
+            rsi_14: rsi,
+            volume_velocity_zscore: v_zscore,
+        }
+    }
+}
+
+pub struct AgentVote {
+    pub agent_name: String,
+    pub stance: String, // "STRONG_BUY", "BUY", "NEUTRAL", "SELL", "STRONG_SELL"
+    pub conviction: f64, // 0.0 to 1.0
+    pub rationale: String
+}
+
+impl AgentVote {
+    pub fn new(name: String, st: String, conv: f64, rat: String) -> AgentVote {
+        AgentVote {
+            agent_name: name,
+            stance: st,
+            conviction: conv,
+            rationale: rat,
+        }
+    }
+}
+
+// -----------------------------------------------------------------------------
+// 2. INVESTOR PERSONA AGENTS
+// -----------------------------------------------------------------------------
+
+// Buffett Agent: Focuses on Return on Invested Capital (ROIC > 15%), low debt, and durable moat
+pub struct BuffettAgent {
+    pub min_roic_pct: f64,
+    pub max_debt_to_equity: f64
+}
+
+impl BuffettAgent {
+    pub fn new() -> BuffettAgent {
+        BuffettAgent {
+            min_roic_pct: 15.0,
+            max_debt_to_equity: 0.80,
+        }
+    }
+
+    pub fn analyze(self: &BuffettAgent, a: &AssetProfile) -> AgentVote {
+        let has_moat: bool = a.roic_pct >= self.min_roic_pct;
+        let healthy_balance_sheet: bool = a.debt_to_equity <= self.max_debt_to_equity;
+        let fair_price: bool = a.pe_ratio <= 22.0;
+
+        if (has_moat == true) && (healthy_balance_sheet == true) && (fair_price == true) {
+            AgentVote::new(
+                "Warren Buffett",
+                "STRONG_BUY",
+                0.92,
+                "Outstanding ROIC capital compounding and fortified balance sheet at fair valuation."
+            )
+        } else if (has_moat == true) && (healthy_balance_sheet == true) {
+            AgentVote::new(
+                "Warren Buffett",
+                "BUY",
+                0.75,
+                "High quality business moat, though price demands margin of safety patience."
+            )
+        } else if healthy_balance_sheet == false {
+            AgentVote::new(
+                "Warren Buffett",
+                "SELL",
+                0.80,
+                "Excessive financial leverage threatens long-term compounding stability."
+            )
+        } else {
+            AgentVote::new("Warren Buffett", "NEUTRAL", 0.50, "Average business lacks exceptional competitive moat.")
+        }
+    }
+}
+
+// Ben Graham Agent: Focuses on Net-Current-Asset Value (NCAV) Bargain & Margin of Safety
+pub struct GrahamAgent {
+    pub margin_of_safety_target: f64
+}
+
+impl GrahamAgent {
+    pub fn new() -> GrahamAgent {
+        GrahamAgent { margin_of_safety_target: 0.667 } // Price <= 66.7% of NCAV
+    }
+
+    pub fn analyze(self: &GrahamAgent, a: &AssetProfile) -> AgentVote {
+        let graham_number: f64 = (22.5 * a.eps * a.book_value);
+        let deep_value_netnet: bool = a.price <= (a.net_current_asset_value * self.margin_of_safety_target);
+
+        if deep_value_netnet == true {
+            AgentVote::new(
+                "Ben Graham",
+                "STRONG_BUY",
+                0.95,
+                "Classic Net-Net bargain: trading below 2/3 of net current assets with enormous margin of safety."
+            )
+        } else if (a.pe_ratio <= 12.0) && (a.debt_to_equity <= 0.50) {
+            AgentVote::new(
+                "Ben Graham",
+                "BUY",
+                0.80,
+                "Strong financial solvency and modest earnings multiple provide adequate defense."
+            )
+        } else if a.pe_ratio > 30.0 {
+            AgentVote::new(
+                "Ben Graham",
+                "SELL",
+                0.85,
+                "Speculative price leaves zero margin of safety against earnings contraction."
+            )
+        } else {
+            AgentVote::new("Ben Graham", "NEUTRAL", 0.50, "Adequate asset protection but lacking deep discount.")
+        }
+    }
+}
+
+// Michael Burry Agent: Scrutinizes Debt bubbles, macro systemic stress, and overhyped valuations
+pub struct BurryAgent {
+    pub leverage_warning_threshold: f64
+}
+
+impl BurryAgent {
+    pub fn new() -> BurryAgent {
+        BurryAgent { leverage_warning_threshold: 1.50 }
+    }
+
+    pub fn analyze(self: &BurryAgent, a: &AssetProfile) -> AgentVote {
+        let is_overleveraged: bool = a.debt_to_equity >= self.leverage_warning_threshold;
+        let is_euphoric: bool = (a.pe_ratio > 45.0) && (a.rsi_14 > 72.0);
+
+        if (is_overleveraged == true) && (is_euphoric == true) {
+            AgentVote::new(
+                "Michael Burry",
+                "STRONG_SELL",
+                0.96,
+                "Critical tail-risk: Overleveraged balance sheet combined with extreme retail euphoria."
+            )
+        } else if is_overleveraged == true {
+            AgentVote::new(
+                "Michael Burry",
+                "SELL",
+                0.82,
+                "Credit cycle rollover risk is elevated; interest coverage vulnerable."
+            )
+        } else if (a.pe_ratio < 10.0) && (a.rsi_14 < 25.0) {
+            AgentVote::new(
+                "Michael Burry",
+                "BUY",
+                0.78,
+                "Asymmetric contrarian long opportunity created by indiscriminate market liquidation."
+            )
+        } else {
+            AgentVote::new("Michael Burry", "NEUTRAL", 0.50, "Macro balance acceptable; monitoring systemic indicators.")
+        }
+    }
+}
+
+// Cathie Wood Agent: Exponential growth, disruptive tech, innovation adoption velocity
+pub struct CathieWoodAgent {
+    pub min_growth_pct: f64
+}
+
+impl CathieWoodAgent {
+    pub fn new() -> CathieWoodAgent {
+        CathieWoodAgent { min_growth_pct: 25.0 }
+    }
+
+    pub fn analyze(self: &CathieWoodAgent, a: &AssetProfile) -> AgentVote {
+        let hyper_growth: bool = a.revenue_growth_pct >= self.min_growth_pct;
+        let strong_momentum: bool = a.volume_velocity_zscore >= 1.50;
+
+        if (hyper_growth == true) && (strong_momentum == true) {
+            AgentVote::new(
+                "Cathie Wood",
+                "STRONG_BUY",
+                0.90,
+                "Disruptive innovation trajectory with accelerating volume adoption curve."
+            )
+        } else if hyper_growth == true {
+            AgentVote::new(
+                "Cathie Wood",
+                "BUY",
+                0.76,
+                "Multi-year secular expansion potential expanding addressable market."
+            )
+        } else if a.revenue_growth_pct < 5.0 {
+            AgentVote::new(
+                "Cathie Wood",
+                "SELL",
+                0.75,
+                "Legacy incumbent facing technological obsolescence."
+            )
+        } else {
+            AgentVote::new("Cathie Wood", "NEUTRAL", 0.50, "Moderate growth below disruptive S-curve velocity.")
+        }
+    }
+}
+
+// -----------------------------------------------------------------------------
+// 3. DETERMINISTIC RISK MANAGER AGENT
+// -----------------------------------------------------------------------------
+pub struct RiskManagerAgent {
+    pub max_portfolio_drawdown_pct: f64,
+    pub max_single_allocation_pct: f64
+}
+
+impl RiskManagerAgent {
+    pub fn new() -> RiskManagerAgent {
+        RiskManagerAgent {
+            max_portfolio_drawdown_pct: 6.0,
+            max_single_allocation_pct: 2.50,
+        }
+    }
+
+    pub fn veto_check(self: &RiskManagerAgent, a: &AssetProfile, proposed_stance: String) -> (bool, String) {
+        // Circuit breaker: If asset or portfolio is in severe drawdown, block aggressive longs
+        if a.current_drawdown_pct >= self.max_portfolio_drawdown_pct {
+            if proposed_stance == "STRONG_BUY" {
+                return (false, "Risk Gate: Blocked STRONG_BUY due to drawdown circuit breaker limit breach.");
+            }
+        }
+
+        // Over-leverage veto: Block longs if debt is fatal
+        if a.debt_to_equity >= 2.50 {
+            if (proposed_stance == "STRONG_BUY") || (proposed_stance == "BUY") {
+                return (false, "Risk Gate: VETOED long exposure due to balance sheet insolvency risk.");
+            }
+        }
+
+        (true, "Risk Gate: Passed all deterministic pre-trade risk and collar invariants.")
+    }
+}
+
+// -----------------------------------------------------------------------------
+// 4. PORTFOLIO CONSENSUS ENGINE (MULTI-AGENT COUNCIL SYNTHESIS)
+// -----------------------------------------------------------------------------
+pub struct CouncilConsensus {
+    pub symbol: String,
+    pub final_verdict: String,
+    pub aggregate_score: f64, // -1.0 (Strong Short) to +1.0 (Strong Long)
+    pub risk_approved: bool,
+    pub approved_allocation_pct: f64,
+    pub consensus_summary: String
+}
+
+pub struct MultiAgentCouncil {
+    pub buffett: BuffettAgent,
+    pub graham: GrahamAgent,
+    pub burry: BurryAgent,
+    pub cathie: CathieWoodAgent,
+    pub risk_officer: RiskManagerAgent
+}
+
+impl MultiAgentCouncil {
+    pub fn new() -> MultiAgentCouncil {
+        MultiAgentCouncil {
+            buffett: BuffettAgent::new(),
+            graham: GrahamAgent::new(),
+            burry: BurryAgent::new(),
+            cathie: CathieWoodAgent::new(),
+            risk_officer: RiskManagerAgent::new(),
+        }
+    }
+
+    fn stance_to_numeric(stance: String, conviction: f64) -> f64 {
+        if stance == "STRONG_BUY" {
+            1.0 * conviction
+        } else if stance == "BUY" {
+            0.5 * conviction
+        } else if stance == "SELL" {
+            -0.5 * conviction
+        } else if stance == "STRONG_SELL" {
+            -1.0 * conviction
+        } else {
+            0.0
+        }
+    }
+
+    pub fn deliberate(self: &MultiAgentCouncil, asset: &AssetProfile) -> CouncilConsensus {
+        let v_buffett: AgentVote = self.buffett.analyze(asset);
+        let v_graham: AgentVote = self.graham.analyze(asset);
+        let v_burry: AgentVote = self.burry.analyze(asset);
+        let v_cathie: AgentVote = self.cathie.analyze(asset);
+
+        // Weighted Persona Deliberation:
+        // Buffett (30%), Graham (25%), Burry (25%), Cathie (20%)
+        let s_buffett: f64 = MultiAgentCouncil::stance_to_numeric(v_buffett.stance, v_buffett.conviction) * 0.30;
+        let s_graham: f64 = MultiAgentCouncil::stance_to_numeric(v_graham.stance, v_graham.conviction) * 0.25;
+        let s_burry: f64 = MultiAgentCouncil::stance_to_numeric(v_burry.stance, v_burry.conviction) * 0.25;
+        let s_cathie: f64 = MultiAgentCouncil::stance_to_numeric(v_cathie.stance, v_cathie.conviction) * 0.20;
+
+        let total_score: f64 = s_buffett + s_graham + s_burry + s_cathie;
+
+        let raw_verdict: String = if total_score >= 0.55 {
+            "STRONG_BUY"
+        } else if total_score >= 0.20 {
+            "BUY"
+        } else if total_score <= -0.55 {
+            "STRONG_SELL"
+        } else if total_score <= -0.20 {
+            "SELL"
+        } else {
+            "NEUTRAL"
+        };
+
+        // Pass to Risk Manager for deterministic gating
+        let (approved, risk_reason): (bool, String) = self.risk_officer.veto_check(asset, raw_verdict);
+
+        let final_action: String = if approved == true { raw_verdict } else { "HOLD" };
+        let allocation: f64 = if approved == true {
+            if final_action == "STRONG_BUY" { 2.50 } else if final_action == "BUY" { 1.25 } else { 0.0 }
+        } else {
+            0.0
+        };
+
+        CouncilConsensus {
+            symbol: asset.symbol,
+            final_verdict: final_action,
+            aggregate_score: total_score,
+            risk_approved: approved,
+            approved_allocation_pct: allocation,
+            consensus_summary: risk_reason,
+        }
+    }
+}

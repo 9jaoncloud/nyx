@@ -1,0 +1,34 @@
+module sec_net
+
+import prelude.*
+
+type Pcap = i64
+type Pkthdr = i64
+type Sockaddr = i64
+
+extern "C" {
+    fn nyx_pcap_open_live(dev: String, snaplen: i32, promisc: i32, to_ms: i32, errbuf: String) -> Pcap
+    fn nyx_pcap_close(p: Pcap)
+    fn nyx_pcap_next_ex(p: Pcap, hdr: Pkthdr, data: i64) -> i32
+    fn nyx_pcap_sendpacket(p: Pcap, buf: String, size: i32) -> i32
+    fn nyx_raw_socket(domain: i32, type_: i32, protocol: i32) -> i32
+    fn nyx_raw_sendto(sock: i32, buf: String, len: u64, flags: i32, addr: Sockaddr, addrlen: u32) -> i64
+    fn nyx_raw_recvfrom(sock: i32, buf: String, len: u64, flags: i32, addr: Sockaddr, addrlen: i64) -> i64
+}
+
+pub struct PcapSession {
+    pub handle: Pcap,
+}
+
+impl PcapSession {
+    pub fn open(device: String, snaplen: i32, promisc: Bool, to_ms: i32) -> Option<PcapSession> {
+        let errbuf = "".to_string()
+        let h = nyx_pcap_open_live(device, snaplen, if promisc { 1 } else { 0 }, to_ms, errbuf)
+        if h == 0 { Option.None } else { Option.Some(PcapSession { handle: h }) }
+    }
+
+    pub fn close(self: PcapSession) { nyx_pcap_close(self.handle) }
+    pub fn send(self: &PcapSession, data: Vec<u8>) -> i32 {
+        nyx_pcap_sendpacket(self.handle, data.as_str(), data.len() as i32)
+    }
+}

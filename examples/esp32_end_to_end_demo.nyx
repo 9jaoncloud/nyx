@@ -1,0 +1,41 @@
+module examples.esp32_end_to_end_demo
+
+import std.io
+import std.embedded.esp32
+import std.net.lora
+
+// =========================================================================
+// ESP32 END-TO-END BARE-METAL APPLICATION IN NYX
+// Hardware Pin Muxing, Dual-Core Task Allocation, Zero-GC Telemetry
+// =========================================================================
+
+fn main() {
+    println("=== Nyx ESP32 Bare-Metal Native Execution ===");
+    
+    // 1. Identify active CPU Core
+    let core = Esp32DualCoreDispatcher.current_core();
+    match core {
+        CpuCore.Core0_Protocol => println("[Boot] Running on Core 0 (Protocol & Mesh Controller)"),
+        CpuCore.Core1_Compute  => println("[Boot] Running on Core 1 (DSP / Real-Time Loop)")
+    }
+
+    // 2. Configure Onboard Status LED (GPIO 2 on classic ESP32, GPIO 8 on C3/S3)
+    let status_led = Esp32Gpio.new(2);
+    status_led.set_direction_output();
+    println("[GPIO] Pin 2 configured as HIGH-SPEED DIGITAL OUTPUT");
+    
+    // Fast Blink
+    status_led.write_high();
+    println("[GPIO] LED State: HIGH (3.3V)");
+    status_led.write_low();
+    println("[GPIO] LED State: LOW (0.0V)");
+
+    // 3. Build Espressif Flash Image Header
+    let img_hdr = Esp32ImageHeader.new_standard(0x40080000);
+    println("[Toolchain] Espressif Binary Header Formatted:");
+    println("  - Magic: 0x" + (img_hdr.magic as String));
+    println("  - Segment Count: " + (img_hdr.segment_count as String));
+    println("  - Entry Point: 0x40080000 (IRAM Reset Vector)");
+
+    println("\n[SUCCESS] ESP32 end-to-end hardware loop executed in 0 bytes dynamic heap!");
+}

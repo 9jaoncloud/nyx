@@ -1,0 +1,79 @@
+module vision
+
+import prelude.*
+
+type Image = i64
+type Cascade = i64
+type VideoCapture = i64
+type Seq = i64
+
+extern "C" {
+    fn cv_create_image(width: i32, height: i32, depth: i32, channels: i32) -> Image
+    fn cv_release_image(img: Image)
+    fn cv_clone_image(img: Image) -> Image
+    fn cv_imread(filename: String, flags: i32) -> Image
+    fn cv_imwrite(filename: String, img: Image)
+    fn cv_cvt_color(src: Image, dst: Image, code: i32)
+    fn cv_canny(src: Image, dst: Image, low: f64, high: f64)
+    fn cv_gaussian_blur(src: Image, dst: Image, ksize: i32)
+    fn cv_median_blur(src: Image, dst: Image, ksize: i32)
+    fn cv_erode(src: Image, dst: Image, kernel: Image, iterations: i32)
+    fn cv_dilate(src: Image, dst: Image, kernel: Image, iterations: i32)
+    fn cv_create_cascade(filename: String) -> Cascade
+    fn cv_cascade_detect_objects(cascade: Cascade, img: Image, objects: i64)
+    fn cv_release_cascade(cascade: Cascade)
+    fn cv_video_capture_open(index: i32) -> VideoCapture
+    fn cv_video_capture_release(cap: VideoCapture)
+    fn cv_video_capture_read(cap: VideoCapture, frame: Image) -> i32
+    fn cv_draw_rect(img: Image, x: i32, y: i32, w: i32, h: i32, color: u32, thickness: i32)
+    fn cv_draw_circle(img: Image, cx: i32, cy: i32, radius: i32, color: u32, thickness: i32)
+    fn cv_get_width(img: Image) -> i32
+    fn cv_get_height(img: Image) -> i32
+    fn cv_get_channels(img: Image) -> i32
+    fn cv_resize(src: Image, dst: Image, width: i32, height: i32)
+}
+
+pub struct ImageObj {
+    pub handle: Image,
+}
+
+impl ImageObj {
+    pub fn new(width: i32, height: i32, depth: i32, channels: i32) -> ImageObj {
+        ImageObj { handle: cv_create_image(width, height, depth, channels) }
+    }
+
+    pub fn open(path: String) -> Option<ImageObj> {
+        let h = cv_imread(path, 1)
+        if h == 0 { Option.None } else { Option.Some(ImageObj { handle: h }) }
+    }
+
+    pub fn release(self: ImageObj) { cv_release_image(self.handle) }
+
+    pub fn width(self: &ImageObj) -> i32 { cv_get_width(self.handle) }
+    pub fn height(self: &ImageObj) -> i32 { cv_get_height(self.handle) }
+    pub fn channels(self: &ImageObj) -> i32 { cv_get_channels(self.handle) }
+
+    pub fn save(self: &ImageObj, path: String) { cv_imwrite(path, self.handle) }
+
+    pub fn canny(self: &ImageObj, low: f64, high: f64) -> ImageObj {
+        let dst = ImageObj.new(self.width(), self.height(), 8, 1)
+        cv_canny(self.handle, dst.handle, low, high)
+        dst
+    }
+
+    pub fn gaussian_blur(self: &ImageObj, ksize: i32) -> ImageObj {
+        let dst = ImageObj.new(self.width(), self.height(), 8, self.channels())
+        cv_gaussian_blur(self.handle, dst.handle, ksize)
+        dst
+    }
+
+    pub fn draw_rect(self: &mut ImageObj, x: i32, y: i32, w: i32, h: i32, color: u32, thickness: i32) {
+        cv_draw_rect(self.handle, x, y, w, h, color, thickness)
+    }
+
+    pub fn resize(self: &ImageObj, width: i32, height: i32) -> ImageObj {
+        let dst = ImageObj.new(width, height, 8, self.channels())
+        cv_resize(self.handle, dst.handle, width, height)
+        dst
+    }
+}

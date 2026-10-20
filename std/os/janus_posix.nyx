@@ -1,0 +1,38 @@
+module janus_posix
+
+import std.io
+import std.os.microkernel
+
+pub enum ElfMachine { X86_64, AArch64, RiscV64 }
+
+pub struct Elf64Header { pub magic: Int, pub machine: ElfMachine, pub entry_point: Int, pub program_header_offset: Int, pub section_header_offset: Int, pub program_headers_count: Int }
+
+pub struct LinuxSyscallContext { pub syscall_nr: Int, pub arg0: Int, pub arg1: Int, pub arg2: Int, pub arg3: Int, pub arg4: Int, pub arg5: Int, pub return_value: Int }
+
+pub struct JanusPosixBridge { pub active_processes: Int, pub total_syscalls_translated: Int, pub is_wayland_active: Bool }
+
+impl JanusPosixBridge {
+    pub fn new() -> JanusPosixBridge {
+        JanusPosixBridge { active_processes: 0, total_syscalls_translated: 0, is_wayland_active: true }
+    }
+
+    pub fn load_elf64_binary(self: &mut Self, binary_path: String, token: &microkernel.CapToken) -> Result<Elf64Header, String> {
+        if !token.has_permission(microkernel.CapRights.Execute) {
+            return Result.Err("denied".to_string())
+        }
+        self.active_processes = self.active_processes + 1
+        Result.Ok(Elf64Header { magic: 0x464l457f, machine: ElfMachine.X86_64, entry_point: 0x400000, program_header_offset: 64, section_header_offset: 4096, program_headers_count: 8 })
+    }
+
+    pub fn translate_syscall(self: &mut Self, ctx: &mut LinuxSyscallContext) -> Result<Int, String> {
+        self.total_syscalls_translated = self.total_syscalls_translated + 1
+        match ctx.syscall_nr {
+            0 => { ctx.return_value = ctx.arg2; Result.Ok(ctx.return_value) },
+            1 => { ctx.return_value = ctx.arg2; Result.Ok(ctx.return_value) },
+            9 => { ctx.return_value = 0x7fff0000; Result.Ok(ctx.return_value) },
+            56 => { ctx.return_value = 1024; Result.Ok(ctx.return_value) },
+            232 => { ctx.return_value = 3; Result.Ok(ctx.return_value) },
+            _ => { ctx.return_value = 0; Result.Ok(0) },
+        }
+    }
+}

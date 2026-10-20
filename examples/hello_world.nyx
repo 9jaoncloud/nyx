@@ -1,0 +1,13 @@
+// examples/hello_world.nyx — Quickstart Hello World in Nyx v0.53.0
+
+fn main() {
+    println("==================================================");
+    println("🌙 Welcome to the Nyx Programming Language (v0.53.0)!");
+    println("Zero-GC Region Inference · 0.00ms Pauses · Native x86_64");
+    println("==================================================");
+
+    let x: Int = 21;
+    let y: Int = 2;
+    println("Quick test calculation (21 * 2): ", x * y);
+    println("Ready to build high-performance systems!");
+}

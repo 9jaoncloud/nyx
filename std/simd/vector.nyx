@@ -1,0 +1,37 @@
+module std.simd.vector
+
+pub struct SimdF32x4 {
+    pub v0: f64,
+    pub v1: f64,
+    pub v2: f64,
+    pub v3: f64
+}
+
+impl SimdF32x4 {
+    pub fn splat(val: f64) -> SimdF32x4 {
+        SimdF32x4 {
+            v0: val,
+            v1: val,
+            v2: val,
+            v3: val
+        }
+    }
+
+    pub fn mul(a: &SimdF32x4, b: &SimdF32x4) -> SimdF32x4 {
+        SimdF32x4 {
+            v0: a.v0 * b.v0,
+            v1: a.v1 * b.v1,
+            v2: a.v2 * b.v2,
+            v3: a.v3 * b.v3
+        }
+    }
+
+    pub fn add(a: &SimdF32x4, b: &SimdF32x4) -> SimdF32x4 {
+        SimdF32x4 {
+            v0: a.v0 + b.v0,
+            v1: a.v1 + b.v1,
+            v2: a.v2 + b.v2,
+            v3: a.v3 + b.v3
+        }
+    }
+}

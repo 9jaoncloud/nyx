@@ -1,0 +1,106 @@
+// ============================================================================
+//   NYX MOBILE: RUNTIME CAPABILITY CONTRACT
+//   Module: std.mobile.runtime
+//
+//   PRODUCTION HONESTY CONTRACT
+//   ------------------------------------------------------------------------
+//   The native Nyx mobile runtime is NOT linked into any build in self
+//   repository. Every hardware-capability call in the mobile stack is therefore
+//   gated through require(), which returns a documented MobileError instead of
+//   fabricated/simulated success.
+//
+//   When a real host ships, it must:
+//     1. Implement the runtime bootstrap,
+//     2. Report `available: true` from probe(),
+//     3. List the capabilities actually present on the device.
+//   Until then every capability call fails fast and honestly.
+//
+//   Nothing in self file invokes extern "C" symbols, so nothing can break
+//   linking. The host wire-up is purely a matter of replacing the default
+//   probe() below with one that returns live data.
+// ============================================================================
+
+module runtime
+
+import std.string
+import std.vec
+import std.result
+
+// Capabilities the mobile stack can ask the platform for.
+pub enum MobileCapability {
+    Display,
+    Sensors,
+    Battery,
+    Haptics,
+    Camera,
+    Bluetooth,
+    Nfc,
+    Biometrics,
+    Billing,
+    Push,
+    Audio,
+    FileSystem,
+}
+
+// Where the app is actually running.
+pub enum MobilePlatform {
+    Android,
+    Ios,
+    Simulator,
+    Desktop,
+    Unknown,
+}
+
+// Error codes the whole mobile stack agrees on.
+pub enum MobileError {
+    RuntimeUnavailable,     // native Nyx mobile runtime not linked
+    CapabilityUnsupported,  // runtime present, but device lacks the capability
+    NotInitialized,         // subsystem not opened
+    DeviceError,            // underlying hardware/system call failed
+    PermissionDenied,
+    UserCancelled,
+}
+
+// Snapshot of what the platform actually exposes.
+pub struct RuntimeProbe {
+    pub available: Bool,
+    pub version: String,
+    pub platform: MobilePlatform,
+    pub capabilities: Vec<MobileCapability>,
+}
+
+// Probe the platform. Defaults to "unavailable" until the native host wire-up.
+pub fn probe() -> RuntimeProbe {
+    RuntimeProbe {
+        available: false,
+        version: "0.0.0-unlinked".to_string(),
+        platform: MobilePlatform.Unknown,
+        capabilities: Vec.new(),
+    }
+}
+
+// Quick availability check.
+pub fn is_available() -> Bool {
+    probe().available
+}
+
+// Require that a specific capability is present and usable right now.
+pub fn require(cap: MobileCapability) -> Result<(), MobileError> {
+    let p = probe()
+    if !p.available {
+        return Err(MobileError.RuntimeUnavailable)
+    }
+
+    let mut present = false
+    for c in &p.capabilities {
+        if c == cap {
+            present = true
+        }
+    }
+
+    if !present {
+        return Err(MobileError.CapabilityUnsupported)
+    }
+
+    Ok(())
+}

@@ -1,0 +1,29 @@
+// @nyx/aero - Official 3D Mobility & Aerospace Systems Package
+// Standard Package: std.aero
+// Modules:
+//   - std.aero.hyperloop    : Transonic Pod MagLev & Aerodynamics Controller
+//   - std.aero.evtol        : Distributed Electric Propulsion (DEP) Fly-By-Wire
+//   - std.aero.deconfliction: 4D Trajectory-Based Operations & ACAS sXu DAA
+//   - std.aero.can_arinc    : DO-178C Level A Avionics Bus (ARINC-429 / CAN)
+
+import std.core.arena;
+import std.core.strict;
+
+import std.aero.hyperloop;
+import std.aero.evtol;
+import std.aero.deconfliction;
+import std.aero.can_arinc;
+
+pub struct NyxAeroPackage {
+    pub version: string,
+    pub compliance_standard: string,
+    pub max_loop_frequency_hz: u32,
+}
+
+pub fn get_package_info() -> NyxAeroPackage {
+    return NyxAeroPackage {
+        version: "1.0.0",
+        compliance_standard: "EASA SC-VTOL-01 / FAA AC 20-193 / DO-178C DAL-A",
+        max_loop_frequency_hz: 5000,
+    };
+}

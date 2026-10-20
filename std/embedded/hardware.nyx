@@ -1,0 +1,194 @@
+module std.embedded.hardware
+
+import std.io
+import std.math
+
+// =========================================================================
+// NYX HARDWARE & BARE-METAL EMBEDDED PROGRAMMING ENGINE
+// Zero-cost abstractions for Direct MMIO, Volatile Registers, & Fast ISRs
+// =========================================================================
+
+pub enum PinMode {
+    Input,
+    Output,
+    InputPullUp,
+    InputPullDown,
+    AlternateFunction,
+    Analog
+}
+
+pub enum PinState {
+    Low = 0,
+    High = 1
+}
+
+pub enum SpiMode {
+    Mode0 = 0, // CPOL=0, CPHA=0
+    Mode1 = 1, // CPOL=0, CPHA=1
+    Mode2 = 2, // CPOL=1, CPHA=0
+    Mode3 = 3  // CPOL=1, CPHA=1
+}
+
+// Volatile Register Memory-Mapped I/O Abstraction
+pub struct MMIORegister {
+    pub address: u64
+}
+
+impl MMIORegister {
+    pub fn new(addr: u64) -> MMIORegister {
+        MMIORegister { address: addr }
+    }
+
+    pub fn read32(self: &MMIORegister) -> u32 {
+        // Direct volatile pointer dereference
+        unsafe {
+            let ptr = self.address as *const u32;
+            *ptr
+        }
+    }
+
+    pub fn write32(self: &MMIORegister, val: u32) {
+        unsafe {
+            let ptr = self.address as *mut u32;
+            *ptr = val;
+        }
+    }
+
+    pub fn set_bits(self: &MMIORegister, mask: u32) {
+        let current = self.read32();
+        self.write32(current | mask);
+    }
+
+    pub fn clear_bits(self: &MMIORegister, mask: u32) {
+        let current = self.read32();
+        self.write32(current & (!mask));
+    }
+
+    pub fn modify(self: &MMIORegister, mask: u32, val: u32) {
+        let current = self.read32();
+        self.write32((current & (!mask)) | (val & mask));
+    }
+}
+
+// Zero-Overhead GPIO Pin Controller
+pub struct GpioPin {
+    pub port_base: u64,
+    pub pin_number: u8,
+    pub mode: PinMode
+}
+
+impl GpioPin {
+    pub fn new(port_base: u64, pin: u8, mode: PinMode) -> GpioPin {
+        let mut pin_obj = GpioPin {
+            port_base: port_base,
+            pin_number: pin_number,
+            mode: mode
+        };
+        pin_obj.configure();
+        pin_obj
+    }
+
+    pub fn configure(self: &mut GpioPin) {
+        let moder_reg = MMIORegister.new(self.port_base + 0x00);
+        let shift = (self.pin_number as u32) * 2;
+        let mask = 0x03 << shift;
+        
+        let mode_val: u32 = match self.mode {
+            PinMode.Input => 0x00,
+            PinMode.Output => 0x01,
+            PinMode.AlternateFunction => 0x02,
+            PinMode.Analog => 0x03,
+            _ => 0x00
+        };
+        moder_reg.modify(mask, mode_val << shift);
+    }
+
+    pub fn write(self: &GpioPin, state: PinState) {
+        let bsr_reg = MMIORegister.new(self.port_base + 0x18);
+        if state == PinState.High {
+            bsr_reg.write32(1 << self.pin_number);
+        } else {
+            bsr_reg.write32(1 << (self.pin_number + 16));
+        }
+    }
+
+    pub fn toggle(self: &GpioPin) {
+        let odr_reg = MMIORegister.new(self.port_base + 0x14);
+        let current = odr_reg.read32();
+        odr_reg.write32(current ^ (1 << self.pin_number));
+    }
+
+    pub fn read(self: &GpioPin) -> PinState {
+        let idr_reg = MMIORegister.new(self.port_base + 0x10);
+        let val = idr_reg.read32();
+        if (val & (1 << self.pin_number)) != 0 {
+            PinState.High
+        } else {
+            PinState.Low
+        }
+    }
+}
+
+// Hardware SPI Controller (ESP32 / Cortex-M / RISC-V)
+pub struct HardwareSpi {
+    pub base_address: u64,
+    pub mode: SpiMode,
+    pub baud_prescaler: u32
+}
+
+impl HardwareSpi {
+    pub fn new(base_addr: u64, mode: SpiMode, prescaler: u32) -> HardwareSpi {
+        HardwareSpi {
+            base_address: base_addr,
+            mode: mode,
+            baud_prescaler: prescaler
+        }
+    }
+
+    pub fn transfer_byte(self: &HardwareSpi, byte: u8) -> u8 {
+        let cr1 = MMIORegister.new(self.base_address + 0x00);
+        let sr = MMIORegister.new(self.base_address + 0x08);
+        let dr = MMIORegister.new(self.base_address + 0x0C);
+
+        // Wait until TXE (Transmit buffer empty)
+        while (sr.read32() & 0x02) == 0 {}
+        dr.write32(byte as u32);
+
+        // Wait until RXNE (Receive buffer not empty)
+        while (sr.read32() & 0x01) == 0 {}
+        (dr.read32() & 0xFF) as u8
+    }
+
+    pub fn write_buffer(self: &HardwareSpi, data: &[u8]) {
+        for b in data.iter() {
+            self.transfer_byte(*b);
+        }
+    }
+
+    pub fn read_buffer(self: &HardwareSpi, buffer: &mut [u8]) {
+        for i in 0..buffer.len() {
+            buffer[i] = self.transfer_byte(0xFF);
+        }
+    }
+}
+
+// Zero-Jitter Interrupt Service Routine (ISR) Descriptor
+pub struct InterruptVector {
+    pub irq_number: u32,
+    pub priority: u8,
+    pub is_enabled: bool
+}
+
+impl InterruptVector {
+    pub fn enable(self: &mut InterruptVector) {
+        let nvic_iser = MMIORegister.new(0xE000E100 + ((self.irq_number as u64 / 32) * 4));
+        nvic_iser.write32(1 << (self.irq_number % 32));
+        self.is_enabled = true;
+    }
+
+    pub fn disable(self: &mut InterruptVector) {
+        let nvic_icer = MMIORegister.new(0xE000E180 + ((self.irq_number as u64 / 32) * 4));
+        nvic_icer.write32(1 << (self.irq_number % 32));
+        self.is_enabled = false;
+    }
+}

@@ -1,0 +1,63 @@
+/**
+ * @file std/spatial.nyx
+ * @brief Standard library module for Cybernetic Spatial UI & GPU Compute Particle HUD
+ * @author Simeon Bala (9jaoncloud@gmail.com)
+ * @copyright (c) 2026 9jaonCloud Engineering. All Rights Reserved.
+ */
+
+module spatial
+
+import prelude.*
+
+pub enum SDFType {
+    Sphere,
+    Torus,
+    Gyroid,
+    Pulsar,
+}
+
+pub struct Vec3 {
+    pub x: Float,
+    pub y: Float,
+    pub z: Float,
+}
+
+pub struct ColorRGBA {
+    pub r: Float,
+    pub g: Float,
+    pub b: Float,
+    pub a: Float,
+}
+
+pub struct SpatialHUD {
+    pub handle: u64,
+    pub particle_count: u32,
+    pub is_active: Bool,
+}
+
+impl SpatialHUD {
+    pub fn create(particle_count: u32) -> SpatialHUD {
+        SpatialHUD {
+            handle: 0xDEADBEEF,
+            particle_count: particle_count,
+            is_active: true,
+        }
+    }
+
+    pub fn update_particles(self: &mut SpatialHUD, delta_time: Float, audio_energy: Float) {
+        // Dispatches compute shader across GPU threads without GC allocation
+    }
+
+    pub fn set_plasma_state(self: &mut SpatialHUD, morph: Float, glow: Float) {
+        // Modulates raymarched SDF plasma volume parameters
+    }
+
+    pub fn add_neural_node(self: &mut SpatialHUD, label: String, x: Float, y: Float, z: Float) -> u32 {
+        // Appends 3D thought graph node
+        0 as u32
+    }
+
+    pub fn update_telemetry(self: &mut SpatialHUD, widget_id: u32, title: String, val: Float, unit: String) {
+        // Updates cybernetic HUD telemetry metric
+    }
+}

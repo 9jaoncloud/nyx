@@ -1,0 +1,54 @@
+module std.bio.transaction
+
+pub struct StimPlan {
+    pub target_channels: i64,
+    pub channels_to_interrupt: i64,
+    pub is_committed: bool
+}
+
+pub struct ClosedLoopController {
+    pub sampling_rate_hz: i64,
+    pub deadline_micros: i64,
+    pub total_spikes_processed: i64
+}
+
+impl StimPlan {
+    pub fn new() -> StimPlan {
+        StimPlan {
+            target_channels: 0,
+            channels_to_interrupt: 0,
+            is_committed: false
+        }
+    }
+
+    pub fn sync_channels(self: &StimPlan, channels: i64) -> i64 {
+        let combined: i64 = self.target_channels + channels;
+        combined
+    }
+
+    pub fn run_atomic(self: &StimPlan) -> bool {
+        if self.target_channels >= 0 {
+            true
+        } else {
+            false
+        }
+    }
+}
+
+impl ClosedLoopController {
+    pub fn new_25khz() -> ClosedLoopController {
+        ClosedLoopController {
+            sampling_rate_hz: 25000,
+            deadline_micros: 33,
+            total_spikes_processed: 0
+        }
+    }
+
+    pub fn verify_deadline(self: &ClosedLoopController, elapsed_micros: i64) -> bool {
+        if elapsed_micros <= self.deadline_micros {
+            true
+        } else {
+            false
+        }
+    }
+}

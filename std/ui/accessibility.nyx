@@ -1,0 +1,58 @@
+// ============================================================================
+// Module: std.ui.accessibility
+// Purpose: Zero-GC Operating System Accessibility Tree & W3C WAI-ARIA Bridge
+// Specification: UI Automation (UIA) & W3C WAI-ARIA 1.2
+// ============================================================================
+
+module accessibility
+
+import prelude.*
+
+pub enum AccessibleRole {
+    Window,
+    Button,
+    Checkbox,
+    TextInput,
+    Heading,
+    Navigation,
+    Dialog,
+    Alert,
+}
+
+pub struct AccessibleNode {
+    pub id: u32,
+    pub role: AccessibleRole,
+    pub label_utf8: String,
+    pub value_utf8: String,
+    pub is_focused: bool,
+    pub is_expanded: bool,
+    pub is_selected: bool,
+    pub parent_id: u32,
+    pub child_count: u32,
+    pub child_ids: Vec<u32>,
+}
+
+pub struct AccessibilityTree {
+    pub node_count: u32,
+    pub nodes: Vec<AccessibleNode>,
+    pub focused_node_id: u32,
+}
+
+pub fn accessibility_node_init(
+    id: u32, 
+    role: AccessibleRole, 
+    label: String
+) -> AccessibleNode {
+    AccessibleNode {
+        id,
+        role,
+        label_utf8: label,
+        value_utf8: "".to_string(),
+        is_focused: false,
+        is_expanded: false,
+        is_selected: false,
+        parent_id: 0,
+        child_count: 0,
+        child_ids: Vec.new(),
+    }
+}

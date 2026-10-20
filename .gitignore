@@ -1,0 +1,28 @@
+# Build Artifacts & Intermediate Files
+target/
+build/
+dist/
+compiler/
+*.o
+*.obj
+*.so
+*.dylib
+*.dll
+*.wasm
+.nyx_cache/
+
+# IDE & Editor Local Configs
+.vscode/
+.idea/
+*.suo
+*.user
+
+# Environment & Credentials
+.env
+.env.*
+credentials/
+scratch/
+backup-*/
+
+# Keep precompiled standalone compiler executable
+!bin/nyx.exe

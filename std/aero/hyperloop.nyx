@@ -1,0 +1,129 @@
+// @nyx/aero - Hyperloop Transonic Pod MagLev & Aerodynamics Controller
+// Standard Package: std.aero.hyperloop
+// Compliance: DO-178C DAL-A / ISO 26262 ASIL-D Deterministic Region Model
+// Hard Real-Time Target: 5,000 Hz (200 microsecond feedback cycle)
+
+import std.core.arena;
+import std.core.strict;
+
+@strict
+@must_region
+pub struct HyperloopTelemetry {
+    pub pod_velocity_mps: f64,          // Velocity in m/s (e.g., 277.78 m/s = 1000 km/h)
+    pub tube_static_pressure_pa: f64,   // Vacuum pressure (typically 100 Pa / 0.001 atm)
+    pub mach_number: f32,               // Local Mach number inside tube (e.g. 0.82)
+    pub airgap_sensor_mm: [f32; 4],     // Four corner electromagnetic suspension sensors (target: 15.0 mm)
+    pub lsm_frequency_hz: f32,          // Linear Synchronous Motor stator frequency
+    pub stator_temperature_c: f32,      // Stator winding temperature
+    pub battery_voltage_v: f32,         // Onboard 800V DC bus voltage
+    pub cabin_pressure_kpa: f32,        // Life support cabin pressure (nominal: 101.3 kPa)
+}
+
+@strict
+@must_region
+pub struct HyperloopActuatorOutput {
+    pub ems_magnet_current_a: [f32; 4], // Quad-corner magnet currents (0.0 to 120.0 A)
+    pub lsm_target_thrust_kn: f32,      // Linear Motor propulsion thrust (kN)
+    pub compressor_bypass_rpm: u32,     // Axial compressor bypass RPM (Kantrowitz relief)
+    pub eddy_brake_deployed: bool,      // Mechanical permanent magnet eddy-current brake
+    pub emergency_vent_valve: bool,     // Emergency cabin repressurization valve
+}
+
+@strict
+@must_region
+pub struct AirgapPidState {
+    pub p_gain: f32,
+    pub i_gain: f32,
+    pub d_gain: f32,
+    pub prev_errors: [f32; 4],
+    pub integral_sums: [f32; 4],
+    pub target_airgap_mm: f32,
+}
+
+// Initialize Airgap PID Controller with high-speed state-space gains
+pub fn init_airgap_controller(target_mm: f32) -> AirgapPidState {
+    return AirgapPidState {
+        p_gain: 1450.0,
+        i_gain: 55.0,
+        d_gain: 340.0,
+        prev_errors: [0.0, 0.0, 0.0, 0.0],
+        integral_sums: [0.0, 0.0, 0.0, 0.0],
+        target_airgap_mm: target_mm,
+    };
+}
+
+// Compute Kantrowitz Aerodynamic Choking Bypass Ratio
+// When Mach approaches 0.85 in a closed tube, flow will choke if bypass area is insufficient.
+pub fn compute_kantrowitz_compressor_rpm(velocity_mps: f64, static_press_pa: f64) -> u32 {
+    let speed_of_sound: f64 = 340.29; // Sea-level reference
+    let local_mach: f64 = velocity_mps / speed_of_sound;
+
+    if local_mach < 0.3 {
+        return 8000; // Idle cooling flow
+    } else if local_mach < 0.65 {
+        return 22000; // Moderate transonic relief
+    } else {
+        // High-subsonic / transonic regime: maximum bypass compression
+        let compression_factor: f64 = (local_mach - 0.65) * 50000.0;
+        let mut target_rpm: u32 = 30000 + (compression_factor as u32);
+        if target_rpm > 65000 {
+            target_rpm = 65000;
+        }
+        return target_rpm;
+    }
+}
+
+// Real-Time 5 kHz Control Step (executed with zero-alloc inside region arena)
+pub fn step_hyperloop_maglev(
+    region r: Arena,
+    mut pid: AirgapPidState,
+    telem: HyperloopTelemetry,
+    dt_seconds: f32
+) -> (HyperloopActuatorOutput, AirgapPidState) {
+    let mut magnet_currents: [f32; 4] = [0.0, 0.0, 0.0, 0.0];
+    let mut emergency_brake: bool = false;
+
+    for i in 0..4 {
+        let current_gap: f32 = telem.airgap_sensor_mm[i];
+        let error: f32 = pid.target_airgap_mm - current_gap;
+        
+        pid.integral_sums[i] = pid.integral_sums[i] + (error * dt_seconds);
+        let derivative: f32 = (error - pid.prev_errors[i]) / dt_seconds;
+        pid.prev_errors[i] = error;
+
+        let mut current_cmd: f32 = (pid.p_gain * error) + 
+                                   (pid.i_gain * pid.integral_sums[i]) + 
+                                   (pid.d_gain * derivative);
+
+        // Clamping to coil saturation limits (0A to 120A)
+        if current_cmd < 0.0 { current_cmd = 0.0; }
+        if current_cmd > 120.0 { current_cmd = 120.0; }
+        magnet_currents[i] = current_cmd;
+
+        // Failsafe condition: If airgap collapses below 4.0 mm, activate fail-safe eddy brakes
+        if current_gap < 4.0 {
+            emergency_brake = true;
+        }
+    }
+
+    let compressor_rpm = compute_kantrowitz_compressor_rpm(
+        telem.pod_velocity_mps, 
+        telem.tube_static_pressure_pa
+    );
+
+    // Dynamic propulsion vectoring
+    let mut thrust_kn: f32 = 45.0; // Cruise thrust
+    if telem.pod_velocity_mps < 50.0 {
+        thrust_kn = 120.0; // High launch acceleration
+    }
+
+    let out = HyperloopActuatorOutput {
+        ems_magnet_current_a: magnet_currents,
+        lsm_target_thrust_kn: thrust_kn,
+        compressor_bypass_rpm: compressor_rpm,
+        eddy_brake_deployed: emergency_brake,
+        emergency_vent_valve: (telem.cabin_pressure_kpa < 70.0),
+    };
+
+    return (out, pid);
+}

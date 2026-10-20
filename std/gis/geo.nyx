@@ -1,0 +1,126 @@
+module geo
+
+import std.io
+import std.vec
+
+extern "C" {
+    fn rt_gis_distance_km(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> f64
+    fn rt_gis_web_mercator_x(lon: f64) -> f64
+    fn rt_gis_web_mercator_y(lat: f64) -> f64
+    fn rt_gis_wgs84_lat(x: f64, y: f64) -> f64
+    fn rt_gis_wgs84_lon(x: f64, y: f64) -> f64
+    fn rt_gis_hillshade(dz_dx: f64, dz_dy: f64) -> f64
+}
+
+/* ── 1. Coordinate Reference Systems (CRS) & Projections ── */
+
+pub struct Point {
+    pub lat: f64,
+    pub lon: f64,
+    pub z: f64,
+}
+
+pub struct WebMercatorPoint {
+    pub x: f64,
+    pub y: f64,
+}
+
+pub fn create_point(lat: f64, lon: f64) -> Point {
+    Point { lat: lat, lon: lon, z: 0.0 }
+}
+
+pub fn distance_km(p1: &Point, p2: &Point) -> f64 {
+    rt_gis_distance_km(p1.lat, p1.lon, p2.lat, p2.lon)
+}
+
+pub fn to_web_mercator(pt: &Point) -> WebMercatorPoint {
+    let x = rt_gis_web_mercator_x(pt.lon)
+    let y = rt_gis_web_mercator_y(pt.lat)
+    WebMercatorPoint { x: x, y: y }
+}
+
+pub fn to_wgs84(merc: &WebMercatorPoint) -> Point {
+    let lat = rt_gis_wgs84_lat(merc.x, merc.y)
+    let lon = rt_gis_wgs84_lon(merc.x, merc.y)
+    create_point(lat, lon)
+}
+
+/* ── 2. Vector Geometry & Spatial Envelopes ── */
+
+pub struct Envelope {
+    pub min_lon: f64,
+    pub min_lat: f64,
+    pub max_lon: f64,
+    pub max_lat: f64,
+}
+
+pub fn create_envelope(min_lon: f64, min_lat: f64, max_lon: f64, max_lat: f64) -> Envelope {
+    Envelope { min_lon: min_lon, min_lat: min_lat, max_lon: max_lon, max_lat: max_lat }
+}
+
+pub fn envelope_contains(env: &Envelope, pt: &Point) -> Bool {
+    pt.lon >= env.min_lon && pt.lon <= env.max_lon &&
+    pt.lat >= env.min_lat && pt.lat <= env.max_lat
+}
+
+pub struct Polygon {
+    pub min_lat: f64,
+    pub max_lat: f64,
+    pub min_lon: f64,
+    pub max_lon: f64,
+}
+
+pub fn create_polygon(min_lat: f64, max_lat: f64, min_lon: f64, max_lon: f64) -> Polygon {
+    Polygon { min_lat: min_lat, max_lat: max_lat, min_lon: min_lon, max_lon: max_lon }
+}
+
+pub fn point_in_polygon(poly: &Polygon, pt: &Point) -> Bool {
+    pt.lat >= poly.min_lat && pt.lat <= poly.max_lat &&
+    pt.lon >= poly.min_lon && pt.lon <= poly.max_lon
+}
+
+/* ── 3. Spatial GeoDataset Container ── */
+
+pub struct GeoDataset {
+    pub layer_name: String,
+    pub feature_count: i64,
+}
+
+pub fn create_geodataset(name: String) -> GeoDataset {
+    GeoDataset { layer_name: name, feature_count: 0 }
+}
+
+pub fn add_feature(ds: &mut GeoDataset, id: i64, name: String, ftype: String, lat: f64, lon: f64) {
+    ds.feature_count = ds.feature_count + 1
+}
+
+/* ── 4. Elevation Raster Transformations ── */
+
+pub struct RasterElevationGrid {
+    pub width: i32,
+    pub height: i32,
+    pub cell_size_meters: f64,
+}
+
+pub fn create_raster_grid(w: i32, h: i32, cell_size: f64) -> RasterElevationGrid {
+    RasterElevationGrid { width: w, height: h, cell_size_meters: cell_size }
+}
+
+pub fn calculate_hillshade(dz_dx: f64, dz_dy: f64) -> f64 {
+    rt_gis_hillshade(dz_dx, dz_dy)
+}
+
+/* ── 5. Spatial Agent Memory Store (TencentDB-Agent-Memory inspired) ── */
+
+pub struct SpatialAgentMemoryStore {
+    pub store_name: String,
+    pub memory_count: i64,
+}
+
+pub fn create_memory_store(name: String) -> SpatialAgentMemoryStore {
+    SpatialAgentMemoryStore { store_name: name, memory_count: 0 }
+}
+
+pub fn insert_spatial_memory(store: &mut SpatialAgentMemoryStore, mem_id: String, agent_id: String, lat: f64, lon: f64, category: String, content: String) {
+    store.memory_count = store.memory_count + 1
+}

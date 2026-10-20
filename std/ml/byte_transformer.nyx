@@ -1,0 +1,78 @@
+module byte_transformer
+
+import ml.{Tensor, Linear, LayerNorm, MultiheadAttention, TransformerBlock, matmul, add, softmax}
+
+/* ── Tokenizer-Free Byte Transformer (arXiv:1908.10322) ────── */
+/* Operates strictly on raw UTF-8 bytes (0..255). No subword BPE.       */
+
+pub struct ByteEmbedding {
+    weight: Tensor,
+    d_model: usize,
+}
+
+impl ByteEmbedding {
+    pub fn new(d_model: usize) -> ByteEmbedding {
+        ByteEmbedding {
+            weight: Tensor.rand(vec![256, d_model]),
+            d_model,
+        }
+    }
+
+    pub fn lookup(self: &ByteEmbedding, byte_val: u8) -> Tensor {
+        let idx = byte_val as usize
+        let mut row_data = Vec.with_capacity(self.d_model)
+        for j in 0..self.d_model {
+            row_data.push(self.weight.data[idx * self.d_model + j])
+        }
+        Tensor.new(row_data, vec![1, self.d_model])
+    }
+}
+
+pub struct ByteTransformerModel {
+    d_model: usize,
+    num_layers: usize,
+    embed: ByteEmbedding,
+    blocks: Vec<TransformerBlock>,
+    norm_final: LayerNorm,
+    head: Linear,
+}
+
+impl ByteTransformerModel {
+    pub fn new(d_model: usize, num_layers: usize, num_heads: usize, ff_dim: usize) -> ByteTransformerModel {
+        let mut blocks = Vec.new()
+        for _ in 0..num_layers {
+            blocks.push(TransformerBlock.new(d_model, num_heads, ff_dim))
+        }
+        ByteTransformerModel {
+            d_model,
+            num_layers,
+            embed: ByteEmbedding.new(d_model),
+            blocks,
+            norm_final: LayerNorm.new(d_model),
+            head: Linear.new(d_model, 256),
+        }
+    }
+
+    pub fn forward_byte(self: &ByteTransformerModel, input_byte: u8) -> Tensor {
+        let mut x = self.embed.lookup(input_byte)
+        for block in &self.blocks {
+            x = block.forward(&x)
+        }
+        let normed = self.norm_final.forward(&x)
+        let logits = self.head.forward(&normed)
+        softmax(&logits)
+    }
+
+    pub fn predict_next_byte(self: &ByteTransformerModel, input_byte: u8) -> u8 {
+        let probs = self.forward_byte(input_byte)
+        let mut best_idx = 0_usize
+        let mut best_p = probs.data[0]
+        for i in 1..256 {
+            if probs.data[i] > best_p {
+                best_p = probs.data[i]
+                best_idx = i
+            }
+        }
+        best_idx as u8
+    }
+}

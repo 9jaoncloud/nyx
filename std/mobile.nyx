@@ -1,0 +1,226 @@
+module mobile
+
+import std.string
+import std.vec
+import std.option
+import std.result
+
+// ── Enterprise Hardware, Storage & Peripherals Submodules ──────────────
+import std.mobile.runtime
+pub import std.mobile.nfc
+pub import std.mobile.ble
+pub import std.mobile.camera
+pub import std.mobile.sync
+pub import std.mobile.push
+pub import std.mobile.billing
+pub import std.mobile.audio
+pub import std.mobile.biometrics
+pub import std.mobile.auto
+pub import std.mobile.a11y
+pub import std.mobile.npu_slm
+pub import std.mobile.pqc_enclave
+pub import std.mobile.trifold
+pub import std.mobile.spatial_teleport
+pub import std.mobile.hologram
+pub import std.mobile.ios_metal
+pub import std.mobile.bifrost
+pub import std.mobile.android_compat
+pub import std.mobile.satellite_ntn
+pub import std.mobile.neuromorphic
+pub import std.mobile.zk_identity
+pub import std.ipa
+
+/* ── 1. Multi-Touch Gestures & Pointer Input ────────────────────────────── */
+
+pub enum TouchPhase {
+    Began,
+    Moved,
+    Stationary,
+    Ended,
+    Cancelled,
+}
+
+pub struct TouchPointer {
+    pub id: i64,
+    pub x: f64,
+    pub y: f64,
+    pub pressure: f64,
+    pub phase: TouchPhase,
+}
+
+pub enum GestureType {
+    Tap,
+    DoubleTap,
+    LongPress,
+    Pan,
+    PinchZoom,
+    Swipe,
+}
+
+pub struct GestureEvent {
+    pub gesture: GestureType,
+    pub focal_x: f64,
+    pub focal_y: f64,
+    pub scale: f64,
+    pub velocity_x: f64,
+    pub velocity_y: f64,
+}
+
+/* ── 2. Display Metrics & Device Posture ─────────────────────────────────── */
+
+pub enum Orientation {
+    Portrait,
+    PortraitUpsideDown,
+    LandscapeLeft,
+    LandscapeRight,
+}
+
+pub struct SafeAreaInsets {
+    pub top: f64,     // Status bar / Notch inset
+    pub bottom: f64,  // Home indicator inset
+    pub left: f64,
+    pub right: f64,
+}
+
+pub struct DisplayMetrics {
+    pub physical_width_px: i64,
+    pub physical_height_px: i64,
+    pub logical_width_dp: f64,
+    pub logical_height_dp: f64,
+    pub scale_density: f64,
+    pub refresh_rate_hz: f64,
+    pub orientation: Orientation,
+    pub safe_area: SafeAreaInsets,
+}
+
+// Live display metrics, gated on the platform runtime.
+// Returns Err(RuntimeUnavailable) until the native host is linked - never
+// fabricated data.
+pub fn get_display_metrics() -> Result<DisplayMetrics, runtime.MobileError> {
+    let r = runtime.require(runtime.MobileCapability.Display)
+    return match r {
+        Result.Ok(_) => Ok(reference_display_metrics()),
+        Result.Err(e) => Err(e),
+    }
+}
+
+// Design-reference geometry for the target device. Clearly named: self is a
+// specification, NOT a live measurement. Do not present it as a device read.
+pub fn reference_display_metrics() -> DisplayMetrics {
+    DisplayMetrics {
+        physical_width_px: 1170,
+        physical_height_px: 2532,
+        logical_width_dp: 390.0,
+        logical_height_dp: 844.0,
+        scale_density: 3.0,
+        refresh_rate_hz: 120.0,
+        orientation: Orientation.Portrait,
+        safe_area: SafeAreaInsets {
+            top: 47.0,
+            bottom: 34.0,
+            left: 0.0,
+            right: 0.0,
+        },
+    }
+}
+
+/* ── 3. Device Motion & IMU Sensors ─────────────────────────────────────── */
+
+pub struct Vector3D {
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
+}
+
+pub struct SensorData {
+    pub acceleration_m_s2: Vector3D,
+    pub gyroscope_rad_s: Vector3D,
+    pub magnetometer_ut: Vector3D,
+    pub timestamp_us: i64,
+}
+
+pub fn read_sensors() -> Result<SensorData, runtime.MobileError> {
+    let r = runtime.require(runtime.MobileCapability.Sensors)
+    return match r {
+        Result.Ok(_) => Ok(reference_sensor_data()),
+        Result.Err(e) => Err(e),
+    }
+}
+
+// Reference (idle-table) values, not a live read.
+pub fn reference_sensor_data() -> SensorData {
+    SensorData {
+        acceleration_m_s2: Vector3D { x: 0.02, y: 9.81, z: 0.05 },
+        gyroscope_rad_s: Vector3D { x: 0.001, y: 0.002, z: 0.0 },
+        magnetometer_ut: Vector3D { x: 22.4, y: -5.1, z: 42.8 },
+        timestamp_us: 0,
+    }
+}
+
+/* ── 4. Power & Battery State ────────────────────────────────────────────── */
+
+pub enum BatteryState {
+    Unplugged,
+    Charging,
+    Full,
+    Unknown,
+}
+
+pub struct BatteryInfo {
+    pub level_percent: f64,
+    pub state: BatteryState,
+    pub is_low_power_mode: Bool,
+}
+
+pub fn get_battery_info() -> Result<BatteryInfo, runtime.MobileError> {
+    let r = runtime.require(runtime.MobileCapability.Battery)
+    return match r {
+        Result.Ok(_) => Ok(reference_battery_info()),
+        Result.Err(e) => Err(e),
+    }
+}
+
+// Reference (idle-table) values, not a live read.
+pub fn reference_battery_info() -> BatteryInfo {
+    BatteryInfo {
+        level_percent: 0.0,
+        state: BatteryState.Unknown,
+        is_low_power_mode: false,
+    }
+}
+
+/* ── 5. Native Haptic Feedback Engine ────────────────────────────────────── */
+
+pub enum HapticPattern {
+    LightImpact,
+    MediumImpact,
+    HeavyImpact,
+    SelectionChange,
+    SuccessNotification,
+    WarningNotification,
+    ErrorNotification,
+}
+
+extern "C" {
+    fn nyx_mobile_haptic_trigger(pattern: i32)
+}
+
+pub fn trigger_haptic(pattern: HapticPattern) {
+    // No-op until a host runtime providing haptics is linked.
+    let cap = runtime.require(runtime.MobileCapability.Haptics)
+    if cap.is_err() {
+        return
+    }
+    let code: i32 = match pattern {
+        HapticPattern.LightImpact => 1,
+        HapticPattern.MediumImpact => 2,
+        HapticPattern.HeavyImpact => 3,
+        HapticPattern.SelectionChange => 4,
+        HapticPattern.SuccessNotification => 5,
+        HapticPattern.WarningNotification => 6,
+        HapticPattern.ErrorNotification => 7,
+    }
+    unsafe {
+        nyx_mobile_haptic_trigger(code)
+    }
+}

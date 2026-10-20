@@ -1,0 +1,129 @@
+module std.embedded.esp32
+
+import std.embedded.hardware
+import std.io
+
+// =========================================================================
+// ESP32 NATIVE BARE-METAL HARDWARE ARCHITECTURE FOR NYX
+// Target Support: ESP32 (Xtensa LX6/LX7), ESP32-S3 (Vector SIMD), ESP32-C3/C6 (RISC-V)
+// =========================================================================
+
+// ESP32 Memory Map Base Addresses
+pub const DPORT_BASE: u64       = 0x3FF00000;
+pub const GPIO_BASE: u64        = 0x3FF44000;
+pub const SPI1_BASE: u64        = 0x3FF42000;
+pub const SPI2_HSPI_BASE: u64   = 0x3FF43000;
+pub const SPI3_VSPI_BASE: u64   = 0x3FF64000;
+pub const UART0_BASE: u64       = 0x3FF40000;
+pub const UART1_BASE: u64       = 0x3FF50000;
+pub const I2C0_BASE: u64        = 0x3FF53000;
+pub const RTC_CNTL_BASE: u64    = 0x3FF48000;
+pub const TIMERG0_BASE: u64     = 0x3FF5F000;
+
+// Dual-Core Identifier
+pub enum CpuCore {
+    Core0_Protocol = 0, // Handles Wi-Fi, BLE, LoRa background communications
+    Core1_Compute  = 1  // Handles real-time control, sensor DSP, zero-jitter loops
+}
+
+pub struct Esp32ImageHeader {
+    pub magic: u8,              // 0xE9 (Standard Espressif Image Magic)
+    pub segment_count: u8,      // Number of memory segments (usually 3 or 4)
+    pub spi_mode: u8,           // 0=QIO, 1=QOUT, 2=DIO, 3=DOUT
+    pub spi_speed_size: u8,     // High nibble: flash size, Low nibble: flash speed (40/80 MHz)
+    pub entry_point: u32        // Address of reset handler (e.g. 0x40080000 in IRAM)
+}
+
+impl Esp32ImageHeader {
+    pub fn new_standard(entry_addr: u32) -> Esp32ImageHeader {
+        Esp32ImageHeader {
+            magic: 0xE9,
+            segment_count: 3,
+            spi_mode: 0x02, // DIO (Dual I/O, universally supported)
+            spi_speed_size: 0x20, // 40MHz, 4MB Flash
+            entry_point: entry_addr
+        }
+    }
+}
+
+// ESP32 GPIO Matrix Pin Controller
+pub struct Esp32Gpio {
+    pub pin_num: u8
+}
+
+impl Esp32Gpio {
+    pub fn new(pin: u8) -> Esp32Gpio {
+        Esp32Gpio { pin_num: pin }
+    }
+
+    pub fn set_direction_output(self: &Esp32Gpio) {
+        if self.pin_num < 32 {
+            let enable_reg = MMIORegister.new(GPIO_BASE + 0x0020);
+            enable_reg.set_bits(1 << self.pin_num);
+        } else {
+            let enable1_reg = MMIORegister.new(GPIO_BASE + 0x002C);
+            enable1_reg.set_bits(1 << (self.pin_num - 32));
+        }
+    }
+
+    pub fn set_direction_input(self: &Esp32Gpio) {
+        if self.pin_num < 32 {
+            let enable_w1tc = MMIORegister.new(GPIO_BASE + 0x0028);
+            enable_w1tc.write32(1 << self.pin_num);
+        } else {
+            let enable1_w1tc = MMIORegister.new(GPIO_BASE + 0x0034);
+            enable1_w1tc.write32(1 << (self.pin_num - 32));
+        }
+    }
+
+    pub fn write_high(self: &Esp32Gpio) {
+        if self.pin_num < 32 {
+            let out_w1ts = MMIORegister.new(GPIO_BASE + 0x0008);
+            out_w1ts.write32(1 << self.pin_num);
+        } else {
+            let out1_w1ts = MMIORegister.new(GPIO_BASE + 0x0014);
+            out1_w1ts.write32(1 << (self.pin_num - 32));
+        }
+    }
+
+    pub fn write_low(self: &Esp32Gpio) {
+        if self.pin_num < 32 {
+            let out_w1tc = MMIORegister.new(GPIO_BASE + 0x000C);
+            out_w1tc.write32(1 << self.pin_num);
+        } else {
+            let out1_w1tc = MMIORegister.new(GPIO_BASE + 0x0018);
+            out1_w1tc.write32(1 << (self.pin_num - 32));
+        }
+    }
+
+    pub fn read_state(self: &Esp32Gpio) -> bool {
+        if self.pin_num < 32 {
+            let in_reg = MMIORegister.new(GPIO_BASE + 0x003C);
+            (in_reg.read32() & (1 << self.pin_num)) != 0
+        } else {
+            let in1_reg = MMIORegister.new(GPIO_BASE + 0x0040);
+            (in1_reg.read32() & (1 << (self.pin_num - 32))) != 0
+        }
+    }
+}
+
+// Dual-Core Execution Dispatcher
+pub struct Esp32DualCoreDispatcher {}
+
+impl Esp32DualCoreDispatcher {
+    pub fn current_core() -> CpuCore {
+        // Read Processor ID Register (PRID) on Xtensa / mhartid on RISC-V
+        let prid = MMIORegister.new(DPORT_BASE + 0x0000).read32();
+        if (prid & 0x01) == 0 {
+            CpuCore.Core0_Protocol
+        } else {
+            CpuCore.Core1_Compute
+        }
+    }
+
+    pub fn enable_core1(entry_function_addr: u64) {
+        // Un-halt Core 1 via DPORT register control
+        let appcpu_ctrl_b = MMIORegister.new(DPORT_BASE + 0x0034);
+        appcpu_ctrl_b.set_bits(1 << 0); // Release Core 1 reset line
+    }
+}

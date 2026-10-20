@@ -1,0 +1,33 @@
+🔥 Nyx Language — Academic Paper Dropping Tonight 🔥
+
+Hey everyone 👋
+
+You need to see this. A group called "The Nyx Architecture Team" (Open Source Systems Research) just published a PLDI/POPL 2026 research submission that might be the closest thing to "Rust but without the lifetime hell" that we've all been waiting for.
+
+**What is Nyx in 30 seconds:**
+- Statically typed systems language
+- Zero garbage collection (0.00 ms GC pauses across 24 benchmark programs)
+- Automatic region inference — the compiler figures out object lifetimes for you
+- No lifetime annotations required (unlike Rust)
+- Combines region bump allocation (82.4% of allocations) with reference-counted promotion for escaping values
+- Formalized with the Lambda-Nyx calculus + Theorem 1 (Zero Use-After-Free Invariant)
+
+This is the kind of thing that either solves real systems programming pain or is total nonsense. The paper is 18 sections deep with formal proofs, escape analysis topology diagrams, and a 24-program empirical benchmark suite.
+
+**I need the smartest people in this group to review this:**
+
+1. Read the paper: https://nyx.9jaoncloud.com.ng/docs/paper/escape-directed-memory-compaction.html
+2. Check the benchmarks: https://nyx.9jaoncloud.com.ng/docs/benchmarks.html
+3. Look at the actual code: https://github.com/9jaoncloud/nyx
+4. Drop your honest feedback below ⬇️
+
+Does the region inference actually work? Are the benchmarks legit? Is the formal model sound? Or is this just vaporware with pretty math?
+
+I'm genuinely curious whether this holds up to scrutiny. The architecture team is soliciting peer review — so if you spot a flaw, a strength, or something that's totally wrong, please speak up. This is exactly the kind of audacious language design that the systems programming community should be hashing out together.
+
+Please share this with anyone who works on compilers, memory safety, or systems languages. The more eyeballs, the better. If this is real, it changes the game. If it's not, we need to know why.
+
+Paper index: https://nyx.9jaoncloud.com.ng/docs/paper/papers.html
+GitHub: https://github.com/9jaoncloud/nyx
+
+Looking forward to hearing what you all think. Don't hold back — tear it apart if it deserves it 🧵

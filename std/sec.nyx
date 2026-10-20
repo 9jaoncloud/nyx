@@ -1,0 +1,199 @@
+module sec
+
+import std.io
+import std.fs
+import std.string
+
+pub enum Capability {
+    FileSystem,
+    Network,
+    Process,
+    Environment,
+    UI,
+    Hardware,
+    FFI,
+    Unsafe,
+}
+
+pub struct SecurityToken {
+    pub cap: Capability,
+    pub granted: Bool,
+    pub granted_at: Int,
+    pub source_module: String,
+}
+
+pub struct AuditEntry {
+    pub timestamp: Int,
+    pub mod_name: String,
+    pub cap: Capability,
+    pub action: String,
+    pub allowed: Bool,
+}
+
+pub struct SecurityContext {
+    pub tokens: Vec<SecurityToken>,
+    pub audit_log: Vec<AuditEntry>,
+    pub manifest_caps: Vec<Capability>,
+    pub strict_mode: Bool,
+}
+
+pub fn new_context() -> SecurityContext {
+    SecurityContext {
+        tokens: Vec.new(),
+        audit_log: Vec.new(),
+        manifest_caps: Vec.new(),
+        strict_mode: true,
+    }
+}
+
+pub fn new_context_relaxed() -> SecurityContext {
+    SecurityContext {
+        tokens: Vec.new(),
+        audit_log: Vec.new(),
+        manifest_caps: Vec.new(),
+        strict_mode: false,
+    }
+}
+
+impl SecurityContext {
+    pub fn grant(self: &mut SecurityContext, cap: Capability, mod_name: String) {
+        self.tokens.push(SecurityToken {
+            cap: cap.clone(),
+            granted: true,
+            granted_at: 0,
+            source_module: mod_name.clone(),
+        });
+        self.audit_log.push(AuditEntry {
+            timestamp: 0,
+            mod_name: mod_name,
+            cap: cap,
+            action: "grant".to_string(),
+            allowed: true,
+        });
+    }
+
+    pub fn revoke(self: &mut SecurityContext, cap: &Capability, mod_name: &String) {
+        for token in self.tokens.iter_mut() {
+            if token.cap == *cap && token.source_module == *mod_name {
+                token.granted = false;
+            }
+        }
+        self.audit_log.push(AuditEntry {
+            timestamp: 0,
+            mod_name: mod_name.clone(),
+            cap: cap.clone(),
+            action: "revoke".to_string(),
+            allowed: true,
+        });
+    }
+
+    pub fn check(self: &SecurityContext, cap: &Capability) -> Bool {
+        if !self.strict_mode {
+            return true;
+        }
+        self.tokens.iter().any(|t| t.cap == *cap && t.granted)
+    }
+
+    pub fn require(self: &SecurityContext, cap: &Capability, operation: &String) -> Result<(), String> {
+        if !self.check(cap) {
+            self.audit_log.push(AuditEntry {
+                timestamp: 0,
+                mod_name: String.new(),
+                cap: cap.clone(),
+                action: operation.clone(),
+                allowed: false,
+            });
+            return Result.Err("Security violation: capability not granted for ".to_string() + operation)
+        }
+        Result.Ok(())
+    }
+
+    pub fn load_manifest(self: &mut SecurityContext, path: String) -> Result<(), String> {
+        let content = match fs.read_to_string(path) {
+            Result.Ok(c) => c,
+            Result.Err(_) => return Result.Ok(()),
+        }
+
+        let lines = content.split("\n")
+        for line in lines {
+            let trimmed = line.trim()
+            if trimmed == "[capabilities]" {
+                continue
+            }
+            if trimmed.starts_with("\"") {
+                let cap_name = trimmed.trim_matches('"').trim_matches(',')
+                let cap = match cap_name {
+                    "filesystem" => Capability.FileSystem,
+                    "network" => Capability.Network,
+                    "process" => Capability.Process,
+                    "environment" => Capability.Environment,
+                    "ui" => Capability.UI,
+                    "hardware" => Capability.Hardware,
+                    "ffi" => Capability.FFI,
+                    "unsafe" => Capability.Unsafe,
+                    _ => continue,
+                }
+                self.manifest_caps.push(cap.clone())
+                self.grant(cap, "manifest".to_string())
+            }
+        }
+
+        Result.Ok(())
+    }
+
+    pub fn audit_summary(self: &SecurityContext) -> String {
+        let mut denied = 0
+        let mut allowed = 0
+        for entry in self.audit_log.iter() {
+            if entry.allowed {
+                allowed = allowed + 1
+            } else {
+                denied = denied + 1
+            }
+        }
+        "Audit: ".to_string() + allowed.to_string() + " allowed, " + denied.to_string() + " denied"
+    }
+
+    pub fn export_audit_log(self: &SecurityContext) -> String {
+        let mut output = "# Security Audit Log\n\n"
+        for entry in self.audit_log.iter() {
+            let cap_name = match entry.cap {
+                Capability.FileSystem => "filesystem",
+                Capability.Network => "network",
+                Capability.Process => "process",
+                Capability.Environment => "environment",
+                Capability.UI => "ui",
+                Capability.Hardware => "hardware",
+                Capability.FFI => "ffi",
+                Capability.Unsafe => "unsafe",
+            }
+            let status = if entry.allowed { "ALLOWED" } else { "DENIED" }
+            output = output + &entry.mod_name + " " + cap_name + " " + &entry.action + " [" + status + "]\n"
+        }
+        output
+    }
+}
+
+pub fn check_file_access(ctx: &SecurityContext, path: &String, operation: &String) -> Result<(), String> {
+    ctx.require(&Capability.FileSystem, &("file ".to_string() + operation + " on " + path))
+}
+
+pub fn check_network_access(ctx: &SecurityContext, host: &String, port: Int) -> Result<(), String> {
+    ctx.require(&Capability.Network, &("network connect to ".to_string() + host + ":" + port.to_string()))
+}
+
+pub fn check_process_access(ctx: &SecurityContext, command: &String) -> Result<(), String> {
+    ctx.require(&Capability.Process, &("process spawn: ".to_string() + command))
+}
+
+pub fn check_env_access(ctx: &SecurityContext, var: &String) -> Result<(), String> {
+    ctx.require(&Capability.Environment, &("env var access: ".to_string() + var))
+}
+
+pub fn check_ffi_access(ctx: &SecurityContext, lib: &String) -> Result<(), String> {
+    ctx.require(&Capability.FFI, &("FFI call to ".to_string() + lib))
+}
+
+pub fn check_unsafe_access(ctx: &SecurityContext, operation: &String) -> Result<(), String> {
+    ctx.require(&Capability.Unsafe, &("unsafe operation: ".to_string() + operation))
+}
