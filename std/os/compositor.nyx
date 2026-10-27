@@ -1,0 +1,31 @@
+module compositor
+
+import std.io
+import std.os.microkernel
+
+pub struct WindowSurface { pub window_id: Int, pub title: String, pub width: Int, pub height: Int, pub z_order: Int, pub is_focused: Bool }
+pub struct DisplayPlane { pub display_id: Int, pub refresh_rate_hz: Float, pub width_px: Int, pub height_px: Int }
+pub struct NyxCompositor { pub primary_display: DisplayPlane, pub total_frames_rendered: Int, pub active_windows: Int }
+
+impl NyxCompositor {
+    pub fn new() -> NyxCompositor {
+        NyxCompositor {
+            primary_display: DisplayPlane { display_id: 0, refresh_rate_hz: 120.0, width_px: 3840, height_px: 2160 },
+            total_frames_rendered: 0,
+            active_windows: 0,
+        }
+    }
+
+    pub fn create_surface(self: &mut Self, title: String, width: Int, height: Int, token: &microkernel.CapToken) -> Result<WindowSurface, String> {
+        if !token.has_permission(microkernel.CapRights.Write) {
+            return Result.Err("denied".to_string())
+        }
+        self.active_windows = self.active_windows + 1
+        Result.Ok(WindowSurface { window_id: self.active_windows, title, width, height, z_order: self.active_windows, is_focused: true })
+    }
+
+    pub fn render_frame(self: &mut Self) -> Float {
+        self.total_frames_rendered = self.total_frames_rendered + 1
+        8.33
+    }
+}

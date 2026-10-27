@@ -1,0 +1,69 @@
+// NYX STANDARD LIBRARY (Phase 1 & Phase 2 - v0.35.0)
+// Module: std/formal.nyx
+// Formal Verification Contracts, Specification Annotations & SMT Invariant Assertions
+
+module formal
+
+import prelude.*
+
+// Specification Contract: Ensures integer value lies strictly within [min_val, max_val]
+pub fn check_range_contract(val: i64, min_val: i64, max_val: i64) -> Bool {
+    val >= min_val && val <= max_val
+}
+
+// Precondition Contract: Non-zero denominator for division safety
+pub fn check_non_zero_contract(val: i64) -> Bool {
+    val != 0
+}
+
+// Region Safety Contract: Slicing bounds verification
+pub fn check_slice_bounds_contract(array_len: usize, offset: usize, slice_len: usize) -> Bool {
+    offset + slice_len <= array_len
+}
+
+// Arithmetic Overflow Guard: Unsigned 64-bit addition overflow assertion
+pub fn check_u64_add_overflow(a: u64, b: u64) -> Bool {
+    let sum = a + b
+    sum >= a
+}
+
+// SMT Proof Obligation Wrapper
+pub struct FormalContract {
+    pub obligation_id: u32,
+    pub is_precondition: Bool,
+    pub is_postcondition: Bool,
+    pub is_loop_invariant: Bool,
+    pub satisfied: Bool,
+}
+
+impl FormalContract {
+    pub fn create_precondition(id: u32, cond: Bool) -> FormalContract {
+        FormalContract {
+            obligation_id: id,
+            is_precondition: true,
+            is_postcondition: false,
+            is_loop_invariant: false,
+            satisfied: cond,
+        }
+    }
+
+    pub fn create_postcondition(id: u32, cond: Bool) -> FormalContract {
+        FormalContract {
+            obligation_id: id,
+            is_precondition: false,
+            is_postcondition: true,
+            is_loop_invariant: false,
+            satisfied: cond,
+        }
+    }
+
+    pub fn create_loop_invariant(id: u32, cond: Bool) -> FormalContract {
+        FormalContract {
+            obligation_id: id,
+            is_precondition: false,
+            is_postcondition: false,
+            is_loop_invariant: true,
+            satisfied: cond,
+        }
+    }
+}

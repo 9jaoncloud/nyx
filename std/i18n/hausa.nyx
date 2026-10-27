@@ -1,0 +1,72 @@
+// @nyx/hausa - Official Hausa Language Localization & Transpiler Module
+// Standard Package: std.i18n.hausa
+// Author: Nyx Architecture Team (9jaonCloud Engineering)
+// Enables native Hausa keywords (Boko script) with zero compiler core modifications.
+
+import std.core.arena;
+import std.core.strict;
+
+pub struct KeywordPair {
+    pub english: string,
+    pub hausa: string,
+    pub category: string,
+    pub description_hausa: string,
+}
+
+// Complete standardized dictionary mapping English Nyx to Hausa
+pub fn get_hausa_keyword_table() -> [KeywordPair; 25] {
+    return [
+        KeywordPair { english: "fn", hausa: "aiki", category: "declaration", description_hausa: "Bayyana sabon aiki ko task" },
+        KeywordPair { english: "let", hausa: "bari", category: "binding", description_hausa: "Ajiye sabon ma'auni ko lamba" },
+        KeywordPair { english: "mut", hausa: "sauyawa", category: "modifier", description_hausa: "Bada damar sauya darajar lamba" },
+        KeywordPair { english: "if", hausa: "idan", category: "control", description_hausa: "Duba sharadi kafin aiwatarwa" },
+        KeywordPair { english: "else", hausa: "in ba haka ba", category: "control", description_hausa: "Aiwatarwa idan sharadin farko bai cika ba" },
+        KeywordPair { english: "while", hausa: "yayin da", category: "control", description_hausa: "Maimaita aiki muddin sharadi yana nan" },
+        KeywordPair { english: "for", hausa: "domin", category: "control", description_hausa: "Madaukin jeri ko lissafi" },
+        KeywordPair { english: "return", hausa: "koma", category: "control", description_hausa: "Mayar da amsa daga aiki" },
+        KeywordPair { english: "struct", hausa: "tsari", category: "type", description_hausa: "Tsara rukunin bayanan lamba" },
+        KeywordPair { english: "impl", hausa: "aikata", category: "type", description_hausa: "Sanya ayyuka a cikin tsari" },
+        KeywordPair { english: "match", hausa: "dace", category: "pattern", description_hausa: "Duba daidaiton tsari ko lamba" },
+        KeywordPair { english: "import", hausa: "shigo", category: "module", description_hausa: "Shigo da dakin karatu ko daki" },
+        KeywordPair { english: "pub", hausa: "fili", category: "visibility", description_hausa: "Bude aiki ga kowa ya gani" },
+        KeywordPair { english: "true", hausa: "gaskiya", category: "literal", description_hausa: "Tabbatacciyar gaskiya (1)" },
+        KeywordPair { english: "false", hausa: "karya", category: "literal", description_hausa: "Rashin gaskiya ko karya (0)" },
+        KeywordPair { english: "null", hausa: "babu", category: "literal", description_hausa: "Fanko ko rashin komai" },
+        KeywordPair { english: "async", hausa: "a_tare", category: "concurrency", description_hausa: "Aiki tare ba tare da tsayawa ba" },
+        KeywordPair { english: "await", hausa: "jira", category: "concurrency", description_hausa: "Jiran sakamakon aiki mai gudana" },
+        KeywordPair { english: "enum", hausa: "jeri", category: "type", description_hausa: "Jerin zababbun sunaye" },
+        KeywordPair { english: "self", hausa: "kansa", category: "identifier", description_hausa: "Nuni ga ainihin tsarin da ake ciki" },
+        KeywordPair { english: "region", hausa: "yanki", category: "memory", description_hausa: "Yankin ma'ajiyar kwamfuta ta musamman" },
+        KeywordPair { english: "trait", hausa: "halaye", category: "type", description_hausa: "Siffofi ko yarjejeniyar aiki (trait/interface)" },
+        KeywordPair { english: "strict", hausa: "tsanani", category: "attribute", description_hausa: "Tabbatar da tsantsar kariya" },
+        KeywordPair { english: "gen", hausa: "tsara_zamani", category: "memory", description_hausa: "Nuni ga rukunin zamani (generational reference)" },
+        KeywordPair { english: "conclude", hausa: "kammala_dole", category: "raii", description_hausa: "Kammala aiki dole ba tare da zubarwa a fakaice ba (Higher-RAII)" },
+    ];
+}
+
+// Convert Hausa Source Code to Canonical English Nyx
+pub fn transpile_hausa_to_english(region r: Arena, hausa_code: string) -> string {
+    let mut result = hausa_code;
+    let table = get_hausa_keyword_table();
+
+    for i in 0..table.len() {
+        let pair = table[i];
+        // Word boundary substitution to preserve variable names
+        result = result.replace_word(pair.hausa, pair.english);
+    }
+
+    return result;
+}
+
+// Convert Standard English Nyx to Hausa Dialect Source Code
+pub fn transpile_english_to_hausa(region r: Arena, english_code: string) -> string {
+    let mut result = english_code;
+    let table = get_hausa_keyword_table();
+
+    for i in 0..table.len() {
+        let pair = table[i];
+        result = result.replace_word(pair.english, pair.hausa);
+    }
+
+    return result;
+}

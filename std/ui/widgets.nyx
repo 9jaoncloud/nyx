@@ -1,0 +1,81 @@
+module std.ui.widgets
+
+pub struct UiElement {
+    pub tag: String,
+    pub width: f64,
+    pub height: f64,
+    pub padding: f64,
+    pub elevation: i64,
+    pub content: String
+}
+
+pub struct SliderState {
+    pub value: f64,
+    pub min_val: f64,
+    pub max_val: f64,
+    pub step: f64
+}
+
+pub struct SwipeTracker {
+    pub start_x: f64,
+    pub start_y: f64,
+    pub current_x: f64,
+    pub current_y: f64,
+    pub is_active: bool
+}
+
+impl UiElement {
+    pub fn new_card(title: String, w: f64, elev: i64) -> UiElement {
+        UiElement {
+            tag: "Card",
+            width: w,
+            height: 120.0,
+            padding: 16.0,
+            elevation: elev,
+            content: title
+        }
+    }
+
+    pub fn new_text(text_content: String) -> UiElement {
+        UiElement {
+            tag: "Text",
+            width: 0.0,
+            height: 24.0,
+            padding: 4.0,
+            elevation: 0,
+            content: text_content
+        }
+    }
+
+    pub fn new_container(dir: String, pad: f64) -> UiElement {
+        UiElement {
+            tag: "Container",
+            width: 1.0,
+            height: 1.0,
+            padding: pad,
+            elevation: 0,
+            content: dir
+        }
+    }
+}
+
+impl SliderState {
+    pub fn new(init_val: f64, min_v: f64, max_v: f64) -> SliderState {
+        SliderState {
+            value: init_val,
+            min_val: min_v,
+            max_val: max_v,
+            step: 0.01
+        }
+    }
+
+    pub fn update_val(self: &SliderState, new_val: f64) -> f64 {
+        if new_val < self.min_val {
+            self.min_val
+        } else if new_val > self.max_val {
+            self.max_val
+        } else {
+            new_val
+        }
+    }
+}

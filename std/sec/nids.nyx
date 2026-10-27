@@ -1,0 +1,47 @@
+module nids
+
+import std.string
+
+pub struct ThreatAlert {
+    pub timestamp: i64,
+    pub src_ip: String,
+    pub threat_type: String,
+    pub severity: i32,
+}
+
+pub struct FlowTracker {
+    pub packets_processed: i64,
+    pub threats_detected: i32,
+}
+
+impl FlowTracker {
+    pub fn new() -> FlowTracker {
+        FlowTracker { packets_processed: 0, threats_detected: 0 }
+    }
+
+    pub fn inspect_packet(self: &mut FlowTracker, src_ip: String, payload: String) -> Option<ThreatAlert> {
+        self.packets_processed = self.packets_processed + 1
+
+        if payload == "SELECT * FROM users WHERE 1=1" || payload == "' OR '1'='1" {
+            self.threats_detected = self.threats_detected + 1
+            return Option.Some(ThreatAlert {
+                timestamp: 0,
+                src_ip,
+                threat_type: "SQL_INJECTION",
+                severity: 3,
+            })
+        }
+
+        if payload == "SYN_BURST_FLOOD" {
+            self.threats_detected = self.threats_detected + 1
+            return Option.Some(ThreatAlert {
+                timestamp: 0,
+                src_ip,
+                threat_type: "SYN_FLOOD",
+                severity: 2,
+            })
+        }
+
+        Option.None
+    }
+}

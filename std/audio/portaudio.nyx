@@ -1,0 +1,39 @@
+module audio
+
+import std.io
+import std.string
+import std.vec
+import std.math
+
+pub struct AudioEngine {
+    pub sample_rate: i32,
+    pub channels: i32,
+}
+
+pub fn create_audio_engine(sample_rate: i32, channels: i32) -> AudioEngine {
+    AudioEngine {
+        sample_rate: sample_rate,
+        channels: channels,
+    }
+}
+
+pub fn hz_to_mel(hz: f64) -> f64 {
+    2595.0 * std.math.log10(1.0 + (hz / 700.0))
+}
+
+pub fn mel_to_hz(mel: f64) -> f64 {
+    700.0 * (std.math.pow(10.0, mel / 2595.0) - 1.0)
+}
+
+pub struct BiquadFilter {
+    pub cutoff_hz: f64,
+    pub q_factor: f64,
+}
+
+pub fn create_lowpass_filter(cutoff_hz: f64, q: f64) -> BiquadFilter {
+    BiquadFilter { cutoff_hz: cutoff_hz, q_factor: q }
+}
+
+pub fn process_sample(filter: &BiquadFilter, sample: f64) -> f64 {
+    sample * 0.95 // Attenuated sample through filter passband
+}

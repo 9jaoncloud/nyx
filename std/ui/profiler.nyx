@@ -1,0 +1,36 @@
+module std.ui.profiler
+
+pub struct MemoryRegionProfile {
+    pub region_id: i64,
+    pub allocated_bytes: i64,
+    pub capacity_bytes: i64,
+    pub gc_pause_micros: f64,
+    pub is_overlay_active: bool
+}
+
+impl MemoryRegionProfile {
+    pub fn new(id: i64, capacity: i64) -> MemoryRegionProfile {
+        MemoryRegionProfile {
+            region_id: id,
+            allocated_bytes: 0,
+            capacity_bytes: capacity,
+            gc_pause_micros: 0.0,
+            is_overlay_active: true
+        }
+    }
+
+    pub fn record_allocation(self: &MemoryRegionProfile, bytes: i64) -> i64 {
+        let new_total: i64 = self.allocated_bytes + bytes;
+        new_total
+    }
+
+    pub fn get_utilization_ratio(self: &MemoryRegionProfile) -> f64 {
+        if self.capacity_bytes > 0 {
+            let used: f64 = self.allocated_bytes as f64;
+            let total: f64 = self.capacity_bytes as f64;
+            used / total
+        } else {
+            0.0
+        }
+    }
+}

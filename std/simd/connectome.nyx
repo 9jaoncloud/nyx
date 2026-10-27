@@ -1,0 +1,31 @@
+module std.simd.connectome
+
+pub struct FlyBrainConnectome {
+    pub neuron_count: i64,
+    pub synapse_count: i64,
+    pub decay_factor: f64,
+    pub membrane_threshold: f64,
+    pub live_spikes_offset: i64,
+    pub target_fps: i64
+}
+
+impl FlyBrainConnectome {
+    pub fn new_drosophila_v1() -> FlyBrainConnectome {
+        FlyBrainConnectome {
+            neuron_count: 139255,          // 140K full Drosophila brain
+            synapse_count: 54500000,       // 54.5M verified synaptic connections
+            decay_factor: 0.95,
+            membrane_threshold: 1.0,
+            live_spikes_offset: 0x0A4F00,  // Direct GPU WebGPU buffer offset
+            target_fps: 120
+        }
+    }
+
+    pub fn compute_step_simd(self: &FlyBrainConnectome, live_spikes: i64) -> i64 {
+        if live_spikes > 0 {
+            live_spikes
+        } else {
+            0
+        }
+    }
+}

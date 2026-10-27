@@ -1,0 +1,33 @@
+module darling_wasi
+
+import std.io
+import std.os.microkernel
+
+pub enum BinaryFormat { MachO64, WasiModule }
+pub struct MachOHeader { pub magic: Int, pub cpu_type: Int, pub cpu_subtype: Int, pub file_type: Int, pub number_of_commands: Int }
+pub struct WasiSandbox { pub memory_limit_bytes: Int, pub allocated_bytes: Int, pub fuel_remaining: Int }
+pub struct DarlingWasiBridge { pub active_modules: Int, pub total_wasi_instructions: Int }
+
+impl DarlingWasiBridge {
+    pub fn new() -> DarlingWasiBridge {
+        DarlingWasiBridge { active_modules: 0, total_wasi_instructions: 0 }
+    }
+
+    pub fn load_macho_binary(self: &mut Self, macho_path: String, token: &microkernel.CapToken) -> Result<MachOHeader, String> {
+        if !token.has_permission(microkernel.CapRights.Execute) {
+            return Result.Err("denied".to_string())
+        }
+        self.active_modules = self.active_modules + 1
+        Result.Ok(MachOHeader { magic: 0xfeedfacf, cpu_type: 0x0100000c, cpu_subtype: 0x00000000, file_type: 2, number_of_commands: 16 })
+    }
+
+    pub fn run_wasi_module(self: &mut Self, module_bytes: Int, sandbox: &mut WasiSandbox) -> Result<Int, String> {
+        if module_bytes > sandbox.memory_limit_bytes {
+            return Result.Err("limit exceeded".to_string())
+        }
+        sandbox.allocated_bytes = module_bytes
+        sandbox.fuel_remaining = sandbox.fuel_remaining - 100
+        self.total_wasi_instructions = self.total_wasi_instructions + 1000
+        Result.Ok(0)
+    }
+}

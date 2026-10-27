@@ -1,0 +1,1348 @@
+module ui
+
+extern "C" {
+    fn nyx_skia_surface_create(w: i32, h: i32) -> *mut void
+    fn nyx_skia_surface_destroy(s: *mut void)
+    fn nyx_skia_canvas_create(s: *mut void) -> *mut void
+    fn nyx_skia_canvas_destroy(c: *mut void)
+    fn nyx_skia_draw_rect(c: *mut void, x: f32, y: f32, w: f32, h: f32, color: u32)
+    fn nyx_skia_draw_rounded_rect(c: *mut void, x: f32, y: f32, w: f32, h: f32, radius: f32, color: u32)
+    fn nyx_skia_draw_circle(c: *mut void, cx: f32, cy: f32, radius: f32, color: u32)
+    fn nyx_skia_draw_gradient_rect(c: *mut void, x: f32, y: f32, w: f32, h: f32, color_top: u32, color_bottom: u32)
+    fn nyx_skia_draw_shadow(c: *mut void, x: f32, y: f32, w: f32, h: f32, radius: f32, elevation: f32, color: u32)
+    fn nyx_skia_draw_glow(c: *mut void, x: f32, y: f32, w: f32, h: f32, radius: f32, spread: f32, glow_color: u32)
+    fn nyx_skia_draw_ripple(c: *mut void, cx: f32, cy: f32, radius: f32, alpha: f32, ripple_color: u32)
+    fn nyx_skia_draw_text(c: *mut void, text: *const char, x: f32, y: f32, size: f32, color: u32)
+    fn nyx_skia_draw_text_ex(c: *mut void, text: *const char, x: f32, y: f32, size: f32, weight: i32, italic: i32, color: u32)
+    fn nyx_skia_draw_icon(c: *mut void, codepoint: u32, x: f32, y: f32, size: f32, color: u32)
+    fn nyx_skia_draw_ripple_anim(c: *mut void, cx: f32, cy: f32, max_radius: f32, elapsed_ms: i64, ripple_color: u32)
+    fn nyx_clip_push_rect(c: *mut void, x: f32, y: f32, w: f32, h: f32)
+    fn nyx_clip_pop(c: *mut void)
+    fn nyx_measure_text_width(c: *mut void, text: *const char, size: f32) -> f32
+    fn nyx_measure_text_height(size: f32) -> f32
+    fn nyx_skia_draw_text_centered(c: *mut void, text: *const char, x: f32, y: f32, w: f32, h: f32, size: f32, color: u32)
+    fn nyx_frame_sleep(frame_start_ms: i64, target_ms: i64)
+    fn nyx_hit_begin_frame()
+    fn nyx_hit_register(x: f32, y: f32, w: f32, h: f32, id: i32) -> i32
+    fn nyx_hit_test(mx: f32, my: f32) -> i32
+    fn nyx_hit_clicked(w: *mut void, id: i32) -> i32
+    fn nyx_window_update_click(w: *mut void)
+    fn nyx_window_mouse_clicked(w: *mut void) -> i32
+    fn nyx_window_mouse_released(w: *mut void) -> i32
+    fn nyx_skia_draw_line(c: *mut void, x1: f32, y1: f32, x2: f32, y2: f32, stroke_width: f32, color: u32)
+    fn nyx_skia_fill(c: *mut void, color: u32)
+    fn nyx_time_millis() -> i64
+    fn nyx_skia_save(c: *mut void)
+    fn nyx_skia_restore(c: *mut void)
+    fn nyx_skia_translate(c: *mut void, dx: f32, dy: f32)
+    fn nyx_skia_rotate(c: *mut void, degrees: f32)
+    fn nyx_skia_scale(c: *mut void, sx: f32, sy: f32)
+    fn nyx_window_create(w: i32, h: i32, title: *const char) -> *mut void
+    fn nyx_window_destroy(w: *mut void)
+    fn nyx_window_should_close(w: *mut void) -> i32
+    fn nyx_window_poll_events(w: *mut void)
+    fn nyx_window_canvas(w: *mut void) -> *mut void
+    fn nyx_window_swap_buffers(w: *mut void)
+    fn nyx_window_width(w: *mut void) -> i32
+    fn nyx_window_height(w: *mut void) -> i32
+    fn nyx_window_set_title(w: *mut void, title: *const char)
+    fn nyx_window_mouse_x(w: *mut void) -> i32
+    fn nyx_window_mouse_y(w: *mut void) -> i32
+    fn nyx_window_mouse_down(w: *mut void) -> i32
+    fn nyx_window_last_key(w: *mut void) -> i32
+}
+
+/* ── Color System ─────────────────────────────────────────────── */
+
+pub struct Color {
+    pub r: f32,
+    pub g: f32,
+    pub b: f32,
+    pub a: f32,
+}
+
+impl Color {
+    pub fn new(r: f32, g: f32, b: f32, a: f32) -> Color {
+        Color { r, g, b, a }
+    }
+
+    pub fn rgb(r: f32, g: f32, b: f32) -> Color {
+        Color { r, g, b, a: 1.0 }
+    }
+
+    pub fn hex(value: u32) -> Color {
+        Color {
+            r: (((value >> 16) & 0xff) as f32) / 255.0,
+            g: (((value >> 8) & 0xff) as f32) / 255.0,
+            b: ((value & 0xff) as f32) / 255.0,
+            a: (((value >> 24) & 0xff) as f32) / 255.0,
+        }
+    }
+
+    pub fn to_u32(self: &Color) -> u32 {
+        let r = (self.r * 255.0) as u32
+        let g = (self.g * 255.0) as u32
+        let b = (self.b * 255.0) as u32
+        let a = (self.a * 255.0) as u32
+        (a << 24) | (r << 16) | (g << 8) | b
+    }
+
+    pub fn with_alpha(self: &Color, alpha: f32) -> Color {
+        Color { r: self.r, g: self.g, b: self.b, a: alpha }
+    }
+
+    pub fn lerp(self: &Color, other: &Color, t: f32) -> Color {
+        Color {
+            r: self.r + (other.r - self.r) * t,
+            g: self.g + (other.g - self.g) * t,
+            b: self.b + (other.b - self.b) * t,
+            a: self.a + (other.a - self.a) * t,
+        }
+    }
+
+    pub fn white() -> Color { Color { r: 1.0, g: 1.0, b: 1.0, a: 1.0 } }
+    pub fn black() -> Color { Color { r: 0.0, g: 0.0, b: 0.0, a: 1.0 } }
+    pub fn red() -> Color { Color { r: 1.0, g: 0.0, b: 0.0, a: 1.0 } }
+    pub fn green() -> Color { Color { r: 0.0, g: 1.0, b: 0.0, a: 1.0 } }
+    pub fn blue() -> Color { Color { r: 0.0, g: 0.0, b: 1.0, a: 1.0 } }
+    pub fn transparent() -> Color { Color { r: 0.0, g: 0.0, b: 0.0, a: 0.0 } }
+}
+
+/* ── Google Material Design 3 Palette & Tokens ────────────────── */
+
+pub struct MaterialTheme {
+    pub primary: Color,
+    pub on_primary: Color,
+    pub primary_container: Color,
+    pub on_primary_container: Color,
+    pub secondary: Color,
+    pub on_secondary: Color,
+    pub secondary_container: Color,
+    pub on_secondary_container: Color,
+    pub tertiary: Color,
+    pub on_tertiary: Color,
+    pub tertiary_container: Color,
+    pub on_tertiary_container: Color,
+    pub background: Color,
+    pub on_background: Color,
+    pub surface: Color,
+    pub on_surface: Color,
+    pub surface_variant: Color,
+    pub on_surface_variant: Color,
+    pub surface_container: Color,
+    pub surface_container_high: Color,
+    pub outline: Color,
+    pub outline_variant: Color,
+    pub error: Color,
+    pub on_error: Color,
+    pub error_container: Color,
+    pub is_dark: Bool,
+}
+
+impl MaterialTheme {
+    pub fn dark() -> MaterialTheme {
+        MaterialTheme {
+            primary: Color.hex(0xFFD0BCFF),
+            on_primary: Color.hex(0xFF381E72),
+            primary_container: Color.hex(0xFF4F378B),
+            on_primary_container: Color.hex(0xFFEADDFF),
+            secondary: Color.hex(0xFFCCC2DC),
+            on_secondary: Color.hex(0xFF332D41),
+            secondary_container: Color.hex(0xFF4A4458),
+            on_secondary_container: Color.hex(0xFFE8DEF8),
+            tertiary: Color.hex(0xFFEFB8C8),
+            on_tertiary: Color.hex(0xFF492532),
+            tertiary_container: Color.hex(0xFF633B48),
+            on_tertiary_container: Color.hex(0xFFFFD8E4),
+            background: Color.hex(0xFF141218),
+            on_background: Color.hex(0xFFE6E0E9),
+            surface: Color.hex(0xFF141218),
+            on_surface: Color.hex(0xFFE6E0E9),
+            surface_variant: Color.hex(0xFF49454F),
+            on_surface_variant: Color.hex(0xFFCAC4D0),
+            surface_container: Color.hex(0xFF211F26),
+            surface_container_high: Color.hex(0xFF2B2930),
+            outline: Color.hex(0xFF938F99),
+            outline_variant: Color.hex(0xFF49454F),
+            error: Color.hex(0xFFF2B8B5),
+            on_error: Color.hex(0xFF601410),
+            error_container: Color.hex(0xFF8C1D18),
+            is_dark: true,
+        }
+    }
+
+    pub fn light() -> MaterialTheme {
+        MaterialTheme {
+            primary: Color.hex(0xFF6750A4),
+            on_primary: Color.white(),
+            primary_container: Color.hex(0xFFEADDFF),
+            on_primary_container: Color.hex(0xFF21005D),
+            secondary: Color.hex(0xFF625B71),
+            on_secondary: Color.white(),
+            secondary_container: Color.hex(0xFFE8DEF8),
+            on_secondary_container: Color.hex(0xFF1D192B),
+            tertiary: Color.hex(0xFF7D5260),
+            on_tertiary: Color.white(),
+            tertiary_container: Color.hex(0xFFFFD8E4),
+            on_tertiary_container: Color.hex(0xFF31111D),
+            background: Color.hex(0xFFFEF7FF),
+            on_background: Color.hex(0xFF1D1B20),
+            surface: Color.hex(0xFFFEF7FF),
+            on_surface: Color.hex(0xFF1D1B20),
+            surface_variant: Color.hex(0xFFE7E0EC),
+            on_surface_variant: Color.hex(0xFF49454F),
+            surface_container: Color.hex(0xFFF3EDF7),
+            surface_container_high: Color.hex(0xFFECE6F0),
+            outline: Color.hex(0xFF79747E),
+            outline_variant: Color.hex(0xFFCAC4D0),
+            error: Color.hex(0xFFB3261E),
+            on_error: Color.white(),
+            error_container: Color.hex(0xFFF9DEDC),
+            is_dark: false,
+        }
+    }
+}
+
+/* ── M3 Shapes & Corner Radii ─────────────────────────────────── */
+
+pub struct M3Shape {
+    pub none: f32,
+    pub extra_small: f32,
+    pub small: f32,
+    pub medium: f32,
+    pub large: f32,
+    pub extra_large: f32,
+    pub full: f32,
+}
+
+impl M3Shape {
+    pub fn default() -> M3Shape {
+        M3Shape {
+            none: 0.0,
+            extra_small: 4.0,
+            small: 8.0,
+            medium: 12.0,
+            large: 16.0,
+            extra_large: 28.0,
+            full: 9999.0,
+        }
+    }
+}
+
+/* ── M3 Typography Scale ──────────────────────────────────────── */
+
+pub struct M3Typography {
+    pub display_large: f32,
+    pub headline_large: f32,
+    pub headline_medium: f32,
+    pub title_large: f32,
+    pub title_medium: f32,
+    pub body_large: f32,
+    pub body_medium: f32,
+    pub label_large: f32,
+    pub label_medium: f32,
+}
+
+impl M3Typography {
+    pub fn default() -> M3Typography {
+        M3Typography {
+            display_large: 48.0,
+            headline_large: 32.0,
+            headline_medium: 24.0,
+            title_large: 20.0,
+            title_medium: 16.0,
+            body_large: 16.0,
+            body_medium: 14.0,
+            label_large: 14.0,
+            label_medium: 12.0,
+        }
+    }
+}
+
+/* ── Canvas (Skia & Native GDI Engine) ────────────────────────── */
+
+pub struct Canvas {
+    native: *mut void,
+}
+
+impl Canvas {
+    pub fn new(surface: &mut Surface) -> Canvas {
+        Canvas { native: unsafe { nyx_skia_canvas_create(surface.native) } }
+    }
+
+    pub fn draw_rect(self: &mut Canvas, x: f32, y: f32, w: f32, h: f32, color: &Color) {
+        unsafe { nyx_skia_draw_rect(self.native, x, y, w, h, color.to_u32()) }
+    }
+
+    pub fn draw_rounded_rect(self: &mut Canvas, x: f32, y: f32, w: f32, h: f32, radius: f32, color: &Color) {
+        unsafe { nyx_skia_draw_rounded_rect(self.native, x, y, w, h, radius, color.to_u32()) }
+    }
+
+    pub fn draw_circle(self: &mut Canvas, cx: f32, cy: f32, radius: f32, color: &Color) {
+        unsafe { nyx_skia_draw_circle(self.native, cx, cy, radius, color.to_u32()) }
+    }
+
+    pub fn draw_gradient_rect(self: &mut Canvas, x: f32, y: f32, w: f32, h: f32, color_top: &Color, color_bottom: &Color) {
+        unsafe { nyx_skia_draw_gradient_rect(self.native, x, y, w, h, color_top.to_u32(), color_bottom.to_u32()) }
+    }
+
+    pub fn draw_shadow(self: &mut Canvas, x: f32, y: f32, w: f32, h: f32, radius: f32, elevation: f32, color: &Color) {
+        unsafe { nyx_skia_draw_shadow(self.native, x, y, w, h, radius, elevation, color.to_u32()) }
+    }
+
+    pub fn draw_glow(self: &mut Canvas, x: f32, y: f32, w: f32, h: f32, radius: f32, spread: f32, color: &Color) {
+        unsafe { nyx_skia_draw_glow(self.native, x, y, w, h, radius, spread, color.to_u32()) }
+    }
+
+    pub fn draw_ripple(self: &mut Canvas, cx: f32, cy: f32, radius: f32, alpha: f32, color: &Color) {
+        unsafe { nyx_skia_draw_ripple(self.native, cx, cy, radius, alpha, color.to_u32()) }
+    }
+
+    pub fn draw_text(self: &mut Canvas, text: String, x: f32, y: f32, size: f32, color: &Color) {
+        unsafe { nyx_skia_draw_text(self.native, text.data, x, y, size, color.to_u32()) }
+    }
+
+    pub fn draw_line(self: &mut Canvas, x1: f32, y1: f32, x2: f32, y2: f32, width: f32, color: &Color) {
+        unsafe { nyx_skia_draw_line(self.native, x1, y1, x2, y2, width, color.to_u32()) }
+    }
+
+    pub fn fill(self: &mut Canvas, color: &Color) {
+        unsafe { nyx_skia_fill(self.native, color.to_u32()) }
+    }
+
+    pub fn save(self: &mut Canvas) {
+        unsafe { nyx_skia_save(self.native) }
+    }
+
+    pub fn restore(self: &mut Canvas) {
+        unsafe { nyx_skia_restore(self.native) }
+    }
+
+    pub fn translate(self: &mut Canvas, dx: f32, dy: f32) {
+        unsafe { nyx_skia_translate(self.native, dx, dy) }
+    }
+
+    pub fn rotate(self: &mut Canvas, degrees: f32) {
+        unsafe { nyx_skia_rotate(self.native, degrees) }
+    }
+
+    pub fn scale(self: &mut Canvas, sx: f32, sy: f32) {
+        unsafe { nyx_skia_scale(self.native, sx, sy) }
+    }
+}
+
+/* ── Surface & Window ─────────────────────────────────────────── */
+
+pub struct Surface {
+    native: *mut void,
+}
+
+impl Surface {
+    pub fn new(width: i32, height: i32) -> Surface {
+        Surface { native: unsafe { nyx_skia_surface_create(width, height) } }
+    }
+}
+
+pub struct Window {
+    native: *mut void,
+}
+
+impl Window {
+    pub fn new(width: i32, height: i32, title: String) -> Window {
+        Window { native: unsafe { nyx_window_create(width, height, title.data) } }
+    }
+
+    pub fn should_close(self: &Window) -> Bool {
+        unsafe { nyx_window_should_close(self.native) != 0 }
+    }
+
+    pub fn poll_events(self: &Window) {
+        unsafe { nyx_window_poll_events(self.native) }
+    }
+
+    pub fn canvas(self: &Window) -> Canvas {
+        Canvas { native: unsafe { nyx_window_canvas(self.native) } }
+    }
+
+    pub fn swap_buffers(self: &Window) {
+        unsafe { nyx_window_swap_buffers(self.native) }
+    }
+
+    pub fn get_width(self: &Window) -> i32 {
+        unsafe { nyx_window_width(self.native) }
+    }
+
+    pub fn get_height(self: &Window) -> i32 {
+        unsafe { nyx_window_height(self.native) }
+    }
+
+    pub fn set_title(self: &Window, title: String) {
+        unsafe { nyx_window_set_title(self.native, title.data) }
+    }
+
+    pub fn mouse_x(self: &Window) -> i32 {
+        unsafe { nyx_window_mouse_x(self.native) }
+    }
+
+    pub fn mouse_y(self: &Window) -> i32 {
+        unsafe { nyx_window_mouse_y(self.native) }
+    }
+
+    pub fn is_mouse_down(self: &Window) -> Bool {
+        unsafe { nyx_window_mouse_down(self.native) != 0 }
+    }
+
+    pub fn last_key(self: &Window) -> i32 {
+        unsafe { nyx_window_last_key(self.native) }
+    }
+}
+
+pub fn point_in_rect(px: f32, py: f32, rx: f32, ry: f32, rw: f32, rh: f32) -> Bool {
+    px >= rx && px <= rx + rw && py >= ry && py <= ry + rh
+}
+
+/* ── Material Widget Tree ─────────────────────────────────────── */
+
+pub enum ButtonVariant {
+    Filled,
+    Elevated,
+    Tonal,
+    Outlined,
+    Text,
+}
+
+pub enum CardVariant {
+    Elevated,
+    Filled,
+    Outlined,
+}
+
+pub struct TextWidget {
+    pub text: String,
+    pub font_size: f32,
+    pub color: Color,
+}
+
+pub struct ButtonWidget {
+    pub label: String,
+    pub variant: ButtonVariant,
+    pub width: f32,
+    pub height: f32,
+}
+
+pub struct CardWidget {
+    pub title: String,
+    pub subtitle: String,
+    pub variant: CardVariant,
+    pub width: f32,
+    pub height: f32,
+    pub elevation: f32,
+}
+
+pub struct BadgeWidget {
+    pub text: String,
+    pub bg_color: Color,
+    pub text_color: Color,
+}
+
+pub struct NavItem {
+    pub label: String,
+    pub icon: String,
+    pub is_active: Bool,
+}
+
+pub struct NavigationRailWidget {
+    pub items: Vec<NavItem>,
+    pub width: f32,
+}
+
+pub struct TopAppBarWidget {
+    pub title: String,
+    pub subtitle: String,
+    pub width: f32,
+}
+
+pub struct SwitchWidget {
+    pub is_on: Bool,
+    pub width: f32,
+    pub height: f32,
+}
+
+pub struct SliderWidget {
+    pub value: f32,
+    pub width: f32,
+    pub height: f32,
+}
+
+pub struct CheckboxWidget {
+    pub is_checked: Bool,
+    pub label: String,
+    pub size: f32,
+}
+
+pub struct TextFieldWidget {
+    pub text: String,
+    pub label: String,
+    pub is_focused: Bool,
+    pub width: f32,
+    pub height: f32,
+}
+
+pub struct ProgressBarWidget {
+    pub progress: f32,
+    pub width: f32,
+    pub height: f32,
+}
+
+/* ── High-Level Renderer ──────────────────────────────────────── */
+
+pub struct MaterialRenderer {
+    pub theme: MaterialTheme,
+    pub shapes: M3Shape,
+    pub typography: M3Typography,
+}
+
+impl MaterialRenderer {
+    pub fn new(theme: MaterialTheme) -> MaterialRenderer {
+        MaterialRenderer {
+            theme,
+            shapes: M3Shape.default(),
+            typography: M3Typography.default(),
+        }
+    }
+
+    pub fn draw_text_widget(self: &MaterialRenderer, canvas: &mut Canvas, t: &TextWidget, x: f32, y: f32) {
+        canvas.draw_text(t.text.clone(), x, y, t.font_size, &t.color)
+    }
+
+    pub fn draw_text(self: &MaterialRenderer, canvas: &mut Canvas, t: &TextWidget, x: f32, y: f32) {
+        canvas.draw_text(t.text.clone(), x, y, t.font_size, &t.color)
+    }
+
+    pub fn draw_button(self: &MaterialRenderer, canvas: &mut Canvas, b: &ButtonWidget, x: f32, y: f32) {
+        let mut bg = self.theme.primary
+        let mut fg = self.theme.on_primary
+        let mut elev = 0.0
+        let radius = self.shapes.full
+
+        if b.variant == ButtonVariant.Filled {
+            bg = self.theme.primary
+            fg = self.theme.on_primary
+            elev = 0.0
+        } else if b.variant == ButtonVariant.Elevated {
+            bg = self.theme.surface_container_high
+            fg = self.theme.primary
+            elev = 2.0
+        } else if b.variant == ButtonVariant.Tonal {
+            bg = self.theme.secondary_container
+            fg = self.theme.on_secondary_container
+            elev = 0.0
+        } else if b.variant == ButtonVariant.Outlined {
+            bg = Color.transparent()
+            fg = self.theme.primary
+            elev = 0.0
+        } else {
+            bg = Color.transparent()
+            fg = self.theme.primary
+            elev = 0.0
+        }
+
+        if elev > 0.0 {
+            canvas.draw_shadow(x, y, b.width, b.height, radius, elev, &Color.hex(0x40000000))
+        }
+
+        if bg.a > 0.0 {
+            canvas.draw_rounded_rect(x, y, b.width, b.height, radius, &bg)
+        }
+
+        if b.variant == ButtonVariant.Outlined {
+            canvas.draw_rounded_rect(x, y, b.width, b.height, radius, &self.theme.outline)
+        }
+
+        let text_y = y + (b.height - self.typography.label_large) / 2.0
+        let text_x = x + 16.0
+        canvas.draw_text(b.label.clone(), text_x, text_y, self.typography.label_large, &fg)
+    }
+
+    pub fn draw_card(self: &MaterialRenderer, canvas: &mut Canvas, c: &CardWidget, x: f32, y: f32) {
+        let mut bg = self.theme.surface_container_high
+        let mut border_color = Color.transparent()
+        let mut elev = c.elevation
+
+        if c.variant == CardVariant.Elevated {
+            bg = self.theme.surface_container_high
+            border_color = Color.transparent()
+            elev = c.elevation
+        } else if c.variant == CardVariant.Filled {
+            bg = self.theme.surface_container
+            border_color = Color.transparent()
+            elev = 0.0
+        } else if c.variant == CardVariant.Outlined {
+            bg = self.theme.surface
+            border_color = self.theme.outline_variant
+            elev = 0.0
+        }
+
+        if elev > 0.0 {
+            canvas.draw_shadow(x, y, c.width, c.height, self.shapes.medium, elev, &Color.hex(0x30000000))
+        }
+
+        canvas.draw_rounded_rect(x, y, c.width, c.height, self.shapes.medium, &bg)
+
+        if border_color.a > 0.0 {
+            canvas.draw_rounded_rect(x, y, c.width, c.height, self.shapes.medium, &border_color)
+        }
+
+        // Title and subtitle typography
+        if c.title.len() > 0 {
+            canvas.draw_text(c.title.clone(), x + 16.0, y + 16.0, self.typography.title_medium, &self.theme.on_surface)
+        }
+        if c.subtitle.len() > 0 {
+            canvas.draw_text(c.subtitle.clone(), x + 16.0, y + 42.0, self.typography.body_medium, &self.theme.on_surface_variant)
+        }
+    }
+
+    pub fn draw_badge(self: &MaterialRenderer, canvas: &mut Canvas, b: &BadgeWidget, x: f32, y: f32) {
+        let bw = (b.text.len() as f32) * 8.0 + 16.0
+        let bh = 22.0
+        canvas.draw_rounded_rect(x, y, bw, bh, self.shapes.small, &b.bg_color)
+        canvas.draw_text(b.text.clone(), x + 8.0, y + 4.0, self.typography.label_medium, &b.text_color)
+    }
+
+    pub fn draw_navigation_rail(self: &MaterialRenderer, canvas: &mut Canvas, rail: &NavigationRailWidget, x: f32, y: f32, h: f32) {
+        canvas.draw_rect(x, y, rail.width, h, &self.theme.surface_container)
+    }
+
+    pub fn draw_top_app_bar(self: &MaterialRenderer, canvas: &mut Canvas, bar: &TopAppBarWidget, x: f32, y: f32) {
+        canvas.draw_rect(x, y, bar.width, 64.0, &self.theme.surface)
+        canvas.draw_text(bar.title.clone(), x + 24.0, y + 18.0, self.typography.title_large, &self.theme.on_surface)
+        if bar.subtitle.len() > 0 {
+            canvas.draw_text(bar.subtitle.clone(), x + 24.0, y + 42.0, self.typography.label_medium, &self.theme.on_surface_variant)
+        }
+        canvas.draw_line(x, y + 64.0, x + bar.width, y + 64.0, 1.0, &self.theme.outline_variant)
+    }
+
+    pub fn draw_switch(self: &MaterialRenderer, canvas: &mut Canvas, sw: &SwitchWidget, x: f32, y: f32) {
+        let w = if sw.width > 0.0 { sw.width } else { 52.0 }
+        let h = if sw.height > 0.0 { sw.height } else { 32.0 }
+        let radius = h * 0.5
+
+        if sw.is_on {
+            canvas.draw_rounded_rect(x, y, w, h, radius, &self.theme.primary)
+            let thumb_x = x + w - radius - 8.0
+            let thumb_y = y + 4.0
+            let thumb_r = radius - 4.0
+            canvas.draw_rounded_rect(thumb_x, thumb_y, thumb_r * 2.0, thumb_r * 2.0, thumb_r, &self.theme.on_primary)
+        } else {
+            canvas.draw_rounded_rect(x, y, w, h, radius, &self.theme.surface_container_high)
+            canvas.draw_rounded_rect(x, y, w, h, radius, &self.theme.outline)
+            let thumb_x = x + 6.0
+            let thumb_y = y + 6.0
+            let thumb_r = radius - 6.0
+            canvas.draw_rounded_rect(thumb_x, thumb_y, thumb_r * 2.0, thumb_r * 2.0, thumb_r, &self.theme.outline)
+        }
+    }
+
+    pub fn draw_slider(self: &MaterialRenderer, canvas: &mut Canvas, sl: &SliderWidget, x: f32, y: f32) {
+        let w = if sl.width > 0.0 { sl.width } else { 200.0 }
+        let h = if sl.height > 0.0 { sl.height } else { 16.0 }
+        let track_h = 6.0
+        let track_y = y + (h - track_h) * 0.5
+        let clamp_val = if sl.value < 0.0 { 0.0 } else if sl.value > 1.0 { 1.0 } else { sl.value }
+
+        // Inactive track
+        canvas.draw_rounded_rect(x, track_y, w, track_h, 3.0, &self.theme.surface_container_high)
+        // Active track
+        let active_w = w * clamp_val
+        if active_w > 0.0 {
+            canvas.draw_rounded_rect(x, track_y, active_w, track_h, 3.0, &self.theme.primary)
+        }
+        // Thumb
+        let thumb_x = x + active_w - 6.0
+        let thumb_y = y + (h - 18.0) * 0.5
+        canvas.draw_shadow(thumb_x, thumb_y, 12.0, 18.0, 4.0, 2.0, &Color.hex(0x30000000))
+        canvas.draw_rounded_rect(thumb_x, thumb_y, 12.0, 18.0, 4.0, &self.theme.primary)
+    }
+
+    pub fn draw_checkbox(self: &MaterialRenderer, canvas: &mut Canvas, cb: &CheckboxWidget, x: f32, y: f32) {
+        let sz = if cb.size > 0.0 { cb.size } else { 20.0 }
+        if cb.is_checked {
+            canvas.draw_rounded_rect(x, y, sz, sz, self.shapes.extra_small, &self.theme.primary)
+            canvas.draw_text("v".to_string(), x + 4.0, y + 2.0, self.typography.label_medium, &self.theme.on_primary)
+        } else {
+            canvas.draw_rounded_rect(x, y, sz, sz, self.shapes.extra_small, &self.theme.surface)
+            canvas.draw_rounded_rect(x, y, sz, sz, self.shapes.extra_small, &self.theme.outline)
+        }
+        if cb.label.len() > 0 {
+            canvas.draw_text(cb.label.clone(), x + sz + 12.0, y + 2.0, self.typography.body_medium, &self.theme.on_surface)
+        }
+    }
+
+    pub fn draw_text_field(self: &MaterialRenderer, canvas: &mut Canvas, tf: &TextFieldWidget, x: f32, y: f32) {
+        let w = if tf.width > 0.0 { tf.width } else { 240.0 }
+        let h = if tf.height > 0.0 { tf.height } else { 56.0 }
+
+        // Container fill
+        canvas.draw_rounded_rect(x, y, w, h, self.shapes.extra_small, &self.theme.surface_container)
+
+        // Floating label
+        if tf.label.len() > 0 {
+            let label_color = if tf.is_focused { &self.theme.primary } else { &self.theme.on_surface_variant }
+            canvas.draw_text(tf.label.clone(), x + 16.0, y + 8.0, self.typography.label_medium, label_color)
+        }
+
+        // Value text
+        let display_text = if tf.text.len() > 0 { tf.text.clone() } else { "Type here...".to_string() }
+        let text_color = if tf.text.len() > 0 { &self.theme.on_surface } else { &self.theme.outline }
+        canvas.draw_text(display_text, x + 16.0, y + 28.0, self.typography.body_large, text_color)
+
+        // Active indicator line
+        let line_color = if tf.is_focused { &self.theme.primary } else { &self.theme.outline_variant }
+        let line_h = if tf.is_focused { 2.0 } else { 1.0 }
+        canvas.draw_rect(x, y + h - line_h, w, line_h, line_color)
+    }
+
+    pub fn draw_progress_bar(self: &MaterialRenderer, canvas: &mut Canvas, pb: &ProgressBarWidget, x: f32, y: f32) {
+        let w = if pb.width > 0.0 { pb.width } else { 240.0 }
+        let h = if pb.height > 0.0 { pb.height } else { 8.0 }
+        let clamp_val = if pb.progress < 0.0 { 0.0 } else if pb.progress > 1.0 { 1.0 } else { pb.progress }
+
+        // Track
+        canvas.draw_rounded_rect(x, y, w, h, 4.0, &self.theme.surface_container_high)
+        // Active indicator
+        let fill_w = w * clamp_val
+        if fill_w > 0.0 {
+            canvas.draw_rounded_rect(x, y, fill_w, h, 4.0, &self.theme.primary)
+        }
+    }
+
+    pub fn draw_animated_card(self: &MaterialRenderer, canvas: &mut Canvas, card: &CardWidget, x: f32, y: f32, anim_progress: f32, is_hovered: Bool) {
+        let w = if card.width > 0.0 { card.width } else { 260.0 }
+        let h = if card.height > 0.0 { card.height } else { 160.0 }
+        let radius = self.shapes.medium
+
+        let current_elevation = if is_hovered { 3.0 + anim_progress * 2.0 } else { 1.0 }
+
+        if is_hovered {
+            canvas.draw_glow(x, y, w, h, radius, 8.0 * anim_progress, &self.theme.primary)
+        }
+
+        canvas.draw_shadow(x, y, w, h, radius, current_elevation, &Color.hex(0x40000000))
+        canvas.draw_rounded_rect(x, y, w, h, radius, &self.theme.surface_container)
+
+        if card.title.len() > 0 {
+            canvas.draw_text(card.title.clone(), x + 16.0, y + 20.0, self.typography.title_medium, &self.theme.on_surface)
+        }
+        if card.subtitle.len() > 0 {
+            canvas.draw_text(card.subtitle.clone(), x + 16.0, y + 46.0, self.typography.body_medium, &self.theme.on_surface_variant)
+        }
+    }
+
+
+    pub fn draw_glow_button(self: &MaterialRenderer, canvas: &mut Canvas, label: String, x: f32, y: f32, w: f32, h: f32, glow_alpha: f32) {
+        let radius = self.shapes.full
+        if glow_alpha > 0.0 {
+            canvas.draw_glow(x, y, w, h, radius, 12.0 * glow_alpha, &self.theme.primary)
+        }
+        canvas.draw_rounded_rect(x, y, w, h, radius, &self.theme.primary)
+        canvas.draw_text(label, x + (w * 0.2), y + (h * 0.3), self.typography.label_large, &self.theme.on_primary)
+    }
+}
+
+/* ── Glassmorphism & Cyber-Acoustic Design System Tokens ──────── */
+
+pub struct GlassTokens {
+    pub surface_bg: Color,
+    pub border_stroke: Color,
+    pub specular_sheen: Color,
+    pub accent_glow: Color,
+    pub text_primary: Color,
+    pub text_secondary: Color,
+    pub shadow_ambient: Color,
+    pub blur_radius: f32,
+    pub corner_radius: f32,
+}
+
+impl GlassTokens {
+    pub fn cyber_void() -> GlassTokens {
+        GlassTokens {
+            surface_bg: Color.new(0.06, 0.09, 0.16, 0.68),
+            border_stroke: Color.new(1.0, 1.0, 1.0, 0.14),
+            specular_sheen: Color.new(1.0, 1.0, 1.0, 0.28),
+            accent_glow: Color.hex(0x8B5CF6),
+            text_primary: Color.hex(0xF8FAFC),
+            text_secondary: Color.hex(0x94A3B8),
+            shadow_ambient: Color.hex(0x60000000),
+            blur_radius: 16.0,
+            corner_radius: 16.0,
+        }
+    }
+
+    pub fn apple_acrylic() -> GlassTokens {
+        GlassTokens {
+            surface_bg: Color.new(0.95, 0.95, 0.98, 0.55),
+            border_stroke: Color.new(1.0, 1.0, 1.0, 0.45),
+            specular_sheen: Color.new(1.0, 1.0, 1.0, 0.65),
+            accent_glow: Color.hex(0x06B6D4),
+            text_primary: Color.hex(0x0F172A),
+            text_secondary: Color.hex(0x475569),
+            shadow_ambient: Color.hex(0x25000000),
+            blur_radius: 24.0,
+            corner_radius: 20.0,
+        }
+    }
+
+    pub fn neon_pulse() -> GlassTokens {
+        GlassTokens {
+            surface_bg: Color.new(0.04, 0.05, 0.10, 0.82),
+            border_stroke: Color.new(0.02, 0.71, 0.83, 0.40),
+            specular_sheen: Color.new(0.93, 0.93, 0.10, 0.50),
+            accent_glow: Color.hex(0xEC4899),
+            text_primary: Color.hex(0xFFFFFF),
+            text_secondary: Color.hex(0xCBD5E1),
+            shadow_ambient: Color.hex(0x70000000),
+            blur_radius: 18.0,
+            corner_radius: 14.0,
+        }
+    }
+}
+
+/* ── Glassmorphic Component Primitives ────────────────────────── */
+
+pub struct GlassSurfaceWidget {
+    pub width: f32,
+    pub height: f32,
+    pub corner_radius: f32,
+    pub has_specular_sheen: Bool,
+}
+
+pub struct GlassCardWidget {
+    pub title: String,
+    pub subtitle: String,
+    pub badge_text: String,
+    pub width: f32,
+    pub height: f32,
+    pub corner_radius: f32,
+    pub is_hovered: Bool,
+    pub elevation: f32,
+}
+
+pub struct Layered3DCardWidget {
+    pub title: String,
+    pub subtitle: String,
+    pub width: f32,
+    pub height: f32,
+    pub tilt_x: f32,
+    pub tilt_y: f32,
+    pub depth_offset: f32,
+}
+
+pub struct GlassButtonWidget {
+    pub label: String,
+    pub width: f32,
+    pub height: f32,
+    pub is_hovered: Bool,
+    pub is_pressed: Bool,
+    pub glow_spread: f32,
+}
+
+pub struct GlassScrubberWidget {
+    pub progress: f32,
+    pub width: f32,
+    pub height: f32,
+    pub hover_time_text: String,
+    pub is_hovered: Bool,
+}
+
+pub struct SpectrumVisualizerWidget {
+    pub bar_heights: Vec<f32>,
+    pub bar_width: f32,
+    pub bar_spacing: f32,
+    pub max_height: f32,
+    pub show_peak_markers: Bool,
+}
+
+pub struct AeroTerminalWidget {
+    pub prompt_title: String,
+    pub lines: Vec<String>,
+    pub width: f32,
+    pub height: f32,
+}
+
+pub struct GlassBadgeWidget {
+    pub text: String,
+    pub is_pulsing: Bool,
+    pub custom_accent: Color,
+}
+
+pub struct GlassSwitchWidget {
+    pub is_on: Bool,
+    pub width: f32,
+    pub height: f32,
+}
+
+/* ── Glassmorphism Renderer ───────────────────────────────────── */
+
+pub struct GlassRenderer {
+    pub tokens: GlassTokens,
+}
+
+impl GlassRenderer {
+    pub fn new(tokens: GlassTokens) -> GlassRenderer {
+        GlassRenderer { tokens }
+    }
+
+    pub fn draw_glass_surface(self: &GlassRenderer, canvas: &mut Canvas, surface: &GlassSurfaceWidget, x: f32, y: f32) {
+        let r = if surface.corner_radius > 0.0 { surface.corner_radius } else { self.tokens.corner_radius }
+        
+        // 1. Ambient drop shadow
+        canvas.draw_shadow(x, y, surface.width, surface.height, r, 6.0, &self.tokens.shadow_ambient)
+        
+        // 2. Frosted translucent base slab
+        canvas.draw_rounded_rect(x, y, surface.width, surface.height, r, &self.tokens.surface_bg)
+        
+        // 3. Specular rim highlight border
+        canvas.draw_rounded_rect(x, y, surface.width, surface.height, r, &self.tokens.border_stroke)
+        
+        // 4. Subtle top sheen reflection line
+        if surface.has_specular_sheen && surface.width > 20.0 {
+            canvas.draw_line(x + r, y + 1.0, x + surface.width - r, y + 1.0, 1.2, &self.tokens.specular_sheen)
+        }
+    }
+
+    pub fn draw_glass_card(self: &GlassRenderer, canvas: &mut Canvas, card: &GlassCardWidget, x: f32, y: f32) {
+        let r = if card.corner_radius > 0.0 { card.corner_radius } else { self.tokens.corner_radius }
+        let elev = if card.is_hovered { card.elevation + 4.0 } else { card.elevation }
+
+        // Dynamic ambient hover glow
+        if card.is_hovered {
+            canvas.draw_glow(x, y, card.width, card.height, r, 14.0, &self.tokens.accent_glow)
+        }
+
+        // Base shadow & surface
+        canvas.draw_shadow(x, y, card.width, card.height, r, elev, &self.tokens.shadow_ambient)
+        canvas.draw_rounded_rect(x, y, card.width, card.height, r, &self.tokens.surface_bg)
+        canvas.draw_rounded_rect(x, y, card.width, card.height, r, &self.tokens.border_stroke)
+        
+        // Top edge specular refraction
+        canvas.draw_line(x + r, y + 1.0, x + card.width - r, y + 1.0, 1.5, &self.tokens.specular_sheen)
+
+        // Title and Subtitle typography
+        if card.title.len() > 0 {
+            canvas.draw_text(card.title.clone(), x + 18.0, y + 24.0, 16.0, &self.tokens.text_primary)
+        }
+        if card.subtitle.len() > 0 {
+            canvas.draw_text(card.subtitle.clone(), x + 18.0, y + 48.0, 13.0, &self.tokens.text_secondary)
+        }
+
+        // Optional Top-Right Status Pill Badge
+        if card.badge_text.len() > 0 {
+            let bw = (card.badge_text.len() as f32) * 7.5 + 18.0
+            let bx = x + card.width - bw - 16.0
+            let by = y + 16.0
+            canvas.draw_rounded_rect(bx, by, bw, 22.0, 11.0, &self.tokens.border_stroke)
+            canvas.draw_text(card.badge_text.clone(), bx + 9.0, by + 4.0, 11.0, &self.tokens.accent_glow)
+        }
+    }
+
+    pub fn draw_layered_3d_card(self: &GlassRenderer, canvas: &mut Canvas, card: &Layered3DCardWidget, x: f32, y: f32) {
+        let r = self.tokens.corner_radius
+        
+        // Base backplane glass slab
+        canvas.draw_shadow(x, y, card.width, card.height, r, 8.0, &self.tokens.shadow_ambient)
+        canvas.draw_rounded_rect(x, y, card.width, card.height, r, &self.tokens.surface_bg)
+        canvas.draw_rounded_rect(x, y, card.width, card.height, r, &self.tokens.border_stroke)
+
+        // Floating elevated foreground plate (with parallax tilt translation)
+        let fx = x + 12.0 + (card.tilt_x * 0.4)
+        let fy = y + 12.0 + (card.tilt_y * 0.4)
+        let fw = card.width - 24.0
+        let fh = card.height - 24.0
+        let fr = r - 4.0
+
+        canvas.draw_shadow(fx, fy, fw, fh, fr, card.depth_offset, &self.tokens.shadow_ambient)
+        canvas.draw_glow(fx, fy, fw, fh, fr, 8.0, &self.tokens.accent_glow)
+        canvas.draw_rounded_rect(fx, fy, fw, fh, fr, &self.tokens.surface_bg)
+        canvas.draw_rounded_rect(fx, fy, fw, fh, fr, &self.tokens.specular_sheen)
+
+        if card.title.len() > 0 {
+            canvas.draw_text(card.title.clone(), fx + 16.0, fy + 24.0, 17.0, &self.tokens.text_primary)
+        }
+        if card.subtitle.len() > 0 {
+            canvas.draw_text(card.subtitle.clone(), fx + 16.0, fy + 50.0, 13.0, &self.tokens.text_secondary)
+        }
+    }
+
+    pub fn draw_glass_button(self: &GlassRenderer, canvas: &mut Canvas, btn: &GlassButtonWidget, x: f32, y: f32) {
+        let r = btn.height * 0.5
+        
+        // Hover luminous bloom
+        if btn.is_hovered || btn.glow_spread > 0.0 {
+            let spread = if btn.glow_spread > 0.0 { btn.glow_spread } else { 12.0 }
+            canvas.draw_glow(x, y, btn.width, btn.height, r, spread, &self.tokens.accent_glow)
+        }
+
+        // Fill & Rim
+        let mut bg = self.tokens.surface_bg
+        if btn.is_pressed {
+            bg = self.tokens.accent_glow
+        }
+        
+        canvas.draw_shadow(x, y, btn.width, btn.height, r, 2.0, &self.tokens.shadow_ambient)
+        canvas.draw_rounded_rect(x, y, btn.width, btn.height, r, &bg)
+        canvas.draw_rounded_rect(x, y, btn.width, btn.height, r, &self.tokens.border_stroke)
+        canvas.draw_line(x + r, y + 1.0, x + btn.width - r, y + 1.0, 1.2, &self.tokens.specular_sheen)
+
+        // Text centered
+        let tx = x + 16.0
+        let ty = y + (btn.height - 14.0) * 0.5
+        canvas.draw_text(btn.label.clone(), tx, ty, 14.0, &self.tokens.text_primary)
+    }
+
+    pub fn draw_glass_scrubber(self: &GlassRenderer, canvas: &mut Canvas, sc: &GlassScrubberWidget, x: f32, y: f32) {
+        let track_h = 6.0
+        let track_y = y + (sc.height - track_h) * 0.5
+        let clamp_p = if sc.progress < 0.0 { 0.0 } else if sc.progress > 1.0 { 1.0 } else { sc.progress }
+
+        // Frosted Background Track
+        canvas.draw_rounded_rect(x, track_y, sc.width, track_h, 3.0, &self.tokens.surface_bg)
+        canvas.draw_rounded_rect(x, track_y, sc.width, track_h, 3.0, &self.tokens.border_stroke)
+
+        // Active Glowing Gradient Fill
+        let active_w = sc.width * clamp_p
+        if active_w > 0.0 {
+            canvas.draw_glow(x, track_y, active_w, track_h, 3.0, 4.0, &self.tokens.accent_glow)
+            canvas.draw_rounded_rect(x, track_y, active_w, track_h, 3.0, &self.tokens.accent_glow)
+        }
+
+        // Illuminated Floating Thumb
+        let thumb_x = x + active_w - 6.0
+        let thumb_y = y + (sc.height - 16.0) * 0.5
+        canvas.draw_glow(thumb_x, thumb_y, 12.0, 16.0, 6.0, 6.0, &self.tokens.accent_glow)
+        canvas.draw_rounded_rect(thumb_x, thumb_y, 12.0, 16.0, 6.0, &self.tokens.text_primary)
+
+        // Hover Time/Percentage Tooltip Tooltip Bubble
+        if sc.is_hovered && sc.hover_time_text.len() > 0 {
+            let tip_w = 48.0
+            let tip_h = 22.0
+            let tip_x = thumb_x - (tip_w * 0.5) + 6.0
+            let tip_y = y - tip_h - 6.0
+            canvas.draw_shadow(tip_x, tip_y, tip_w, tip_h, 6.0, 2.0, &self.tokens.shadow_ambient)
+            canvas.draw_rounded_rect(tip_x, tip_y, tip_w, tip_h, 6.0, &self.tokens.surface_bg)
+            canvas.draw_rounded_rect(tip_x, tip_y, tip_w, tip_h, 6.0, &self.tokens.border_stroke)
+            canvas.draw_text(sc.hover_time_text.clone(), tip_x + 8.0, tip_y + 4.0, 11.0, &self.tokens.text_primary)
+        }
+    }
+
+    pub fn draw_spectrum_visualizer(self: &GlassRenderer, canvas: &mut Canvas, spec: &SpectrumVisualizerWidget, x: f32, y: f32) {
+        let mut cur_x = x
+        let count = spec.bar_heights.len()
+        let mut i = 0
+        while i < count {
+            let val = spec.bar_heights.get(i).unwrap()
+            let clamp_h = if val > spec.max_height { spec.max_height } else if val < 2.0 { 2.0 } else { val }
+            let bar_y = y + spec.max_height - clamp_h
+
+            // Bar Glow & Body
+            canvas.draw_rounded_rect(cur_x, bar_y, spec.bar_width, clamp_h, spec.bar_width * 0.5, &self.tokens.accent_glow)
+            
+            // Peak Hold Indicator Marker
+            if spec.show_peak_markers {
+                let peak_y = bar_y - 3.0
+                canvas.draw_rect(cur_x, peak_y, spec.bar_width, 1.5, &self.tokens.text_primary)
+            }
+
+            cur_x = cur_x + spec.bar_width + spec.bar_spacing
+            i = i + 1
+        }
+    }
+
+    pub fn draw_aero_terminal(self: &GlassRenderer, canvas: &mut Canvas, term: &AeroTerminalWidget, x: f32, y: f32) {
+        let r = 12.0
+        
+        // 1. Dark Frosted Acrylic Shell
+        canvas.draw_shadow(x, y, term.width, term.height, r, 6.0, &self.tokens.shadow_ambient)
+        canvas.draw_rounded_rect(x, y, term.width, term.height, r, &self.tokens.surface_bg)
+        canvas.draw_rounded_rect(x, y, term.width, term.height, r, &self.tokens.border_stroke)
+
+        // 2. Titlebar & Traffic-light Window Dots
+        canvas.draw_line(x, y + 32.0, x + term.width, y + 32.0, 1.0, &self.tokens.border_stroke)
+        canvas.draw_circle(x + 16.0, y + 16.0, 4.5, &Color.hex(0xEF4444))
+        canvas.draw_circle(x + 28.0, y + 16.0, 4.5, &Color.hex(0xF59E0B))
+        canvas.draw_circle(x + 40.0, y + 16.0, 4.5, &Color.hex(0x10B981))
+        
+        if term.prompt_title.len() > 0 {
+            canvas.draw_text(term.prompt_title.clone(), x + 56.0, y + 10.0, 12.0, &self.tokens.text_secondary)
+        }
+
+        // 3. Monospace Code Lines
+        let line_count = term.lines.len()
+        let mut line_y = y + 46.0
+        let mut j = 0
+        while j < line_count {
+            let l: String = term.lines.get(j).unwrap()
+            canvas.draw_text(l, x + 16.0, line_y, 12.0, &self.tokens.text_primary)
+            line_y = line_y + 18.0
+            j = j + 1
+        }
+    }
+
+    pub fn draw_glass_badge(self: &GlassRenderer, canvas: &mut Canvas, badge: &GlassBadgeWidget, x: f32, y: f32) {
+        let bw = (badge.text.len() as f32) * 7.5 + (if badge.is_pulsing { 28.0 } else { 16.0 })
+        let bh = 22.0
+        let r = bh * 0.5
+
+        canvas.draw_rounded_rect(x, y, bw, bh, r, &self.tokens.surface_bg)
+        canvas.draw_rounded_rect(x, y, bw, bh, r, &self.tokens.border_stroke)
+
+        let mut text_x = x + 8.0
+        if badge.is_pulsing {
+            // Live pulsing neon dot
+            canvas.draw_glow(x + 8.0, y + 7.0, 8.0, 8.0, 4.0, 4.0, &badge.custom_accent)
+            canvas.draw_circle(x + 12.0, y + 11.0, 3.5, &badge.custom_accent)
+            text_x = x + 22.0
+        }
+
+        canvas.draw_text(badge.text.clone(), text_x, y + 4.0, 11.0, &self.tokens.text_primary)
+    }
+
+    pub fn draw_glass_switch(self: &GlassRenderer, canvas: &mut Canvas, sw: &GlassSwitchWidget, x: f32, y: f32) {
+        let w = if sw.width > 0.0 { sw.width } else { 48.0 }
+        let h = if sw.height > 0.0 { sw.height } else { 26.0 }
+        let r = h * 0.5
+
+        if sw.is_on {
+            canvas.draw_glow(x, y, w, h, r, 6.0, &self.tokens.accent_glow)
+            canvas.draw_rounded_rect(x, y, w, h, r, &self.tokens.accent_glow)
+            let thumb_x = x + w - r - 6.0
+            let thumb_y = y + 3.0
+            let thumb_r = r - 3.0
+            canvas.draw_rounded_rect(thumb_x, thumb_y, thumb_r * 2.0, thumb_r * 2.0, thumb_r, &self.tokens.text_primary)
+        } else {
+            canvas.draw_rounded_rect(x, y, w, h, r, &self.tokens.surface_bg)
+            canvas.draw_rounded_rect(x, y, w, h, r, &self.tokens.border_stroke)
+            let thumb_x = x + 4.0
+            let thumb_y = y + 4.0
+            let thumb_r = r - 4.0
+            canvas.draw_rounded_rect(thumb_x, thumb_y, thumb_r * 2.0, thumb_r * 2.0, thumb_r, &self.tokens.text_secondary)
+        }
+    }
+}
+
+
+/* ── Motion & Animation Engine (120 FPS Clock & Controllers) ──── */
+
+pub struct Clock {}
+
+impl Clock {
+    pub fn now_ms() -> i64 {
+        unsafe { nyx_time_millis() }
+    }
+}
+
+pub struct AnimationController {
+    pub start_time: i64,
+    pub duration_ms: i64,
+    pub is_running: Bool,
+    pub is_reverse: Bool,
+}
+
+impl AnimationController {
+    pub fn new(duration_ms: i64) -> AnimationController {
+        AnimationController {
+            start_time: unsafe { nyx_time_millis() },
+            duration_ms,
+            is_running: true,
+            is_reverse: false,
+        }
+    }
+
+    pub fn progress(self: &AnimationController) -> f32 {
+        if !self.is_running {
+            return if self.is_reverse { 0.0 } else { 1.0 }
+        }
+        let now = unsafe { nyx_time_millis() }
+        let elapsed = now - self.start_time
+        if elapsed >= self.duration_ms {
+            return if self.is_reverse { 0.0 } else { 1.0 }
+        }
+        let raw = (elapsed as f32) / (self.duration_ms as f32)
+        if self.is_reverse { 1.0 - raw } else { raw }
+    }
+
+    pub fn value(self: &AnimationController) -> f32 {
+        let t = self.progress()
+        // Material 3 Emphasized Decelerate Curve
+        1.0 - ((1.0 - t) * (1.0 - t) * (1.0 - t))
+    }
+
+    pub fn restart(self: &mut AnimationController) {
+        self.start_time = unsafe { nyx_time_millis() }
+        self.is_running = true
+    }
+
+    pub fn reverse(self: &mut AnimationController) {
+        self.start_time = unsafe { nyx_time_millis() }
+        self.is_reverse = true
+        self.is_running = true
+    }
+}
+
+/* ── P0 Layout Widgets & Ergonomics ──────────────────────────── */
+
+pub struct Padding {
+    pub left: f32,
+    pub top: f32,
+    pub right: f32,
+    pub bottom: f32,
+}
+
+impl Padding {
+    pub fn all(value: f32) -> Padding {
+        Padding { left: value, top: value, right: value, bottom: value }
+    }
+
+    pub fn symmetric(horizontal: f32, vertical: f32) -> Padding {
+        Padding { left: horizontal, top: vertical, right: horizontal, bottom: vertical }
+    }
+}
+
+pub struct CenterBox {
+    pub width: f32,
+    pub height: f32,
+}
+
+impl CenterBox {
+    pub fn new(width: f32, height: f32) -> CenterBox {
+        CenterBox { width, height }
+    }
+}
+
+pub struct SizedBox {
+    pub width: f32,
+    pub height: f32,
+}
+
+impl SizedBox {
+    pub fn new(width: f32, height: f32) -> SizedBox {
+        SizedBox { width, height }
+    }
+
+    pub fn square(dimension: f32) -> SizedBox {
+        SizedBox { width: dimension, height: dimension }
+    }
+}
+
+pub struct Expanded {
+    pub flex: i32,
+}
+
+impl Expanded {
+    pub fn new(flex: i32) -> Expanded {
+        Expanded { flex }
+    }
+}
+
+pub enum Alignment {
+    TopLeft,
+    TopCenter,
+    TopRight,
+    CenterLeft,
+    Center,
+    CenterRight,
+    BottomLeft,
+    BottomCenter,
+    BottomRight,
+}
+
+pub struct Align {
+    pub alignment: Alignment,
+}
+
+impl Align {
+    pub fn new(alignment: Alignment) -> Align {
+        Align { alignment }
+    }
+}
+
+/* ── Physics Motion Simulation ────────────────────────────────── */
+
+pub struct SpringSimulation {
+    pub stiffness: f32,
+    pub damping: f32,
+    pub position: f32,
+    pub velocity: f32,
+    pub target: f32,
+}
+
+impl SpringSimulation {
+    pub fn new(stiffness: f32, damping: f32, target: f32) -> SpringSimulation {
+        SpringSimulation { stiffness, damping, position: 0.0, velocity: 0.0, target }
+    }
+
+    pub fn update(self: &mut SpringSimulation, dt: f32) -> f32 {
+        let force = -self.stiffness * (self.position - self.target)
+        let damping_force = -self.damping * self.velocity
+        let accel = force + damping_force
+        self.velocity = self.velocity + accel * dt
+        self.position = self.position + self.velocity * dt
+        self.position
+    }
+}
+
+/* ── Dynamic Theme & ThemeProvider ─────────────────────────────── */
+
+pub struct ThemeProvider {
+    pub is_dark: Bool,
+    pub primary_color: Color,
+    pub background_color: Color,
+    pub surface_color: Color,
+    pub text_color: Color,
+}
+
+impl ThemeProvider {
+    pub fn new(is_dark: Bool) -> ThemeProvider {
+        if is_dark {
+            ThemeProvider {
+                is_dark: true,
+                primary_color: Color.hex(0xA855F7),
+                background_color: Color.hex(0x0F172A),
+                surface_color: Color.hex(0x1E293B),
+                text_color: Color.hex(0xF8FAFC),
+            }
+        } else {
+            ThemeProvider {
+                is_dark: false,
+                primary_color: Color.hex(0x6366F1),
+                background_color: Color.hex(0xF8FAFC),
+                surface_color: Color.hex(0xFFFFFF),
+                text_color: Color.hex(0x0F172A),
+            }
+        }
+    }
+
+    pub fn toggle_theme(self: &mut ThemeProvider) {
+        self.is_dark = !self.is_dark
+        if self.is_dark {
+            self.primary_color = Color.hex(0xA855F7)
+            self.background_color = Color.hex(0x0F172A)
+            self.surface_color = Color.hex(0x1E293B)
+            self.text_color = Color.hex(0xF8FAFC)
+        } else {
+            self.primary_color = Color.hex(0x6366F1)
+            self.background_color = Color.hex(0xF8FAFC)
+            self.surface_color = Color.hex(0xFFFFFF)
+            self.text_color = Color.hex(0x0F172A)
+        }
+    }
+}
+
+/* ── Debug Inspector Overlay ───────────────────────────────────── */
+
+pub fn debugDumpApp() {
+    unsafe {
+        nyx_skia_draw_text(null, "Nyx UI Tree Dump: [Window -> Scaffold -> Column -> (Padding, SizedBox, Expanded)]".as_ptr(), 10.0, 30.0, 12.0, 0x818CF8FF)
+    }
+}
+
+

@@ -1,0 +1,17 @@
+// ============================================================================
+// Module: std.fusion
+// Package: @nyx/fusion
+// Description: Unified Package Entry for Nyx Nuclear Fusion & Tokamak Plasma SDK
+// ============================================================================
+
+module std.fusion;
+
+pub import std.physics.mhd_tokamak;
+
+pub fn get_version() -> String {
+    return "1.0.0";
+}
+
+pub fn get_description() -> String {
+    return "Nyx Real-Time 10,000 Hz Tokamak Plasma MHD Equilibrium & Coil Feedback SDK";
+}

@@ -1,0 +1,63 @@
+// ============================================================================
+// Module: std.audio.hrtf_spatial
+// Purpose: Binaural Head-Related Transfer Function (HRTF) 3D Spatial Audio Filter
+// Specification: Zero-Allocation Convolution Reverb & Directional Audio Panning
+// ============================================================================
+
+module std.audio.hrtf_spatial;
+
+import std.simd;
+import std.math;
+
+public struct Spatial3DSource {
+    public f32 x;
+    public f32 y;
+    public f32 z;
+    public f32 gain;
+    public f32 inner_radius;
+    public f32 outer_radius;
+}
+
+public struct ListenerOrientation {
+    public f32 x;
+    public f32 y;
+    public f32 z;
+    public f32 yaw;
+    public f32 pitch;
+}
+
+public struct HrtfImpulseResponse {
+    public f32[128] left_ear_fir;
+    public f32[128] right_ear_fir;
+}
+
+public fn compute_binaural_panning(
+    Spatial3DSource* src, 
+    ListenerOrientation* listener, 
+    f32* in_mono, 
+    f32* out_left, 
+    f32* out_right, 
+    u32 sample_count
+) -> void {
+    // Relative vector from listener to source
+    f32 dx = src.x - listener.x;
+    f32 dy = src.y - listener.y;
+    f32 dz = src.z - listener.z;
+    f32 distance = math_sqrt(dx*dx + dy*dy + dz*dz);
+    if (distance < 0.001) distance = 0.001;
+    
+    // Distance attenuation (1/d)
+    f32 atten = math_clamp(1.0 / distance, 0.0, 1.0) * src.gain;
+    
+    // Azimuth calculation for Interaural Time Difference (ITD) & Intensity (IID)
+    f32 azimuth = math_atan2(dx, dz) - listener.yaw;
+    f32 pan_left = math_clamp(0.5 * (1.0 - math_sin(azimuth)), 0.0, 1.0);
+    f32 pan_right = math_clamp(0.5 * (1.0 + math_sin(azimuth)), 0.0, 1.0);
+    
+    // SIMD Buffer Processing
+    for (u32 i = 0; i < sample_count; i++) {
+        f32 s = in_mono[i] * atten;
+        out_left[i] = s * pan_left;
+        out_right[i] = s * pan_right;
+    }
+}

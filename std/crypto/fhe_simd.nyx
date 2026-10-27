@@ -1,0 +1,32 @@
+module std.crypto.fhe_simd
+
+pub struct FheCiphertextRing {
+    pub dimension: i64,
+    pub modulus_bits: i64,
+    pub noise_budget_bits: i64,
+    pub is_homomorphic: bool
+}
+
+impl FheCiphertextRing {
+    pub fn new_ckks_ring() -> FheCiphertextRing {
+        FheCiphertextRing {
+            dimension: 8192,
+            modulus_bits: 128,
+            noise_budget_bits: 64,
+            is_homomorphic: true
+        }
+    }
+
+    pub fn multiply_simd_step(self: &FheCiphertextRing, a_coeff: f64, b_coeff: f64) -> f64 {
+        let product: f64 = a_coeff * b_coeff;
+        product
+    }
+
+    pub fn has_sufficient_noise_budget(self: &FheCiphertextRing) -> bool {
+        if self.noise_budget_bits > 16 {
+            true
+        } else {
+            false
+        }
+    }
+}

@@ -1,0 +1,17 @@
+// ============================================================================
+// Module: std.neuromorphic
+// Package: @nyx/neuromorphic
+// Description: Unified Package Entry for Nyx Neuromorphic SNN & STDP SDK
+// ============================================================================
+
+module std.neuromorphic;
+
+pub import std.ai.snn_event;
+
+pub fn get_version() -> String {
+    return "1.0.0";
+}
+
+pub fn get_description() -> String {
+    return "Nyx Event-Driven Neuromorphic Spiking Neural Network (LIF & STDP) SDK";
+}
