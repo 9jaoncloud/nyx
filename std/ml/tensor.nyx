@@ -1,0 +1,43 @@
+module tensor
+
+extern "C" {
+    fn nyx_tensor_create(rows: i32, cols: i32) -> *TensorHandle
+    fn nyx_tensor_free(t: *TensorHandle)
+    fn nyx_tensor_matmul(a: *TensorHandle, b: *TensorHandle, out: *TensorHandle)
+    fn nyx_tensor_add(a: *TensorHandle, b: *TensorHandle, out: *TensorHandle)
+    fn nyx_tensor_scale(a: *TensorHandle, scalar: f32, out: *TensorHandle)
+}
+
+type TensorHandle = *()
+
+pub struct Tensor {
+    handle: TensorHandle,
+    rows: i32,
+    cols: i32,
+}
+
+impl Tensor {
+    pub fn new(rows: i32, cols: i32) -> Tensor {
+        Tensor { handle: nyx_tensor_create(rows, cols), rows, cols }
+    }
+
+    pub fn matmul(self: &Tensor, other: &Tensor) -> Tensor {
+        let out = Tensor.new(self.rows, other.cols)
+        nyx_tensor_matmul(self.handle, other.handle, out.handle)
+        out
+    }
+
+    pub fn add(self: &Tensor, other: &Tensor) -> Tensor {
+        let out = Tensor.new(self.rows, self.cols)
+        nyx_tensor_add(self.handle, other.handle, out.handle)
+        out
+    }
+
+    pub fn scale(self: &Tensor, s: f32) -> Tensor {
+        let out = Tensor.new(self.rows, self.cols)
+        nyx_tensor_scale(self.handle, s, out.handle)
+        out
+    }
+
+    pub fn release(self: Tensor) { nyx_tensor_free(self.handle) }
+}

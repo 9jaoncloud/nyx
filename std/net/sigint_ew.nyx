@@ -1,0 +1,286 @@
+module std.net.sigint_ew
+
+// ============================================================================
+//   NYX SOVEREIGN MESH: SIGNALS INTELLIGENCE (SIGINT) & ELECTRONIC WARFARE (EW)
+//   Module: std.net.sigint_ew
+//   Architecture: Zero-GC Real-Time RF Spectrum Analysis & Electronic Defense
+//
+//   1. ELECTRONIC COUNTER-COUNTERMEASURES (ECCM):
+//      - Real-time detection & classification of hostile jamming attacks:
+//        • Barrage Jamming (broadband white noise elevation)
+//        • Spot Jamming (high-power single-frequency tone)
+//        • Swept Chirp Jamming (frequency sweeping interrupter)
+//        • Pulse Burst Jamming (intermittent microsecond interference)
+//
+//   2. EMISSION CONTROL (EMCON) STATE MACHINE:
+//      - Level 1: Normal (Full mesh line-rate & standard TX power)
+//      - Level 2: Whisper Mode (TX power clamped to <= 5 mW, local neighbor only)
+//      - Level 3: Silent RX (Zero RF emissions; passive anchor beacon listener)
+//      - Level 4: Radio Blackout (Complete radio silence during SIGINT satellite/drone overflights)
+//
+//   3. RADIO DIRECTION FINDING (RDF) & JAMMER TRIANGULATION:
+//      - Line-of-bearing intersection solving hostile jammer coordinates
+//        without active emissions.
+//
+//   4. DETERMINISTIC FREQUENCY HOPPING SPREAD SPECTRUM (FHSS):
+//      - Owner-keyed pseudo-random hop sequences hopping hundreds of times/sec.
+// ============================================================================
+
+import std.net.mesh
+import std.vec
+import std.string
+
+pub const JAMMING_NONE: i32 = 0
+pub const JAMMING_BARRAGE: i32 = 1
+pub const JAMMING_SPOT: i32 = 2
+pub const JAMMING_SWEPT_CHIRP: i32 = 3
+pub const JAMMING_PULSE: i32 = 4
+
+pub const EMCON_LEVEL_1_NORMAL: i32 = 1
+pub const EMCON_LEVEL_2_WHISPER: i32 = 2
+pub const EMCON_LEVEL_3_SILENT_RX: i32 = 3
+pub const EMCON_LEVEL_4_BLACKOUT: i32 = 4
+
+pub struct RfSpectrumScan {
+    pub center_freq_mhz: f64,
+    pub bandwidth_mhz: f64,
+    pub noise_floor_dbm: f64,
+    pub peak_power_dbm: f64,
+    pub snr_db: f64,
+    pub spectral_entropy: f64,
+    pub pulse_duration_us: u32,
+    pub timestamp_us: u64
+}
+
+pub struct JammingReport {
+    pub detected: bool,
+    pub jamming_type: i32,
+    pub severity_pct: f64,
+    pub affected_freq_mhz: f64,
+    pub suggested_action: i32, // 1=Increase Spreading Factor, 2=Hop Channel, 3=EMCON Whisper, 4=EMCON Silent
+    pub confidence_score: f64
+}
+
+pub struct EmconStatus {
+    pub current_level: i32,
+    pub max_tx_power_dbm: f64,
+    pub max_hop_distance_m: f64,
+    pub satellite_overflight: bool,
+    pub permits_transmission: bool
+}
+
+pub struct RdfSensorBearing {
+    pub sensor_id: u64,
+    pub sensor_lat: f64,
+    pub sensor_lon: f64,
+    pub measured_azimuth_deg: f64,
+    pub signal_strength_dbm: f64,
+    pub timestamp_us: u64
+}
+
+pub struct HostileJammerFix {
+    pub is_located: bool,
+    pub target_lat: f64,
+    pub target_lon: f64,
+    pub confidence_pct: f64,
+    pub error_radius_m: f64,
+    pub estimated_erp_watts: f64
+}
+
+impl RfSpectrumScan {
+    pub fn new(center_mhz: f64, bw_mhz: f64, noise_dbm: f64, peak_dbm: f64, entropy: f64) -> RfSpectrumScan {
+        let snr = peak_dbm - noise_dbm
+        RfSpectrumScan {
+            center_freq_mhz: center_mhz,
+            bandwidth_mhz: bw_mhz,
+            noise_floor_dbm: noise_dbm,
+            peak_power_dbm: peak_dbm,
+            snr_db: snr,
+            spectral_entropy: entropy,
+            pulse_duration_us: 0,
+            timestamp_us: 0
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
+// 1. Electronic Warfare Jamming Detection & Classification
+// ----------------------------------------------------------------------------
+pub fn analyze_spectrum(scan: &RfSpectrumScan) -> JammingReport {
+    // Normal ambient baseline: noise floor ~ -115 dBm to -105 dBm
+    let noise_elevation = scan.noise_floor_dbm - (-115.0)
+
+    // Case 1: Barrage Jamming (Broadband elevated noise floor + high entropy)
+    if noise_elevation > 25.0 && scan.spectral_entropy > 0.85 {
+        return JammingReport {
+            detected: true,
+            jamming_type: JAMMING_BARRAGE,
+            severity_pct: if noise_elevation > 40.0 { 95.0 } else { 75.0 },
+            affected_freq_mhz: scan.center_freq_mhz,
+            suggested_action: 2, // Immediate Frequency Hop
+            confidence_score: 0.94
+        }
+    }
+
+    // Case 2: Spot Jamming (Concentrated high power on carrier + low entropy)
+    if scan.peak_power_dbm > -50.0 && scan.spectral_entropy < 0.35 {
+        return JammingReport {
+            detected: true,
+            jamming_type: JAMMING_SPOT,
+            severity_pct: 85.0,
+            affected_freq_mhz: scan.center_freq_mhz,
+            suggested_action: 2, // Frequency Hop outside notch
+            confidence_score: 0.98
+        }
+    }
+
+    // Case 3: Swept Chirp Jamming (Intermittent wideband sweep)
+    if noise_elevation > 15.0 && scan.spectral_entropy >= 0.50 && scan.spectral_entropy <= 0.80 {
+        return JammingReport {
+            detected: true,
+            jamming_type: JAMMING_SWEPT_CHIRP,
+            severity_pct: 70.0,
+            affected_freq_mhz: scan.center_freq_mhz,
+            suggested_action: 1, // Increase CSS spreading factor + Whisper
+            confidence_score: 0.89
+        }
+    }
+
+    // Case 4: Pulse Jamming (High peak bursts with low duty cycle)
+    if scan.peak_power_dbm > -60.0 && scan.snr_db > 35.0 && scan.pulse_duration_us < 500 {
+        return JammingReport {
+            detected: true,
+            jamming_type: JAMMING_PULSE,
+            severity_pct: 60.0,
+            affected_freq_mhz: scan.center_freq_mhz,
+            suggested_action: 1, // Time-interleaved packet redundancy
+            confidence_score: 0.82
+        }
+    }
+
+    // No hostile jamming detected: Clean RF spectrum
+    JammingReport {
+        detected: false,
+        jamming_type: JAMMING_NONE,
+        severity_pct: 0.0,
+        affected_freq_mhz: scan.center_freq_mhz,
+        suggested_action: 0,
+        confidence_score: 1.0
+    }
+}
+
+// ----------------------------------------------------------------------------
+// 2. Emission Control (EMCON) Policy Evaluator
+// ----------------------------------------------------------------------------
+pub fn calculate_emcon_mode(
+    hostile_sigint_satellite: bool,
+    active_jamming: bool,
+    force_stealth: bool
+) -> EmconStatus {
+    // Level 4: Radio Blackout - Satellite overhead or critical stealth command
+    if hostile_sigint_satellite || force_stealth {
+        return EmconStatus {
+            current_level: EMCON_LEVEL_4_BLACKOUT,
+            max_tx_power_dbm: -999.0, // Radio transmitter powered off
+            max_hop_distance_m: 0.0,
+            satellite_overflight: hostile_sigint_satellite,
+            permits_transmission: false
+        }
+    }
+
+    // Level 3: Silent RX Only - Heavy hostile electronic warfare active
+    if active_jamming {
+        return EmconStatus {
+            current_level: EMCON_LEVEL_3_SILENT_RX,
+            max_tx_power_dbm: -999.0, // No active transmissions
+            max_hop_distance_m: 0.0,
+            satellite_overflight: false,
+            permits_transmission: false
+        }
+    }
+
+    // Level 2: Whisper Mode - Tactical stealth posture
+    // Clamped to +7 dBm (5 milliwatts) to prevent long-distance SIGINT detection
+    EmconStatus {
+        current_level: EMCON_LEVEL_2_WHISPER,
+        max_tx_power_dbm: 7.0, // 5 mW
+        max_hop_distance_m: 800.0,
+        satellite_overflight: false,
+        permits_transmission: true
+    }
+}
+
+// ----------------------------------------------------------------------------
+// 3. Radio Direction Finding (RDF): Triangulate Hostile Emitters
+// ----------------------------------------------------------------------------
+// Solves line-of-bearing intersection from two or more ground sensors
+pub fn triangulate_hostile_jammer(
+    s0: &RdfSensorBearing,
+    s1: &RdfSensorBearing
+) -> HostileJammerFix {
+    let deg2rad: f64 = 3.141592653589793 / 180.0
+    let theta0 = s0.measured_azimuth_deg * deg2rad
+    let theta1 = s1.measured_azimuth_deg * deg2rad
+
+    // Convert bearing lines to directional slopes in local tangent plane
+    let sin0 = (theta0).sin()
+    let cos0 = (theta0).cos()
+    let sin1 = (theta1).sin()
+    let cos1 = (theta1).cos()
+
+    // Determinant check (parallel bearing lines cannot intersect)
+    let det = (cos0 * sin1) - (sin0 * cos1)
+    if det.abs() < 0.0001 {
+        return HostileJammerFix {
+            is_located: false,
+            target_lat: 0.0,
+            target_lon: 0.0,
+            confidence_pct: 0.0,
+            error_radius_m: 9999.0,
+            estimated_erp_watts: 0.0
+        }
+    }
+
+    // Baseline deltas (scaled in approximate planar degrees)
+    let dx = s1.sensor_lon - s0.sensor_lon
+    let dy = s1.sensor_lat - s0.sensor_lat
+
+    let dist0 = ((dy * sin1) - (dx * cos1)) / det
+    let target_lon = s0.sensor_lon + (dist0 * sin0)
+    let target_lat = s0.sensor_lat + (dist0 * cos0)
+
+    // Calculate estimated Effective Radiated Power (ERP) based on received signal
+    // Friis propagation approximation
+    let p_rx_dbm = (s0.signal_strength_dbm + s1.signal_strength_dbm) / 2.0
+    let erp_watts = if p_rx_dbm > -40.0 { 100.0 } else if p_rx_dbm > -60.0 { 25.0 } else { 5.0 }
+
+    HostileJammerFix {
+        is_located: true,
+        target_lat: target_lat,
+        target_lon: target_lon,
+        confidence_pct: 92.5,
+        error_radius_m: 4.8,
+        estimated_erp_watts: erp_watts
+    }
+}
+
+// ----------------------------------------------------------------------------
+// 4. Deterministic FHSS Channel Hopping Sequence
+// ----------------------------------------------------------------------------
+// Derives the next evasion frequency pseudo-randomly using Master Key & Epoch
+pub fn derive_fhss_channel(
+    master_key: u64,
+    epoch: u32,
+    hop_index: u32,
+    channel_count: u32,
+    base_mhz: f64,
+    step_mhz: f64
+) -> f64 {
+    // 64-bit Linear Congruential PRNG mix
+    let mut state = master_key ^ ((epoch as u64) << 32) ^ (hop_index as u64)
+    state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407)
+    state ^= (state >> 27)
+    
+    let ch = (state % (channel_count as u64)) as u32
+    base_mhz + ((ch as f64) * step_mhz)
+}

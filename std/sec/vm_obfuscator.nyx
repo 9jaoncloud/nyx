@@ -1,0 +1,223 @@
+// Nyx Standard Library: Dynamic Virtual-Machine Bytecode Obfuscator
+// Module: std.sec.vm_obfuscator
+// Zero-GC Custom Bytecode Virtualization for Deep Binary Hardening
+
+module vm_obfuscator
+
+import prelude.*
+import crypto.*
+import sec.*
+
+// Virtual Machine Registers
+pub const VREG_R0: u8 = 0x00
+pub const VREG_R1: u8 = 0x01
+pub const VREG_R2: u8 = 0x02
+pub const VREG_R3: u8 = 0x03
+pub const VREG_R4: u8 = 0x04
+pub const VREG_R5: u8 = 0x05
+pub const VREG_R6: u8 = 0x06
+pub const VREG_R7: u8 = 0x07
+pub const VREG_SP: u8 = 0x08
+pub const VREG_FLAGS: u8 = 0x09
+
+// Logical Opcodes before Session Shuffling
+pub const VOP_NOP: u8        = 0x00
+pub const VOP_LOAD_IMM: u8   = 0x01
+pub const VOP_MOV: u8        = 0x02
+pub const VOP_ADD_MBA: u8    = 0x03
+pub const VOP_SUB_MBA: u8    = 0x04
+pub const VOP_XOR: u8        = 0x05
+pub const VOP_AND: u8        = 0x06
+pub const VOP_OR: u8         = 0x07
+pub const VOP_SHL: u8        = 0x08
+pub const VOP_SHR: u8        = 0x09
+pub const VOP_CMP: u8        = 0x0A
+pub const VOP_JMP: u8        = 0x0B
+pub const VOP_JZ: u8         = 0x0C
+pub const VOP_JNZ: u8        = 0x0D
+pub const VOP_PUSH: u8       = 0x0E
+pub const VOP_POP: u8        = 0x0F
+pub const VOP_TAMPER_CHK: u8 = 0x10
+pub const VOP_SYSCALL: u8    = 0x11
+pub const VOP_RET: u8        = 0xFF
+
+// Randomized Opcode Map per Compilation Seed
+pub struct VmOpcodeTable {
+    pub seed: u64,
+    pub encoding_map: Vec<u8>,
+    pub decoding_map: Vec<u8>,
+    pub key_xor: u8,
+}
+
+impl VmOpcodeTable {
+    pub fn new(seed: u64) -> VmOpcodeTable {
+        let mut enc: Vec<u8> = Vec.new()
+        let mut dec: Vec<u8> = Vec.new()
+        let mut i: usize = 0
+        while i < 256 {
+            enc.push(i as u8)
+            dec.push(i as u8)
+            i = i + 1
+        }
+
+        // Fisher-Yates shuffle with deterministic Linear Congruential Generator
+        let mut state: u64 = seed ^ (0x5A879E19A64E2B1F as u64)
+        let mut j: usize = 255
+        while j > 0 {
+            state = (state * (6364136223846793005 as u64) + (1442695040888963407 as u64))
+            let target = (state % (j as u64 + 1)) as usize
+            let tmp = enc[j]
+            enc[j] = enc[target]
+            enc[target] = tmp
+            j = j - 1
+        }
+
+        let mut k: usize = 0
+        while k < 256 {
+            dec[enc[k] as usize] = k as u8
+            k = k + 1
+        }
+
+        let key = ((seed >> 24) ^ 0xA5) as u8
+        VmOpcodeTable {
+            seed,
+            encoding_map: enc,
+            decoding_map: dec,
+            key_xor: key,
+        }
+    }
+
+    pub fn encode_op(&self, logical_op: u8) -> u8 {
+        self.encoding_map[logical_op as usize] ^ self.key_xor
+    }
+
+    pub fn decode_op(&self, physical_op: u8) -> u8 {
+        let unmasked = physical_op ^ self.key_xor
+        self.decoding_map[unmasked as usize]
+    }
+}
+
+// Bytecode Instruction Representation
+pub struct VmInstruction {
+    pub opcode: u8,
+    pub r_dest: u8,
+    pub r_src: u8,
+    pub imm32: u32,
+}
+
+// Runtime Execution Context
+pub struct VmRuntimeState {
+    pub regs: Vec<u64>,
+    pub ip: usize,
+    pub flags: u64,
+    pub stack: Vec<u64>,
+    pub sp: usize,
+    pub is_halted: bool,
+    pub tamper_detected: bool,
+}
+
+impl VmRuntimeState {
+    pub fn new() -> VmRuntimeState {
+        let mut regs: Vec<u64> = Vec.new()
+        for _ in 0..16 { regs.push(0 as u64) }
+        let mut stack: Vec<u64> = Vec.new()
+        for _ in 0..256 { stack.push(0 as u64) }
+        
+        VmRuntimeState {
+            regs,
+            ip: 0,
+            flags: 0,
+            stack,
+            sp: 0,
+            is_halted: false,
+            tamper_detected: false,
+        }
+    }
+
+    // Execute Virtualized Bytecode with Flattened Indirect Dispatch
+    pub fn execute(&mut self, bytecode: &Vec<u8>, table: &VmOpcodeTable) -> u64 {
+        let len = bytecode.len()
+        self.ip = 0
+        self.is_halted = false
+
+        while self.ip < len && !self.is_halted {
+            if self.ip + 6 > len {
+                break
+            }
+
+            // Decode 6-byte V-Instruction: [Opcode, RDest, RSrc, Imm32 (4 bytes)]
+            let raw_op = bytecode[self.ip]
+            let logical_op = table.decode_op(raw_op)
+            let r_dest = (bytecode[self.ip + 1] & 0x0F) as usize
+            let r_src = (bytecode[self.ip + 2] & 0x0F) as usize
+            let imm = (bytecode[self.ip + 3] as u32) |
+                      ((bytecode[self.ip + 4] as u32) << 8) |
+                      ((bytecode[self.ip + 5] as u32) << 16) |
+                      ((bytecode[self.ip + 6] as u32) << 24)
+
+            self.ip = self.ip + 7
+
+            // Dispatcher Jump Table
+            if logical_op == VOP_NOP {
+            } else if logical_op == VOP_LOAD_IMM {
+                self.regs[r_dest] = imm as u64
+            } else if logical_op == VOP_MOV {
+                self.regs[r_dest] = self.regs[r_src]
+            } else if logical_op == VOP_ADD_MBA {
+                let a = self.regs[r_dest]
+                let b = self.regs[r_src]
+                self.regs[r_dest] = (a ^ b) + ((a & b) << 1)
+            } else if logical_op == VOP_SUB_MBA {
+                let a = self.regs[r_dest]
+                let b = self.regs[r_src]
+                self.regs[r_dest] = a - b
+            } else if logical_op == VOP_XOR {
+                self.regs[r_dest] = self.regs[r_dest] ^ self.regs[r_src]
+            } else if logical_op == VOP_AND {
+                self.regs[r_dest] = self.regs[r_dest] & self.regs[r_src]
+            } else if logical_op == VOP_OR {
+                self.regs[r_dest] = self.regs[r_dest] | self.regs[r_src]
+            } else if logical_op == VOP_SHL {
+                self.regs[r_dest] = self.regs[r_dest] << (imm & 0x3F)
+            } else if logical_op == VOP_SHR {
+                self.regs[r_dest] = self.regs[r_dest] >> (imm & 0x3F)
+            } else if logical_op == VOP_CMP {
+                let diff = (self.regs[r_dest] as i64) - (self.regs[r_src] as i64)
+                self.flags = if diff == 0 { 0x01 } else if diff < 0 { 0x02 } else { 0x00 }
+            } else if logical_op == VOP_JMP {
+                self.ip = imm as usize
+            } else if logical_op == VOP_JZ {
+                if (self.flags & 0x01) != 0 {
+                    self.ip = imm as usize
+                }
+            } else if logical_op == VOP_JNZ {
+                if (self.flags & 0x01) == 0 {
+                    self.ip = imm as usize
+                }
+            } else if logical_op == VOP_PUSH {
+                if self.sp < 255 {
+                    self.stack[self.sp] = self.regs[r_src]
+                    self.sp = self.sp + 1
+                }
+            } else if logical_op == VOP_POP {
+                if self.sp > 0 {
+                    self.sp = self.sp - 1
+                    self.regs[r_dest] = self.stack[self.sp]
+                }
+            } else if logical_op == VOP_TAMPER_CHK {
+                let canary = self.regs[r_src] ^ (0xDEADBEEFCAFEBABE as u64)
+                if canary != (imm as u64) {
+                    self.tamper_detected = true
+                    self.regs[0] = 0
+                    self.is_halted = true
+                }
+            } else if logical_op == VOP_RET {
+                self.is_halted = true
+            } else {
+                self.is_halted = true
+            }
+        }
+
+        self.regs[0]
+    }
+}

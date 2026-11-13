@@ -1,0 +1,64 @@
+// Nyx Standard Library — @nyx/finance/fvgm_engine
+// Zero-GC Algorithmic Fair Value Gap Mitigation (FVGM) Engine
+// Auto-Optimizing Multi-Profile ICT/SMC State Machine (PhenLabs v6 Protocol)
+
+module std.finance.fvgm_engine
+
+pub struct FvgmZoneModel {
+    pub dir: i32,           // +1 = Bullish, -1 = Bearish
+    pub top: f64,
+    pub bot: f64,
+    pub ce: f64,            // Consequent Encroachment (50% midpoint)
+    pub birth_bar: i32,
+    pub touched: bool,
+    pub dead: bool
+}
+
+pub struct FvgmTradePlan {
+    pub profile_id: i32,    // 0: Balanced, 1: Conservative, 2: Aggressive, 3: Scalp, 4: Swing, 5: VolClimax
+    pub dir: i32,           // +1 = Long, -1 = Short
+    pub entry_price: f64,
+    pub stop_loss: f64,
+    pub cur_stop_loss: f64,
+    pub tp1: f64,
+    pub tp2: f64,
+    pub tp3: f64,
+    pub risk_amount: f64,
+    pub score: f64,
+    pub hit1: bool,
+    pub hit2: bool,
+    pub hit3: bool,
+    pub outcome: String
+}
+
+pub struct FvgmEngineState {
+    pub active_profile: i32,
+    pub auto_selected_profile: i32,
+    pub live_bull_zones: i32,
+    pub live_bear_zones: i32,
+    pub total_trades: i32,
+    pub total_wins: i32,
+    pub net_r: f64,
+    pub win_rate_pct: f64,
+    pub max_drawdown_r: f64,
+    pub kaufman_er: f64,
+    pub last_effort: f64
+}
+
+impl FvgmEngineState {
+    pub fn new() -> FvgmEngineState {
+        FvgmEngineState {
+            active_profile: -1, // Auto
+            auto_selected_profile: 0,
+            live_bull_zones: 0,
+            live_bear_zones: 0,
+            total_trades: 0,
+            total_wins: 0,
+            net_r: 0.0,
+            win_rate_pct: 0.0,
+            max_drawdown_r: 0.0,
+            kaufman_er: 0.0,
+            last_effort: 0.0
+        }
+    }
+}

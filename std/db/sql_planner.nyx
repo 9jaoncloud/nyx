@@ -1,0 +1,59 @@
+// ============================================================================
+// Module: std.db.sql_planner
+// Purpose: Zero-GC SQL AST Parser, Cost-Based Optimizer & Query Execution Planner
+// Specification: ANSI SQL-92 / PostgreSQL Dialect with Vectorized Scan Nodes
+// ============================================================================
+
+module std.db.sql_planner;
+
+import std.collections;
+import std.string;
+
+public enum SqlOpType {
+    SCAN = 0,
+    FILTER = 1,
+    PROJECT = 2,
+    HASH_JOIN = 3,
+    AGGREGATE = 4,
+    SORT = 5,
+    LIMIT = 6
+}
+
+public struct PlanNode {
+    public u32 id;
+    public SqlOpType op_type;
+    public u8[64] table_name;
+    public u8[128] predicate;
+    public u64 estimated_rows;
+    public f64 estimated_cost;
+    public u32 left_child_id;
+    public u32 right_child_id;
+}
+
+public struct QueryPlan {
+    public u32 node_count;
+    public PlanNode[32] nodes;
+    public u32 root_node_id;
+    public f64 total_cost;
+}
+
+public fn build_seq_scan_plan(const u8* table, u64 estimated_rows, QueryPlan* out_plan) -> void {
+    out_plan.node_count = 1;
+    out_plan.root_node_id = 0;
+    
+    PlanNode* root = &out_plan.nodes[0];
+    root.id = 0;
+    root.op_type = SqlOpType.SCAN;
+    root.estimated_rows = estimated_rows;
+    root.estimated_cost = cast<f64>(estimated_rows) * 0.01;
+    root.left_child_id = 0xFFFFFFFF;
+    root.right_child_id = 0xFFFFFFFF;
+    
+    usize i = 0;
+    while (table[i] != 0 && i < 63) {
+        root.table_name[i] = table[i];
+        i++;
+    }
+    root.table_name[i] = 0;
+    out_plan.total_cost = root.estimated_cost;
+}

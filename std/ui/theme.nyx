@@ -1,0 +1,32 @@
+module std.ui.theme
+
+pub struct Color {
+    pub r: f64,
+    pub g: f64,
+    pub b: f64,
+    pub a: f64
+}
+
+pub struct ThemeTokens {
+    pub primary: Color,
+    pub on_primary: Color,
+    pub surface: Color,
+    pub on_surface: Color,
+    pub surface_variant: Color,
+    pub outline: Color,
+    pub glass_opacity: f64
+}
+
+impl ThemeTokens {
+    pub fn new_dark_md3() -> ThemeTokens {
+        ThemeTokens {
+            primary: Color { r: 0.22, g: 0.74, b: 0.97, a: 1.0 },       // #38bdf8 cyan
+            on_primary: Color { r: 0.01, g: 0.02, b: 0.05, a: 1.0 },    // #030712
+            surface: Color { r: 0.04, g: 0.06, b: 0.11, a: 1.0 },       // #0a0f1d
+            on_surface: Color { r: 0.97, g: 0.98, b: 0.99, a: 1.0 },    // #f8fafc
+            surface_variant: Color { r: 0.08, g: 0.11, b: 0.19, a: 0.85 },
+            outline: Color { r: 0.54, g: 0.36, b: 0.96, a: 0.45 },     // #8b5cf6 glow
+            glass_opacity: 0.85
+        }
+    }
+}

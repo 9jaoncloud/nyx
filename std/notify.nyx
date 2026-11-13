@@ -1,0 +1,13 @@
+module notify
+
+import std.string
+
+extern "C" {
+    fn nyx_notify_send(title: *const char, message: *const char)
+}
+
+pub fn send(title: String, message: String) {
+    unsafe {
+        nyx_notify_send(title.as_ptr(), message.as_ptr())
+    }
+}

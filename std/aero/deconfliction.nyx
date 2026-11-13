@@ -1,0 +1,117 @@
+// @nyx/aero - 4D Trajectory-Based Operations & Urban Airspace Deconfliction
+// Standard Package: std.aero.deconfliction
+// Compliance: ACAS sXu / FAA NextGen 4D-TBO / ASTM F3411 Remote ID
+
+import std.core.arena;
+import std.core.strict;
+
+@strict
+@must_region
+pub struct Waypoint4D {
+    pub lat_deg: f64,
+    pub lon_deg: f64,
+    pub altitude_msl_ft: f32,
+    pub timestamp_utc_ms: u64,
+    pub speed_knots: f32,
+    pub corridor_radius_m: f32,
+}
+
+@strict
+@must_region
+pub struct AerialVehicleState {
+    pub vehicle_id: u32,
+    pub current_lat: f64,
+    pub current_lon: f64,
+    pub current_alt_ft: f32,
+    pub heading_deg: f32,
+    pub groundspeed_knots: f32,
+    pub vertical_speed_fpm: f32,
+}
+
+@strict
+@must_region
+pub struct ConflictAlert {
+    pub is_conflict: bool,
+    pub target_vehicle_id: u32,
+    pub time_to_closest_point_sec: f32,
+    pub predicted_separation_m: f32,
+    pub recommended_heading_escape_deg: f32,
+    pub recommended_vertical_rate_escape_fpm: f32,
+}
+
+// Haversine geodesic distance in meters between two coordinates
+pub fn compute_geo_distance_m(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> f64 {
+    let r_earth: f64 = 6371000.0; // Earth radius in meters
+    let deg2rad: f64 = 0.017453292519943295;
+
+    let d_lat = (lat2 - lat1) * deg2rad;
+    let d_lon = (lon2 - lon1) * deg2rad;
+
+    // Approximate flat-earth projection for fast sub-millisecond local airspace calculation
+    let mean_lat = ((lat1 + lat2) / 2.0) * deg2rad;
+    let x = d_lon * (mean_lat.cos());
+    let y = d_lat;
+
+    return r_earth * ((x * x + y * y).sqrt());
+}
+
+// Fast ACAS sXu Conflict Prediction between ownship and intruder
+pub fn check_4d_airspace_conflict(
+    region r: Arena,
+    ownship: AerialVehicleState,
+    intruder: AerialVehicleState,
+    lookahead_seconds: f32
+) -> ConflictAlert {
+    let horizontal_dist = compute_geo_distance_m(
+        ownship.current_lat, ownship.current_lon,
+        intruder.current_lat, intruder.current_lon
+    ) as f32;
+
+    let vertical_dist = (ownship.current_alt_ft - intruder.current_alt_ft).abs();
+
+    // Standard Urban Air Mobility Separation Minimums:
+    // Horizontal: 150 meters, Vertical: 250 feet
+    let min_horiz_sep_m: f32 = 150.0;
+    let min_vert_sep_ft: f32 = 250.0;
+
+    // Closing velocity estimation
+    let own_speed_mps = ownship.groundspeed_knots * 0.514444;
+    let int_speed_mps = intruder.groundspeed_knots * 0.514444;
+
+    // Relative angle and closing speed approximation
+    let closing_rate_mps = (own_speed_mps + int_speed_mps) * 0.75;
+    let time_to_cpa = if closing_rate_mps > 1.0 {
+        horizontal_dist / closing_rate_mps
+    } else {
+        999.0
+    };
+
+    let mut conflict_detected = false;
+    let mut escape_heading = ownship.heading_deg;
+    let mut escape_vrate = 0.0;
+
+    if horizontal_dist < (min_horiz_sep_m * 3.0) && vertical_dist < (min_vert_sep_ft * 2.0) {
+        if time_to_cpa < lookahead_seconds {
+            conflict_detected = true;
+            // Right-hand rule escape advisory (standard ICAO rules of the air)
+            escape_heading = ownship.heading_deg + 30.0;
+            if escape_heading >= 360.0 { escape_heading = escape_heading - 360.0; }
+            
+            // Vertical separation climb advisory if ownship is higher, else descend
+            if ownship.current_alt_ft >= intruder.current_alt_ft {
+                escape_vrate = 800.0; // Climb at 800 fpm
+            } else {
+                escape_vrate = -800.0; // Descend at 800 fpm
+            }
+        }
+    }
+
+    return ConflictAlert {
+        is_conflict: conflict_detected,
+        target_vehicle_id: intruder.vehicle_id,
+        time_to_closest_point_sec: time_to_cpa,
+        predicted_separation_m: horizontal_dist,
+        recommended_heading_escape_deg: escape_heading,
+        recommended_vertical_rate_escape_fpm: escape_vrate,
+    };
+}

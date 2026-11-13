@@ -1,0 +1,64 @@
+module microkernel
+
+import std.io
+
+pub enum CapRights { Read, Write, Execute, Control, Grant, Revoke }
+
+pub struct CapToken { pub token_id: Int, pub owner_isolate_id: Int, pub target_resource_id: Int, pub rights_bitmask: Int, pub is_valid: Bool }
+
+impl CapToken {
+    pub fn new(token_id: Int, isolate_id: Int, resource_id: Int, bitmask: Int) -> CapToken {
+        CapToken { token_id, owner_isolate_id: isolate_id, target_resource_id: resource_id, rights_bitmask: bitmask, is_valid: true }
+    }
+
+    pub fn has_permission(self: &Self, right: CapRights) -> Bool {
+        if !self.is_valid { return false }
+        match right {
+            CapRights.Read => (self.rights_bitmask & 1) != 0,
+            CapRights.Write => (self.rights_bitmask & 2) != 0,
+            CapRights.Execute => (self.rights_bitmask & 4) != 0,
+            CapRights.Control => (self.rights_bitmask & 8) != 0,
+            CapRights.Grant => (self.rights_bitmask & 16) != 0,
+            CapRights.Revoke => (self.rights_bitmask & 32) != 0,
+        }
+    }
+}
+
+pub struct PhysicalPageFrame { pub physical_address: Int, pub size_bytes: Int, pub is_pinned: Bool, pub owning_isolate: Int }
+
+pub struct RegionPagingAllocator { pub base_address: Int, pub total_pages: Int, pub allocated_pages: Int, pub bump_pointer: Int }
+
+impl RegionPagingAllocator {
+    pub fn new(base_addr: Int, total: Int) -> RegionPagingAllocator {
+        RegionPagingAllocator { base_address: base_addr, total_pages: total, allocated_pages: 0, bump_pointer: base_addr }
+    }
+
+    pub fn allocate_frame(self: &mut Self, isolate_id: Int) -> Result<PhysicalPageFrame, String> {
+        if self.allocated_pages >= self.total_pages {
+            return Result.Err("out of frames".to_string())
+        }
+        let addr = self.bump_pointer
+        self.bump_pointer = self.bump_pointer + 4096
+        self.allocated_pages = self.allocated_pages + 1
+        Result.Ok(PhysicalPageFrame { physical_address: addr, size_bytes: 4096, is_pinned: true, owning_isolate: isolate_id })
+    }
+
+    pub fn reset_region(self: &mut Self) {
+        self.bump_pointer = self.base_address
+        self.allocated_pages = 0
+    }
+}
+
+pub struct MicrokernelScheduler { pub current_tick: Int, pub active_isolates: Int, pub context_switches: Int }
+
+impl MicrokernelScheduler {
+    pub fn new() -> MicrokernelScheduler {
+        MicrokernelScheduler { current_tick: 0, active_isolates: 0, context_switches: 0 }
+    }
+
+    pub fn schedule_next(self: &mut Self) -> Int {
+        self.current_tick = self.current_tick + 1
+        self.context_switches = self.context_switches + 1
+        self.current_tick % 16
+    }
+}

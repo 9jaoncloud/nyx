@@ -1,0 +1,93 @@
+// @nyx/aero - DO-178C Avionics Bus Interface (ARINC-429 & CAN Aerospace)
+// Standard Package: std.aero.can_arinc
+// Compliance: ARINC Specification 429-18 / CAN Aerospace 2.0B / DO-178C Level A
+
+import std.core.arena;
+import std.core.strict;
+
+@strict
+@must_region
+pub struct Arinc429Word {
+    pub raw_word: u32,
+    pub label_octal: u8,       // 8-bit octal label (e.g. 0310 for Pitch Angle)
+    pub sdi: u8,               // Source/Destination Identifier (2 bits)
+    pub ssm: u8,               // Sign/Status Matrix (2 bits: Normal, No Data, Test, Failure)
+    pub parity_valid: bool,    // Odd parity validation bit
+}
+
+@strict
+@must_region
+pub struct CanAerospaceMessage {
+    pub message_id: u32,       // 11-bit or 29-bit CAN ID
+    pub node_id: u8,           // Hardware Node ID
+    pub data_type: u8,         // Standard CAN Aerospace data type indicator
+    pub service_code: u8,      // Service identifier
+    pub message_code: u8,      // Function code
+    pub payload_bytes: [u8; 8],// 8-byte deterministic payload
+}
+
+// Decode raw 32-bit ARINC 429 digital word with zero allocation
+pub fn decode_arinc429(raw: u32) -> Arinc429Word {
+    let label = (raw & 0x000000FF) as u8;
+    let sdi = ((raw >> 8) & 0x03) as u8;
+    let ssm = ((raw >> 29) & 0x03) as u8;
+    
+    // Parity verification (Odd Parity standard across ARINC-429)
+    let mut bits_set: u32 = 0;
+    let mut temp = raw;
+    while temp > 0 {
+        bits_set = bits_set + (temp & 1);
+        temp = temp >> 1;
+    }
+    let parity_ok = (bits_set % 2) != 0;
+
+    return Arinc429Word {
+        raw_word: raw,
+        label_octal: label,
+        sdi: sdi,
+        ssm: ssm,
+        parity_valid: parity_ok,
+    };
+}
+
+// Encode BNR (Binary) flight parameter into ARINC-429 32-bit word
+pub fn encode_arinc429_bnr(label_octal: u8, sdi: u8, value_int19: i32, ssm: u8) -> u32 {
+    let mut word: u32 = (label_octal as u32) & 0xFF;
+    word = word | (((sdi as u32) & 0x03) << 8);
+    word = word | (((value_int19 as u32) & 0x7FFFF) << 10);
+    word = word | (((ssm as u32) & 0x03) << 29);
+
+    // Compute Odd Parity bit (Bit 32)
+    let mut count: u32 = 0;
+    let mut temp = word;
+    while temp > 0 {
+        count = count + (temp & 1);
+        temp = temp >> 1;
+    }
+    if (count % 2) == 0 {
+        word = word | 0x80000000; // Set MSB parity bit
+    }
+
+    return word;
+}
+
+// Construct CAN Aerospace 2.0B Frame
+pub fn build_can_aerospace_frame(
+    node_id: u8,
+    data_type: u8,
+    service_code: u8,
+    message_code: u8,
+    data: [u8; 4]
+) -> CanAerospaceMessage {
+    let can_id = 0x300 + (node_id as u32);
+    let mut payload: [u8; 8] = [node_id, data_type, service_code, message_code, data[0], data[1], data[2], data[3]];
+
+    return CanAerospaceMessage {
+        message_id: can_id,
+        node_id: node_id,
+        data_type: data_type,
+        service_code: service_code,
+        message_code: message_code,
+        payload_bytes: payload,
+    };
+}

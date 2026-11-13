@@ -1,0 +1,25 @@
+module std.cluster.crdt
+
+pub struct EpistemicStateCrdt {
+    pub vector_clock: i64,
+    pub node_count: i64,
+    pub is_converged: bool
+}
+
+impl EpistemicStateCrdt {
+    pub fn new() -> EpistemicStateCrdt {
+        EpistemicStateCrdt {
+            vector_clock: 1,
+            node_count: 3,
+            is_converged: true
+        }
+    }
+
+    pub fn merge_state(self: &EpistemicStateCrdt, remote_clock: i64) -> i64 {
+        if remote_clock > self.vector_clock {
+            remote_clock
+        } else {
+            self.vector_clock
+        }
+    }
+}

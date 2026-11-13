@@ -1,0 +1,92 @@
+module profiler
+
+import std.io
+import std.string
+import std.vec
+
+// ─── Event types ────────────────────────────────────────────────────────────
+// 0 = region_create  1 = arena_alloc  2 = region_destroy  3 = heap_escape
+
+// ─── Profiler state ──────────────────────────────────────────────────────────
+// The ring buffer lives in the C runtime (rt_profiler.h) and is embedded
+// via the opaque i64 `ring_ptr` field.  The Nyx-level struct carries
+// summary counters that are maintained in parallel for zero-overhead reads.
+pub struct ProfilerState {
+    pub total_allocated_bytes: i64,
+    pub peak_memory_bytes: i64,
+    pub active_bytes: i64,
+    pub active_regions: i32,
+    pub total_events: i32,
+    // Opaque ring-buffer state (matches sizeof(rt_profiler_state_t) via
+    // the C bridge functions declared in rt_stdlib.h).
+    // The bridge allocates and returns a pointer; we store it as i64.
+    pub ring_ptr: i64,
+}
+
+// ─── Time-travel snapshot ────────────────────────────────────────────────────
+pub struct TimeTravelSnapshot {
+    pub timestamp_us: i64,
+    pub memory_footprint_bytes: i64,
+    pub active_regions_count: i32,
+}
+
+// ─── C runtime bridge (declared in rt_stdlib.h) ──────────────────────────────
+extern "C" {
+    fn nyx_profiler_ring_init() -> i64
+    fn nyx_profiler_ring_alloc(ring: i64, region_id: i32, bytes: i64, tag: String) -> i64
+    fn nyx_profiler_ring_drop(ring: i64, region_id: i32, bytes: i64) -> i64
+    fn nyx_profiler_ring_scrub(ring: i64, target_us: i64) -> i64
+    fn nyx_profiler_ring_json(ring: i64) -> String
+}
+
+pub fn init_profiler() -> ProfilerState {
+    let ring = nyx_profiler_ring_init()
+    ProfilerState {
+        total_allocated_bytes: 0,
+        peak_memory_bytes: 0,
+        active_bytes: 0,
+        active_regions: 0,
+        total_events: 0,
+        ring_ptr: ring,
+    }
+}
+
+pub fn record_allocation(state: &mut ProfilerState, region_id: i32, bytes: i64, tag: String) {
+    state.total_allocated_bytes = state.total_allocated_bytes + bytes
+    state.active_bytes = state.active_bytes + bytes
+    if state.active_bytes > state.peak_memory_bytes {
+        state.peak_memory_bytes = state.active_bytes
+    }
+    state.active_regions = state.active_regions + 1
+    state.total_events = state.total_events + 1
+    nyx_profiler_ring_alloc(state.ring_ptr, region_id, bytes, tag)
+}
+
+pub fn record_deallocation(state: &mut ProfilerState, region_id: i32, bytes_reclaimed: i64) {
+    if state.active_bytes >= bytes_reclaimed {
+        state.active_bytes = state.active_bytes - bytes_reclaimed
+    } else {
+        state.active_bytes = 0
+    }
+    if state.active_regions > 0 {
+        state.active_regions = state.active_regions - 1
+    }
+    state.total_events = state.total_events + 1
+    nyx_profiler_ring_drop(state.ring_ptr, region_id, bytes_reclaimed)
+}
+
+// Real time-travel: delegates to the C ring-buffer replay function.
+// Returns the actual cumulative active-byte count at target_time_us.
+pub fn scrub_timeline(state: &ProfilerState, target_time_us: i64) -> TimeTravelSnapshot {
+    let footprint = nyx_profiler_ring_scrub(state.ring_ptr, target_time_us)
+    TimeTravelSnapshot {
+        timestamp_us: target_time_us,
+        memory_footprint_bytes: footprint,
+        active_regions_count: state.active_regions,
+    }
+}
+
+// Returns Perfetto/Chrome Tracing JSON from the live ring buffer.
+pub fn export_trace_json(state: &ProfilerState) -> String {
+    nyx_profiler_ring_json(state.ring_ptr)
+}

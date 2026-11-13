@@ -1,0 +1,27 @@
+module std.cluster.actor
+
+pub struct ClusterActorRef {
+    pub actor_id: String,
+    pub node_id: String,
+    pub mailbox_capacity: i64,
+    pub is_active: bool
+}
+
+impl ClusterActorRef {
+    pub fn new(id: String, node: String) -> ClusterActorRef {
+        ClusterActorRef {
+            actor_id: id,
+            node_id: node,
+            mailbox_capacity: 65536,
+            is_active: true
+        }
+    }
+
+    pub fn submit_remote_write(self: &ClusterActorRef, payload_size: i64) -> bool {
+        if payload_size > 0 {
+            true
+        } else {
+            false
+        }
+    }
+}

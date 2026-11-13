@@ -1,0 +1,453 @@
+// std/apk.nyx — APK Package Inspector (Tier-2 Standard Library)
+// Nyx APK Inspector: Parses Android APK container format (ZIP + binary XML manifest)
+
+module apk
+
+import prelude.*
+
+// ── APK Binary XML (AXML) Constants ──────────────────────────────────────────
+const AXML_MAGIC: u32 = 0x00080003
+const CHUNK_STRING_POOL: u16 = 0x0001
+const CHUNK_XML_START_NAMESPACE: u16 = 0x0100
+const CHUNK_XML_END_NAMESPACE: u16 = 0x0101
+const CHUNK_XML_START_ELEMENT: u16 = 0x0102
+const CHUNK_XML_END_ELEMENT: u16 = 0x0103
+const CHUNK_XML_CDATA: u16 = 0x0104
+const CHUNK_RESOURCE_MAP: u16 = 0x0180
+
+// ── Data Structures ───────────────────────────────────────────────────────────
+
+pub struct ApkManifest {
+    pub package_name: String,
+    pub version_name: String,
+    pub version_code: i32,
+    pub min_sdk_version: i32,
+    pub target_sdk_version: i32,
+    pub app_label: String,
+    pub permissions: Vec<String>,
+    pub activities: Vec<String>,
+    pub services: Vec<String>,
+    pub receivers: Vec<String>,
+    pub providers: Vec<String>,
+}
+
+pub struct NativeLib {
+    pub abi: String,
+    pub name: String,
+    pub size_bytes: u64,
+}
+
+pub enum SigningScheme {
+    V1,
+    V2,
+    V3,
+    V4,
+    Unknown,
+}
+
+pub enum CompatTier {
+    ContainerOnly,
+    NativeOnly,
+    RequiresFullAndroid,
+}
+
+pub struct ApkInfo {
+    pub path: String,
+    pub file_size_bytes: u64,
+    pub manifest: ApkManifest,
+    pub dex_files: Vec<String>,
+    pub native_libs: Vec<NativeLib>,
+    pub has_resources: Bool,
+    pub has_assets: Bool,
+    pub signing_scheme: SigningScheme,
+    pub compatibility_tier: CompatTier,
+}
+
+pub struct ZipEntry {
+    pub name: String,
+    pub compressed_size: u64,
+    pub uncompressed_size: u64,
+    pub offset: u64,
+    pub method: u16,
+}
+
+pub struct StringPool {
+    pub strings: Vec<String>,
+}
+
+fn read_u16_le(data: &Vec<u8>, offset: usize) -> u16 {
+    (data[offset] as u16) | ((data[offset + 1] as u16) << 8)
+}
+
+fn read_u32_le(data: &Vec<u8>, offset: usize) -> u32 {
+    (data[offset] as u32) | ((data[offset + 1] as u32) << 8) | ((data[offset + 2] as u32) << 16) | ((data[offset + 3] as u32) << 24)
+}
+
+// Find the ZIP end-of-central-directory record
+fn find_eocd(data: &Vec<u8>) -> Result<usize, String> {
+    let eocd_sig: u32 = 0x06054b50
+    let min_eocd_size: usize = 22
+
+    if data.len() < min_eocd_size {
+        return Result.Err("File too small to be a valid APK".to_string())
+    }
+
+    let max_comment_len: usize = 65535
+    let search_start = if data.len() > max_comment_len + min_eocd_size {
+        data.len() - max_comment_len - min_eocd_size
+    } else {
+        0 as usize
+    }
+
+    let mut i = data.len() - min_eocd_size
+    while i >= search_start {
+        if read_u32_le(data, i) == eocd_sig {
+            return Result.Ok(i)
+        }
+        if i == 0 { break }
+        i = i - 1
+    }
+    Result.Err("No EOCD record found — not a valid ZIP/APK file".to_string())
+}
+
+// Parse the central directory and return list of entries
+fn parse_central_directory(data: &Vec<u8>) -> Result<Vec<ZipEntry>, String> {
+    let eocd_offset = find_eocd(data)?
+    let cd_count = read_u16_le(data, eocd_offset + 8) as usize
+    let cd_offset = read_u32_le(data, eocd_offset + 16) as usize
+
+    let mut entries: Vec<ZipEntry> = Vec.new()
+    let mut pos = cd_offset
+    let cd_sig: u32 = 0x02014b50
+
+    for _ in 0..cd_count {
+        if pos + 46 > data.len() { break }
+        if read_u32_le(data, pos) != cd_sig { break }
+
+        let method = read_u16_le(data, pos + 10)
+        let compressed = read_u32_le(data, pos + 20) as u64
+        let uncompressed = read_u32_le(data, pos + 24) as u64
+        let name_len = read_u16_le(data, pos + 28) as usize
+        let extra_len = read_u16_le(data, pos + 30) as usize
+        let comment_len = read_u16_le(data, pos + 32) as usize
+        let local_offset = read_u32_le(data, pos + 42) as u64
+
+        let name_end = pos + 46 + name_len
+        if name_end > data.len() { break }
+        let name = String.from_utf8_bytes(&data[pos + 46..name_end])
+
+        entries.push(ZipEntry {
+            name,
+            compressed_size: compressed,
+            uncompressed_size: uncompressed,
+            offset: local_offset,
+            method,
+        })
+
+        pos = pos + 46 + name_len + extra_len + comment_len
+    }
+
+    Result.Ok(entries)
+}
+
+// Extract raw bytes of a ZIP entry
+fn extract_entry_bytes(data: &Vec<u8>, entry: &ZipEntry) -> Result<Vec<u8>, String> {
+    let lh_sig: u32 = 0x04034b50
+    let offset = entry.offset as usize
+
+    if offset + 30 > data.len() {
+        return Result.Err("Entry offset out of bounds".to_string())
+    }
+    if read_u32_le(data, offset) != lh_sig {
+        return Result.Err("Invalid local file header".to_string())
+    }
+
+    let name_len = read_u16_le(data, offset + 26) as usize
+    let extra_len = read_u16_le(data, offset + 28) as usize
+    let data_start = offset + 30 + name_len + extra_len
+    let data_end = data_start + (entry.compressed_size as usize)
+
+    if data_end > data.len() {
+        return Result.Err("Entry data out of bounds".to_string())
+    }
+
+    if entry.method == 0 as u16 {
+        let mut extracted: Vec<u8> = Vec.new()
+        for i in data_start..data_end {
+            extracted.push(data[i])
+        }
+        Result.Ok(extracted)
+    } else {
+        Result.Err("DEFLATE entry requires zlib decompression".to_string())
+    }
+}
+
+// Parse string pool from AXML
+fn parse_string_pool(data: &Vec<u8>, offset: usize) -> Result<StringPool, String> {
+    if offset + 8 > data.len() {
+        return Result.Err("String pool too short".to_string())
+    }
+
+    let string_count = read_u32_le(data, offset + 8) as usize
+    let strings_start = read_u32_le(data, offset + 20) as usize
+    let flags = read_u32_le(data, offset + 16)
+    let is_utf8 = (flags & (1 << 8)) != 0
+
+    let mut strings: Vec<String> = Vec.new()
+    let offsets_start = offset + 28
+
+    for i in 0..string_count {
+        let str_offset_pos = offsets_start + i * 4
+        if str_offset_pos + 4 > data.len() { break }
+        let str_offset = read_u32_le(data, str_offset_pos) as usize
+        let abs_offset = offset + strings_start + str_offset
+
+        if abs_offset + 2 > data.len() {
+            strings.push("".to_string())
+            continue
+        }
+
+        let s = if is_utf8 {
+            let byte_len = data[abs_offset + 1] as usize
+            if abs_offset + 2 + byte_len > data.len() {
+                "".to_string()
+            } else {
+                String.from_utf8_bytes(&data[abs_offset + 2..abs_offset + 2 + byte_len])
+            }
+        } else {
+            let char_len = read_u16_le(data, abs_offset) as usize
+            let mut result = String.new()
+            for c in 0..char_len {
+                let char_pos = abs_offset + 2 + c * 2
+                if char_pos + 2 > data.len() { break }
+                let code = read_u16_le(data, char_pos)
+                if code > 0 as u16 {
+                    result.push_char(code as u8 as char)
+                }
+            }
+            result
+        }
+        strings.push(s)
+    }
+
+    Result.Ok(StringPool { strings })
+}
+
+// Parse binary AndroidManifest.xml and extract key manifest data
+fn parse_axml_manifest(data: &Vec<u8>) -> Result<ApkManifest, String> {
+    if data.len() < 8 {
+        return Result.Err("AXML data too short".to_string())
+    }
+
+    let magic = read_u32_le(data, 0)
+    if magic != AXML_MAGIC {
+        return Result.Err("Invalid AXML magic (expected 0x00080003)".to_string())
+    }
+
+    let mut manifest = ApkManifest {
+        package_name: String.new(),
+        version_name: String.new(),
+        version_code: 0,
+        min_sdk_version: 0,
+        target_sdk_version: 0,
+        app_label: String.new(),
+        permissions: Vec.new(),
+        activities: Vec.new(),
+        services: Vec.new(),
+        receivers: Vec.new(),
+        providers: Vec.new(),
+    }
+
+    let mut string_pool: Option<StringPool> = Option.None
+    let mut pos = 8
+
+    while pos + 8 <= data.len() {
+        let chunk_type = read_u16_le(data, pos)
+        let header_size = read_u16_le(data, pos + 2) as usize
+        let chunk_size = read_u32_le(data, pos + 4) as usize
+
+        if chunk_size == 0 || pos + chunk_size > data.len() { break }
+
+        match chunk_type {
+            0x0001 => {
+                match parse_string_pool(data, pos) {
+                    Result.Ok(pool) => string_pool = Option.Some(pool),
+                    Result.Err(_) => {}
+                }
+            }
+            0x0102 => {
+                match string_pool {
+                    Option.Some(pool) => {
+                        if pos + header_size + 8 <= data.len() {
+                            let name_idx = read_u32_le(data, pos + 12) as usize
+                            let attr_count = read_u16_le(data, pos + 20) as usize
+                            let attrs_start = pos + header_size
+                            let element_name = if name_idx < pool.strings.len() { pool.strings[name_idx].clone() } else { "".to_string() }
+
+                            for a in 0..attr_count {
+                                let attr_pos = attrs_start + a * 20
+                                if attr_pos + 20 > data.len() { break }
+
+                                let attr_name_idx = read_u32_le(data, attr_pos + 4) as usize
+                                let attr_raw_val = read_u32_le(data, attr_pos + 8) as usize
+                                let attr_data = read_u32_le(data, attr_pos + 16)
+
+                                let attr_name = if attr_name_idx < pool.strings.len() { pool.strings[attr_name_idx].clone() } else { "".to_string() }
+                                let attr_str_val = if attr_raw_val < pool.strings.len() { pool.strings[attr_raw_val].clone() } else { "".to_string() }
+
+                                if element_name == "manifest" {
+                                    if attr_name == "package" { manifest.package_name = attr_str_val }
+                                    else if attr_name == "versionName" { manifest.version_name = attr_str_val }
+                                    else if attr_name == "versionCode" { manifest.version_code = attr_data as i32 }
+                                } else if element_name == "uses-sdk" {
+                                    if attr_name == "minSdkVersion" { manifest.min_sdk_version = attr_data as i32 }
+                                    else if attr_name == "targetSdkVersion" { manifest.target_sdk_version = attr_data as i32 }
+                                } else if element_name == "uses-permission" {
+                                    if attr_name == "name" && attr_str_val.len() > 0 {
+                                        manifest.permissions.push(attr_str_val)
+                                    }
+                                } else if element_name == "application" {
+                                    if attr_name == "label" && attr_str_val.len() > 0 {
+                                        manifest.app_label = attr_str_val
+                                    }
+                                } else if element_name == "activity" {
+                                    if attr_name == "name" && attr_str_val.len() > 0 {
+                                        manifest.activities.push(attr_str_val)
+                                    }
+                                } else if element_name == "service" {
+                                    if attr_name == "name" && attr_str_val.len() > 0 {
+                                        manifest.services.push(attr_str_val)
+                                    }
+                                } else if element_name == "receiver" {
+                                    if attr_name == "name" && attr_str_val.len() > 0 {
+                                        manifest.receivers.push(attr_str_val)
+                                    }
+                                } else if element_name == "provider" {
+                                    if attr_name == "name" && attr_str_val.len() > 0 {
+                                        manifest.providers.push(attr_str_val)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Option.None => {}
+                }
+            }
+            _ => {}
+        }
+
+        pos = pos + chunk_size
+    }
+
+    Result.Ok(manifest)
+}
+
+fn assess_compatibility(manifest: &ApkManifest, native_libs: &Vec<NativeLib>, dex_count: usize) -> CompatTier {
+    let mut has_arm64_native = false
+    for i in 0..native_libs.len() {
+        if native_libs[i].abi == "arm64-v8a" {
+            has_arm64_native = true
+            break
+        }
+    }
+
+    if dex_count == 0 && has_arm64_native {
+        return CompatTier.NativeOnly
+    }
+
+    let mut uses_framework_perms = false
+    for i in 0..manifest.permissions.len() {
+        let p = &manifest.permissions[i]
+        if p.starts_with("android.permission.") && (
+            p.contains("CAMERA") || p.contains("PHONE") ||
+            p.contains("CONTACTS") || p.contains("LOCATION") ||
+            p.contains("READ_CALL_LOG") || p.contains("NFC")
+        ) {
+            uses_framework_perms = true
+            break
+        }
+    }
+
+    if uses_framework_perms || manifest.services.len() > 2 || manifest.receivers.len() > 2 {
+        return CompatTier.RequiresFullAndroid
+    }
+
+    CompatTier.ContainerOnly
+}
+
+/// Open and inspect an APK file. Returns structured metadata.
+pub fn inspect_apk(path: String) -> Result<ApkInfo, String> {
+    let data = match fs.read_bytes(path.clone()) {
+        Result.Ok(d) => d,
+        Result.Err(e) => return Result.Err("Cannot read APK: " + e),
+    }
+    let file_size = data.len() as u64
+
+    // 1. Parse ZIP central directory
+    let entries = parse_central_directory(&data)?
+
+    // 2. Find AndroidManifest.xml entry
+    let mut manifest_idx: usize = 0
+    let mut found = false
+    for i in 0..entries.len() {
+        if entries[i].name == "AndroidManifest.xml" {
+            manifest_idx = i
+            found = true
+            break
+        }
+    }
+
+    if !found {
+        return Result.Err("AndroidManifest.xml not found in APK".to_string())
+    }
+
+    // 3. Extract and parse manifest
+    let manifest_bytes = extract_entry_bytes(&data, &entries[manifest_idx])?
+    let manifest = parse_axml_manifest(&manifest_bytes)?
+
+    // 4. Collect DEX files
+    let mut dex_files: Vec<String> = Vec.new()
+    for i in 0..entries.len() {
+        if entries[i].name.ends_with(".dex") {
+            dex_files.push(entries[i].name.clone())
+        }
+    }
+
+    // 5. Collect native libraries
+    let mut native_libs: Vec<NativeLib> = Vec.new()
+    for i in 0..entries.len() {
+        let ename = &entries[i].name
+        if ename.starts_with("lib/") && ename.ends_with(".so") {
+            let parts = ename.split("/")
+            if parts.len() == 3 {
+                native_libs.push(NativeLib {
+                    abi: parts[1].clone(),
+                    name: parts[2].clone(),
+                    size_bytes: entries[i].uncompressed_size,
+                })
+            }
+        }
+    }
+
+    // 6. Check for resources
+    let mut has_resources = false
+    let mut has_assets = false
+    for i in 0..entries.len() {
+        if entries[i].name == "resources.arsc" { has_resources = true }
+        if entries[i].name.starts_with("assets/") { has_assets = true }
+    }
+
+    let compat = assess_compatibility(&manifest, &native_libs, dex_files.len())
+
+    Result.Ok(ApkInfo {
+        path,
+        file_size_bytes: file_size,
+        manifest,
+        dex_files,
+        native_libs,
+        has_resources,
+        has_assets,
+        signing_scheme: SigningScheme.V1,
+        compatibility_tier: compat,
+    })
+}

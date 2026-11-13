@@ -1,0 +1,59 @@
+// ============================================================================
+// Module: std.robotics.ros2_dds
+// Purpose: Zero-GC Micro-XRCE-DDS Client & ROS2 Robotics Telemetry Runtime
+// Specification: OMG Data Distribution Service (DDS) & ROS2 Humble/Iron Interop
+// ============================================================================
+
+module std.robotics.ros2_dds;
+
+import std.net;
+
+public struct Ros2Header {
+    public u64 timestamp_ns;
+    public u8[32] frame_id;
+}
+
+public struct TwistMessage {
+    public Ros2Header header;
+    // Linear velocity (m/s)
+    public f32 linear_x;
+    public f32 linear_y;
+    public f32 linear_z;
+    // Angular velocity (rad/s)
+    public f32 angular_x;
+    public f32 angular_y;
+    public f32 angular_z;
+}
+
+public struct OdometryMessage {
+    public Ros2Header header;
+    public f32 pos_x;
+    public f32 pos_y;
+    public f32 pos_z;
+    public f32 orient_x;
+    public f32 orient_y;
+    public f32 orient_z;
+    public f32 orient_w;
+}
+
+public fn serialize_twist_cdr(TwistMessage* msg, u8* out_buffer) -> usize {
+    // CDR (Common Data Representation) 4-byte aligned binary packaging
+    u8* ptr = out_buffer;
+    
+    // Header Magic
+    *ptr = 0x00; ptr++;
+    *ptr = 0x01; ptr++;
+    *ptr = 0x00; ptr++;
+    *ptr = 0x00; ptr++;
+    
+    // Copy floats
+    f32* float_ptr = cast<f32*>(ptr);
+    float_ptr[0] = msg.linear_x;
+    float_ptr[1] = msg.linear_y;
+    float_ptr[2] = msg.linear_z;
+    float_ptr[3] = msg.angular_x;
+    float_ptr[4] = msg.angular_y;
+    float_ptr[5] = msg.angular_z;
+    
+    return 4 + 24;
+}

@@ -1,0 +1,110 @@
+// Nyx Standard Library — @nyx/finance/risk_sentinel
+// Deterministic Quantitative Risk Sentinel & High-Frequency Circuit Breaker
+// Inspired by Risk-Vista, NautilusTrader, and Citadel/Two Sigma Risk Collars
+// 100% Pure Native Nyx (Zero Python, Zero-GC Region Memory, Deterministic Precision)
+
+module std.finance.risk_sentinel
+
+pub struct PortfolioRiskSnapshot {
+    pub total_equity_usd: f64,
+    pub peak_equity_usd: f64,
+    pub cash_available_usd: f64,
+    pub total_exposure_usd: f64,
+    pub current_drawdown_pct: f64,
+    pub is_circuit_breaker_tripped: bool
+}
+
+impl PortfolioRiskSnapshot {
+    pub fn new(equity: f64, peak: f64, cash: f64, exposure: f64) -> PortfolioRiskSnapshot {
+        let dd: f64 = if peak > 0.0 { ((peak - equity) / peak) * 100.0 } else { 0.0 };
+        let tripped: bool = dd >= 5.0; // 5.0% trailing max drawdown limit
+        PortfolioRiskSnapshot {
+            total_equity_usd: equity,
+            peak_equity_usd: peak,
+            cash_available_usd: cash,
+            total_exposure_usd: exposure,
+            current_drawdown_pct: dd,
+            is_circuit_breaker_tripped: tripped,
+        }
+    }
+}
+
+pub struct RiskSentinel {
+    pub max_drawdown_threshold_pct: f64,
+    pub max_single_position_pct: f64,
+    pub max_leverage_ratio: f64,
+    pub slippage_collar_pips: f64
+}
+
+impl RiskSentinel {
+    pub fn new(max_dd: f64, max_pos: f64, max_lev: f64, slip_collar: f64) -> RiskSentinel {
+        RiskSentinel {
+            max_drawdown_threshold_pct: max_dd,
+            max_single_position_pct: max_pos,
+            max_leverage_ratio: max_lev,
+            slippage_collar_pips: slip_collar,
+        }
+    }
+
+    // 1. Half-Kelly Criterion for Optimal Sovereign Position Sizing
+    // Formula: f* = (p * b - q) / b * 0.5 (Half-Kelly for drawdown mitigation)
+    // p = win rate (e.g. 0.60), b = payoff ratio (e.g. 2.0), q = 1 - p (0.40)
+    pub fn calculate_half_kelly_fraction(self: &RiskSentinel, win_rate: f64, payoff_ratio: f64) -> f64 {
+        if payoff_ratio <= 0.0 {
+            return 0.0;
+        }
+        let loss_rate: f64 = 1.0 - win_rate;
+        let full_kelly: f64 = ((win_rate * payoff_ratio) - loss_rate) / payoff_ratio;
+        if full_kelly <= 0.0 {
+            return 0.0;
+        }
+        let half_kelly: f64 = full_kelly * 0.50;
+        // Cap at configured max single position limit (e.g. 2.5%)
+        if half_kelly > (self.max_single_position_pct / 100.0) {
+            self.max_single_position_pct / 100.0
+        } else {
+            half_kelly
+        }
+    }
+
+    // 2. Parametric Value-at-Risk (99% Confidence Level, Z = 2.326)
+    pub fn calculate_var_99(self: &RiskSentinel, position_size_usd: f64, daily_volatility_pct: f64) -> f64 {
+        let z_99: f64 = 2.326;
+        let var_usd: f64 = position_size_usd * (daily_volatility_pct / 100.0) * z_99;
+        var_usd
+    }
+
+    // 3. Pre-Trade Execution Defense Check (Hard Circuit Breaker)
+    pub fn validate_order_execution(
+        self: &RiskSentinel,
+        snap: &PortfolioRiskSnapshot,
+        order_size_usd: f64,
+        requested_price: f64,
+        best_market_price: f64,
+        is_buy: bool
+    ) -> (bool, String) {
+        // A. Trailing Max Drawdown Defense
+        if snap.is_circuit_breaker_tripped == true {
+            return (false, "EXECUTION HALTED: Portfolio Trailing Drawdown has breached maximum risk ceiling.");
+        }
+
+        // B. Leverage Expansion Limit
+        let projected_exposure: f64 = snap.total_exposure_usd + order_size_usd;
+        let projected_leverage: f64 = projected_exposure / snap.total_equity_usd;
+        if projected_leverage > self.max_leverage_ratio {
+            return (false, "ORDER REJECTED: Projected leverage exceeds sovereign risk ceiling.");
+        }
+
+        // C. Slippage Collar Defense (Protects against toxic fill latency & front-running)
+        let slippage: f64 = if is_buy == true {
+            best_market_price - requested_price
+        } else {
+            requested_price - best_market_price
+        };
+        if slippage > self.slippage_collar_pips {
+            return (false, "ORDER QUARANTINED: Adverse market slippage collar exceeded.");
+        }
+
+        (true, "EXECUTION APPROVED: All deterministic risk invariants fully satisfied.")
+    }
+}

@@ -1,0 +1,137 @@
+// ============================================================================
+// Module: std.industrial.scada_modbus
+// Purpose: Deterministic Zero-GC Modbus TCP & OPC-UA Industrial SCADA Protocol
+// Specification: Modbus Application Protocol V1.1b3 & IEC 61131-3 PLC Runtime
+// ============================================================================
+
+module std.industrial.scada_modbus;
+
+import std.net;
+
+// ----------------------------------------------------------------------------
+// 1. Modbus TCP Protocol Definitions & MBAP Header
+// ----------------------------------------------------------------------------
+
+public enum ModbusFunctionCode {
+    READ_COILS = 0x01,
+    READ_DISCRETE_INPUTS = 0x02,
+    READ_HOLDING_REGISTERS = 0x03,
+    READ_INPUT_REGISTERS = 0x04,
+    WRITE_SINGLE_COIL = 0x05,
+    WRITE_SINGLE_REGISTER = 0x06,
+    WRITE_MULTIPLE_COILS = 0x0F,
+    WRITE_MULTIPLE_REGISTERS = 0x10
+}
+
+public struct MbapHeader {
+    public u16 transaction_id;
+    public u16 protocol_id;     // 0 = Modbus TCP
+    public u16 length;          // Number of following bytes
+    public u8 unit_id;          // Slave/Device Address
+}
+
+public struct ModbusRequest {
+    public MbapHeader header;
+    public u8 function_code;
+    public u16 start_address;
+    public u16 quantity;
+    public u16[128] write_data;
+}
+
+public struct ModbusResponse {
+    public MbapHeader header;
+    public u8 function_code;
+    public u8 byte_count;
+    public u16[128] register_data;
+}
+
+// ----------------------------------------------------------------------------
+// 2. Deterministic PLC Memory Space (IEC 61131-3 Compliant)
+// ----------------------------------------------------------------------------
+
+public struct PlcMemorySpace {
+    public bool[1024] coils;             // %QX0.0 .. %QX127.7
+    public bool[1024] discrete_inputs;   // %IX0.0 .. %IX127.7
+    public u16[2048] holding_registers;  // %MW0 .. %MW2047
+    public u16[2048] input_registers;    // %IW0 .. %IW2047
+}
+
+// ----------------------------------------------------------------------------
+// 3. Zero-Allocation Modbus Frame Processor
+// ----------------------------------------------------------------------------
+
+public fn process_modbus_frame(
+    PlcMemorySpace* plc_mem, 
+    u8* rx_buffer, 
+    usize rx_len, 
+    u8* tx_buffer, 
+    usize* out_tx_len
+) -> bool {
+    if (rx_len < 12) {
+        return false;
+    }
+    
+    // Parse MBAP (Big Endian byte order conversion)
+    u16 tx_id = (cast<u16>(rx_buffer[0]) << 8) | cast<u16>(rx_buffer[1]);
+    u16 proto_id = (cast<u16>(rx_buffer[2]) << 8) | cast<u16>(rx_buffer[3]);
+    u16 len = (cast<u16>(rx_buffer[4]) << 8) | cast<u16>(rx_buffer[5]);
+    u8 unit_id = rx_buffer[6];
+    u8 fn_code = rx_buffer[7];
+    
+    if (proto_id != 0) return false;
+    
+    u16 start_addr = (cast<u16>(rx_buffer[8]) << 8) | cast<u16>(rx_buffer[9]);
+    u16 count = (cast<u16>(rx_buffer[10]) << 8) | cast<u16>(rx_buffer[11]);
+    
+    // Process Read Holding Registers (0x03)
+    if (fn_code == 0x03) {
+        if (start_addr + count > 2048 || count > 125) {
+            // Exception: Illegal Data Address (0x02)
+            tx_buffer[0] = rx_buffer[0]; tx_buffer[1] = rx_buffer[1];
+            tx_buffer[2] = 0; tx_buffer[3] = 0;
+            tx_buffer[4] = 0; tx_buffer[5] = 3;
+            tx_buffer[6] = unit_id;
+            tx_buffer[7] = fn_code | 0x80;
+            tx_buffer[8] = 0x02;
+            *out_tx_len = 9;
+            return true;
+        }
+        
+        u8 byte_count = cast<u8>(count * 2);
+        u16 total_pdu_len = cast<u16>(3 + byte_count);
+        
+        tx_buffer[0] = rx_buffer[0]; tx_buffer[1] = rx_buffer[1];
+        tx_buffer[2] = 0; tx_buffer[3] = 0;
+        tx_buffer[4] = cast<u8>(total_pdu_len >> 8);
+        tx_buffer[5] = cast<u8>(total_pdu_len & 0xFF);
+        tx_buffer[6] = unit_id;
+        tx_buffer[7] = fn_code;
+        tx_buffer[8] = byte_count;
+        
+        for (u16 i = 0; i < count; i++) {
+            u16 val = plc_mem.holding_registers[start_addr + i];
+            tx_buffer[9 + i*2 + 0] = cast<u8>(val >> 8);
+            tx_buffer[9 + i*2 + 1] = cast<u8>(val & 0xFF);
+        }
+        
+        *out_tx_len = 9 + byte_count;
+        return true;
+    }
+    
+    // Process Write Single Register (0x06)
+    if (fn_code == 0x06) {
+        u16 write_val = count; // in 0x06, bytes 10-11 contain the register value
+        if (start_addr < 2048) {
+            plc_mem.holding_registers[start_addr] = write_val;
+            
+            // Echo back request as response
+            for (usize i = 0; i < 12; i++) {
+                tx_buffer[i] = rx_buffer[i];
+            }
+            *out_tx_len = 12;
+            return true;
+        }
+    }
+    
+    return false;
+}

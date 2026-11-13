@@ -1,0 +1,213 @@
+// ============================================================================
+// Module: std.db.raft_consensus
+// Purpose: Deterministic Zero-GC Raft Distributed Consensus Engine
+// Specification: Ongaro & Ousterhout Raft Protocol with Zero-Copy State Machine
+// ============================================================================
+
+module std.db.raft_consensus;
+
+import std.net;
+import std.time;
+import std.crypto;
+
+// ----------------------------------------------------------------------------
+// 1. Raft Node Roles & State Definitions
+// ----------------------------------------------------------------------------
+
+public enum RaftRole {
+    FOLLOWER = 0,
+    CANDIDATE = 1,
+    LEADER = 2
+}
+
+public struct LogEntry {
+    public u64 term;
+    public u64 index;
+    public u32 command_type;
+    public u32 payload_len;
+    public u8[256] payload;
+}
+
+public struct AppendEntriesRequest {
+    public u64 term;
+    public u32 leader_id;
+    public u64 prev_log_index;
+    public u64 prev_log_term;
+    public u32 entry_count;
+    public LogEntry entries[16];
+    public u64 leader_commit;
+}
+
+public struct AppendEntriesResponse {
+    public u64 term;
+    public bool success;
+    public u64 match_index;
+}
+
+public struct RequestVoteRequest {
+    public u64 term;
+    public u32 candidate_id;
+    public u64 last_log_index;
+    public u64 last_log_term;
+}
+
+public struct RequestVoteResponse {
+    public u64 term;
+    public bool vote_granted;
+}
+
+// ----------------------------------------------------------------------------
+// 2. Raft Consensus Node State Machine
+// ----------------------------------------------------------------------------
+
+public struct RaftNode {
+    public u32 node_id;
+    public u32 cluster_size;
+    public RaftRole current_role;
+    
+    // Persistent State
+    public u64 current_term;
+    public i32 voted_for; // -1 if null
+    public u64 log_count;
+    public LogEntry[1024] log;
+    
+    // Volatile State on all servers
+    public u64 commit_index;
+    public u64 last_applied;
+    
+    // Volatile State on leaders
+    public u64[32] next_index;
+    public u64[32] match_index;
+    
+    // Timers (Microseconds)
+    public u64 election_timeout_us;
+    public u64 last_heartbeat_timestamp_us;
+    public u32 votes_received;
+}
+
+// ----------------------------------------------------------------------------
+// 3. Consensus Logic & Election Handlers
+// ----------------------------------------------------------------------------
+
+public fn raft_node_init(RaftNode* node, u32 node_id, u32 cluster_size, u64 election_timeout_us) -> void {
+    node.node_id = node_id;
+    node.cluster_size = cluster_size;
+    node.current_role = RaftRole.FOLLOWER;
+    node.current_term = 0;
+    node.voted_for = -1;
+    node.log_count = 0;
+    node.commit_index = 0;
+    node.last_applied = 0;
+    node.election_timeout_us = election_timeout_us;
+    node.last_heartbeat_timestamp_us = 0;
+    node.votes_received = 0;
+    
+    for (u32 i = 0; i < 32; i++) {
+        node.next_index[i] = 1;
+        node.match_index[i] = 0;
+    }
+}
+
+public fn raft_handle_election_tick(RaftNode* node, u64 current_time_us) -> bool {
+    if (node.current_role == RaftRole.LEADER) {
+        return false;
+    }
+    
+    if (current_time_us - node.last_heartbeat_timestamp_us >= node.election_timeout_us) {
+        // Start Election: Become Candidate
+        node.current_role = RaftRole.CANDIDATE;
+        node.current_term += 1;
+        node.voted_for = cast<i32>(node.node_id);
+        node.votes_received = 1;
+        node.last_heartbeat_timestamp_us = current_time_us;
+        return true; // Triggers RequestVote RPC broadcast
+    }
+    
+    return false;
+}
+
+public fn raft_handle_request_vote(
+    RaftNode* node, 
+    RequestVoteRequest* req, 
+    RequestVoteResponse* res
+) -> void {
+    if (req.term > node.current_term) {
+        node.current_term = req.term;
+        node.current_role = RaftRole.FOLLOWER;
+        node.voted_for = -1;
+    }
+    
+    res.term = node.current_term;
+    res.vote_granted = false;
+    
+    if (req.term == node.current_term && (node.voted_for == -1 || node.voted_for == cast<i32>(req.candidate_id))) {
+        u64 last_log_term = 0;
+        if (node.log_count > 0) {
+            last_log_term = node.log[node.log_count - 1].term;
+        }
+        
+        // Log completeness check
+        if (req.last_log_term > last_log_term || 
+           (req.last_log_term == last_log_term && req.last_log_index >= node.log_count)) {
+            res.vote_granted = true;
+            node.voted_for = cast<i32>(req.candidate_id);
+        }
+    }
+}
+
+public fn raft_handle_append_entries(
+    RaftNode* node, 
+    AppendEntriesRequest* req, 
+    AppendEntriesResponse* res,
+    u64 current_time_us
+) -> void {
+    if (req.term < node.current_term) {
+        res.term = node.current_term;
+        res.success = false;
+        res.match_index = node.log_count;
+        return;
+    }
+    
+    // Heartbeat received: Reset election timeout
+    node.last_heartbeat_timestamp_us = current_time_us;
+    if (req.term > node.current_term || node.current_role == RaftRole.CANDIDATE) {
+        node.current_term = req.term;
+        node.current_role = RaftRole.FOLLOWER;
+        node.voted_for = cast<i32>(req.leader_id);
+    }
+    
+    // Check previous log entry match
+    if (req.prev_log_index > 0) {
+        if (req.prev_log_index > node.log_count || 
+            node.log[req.prev_log_index - 1].term != req.prev_log_term) {
+            res.term = node.current_term;
+            res.success = false;
+            res.match_index = node.log_count;
+            return;
+        }
+    }
+    
+    // Append new entries with zero-copy log slice copy
+    for (u32 i = 0; i < req.entry_count; i++) {
+        u64 target_idx = req.prev_log_index + 1 + i;
+        if (target_idx <= node.log_count) {
+            node.log[target_idx - 1] = req.entries[i];
+        } else {
+            node.log[node.log_count] = req.entries[i];
+            node.log_count += 1;
+        }
+    }
+    
+    // Update commit index
+    if (req.leader_commit > node.commit_index) {
+        if (req.leader_commit < node.log_count) {
+            node.commit_index = req.leader_commit;
+        } else {
+            node.commit_index = node.log_count;
+        }
+    }
+    
+    res.term = node.current_term;
+    res.success = true;
+    res.match_index = node.log_count;
+}

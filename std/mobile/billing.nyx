@@ -1,0 +1,98 @@
+// ============================================================================
+//   NYX MOBILE: STOREKIT 2 & PLAY BILLING 7 ENCLAVE RECEIPT VALIDATOR
+//   Module: std.mobile.billing
+//   Design targets: Apple StoreKit 2 (JWS RFC 7515), Google Play Billing v7.0.
+//   NOT yet integrated - self module fails honestly until a host runtime exists.
+// ============================================================================
+
+module billing
+
+import std.string
+import std.vec
+import std.option
+import std.result
+import std.mobile.runtime
+
+// ── 1. Product & Transaction Types ─────────────────────────────────────────
+
+pub enum ProductType {
+    Consumable,
+    NonConsumable,
+    AutoRenewingSubscription,
+    NonRenewingSubscription,
+}
+
+pub enum SubscriptionStatus {
+    Active,
+    InGracePeriod,
+    InBillingRetry,
+    Expired,
+    Revoked,
+}
+
+pub struct ProductDetails {
+    pub product_id: String,
+    pub title: String,
+    pub description: String,
+    pub price_formatted: String,
+    pub price_amount_micros: i64,
+    pub currency_code: String,
+    pub product_type: ProductType,
+}
+
+pub struct VerifiedTransaction {
+    pub transaction_id: String,
+    pub original_transaction_id: String,
+    pub product_id: String,
+    pub purchase_date_epoch_ms: i64,
+    pub expiration_date_epoch_ms: Option<i64>,
+    pub is_verified_by_enclave: Bool,
+    pub raw_jws_token: String,
+}
+
+// ── 2. Dual-Store In-App Billing Engine ────────────────────────────────────
+
+pub struct InAppBillingManager {
+    pub is_ready: Bool,
+    pub active_products: Vec<ProductDetails>,
+}
+
+impl InAppBillingManager {
+    pub fn new() -> InAppBillingManager {
+        let mut products = Vec.new();
+        products.push(ProductDetails {
+            product_id: "com.nyx.pulsepay.pro_monthly".to_string(),
+            title: "PulsePay Enterprise Terminal (Monthly)".to_string(),
+            description: "Unlimited PQC Tap-to-Pay and contactless clearing".to_string(),
+            price_formatted: "$19.99".to_string(),
+            price_amount_micros: 19990000,
+            currency_code: "USD".to_string(),
+            product_type: ProductType.AutoRenewingSubscription,
+        });
+
+        InAppBillingManager {
+            is_ready: true,
+            active_products: products,
+        }
+    }
+
+    // Initiate native OS purchase flow (Apple Sheet or Google Bottom Sheet).
+    // Fails fast and honestly until a host runtime implementing StoreKit 2 /
+    // Play Billing v7 is linked. Never fabricates a transaction.
+    pub fn purchase(&mut self, product_id: String) -> Result<VerifiedTransaction, String> {
+        let cap = runtime.require(runtime.MobileCapability.Billing)
+        if cap.is_err() {
+            return Err("InAppBilling unavailable: native billing runtime not linked")
+        }
+        // Host store flow is not wired in self build. Do not return a
+        // fabricated "verified" transaction.
+        return Err("Purchase flow not implemented until billing runtime is linked")
+    }
+
+    // Verify a receipt. There is no enclave verifier linked in self build, so
+    // a receipt cannot be certified. Returns Revoked rather than granting
+    // access on an unverifiable / fabricated token.
+    pub fn verify_receipt_in_enclave(&self, transaction: VerifiedTransaction) -> SubscriptionStatus {
+        SubscriptionStatus.Revoked
+    }
+}

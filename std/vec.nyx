@@ -1,0 +1,291 @@
+module vec
+
+extern "C" {
+    fn malloc(size: u64) -> *mut u8
+    fn realloc(ptr: *mut u8, size: u64) -> *mut u8
+    fn free(ptr: *mut u8)
+    fn memcpy(dst: *mut u8, src: *const u8, n: u64) -> *mut u8
+    fn memmove(dst: *mut u8, src: *const u8, n: u64) -> *mut u8
+}
+
+pub struct Vec<T> {
+    data: *mut T,
+    len: Int,
+    cap: Int,
+}
+
+pub const INITIAL_CAP: Int = 16
+
+pub fn new<T>() -> Vec<T> {
+    unsafe {
+        let ptr = malloc((INITIAL_CAP * sizeof::<T>()) as u64)
+        Vec { data: ptr as *mut T, len: 0, cap: INITIAL_CAP }
+    }
+}
+
+pub fn with_capacity<T>(cap: Int) -> Vec<T> {
+    unsafe {
+        let ptr = malloc((cap * sizeof::<T>()) as u64)
+        Vec { data: ptr as *mut T, len: 0, cap }
+    }
+}
+
+pub fn from_slice<T>(slice: &[T]) -> Vec<T> {
+    let count = slice.len() as Int
+    unsafe {
+        let ptr = malloc((count * sizeof::<T>()) as u64)
+        memcpy(ptr as *mut u8, slice.as_ptr() as *const u8, (count * sizeof::<T>()) as u64)
+        Vec { data: ptr as *mut T, len: count, cap: count }
+    }
+}
+
+impl<T> Vec<T> {
+    pub fn push(self: &mut Vec<T>, item: T) {
+        if self.len >= self.cap {
+            let new_cap = self.cap * 2
+            unsafe {
+                self.data = realloc(self.data as *mut u8, (new_cap * sizeof::<T>()) as u64) as *mut T
+            }
+            self.cap = new_cap
+        }
+        unsafe {
+            *self.data.add(self.len as usize) = item
+        }
+        self.len = self.len + 1
+    }
+
+    pub fn pop(self: &mut Vec<T>) -> Option<T> {
+        if self.len == 0 {
+            return Option.None
+        }
+        self.len = self.len - 1
+        unsafe {
+            Option.Some(*self.data.add(self.len as usize))
+        }
+    }
+
+    pub fn len(self: &Vec<T>) -> Int { self.len }
+    pub fn is_empty(self: &Vec<T>) -> Bool { self.len == 0 }
+    pub fn capacity(self: &Vec<T>) -> Int { self.cap }
+
+    pub fn get(self: &Vec<T>, index: Int) -> Option<T> {
+        if index < 0 || index >= self.len {
+            return Option.None
+        }
+        unsafe {
+            Option.Some(*self.data.add(index as usize))
+        }
+    }
+
+    pub fn set(self: &mut Vec<T>, index: Int, item: T) -> Bool {
+        if index < 0 || index >= self.len {
+            return false
+        }
+        unsafe {
+            *self.data.add(index as usize) = item
+        }
+        true
+    }
+
+    pub fn first(self: &Vec<T>) -> Option<T> {
+        self.get(0)
+    }
+
+    pub fn last(self: &Vec<T>) -> Option<T> {
+        if self.len == 0 { Option.None } else { self.get(self.len - 1) }
+    }
+
+    pub fn contains(self: &Vec<T>, item: &T) -> Bool {
+        for i in 0..self.len {
+            if self.get(i).unwrap() == *item {
+                return true
+            }
+        }
+        false
+    }
+
+    pub fn index_of(self: &Vec<T>, item: &T) -> Option<Int> {
+        for i in 0..self.len {
+            if self.get(i).unwrap() == *item {
+                return Option.Some(i)
+            }
+        }
+        Option.None
+    }
+
+    pub fn clear(self: &mut Vec<T>) {
+        self.len = 0
+    }
+
+    pub fn iter(self: &Vec<T>) -> VecIter<T> {
+        VecIter { vec: self, index: 0 }
+    }
+
+    pub fn map<U>(self: &Vec<T>, f: fn(T) -> U) -> Vec<U> {
+        let mut result = Vec.new()
+        for i in 0..self.len {
+            result.push(f(self.get(i).unwrap()))
+        }
+        result
+    }
+
+    pub fn filter(self: &Vec<T>, f: fn(&T) -> Bool) -> Vec<T> {
+        let mut result = Vec.new()
+        for i in 0..self.len {
+            let item = self.get(i).unwrap()
+            if f(&item) {
+                result.push(item)
+            }
+        }
+        result
+    }
+
+    pub fn fold<U>(self: &Vec<T>, initial: U, f: fn(U, T) -> U) -> U {
+        let mut acc = initial
+        for i in 0..self.len {
+            acc = f(acc, self.get(i).unwrap())
+        }
+        acc
+    }
+
+    pub fn sum(self: &Vec<T>) -> T {
+        let mut total = T.default()
+        for i in 0..self.len {
+            total = total + self.get(i).unwrap()
+        }
+        total
+    }
+
+    pub fn sort(self: &mut Vec<T>) where T: Ord {
+        // Simple insertion sort
+        for i in 1..self.len {
+            let key = self.get(i).unwrap()
+            let mut j = i - 1
+            while j >= 0 && self.get(j).unwrap() > key {
+                self.set(j + 1, self.get(j).unwrap())
+                if j == 0 { break }
+                j = j - 1
+            }
+            self.set(j + 1, key)
+        }
+    }
+
+    pub fn reverse(self: &mut Vec<T>) {
+        let mut left = 0
+        let mut right = self.len - 1
+        while left < right {
+            let tmp = self.get(left).unwrap()
+            self.set(left, self.get(right).unwrap())
+            self.set(right, tmp)
+            left = left + 1
+            right = right - 1
+        }
+    }
+
+    pub fn slice(self: &Vec<T>, start: Int, end: Int) -> Vec<T> {
+        let mut result = Vec.new()
+        for i in start..end {
+            if let Some(item) = self.get(i) {
+                result.push(item)
+            }
+        }
+        result
+    }
+}
+
+pub struct VecIter<T> {
+    vec: *const Vec<T>,
+    index: Int,
+}
+
+impl<T> VecIter<T> {
+    pub fn next(self: &mut VecIter<T>) -> Option<T> {
+        unsafe {
+            if self.index >= (*self.vec).len {
+                return Option.None
+            }
+            let result = (*self.vec).get(self.index)
+            self.index = self.index + 1
+            result
+        }
+    }
+}
+
+pub fn clear<T>(v: &mut Vec<T>) {
+    unsafe { v.len = 0 }
+}
+
+pub fn insert<T>(v: &mut Vec<T>, index: Int, value: T) {
+    if index < 0 || index > v.len() { return }
+    v.push(value)
+    let mut i = v.len() - 1
+    while i > index {
+        let temp = v.get(i - 1).unwrap()
+        v.set(i, temp)
+        i = i - 1
+    }
+    v.set(index, value)
+}
+
+pub fn remove<T>(v: &mut Vec<T>, index: Int) -> Option<T> {
+    if index < 0 || index >= v.len() { return Option.None }
+    let result = v.get(index)
+    let mut i = index
+    while i < v.len() - 1 {
+        let next = v.get(i + 1).unwrap()
+        v.set(i, next)
+        i = i + 1
+    }
+    v.len = v.len() - 1
+    result
+}
+
+pub fn extend<T>(v: &mut Vec<T>, other: Vec<T>) {
+    for i in 0..other.len() {
+        v.push(other.get(i).unwrap())
+    }
+}
+
+pub fn take<T>(v: &Vec<T>, n: Int) -> Vec<T> {
+    let mut result = Vec.new()
+    let count = if n < v.len() { n } else { v.len() }
+    for i in 0..count {
+        result.push(v.get(i).unwrap())
+    }
+    result
+}
+
+pub fn skip<T>(v: &Vec<T>, n: Int) -> Vec<T> {
+    let mut result = Vec.new()
+    let mut i = n
+    while i < v.len() {
+        result.push(v.get(i).unwrap())
+        i = i + 1
+    }
+    result
+}
+
+pub fn fill<T>(v: &mut Vec<T>, value: T) {
+    for i in 0..v.len() {
+        v.set(i, value)
+    }
+}
+
+pub fn join(v: &Vec<String>, sep: String) -> String {
+    let mut result = ""
+    for i in 0..v.len() {
+        if i > 0 { result = result + sep.clone() }
+        result = result + v.get(i).unwrap()
+    }
+    result
+}
+
+pub fn zip<A, B>(a: &Vec<A>, b: &Vec<B>) -> Vec<(A, B)> {
+    let mut result = Vec.new()
+    let count = if a.len() < b.len() { a.len() } else { b.len() }
+    for i in 0..count {
+        result.push((a.get(i).unwrap(), b.get(i).unwrap()))
+    }
+    result
+}
+

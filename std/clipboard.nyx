@@ -1,0 +1,21 @@
+module clipboard
+
+import std.string
+
+extern "C" {
+    fn nyx_clipboard_get_text() -> *const char
+    fn nyx_clipboard_set_text(text: *const char)
+}
+
+pub fn get_text() -> String {
+    unsafe {
+        let ptr = nyx_clipboard_get_text()
+        if ptr == null { String.from("") } else { String.from_raw(ptr) }
+    }
+}
+
+pub fn set_text(text: String) {
+    unsafe {
+        nyx_clipboard_set_text(text.as_ptr())
+    }
+}

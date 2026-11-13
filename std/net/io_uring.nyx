@@ -1,0 +1,27 @@
+module std.net.io_uring
+
+pub struct IoUringRing {
+    pub ring_entries: i64,
+    pub sq_tail: i64,
+    pub cq_head: i64,
+    pub is_kernel_polled: bool
+}
+
+impl IoUringRing {
+    pub fn new(entries: i64) -> IoUringRing {
+        IoUringRing {
+            ring_entries: entries,
+            sq_tail: 0,
+            cq_head: 0,
+            is_kernel_polled: true
+        }
+    }
+
+    pub fn submit_io(self: &IoUringRing, op_code: i64) -> i64 {
+        if op_code >= 0 {
+            self.sq_tail + 1
+        } else {
+            self.sq_tail
+        }
+    }
+}

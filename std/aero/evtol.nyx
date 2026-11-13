@@ -1,0 +1,147 @@
+// @nyx/aero - eVTOL Distributed Electric Propulsion (DEP) Flight Control System
+// Standard Package: std.aero.evtol
+// Compliance: EASA SC-VTOL-01 / FAA AC 20-193 / DO-178C Level A
+// Hard Real-Time Target: 1,000 Hz (1.0 ms inner flight control loop)
+
+import std.core.arena;
+import std.core.strict;
+
+pub enum FlightPhase {
+    GroundTaxi = 0,
+    VerticalHover = 1,
+    ForwardTransition = 2,
+    WingCruise = 3,
+    LandingDescent = 4,
+    EmergencyAutorotation = 5,
+}
+
+@strict
+@must_region
+pub struct EvtolTelemetry {
+    pub roll_rad: f32,
+    pub pitch_rad: f32,
+    pub yaw_rad: f32,
+    pub roll_rate_rad_s: f32,
+    pub pitch_rate_rad_s: f32,
+    pub yaw_rate_rad_s: f32,
+    pub airspeed_knots: f32,
+    pub altitude_agl_ft: f32,
+    pub climb_rate_fpm: f32,
+    pub battery_soc_pct: f32,
+    pub motor_temps_c: [f32; 8],
+}
+
+@strict
+@must_region
+pub struct PilotInput {
+    pub stick_pitch: f32,       // -1.0 (nose down) to +1.0 (nose up)
+    pub stick_roll: f32,        // -1.0 (left) to +1.0 (right)
+    pub pedal_yaw: f32,         // -1.0 (left) to +1.0 (right)
+    pub thrust_collective: f32, // 0.0 (idle) to 1.0 (full takeoff/cruise power)
+    pub requested_phase: FlightPhase,
+}
+
+@strict
+@must_region
+pub struct RotorMixerOutput {
+    pub rotor_rpm: [u16; 8],    // RPM for 8 distributed electric motors (0 to 3500 RPM)
+    pub tilt_angle_deg: f32,    // Nacelle / wing tilt (0 deg = vertical, 90 deg = cruise)
+    pub elevon_left_deg: f32,   // Aerodynamic wing control surfaces (-25 to +25 deg)
+    pub elevon_right_deg: f32,
+    pub master_warning: bool,
+}
+
+// Compute 8-Rotor Differential RPM Mixing Vector based on 6-DOF Flight Laws
+pub fn compute_dep_mixer(
+    region r: Arena,
+    input: PilotInput,
+    telem: EvtolTelemetry,
+    current_tilt_deg: f32
+) -> RotorMixerOutput {
+    let base_hover_rpm: f32 = 1800.0 + (input.thrust_collective * 1200.0);
+    let mut motor_cmds: [f32; 8] = [
+        base_hover_rpm, base_hover_rpm, base_hover_rpm, base_hover_rpm,
+        base_hover_rpm, base_hover_rpm, base_hover_rpm, base_hover_rpm
+    ];
+
+    let pitch_gain: f32 = 450.0;
+    let roll_gain: f32 = 380.0;
+    let yaw_gain: f32 = 220.0;
+
+    let pitch_delta = (input.stick_pitch - (telem.pitch_rad * 1.2)) * pitch_gain;
+    let roll_delta = (input.stick_roll - (telem.roll_rad * 1.2)) * roll_gain;
+    let yaw_delta = (input.pedal_yaw - (telem.yaw_rate_rad_s * 0.8)) * yaw_gain;
+
+    // Distributed Quad-Front / Quad-Rear Motor Layout:
+    // Front motors (0, 1, 2, 3) vs Rear motors (4, 5, 6, 7)
+    // Left motors (0, 1, 4, 5) vs Right motors (2, 3, 6, 7)
+
+    // Pitch mixing
+    motor_cmds[0] = motor_cmds[0] - pitch_delta;
+    motor_cmds[1] = motor_cmds[1] - pitch_delta;
+    motor_cmds[2] = motor_cmds[2] - pitch_delta;
+    motor_cmds[3] = motor_cmds[3] - pitch_delta;
+    motor_cmds[4] = motor_cmds[4] + pitch_delta;
+    motor_cmds[5] = motor_cmds[5] + pitch_delta;
+    motor_cmds[6] = motor_cmds[6] + pitch_delta;
+    motor_cmds[7] = motor_cmds[7] + pitch_delta;
+
+    // Roll mixing
+    motor_cmds[0] = motor_cmds[0] - roll_delta;
+    motor_cmds[1] = motor_cmds[1] - roll_delta;
+    motor_cmds[4] = motor_cmds[4] - roll_delta;
+    motor_cmds[5] = motor_cmds[5] - roll_delta;
+    motor_cmds[2] = motor_cmds[2] + roll_delta;
+    motor_cmds[3] = motor_cmds[3] + roll_delta;
+    motor_cmds[6] = motor_cmds[6] + roll_delta;
+    motor_cmds[7] = motor_cmds[7] + roll_delta;
+
+    // Yaw counter-torque mixing
+    motor_cmds[0] = motor_cmds[0] + yaw_delta;
+    motor_cmds[2] = motor_cmds[2] - yaw_delta;
+    motor_cmds[5] = motor_cmds[5] + yaw_delta;
+    motor_cmds[7] = motor_cmds[7] - yaw_delta;
+
+    let mut target_tilt = current_tilt_deg;
+    let mut elevon_l = 0.0;
+    let mut elevon_r = 0.0;
+    let mut warning = false;
+
+    // Transition Dynamics Governor
+    if input.requested_phase == FlightPhase::ForwardTransition {
+        if telem.airspeed_knots > 45.0 && current_tilt_deg < 90.0 {
+            target_tilt = current_tilt_deg + 2.5; // Smooth 2.5 deg/sec tilt rate
+        }
+    } else if input.requested_phase == FlightPhase::WingCruise {
+        target_tilt = 90.0; // Full forward wing-borne propulsion
+        elevon_l = input.stick_pitch * 15.0 - input.stick_roll * 10.0;
+        elevon_r = input.stick_pitch * 15.0 + input.stick_roll * 10.0;
+    } else if input.requested_phase == FlightPhase::VerticalHover {
+        target_tilt = 0.0; // Full vertical thrust
+    }
+
+    // Battery & Thermal Derating Safety Checks
+    let mut final_rpm: [u16; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
+    for i in 0..8 {
+        let mut rpm = motor_cmds[i];
+        if telem.motor_temps_c[i] > 115.0 {
+            rpm = rpm * 0.85; // Thermal derate protection
+            warning = true;
+        }
+        if rpm < 500.0 { rpm = 500.0; }
+        if rpm > 3200.0 { rpm = 3200.0; }
+        final_rpm[i] = rpm as u16;
+    }
+
+    if telem.battery_soc_pct < 15.0 {
+        warning = true;
+    }
+
+    return RotorMixerOutput {
+        rotor_rpm: final_rpm,
+        tilt_angle_deg: target_tilt,
+        elevon_left_deg: elevon_l,
+        elevon_right_deg: elevon_r,
+        master_warning: warning,
+    };
+}

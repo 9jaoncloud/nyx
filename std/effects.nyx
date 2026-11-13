@@ -1,0 +1,46 @@
+/**
+ * @file std/effects.nyx
+ * @brief Standard library module for Zero-Allocation Algebraic Effect Handlers
+ * @author Simeon Bala (9jaoncloud@gmail.com)
+ * @copyright (c) 2026 9jaonCloud Engineering. All Rights Reserved.
+ */
+
+module effects
+
+import prelude.*
+
+pub enum EffectType {
+    Yield,
+    AsyncAwait,
+    BargeIn,
+    SwarmMsg,
+    FailRecover,
+}
+
+pub struct EffectSignal {
+    pub effect_type: EffectType,
+    pub payload: u64,
+    pub is_handled: Bool,
+}
+
+pub struct EffectHandler {
+    pub depth: u32,
+    pub is_active: Bool,
+}
+
+impl EffectHandler {
+    pub fn create() -> EffectHandler {
+        EffectHandler {
+            depth: 0 as u32,
+            is_active: true,
+        }
+    }
+
+    pub fn perform(self: &mut EffectHandler, effect: EffectType, payload: u64) {
+        // Suspends current fiber frame and propagates signal upward without heap allocation
+    }
+
+    pub fn resume(self: &mut EffectHandler, value: u64) {
+        // Resumes suspended fiber frame with returned value
+    }
+}

@@ -1,0 +1,131 @@
+// Nyx Standard Library — @nyx/finance/portfolio_optimizer
+// Modern Portfolio Theory (MPT), Markowitz Efficient Frontier & Risk Parity Engine
+// Inspired by FinceptTerminal Portfolio Desk & Institutional Asset Management
+// 100% Pure Native Nyx (Zero Python, Zero-GC Region Memory, Deterministic Precision)
+
+module std.finance.portfolio_optimizer
+
+pub struct PortfolioAsset {
+    pub symbol: String,
+    pub expected_annual_return: f64,
+    pub annual_volatility: f64,
+    pub current_weight: f64
+}
+
+impl PortfolioAsset {
+    pub fn new(sym: String, ret: f64, vol: f64, weight: f64) -> PortfolioAsset {
+        PortfolioAsset {
+            symbol: sym,
+            expected_annual_return: ret,
+            annual_volatility: vol,
+            current_weight: weight,
+        }
+    }
+}
+
+pub struct OptimizedAllocation {
+    pub symbol_1: String,
+    pub weight_1: f64,
+    pub symbol_2: String,
+    pub weight_2: f64,
+    pub symbol_3: String,
+    pub weight_3: f64,
+    pub portfolio_expected_return: f64,
+    pub portfolio_volatility: f64,
+    pub sharpe_ratio: f64
+}
+
+impl OptimizedAllocation {
+    pub fn new(
+        s1: String, w1: f64,
+        s2: String, w2: f64,
+        s3: String, w3: f64,
+        ret: f64, vol: f64, sharpe: f64
+    ) -> OptimizedAllocation {
+        OptimizedAllocation {
+            symbol_1: s1,
+            weight_1: w1,
+            symbol_2: s2,
+            weight_2: w2,
+            symbol_3: s3,
+            weight_3: w3,
+            portfolio_expected_return: ret,
+            portfolio_volatility: vol,
+            sharpe_ratio: sharpe,
+        }
+    }
+}
+
+pub struct MarkowitzOptimizer {
+    pub risk_free_rate: f64
+}
+
+impl MarkowitzOptimizer {
+    pub fn new(rf_rate: f64) -> MarkowitzOptimizer {
+        MarkowitzOptimizer { risk_free_rate: rf_rate }
+    }
+
+    // 1. Two-Asset Markowitz Optimization (Closed-Form Analytical Solution)
+    // Solves for weight w1 that maximizes Sharpe Ratio:
+    // R_p = w1*R1 + (1-w1)*R2
+    // Var_p = w1^2*s1^2 + (1-w1)^2*s2^2 + 2*w1*(1-w1)*s1*s2*rho
+    pub fn optimize_two_assets(
+        self: &MarkowitzOptimizer,
+        a1: &PortfolioAsset,
+        a2: &PortfolioAsset,
+        correlation_rho: f64
+    ) -> OptimizedAllocation {
+        let r1: f64 = a1.expected_annual_return;
+        let r2: f64 = a2.expected_annual_return;
+        let s1: f64 = a1.annual_volatility;
+        let s2: f64 = a2.annual_volatility;
+        let rho: f64 = correlation_rho;
+        let rf: f64 = self.risk_free_rate;
+
+        let var1: f64 = s1 * s1;
+        let var2: f64 = s2 * s2;
+        let cov: f64 = s1 * s2 * rho;
+
+        // Tangency portfolio weight formulation (Maximum Sharpe)
+        let num: f64 = ((r1 - rf) * var2) - ((r2 - rf) * cov);
+        let den: f64 = ((r1 - rf) * var2) + ((r2 - rf) * var1) - ((r1 - rf + r2 - rf) * cov);
+
+        let w1_raw: f64 = if den != 0.0 { num / den } else { 0.50 };
+        // Long-only constraints [0.0, 1.0]
+        let w1: f64 = if w1_raw > 1.0 { 1.0 } else if w1_raw < 0.0 { 0.0 } else { w1_raw };
+        let w2: f64 = 1.0 - w1;
+
+        let port_return: f64 = (w1 * r1) + (w2 * r2);
+        let port_var: f64 = (w1 * w1 * var1) + (w2 * w2 * var2) + (2.0 * w1 * w2 * cov);
+        let port_vol: f64 = port_var.sqrt();
+
+        let sharpe: f64 = if port_vol > 0.0 { (port_return - rf) / port_vol } else { 0.0 };
+
+        OptimizedAllocation::new(a1.symbol, w1, a2.symbol, w2, "NONE", 0.0, port_return, port_vol, sharpe)
+    }
+
+    // 2. Risk Parity Allocation (Inverse Volatility Weighting)
+    // Equalizes risk contribution across multi-asset portfolios
+    pub fn compute_risk_parity_three(
+        self: &MarkowitzOptimizer,
+        a1: &PortfolioAsset,
+        a2: &PortfolioAsset,
+        a3: &PortfolioAsset
+    ) -> OptimizedAllocation {
+        let inv1: f64 = if a1.annual_volatility > 0.0 { 1.0 / a1.annual_volatility } else { 0.0 };
+        let inv2: f64 = if a2.annual_volatility > 0.0 { 1.0 / a2.annual_volatility } else { 0.0 };
+        let inv3: f64 = if a3.annual_volatility > 0.0 { 1.0 / a3.annual_volatility } else { 0.0 };
+
+        let total_inv: f64 = inv1 + inv2 + inv3;
+        let w1: f64 = inv1 / total_inv;
+        let w2: f64 = inv2 / total_inv;
+        let w3: f64 = inv3 / total_inv;
+
+        let port_return: f64 = (w1 * a1.expected_annual_return) + (w2 * a2.expected_annual_return) + (w3 * a3.expected_annual_return);
+        // Assuming moderate zero-cross diversification proxy
+        let port_vol: f64 = (w1 * a1.annual_volatility) + (w2 * a2.annual_volatility) + (w3 * a3.annual_volatility) * 0.85;
+        let sharpe: f64 = if port_vol > 0.0 { (port_return - self.risk_free_rate) / port_vol } else { 0.0 };
+
+        OptimizedAllocation::new(a1.symbol, w1, a2.symbol, w2, a3.symbol, w3, port_return, port_vol, sharpe)
+    }
+}

@@ -1,0 +1,104 @@
+// std/finance/semi_markov_trend.nyx
+// Sovereign Semi-Markov Regime-Switching Trend Filter & ICT CISD Engine
+// Synthesizes:
+// 1. Semi-Markov Regime Duration Hazard Weighting (MiesOnCharts / TradingView)
+// 2. High Timeframe (HTF) Liquidity Sweep & Change in State of Delivery (CISD) (WillyAlgoTrader)
+// 3. Multi-Timeframe Signal Overlay & Non-Repainting Execution Trigger (Jayadev Rana)
+// Zero-GC Bump Memory | Freestanding Nyx / Sophia Sovereign Cortex
+
+module std.finance.semi_markov_trend
+
+struct ReturnSample {
+    log_return: f64,
+    bar_volatility: f64
+}
+
+struct SemiMarkovFilter {
+    lookback_window: int,
+    regime_age: int,
+    hazard_rate: f64
+}
+
+struct HTFSweepCISD {
+    htf_high: f64,
+    htf_low: f64,
+    is_sweep_high: bool,
+    is_sweep_low: bool,
+    cisd_active: bool,
+    equilibrium_mid: f64
+}
+
+struct SovereignTrendDecision {
+    semi_markov_score: f64,
+    regime_state: string, // "BULL_PERSISTENT", "BEAR_PERSISTENT", "REGIME_TRANSITION", "CHOP"
+    is_long_trigger: bool,
+    is_short_trigger: bool,
+    risk_r_multiple: f64
+}
+
+impl SemiMarkovFilter {
+    fn new(window: int) -> SemiMarkovFilter {
+        return SemiMarkovFilter {
+            lookback_window: window,
+            regime_age: 1,
+            hazard_rate: 0.05
+        }
+    }
+
+    // score = sum(w[k] * r[k]) / (sigma * sqrt(sum(w[k]^2)))
+    // Weights w[k] decay as regime ages according to semi-markov hazard function
+    fn compute_trend_score(this: &SemiMarkovFilter, r_k: f64, sigma: f64, age: int) -> f64 {
+        if sigma <= 0.000001 { return 0.0 }
+        let hazard = 0.05 + ((age as f64) * 0.015)
+        let w = if hazard < 0.95 { 1.0 - hazard } else { 0.05 }
+        let score = (w * r_k) / (sigma * (w * w + 0.0001))
+        return score
+    }
+}
+
+impl HTFSweepCISD {
+    fn evaluate(high: f64, low: f64, close: f64, htf_h: f64, htf_l: f64) -> HTFSweepCISD {
+        let swept_high = high > htf_h && close < htf_h
+        let swept_low = low < htf_l && close > htf_l
+        let mid = (htf_h + htf_l) * 0.5
+        let cisd = (swept_high && close < mid) || (swept_low && close > mid)
+
+        return HTFSweepCISD {
+            htf_high: htf_h,
+            htf_low: htf_l,
+            is_sweep_high: swept_high,
+            is_sweep_low: swept_low,
+            cisd_active: cisd,
+            equilibrium_mid: mid
+        }
+    }
+}
+
+impl SovereignTrendDecision {
+    fn synthesize(score: f64, htf: HTFSweepCISD) -> SovereignTrendDecision {
+        let mut state = "CHOP"
+        let mut long_sig = false
+        let mut short_sig = false
+
+        if score > 1.25 && htf.is_sweep_low && htf.cisd_active {
+            state = "BULL_PERSISTENT"
+            long_sig = true
+        } else if score < -1.25 && htf.is_sweep_high && htf.cisd_active {
+            state = "BEAR_PERSISTENT"
+            short_sig = true
+        } else if score > 0.5 {
+            state = "BULL_WEAK"
+        } else if score < -0.5 {
+            state = "BEAR_WEAK"
+        }
+
+        return SovereignTrendDecision {
+            semi_markov_score: score,
+            regime_state: state,
+            is_long_trigger: long_sig,
+            is_short_trigger: short_sig,
+            risk_r_multiple: if long_sig || short_sig { 3.5 } else { 0.0 }
+        }
+    }
+}
+

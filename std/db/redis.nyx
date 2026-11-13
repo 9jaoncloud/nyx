@@ -1,0 +1,42 @@
+// Nyx Standard Library — @nyx/db/redis
+// Production-Grade Redis Client Binding via hiredis C-ABI
+
+module std.db.redis
+
+extern "C" {
+    fn nyx_redis_connect(host: *const u8, port: i32) -> *mut u8
+    fn nyx_redis_disconnect(conn: *mut u8)
+    fn nyx_redis_set(conn: *mut u8, key: *const u8, val: *const u8) -> bool
+    fn nyx_redis_get(conn: *mut u8, key: *const u8) -> *const u8
+}
+
+pub struct RedisClient {
+    handle: *mut u8,
+    pub is_connected: bool,
+}
+
+impl RedisClient {
+    pub fn connect(host: String, port: i32) -> Option<RedisClient> {
+        let ptr = nyx_redis_connect(host.as_ptr(), port);
+        if ptr == null {
+            return Option.None;
+        }
+        Option.Some(RedisClient {
+            handle: ptr,
+            is_connected: true,
+        })
+    }
+
+    pub fn set(self: &RedisClient, key: String, val: String) -> bool {
+        if self.handle == null { return false; }
+        nyx_redis_set(self.handle, key.as_ptr(), val.as_ptr())
+    }
+
+    pub fn close(self: &mut RedisClient) {
+        if self.handle != null {
+            nyx_redis_disconnect(self.handle);
+            self.handle = null;
+            self.is_connected = false;
+        }
+    }
+}

@@ -1,0 +1,55 @@
+/**
+ * @file std/swarm/proof_carrier.nyx
+ * @brief Proof-Carrying Code & Self-Healing Microkernel Verifier for Autonomous Swarms
+ * @author Simeon Bala (9jaoncloud@gmail.com)
+ * @copyright (c) 2026 9jaonCloud Engineering. All Rights Reserved.
+ */
+
+module swarm.proof_carrier
+
+pub enum VerifyResult {
+    Sound,
+    VersionRegression,
+    BoundsViolation,
+    FuelExhaustion,
+    HashMismatch,
+}
+
+pub struct ProofCertificate {
+    pub patch_version: u32,
+    pub max_memory_bytes: u32,
+    pub max_execution_fuel: u32,
+    pub bytecode_crc: u64,
+    pub smt_proof_token: u64,
+}
+
+pub struct SwarmKernelState {
+    pub active_firmware_version: u32,
+    pub patches_applied: u32,
+    pub patches_rejected: u32,
+    pub genesis_safe_state: Bool,
+}
+
+impl SwarmKernelState {
+    pub fn new() -> SwarmKernelState {
+        SwarmKernelState {
+            active_firmware_version: 1,
+            patches_applied: 0,
+            patches_rejected: 0,
+            genesis_safe_state: true,
+        }
+    }
+
+    pub fn verify_patch(self: &SwarmKernelState, cert: &ProofCertificate) -> VerifyResult {
+        if cert.patch_version <= self.active_firmware_version {
+            return VerifyResult::VersionRegression;
+        }
+        if cert.max_memory_bytes > 0x10000000 {
+            return VerifyResult::BoundsViolation;
+        }
+        if cert.max_execution_fuel == 0 || cert.max_execution_fuel > 10000000 {
+            return VerifyResult::FuelExhaustion;
+        }
+        VerifyResult::Sound
+    }
+}

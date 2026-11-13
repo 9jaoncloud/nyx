@@ -1,0 +1,361 @@
+module std.ai.sophia_continuum_memory
+
+// =============================================================================
+// SOPHIA CONTINUUM MEMORY SYSTEM (CMS) + DELTA GRADIENT DESCENT + SLEEP
+//
+// Research basis:
+//  - Nested Learning: The Illusion of Deep Learning Architectures
+//        (arXiv:2512.24695, NeurIPS 2025) -- continuum memory system (CMS),
+//        delta rule (vs Hebbian), Delta Gradient Descent (DGD), HOPE.
+//  - The sleep framework (arXiv:2606.03979) -- wake / consolidation / dreaming.
+//  - Sleep-time compute (arXiv:2504.13171) -- heavy work while idle.
+//
+// Speed guarantee: the AWAKE path is only an O(D^2) delta update on `fast`.
+// Continuum tiers are touched ONLY inside `run_sleep_session` (off the live
+// critical path). Fixed-size, flat-array storage only (the layout the current
+// native compiler supports): matrices are `m.d[row * 16 + col]`.
+// =============================================================================
+
+pub struct Mat16 {
+    pub d: [f64; 256]
+}
+
+impl Mat16 {
+    pub fn zeros() -> Mat16 {
+        Mat16 { d: [0.0; 256] }
+    }
+    pub fn identity() -> Mat16 {
+        let mut m: Mat16 = Mat16 { d: [0.0; 256] }
+        let mut i: usize = 0
+        while i < 16 {
+            m.d[(i * 16) + i] = 1.0
+            i = i + 1
+        }
+        m
+    }
+}
+
+pub struct V16 {
+    pub d: [f64; 16]
+}
+
+impl V16 {
+    pub fn zeros() -> V16 {
+        V16 { d: [0.0; 16] }
+    }
+}
+
+// Fragile short-term store: up to 64 traces (key/value of 16 dims), flat.
+pub struct TraceBank {
+    pub keys: [f64; 1024],
+    pub vals: [f64; 1024],
+    pub count: i64,
+    pub head: i64
+}
+
+impl TraceBank {
+    pub fn new() -> TraceBank {
+        TraceBank { keys: [0.0; 1024], vals: [0.0; 1024], count: 0, head: 0 }
+    }
+}
+
+pub struct SophiaContinuumMemory {
+    pub fast: Mat16,
+    pub fast_eta: f64,
+    pub fast_decay: f64,
+    pub last_key: V16,
+    pub has_last: bool,
+
+    pub bank: TraceBank,
+
+    pub t0: Mat16, pub eta0: f64, pub decay0: f64, pub chunk0: i64, pub cons0: i64,
+    pub t1: Mat16, pub eta1: f64, pub decay1: f64, pub chunk1: i64, pub cons1: i64,
+    pub t2: Mat16, pub eta2: f64, pub decay2: f64, pub chunk2: i64, pub cons2: i64,
+    pub t3: Mat16, pub eta3: f64, pub decay3: f64, pub chunk3: i64, pub cons3: i64,
+
+    pub global_tokens: i64,
+    pub consolidation_cycles: i64,
+    pub dreams: i64,
+    pub is_sleeping: bool
+}
+
+// Delta write on the awake fast matrix:
+//   W <- (1-decay)W + eta (v - W.k) k^T / (1 + ||k||^2)
+// Returns squared surprise ||v - W.k||^2 (no sqrt dependency).
+fn delta_write(w: &mut Mat16, key: &V16, value: &V16, eta: f64, decay: f64) -> f64 {
+    let mut err_norm: f64 = 0.0
+    let mut k_norm: f64 = 0.0
+    let mut i: usize = 0
+    while i < 16 {
+        let mut dot: f64 = 0.0
+        let mut j: usize = 0
+        while j < 16 {
+            dot = dot + (w.d[(i * 16) + j] * key.d[j])
+            j = j + 1
+        }
+        let e: f64 = value.d[i] - dot
+        err_norm = err_norm + (e * e)
+        k_norm = k_norm + (key.d[i] * key.d[i])
+        i = i + 1
+    }
+    let denom: f64 = 1.0 + k_norm
+    let retain: f64 = 1.0 - decay
+    let mut r: usize = 0
+    while r < 16 {
+        let mut dot2: f64 = 0.0
+        let mut j2: usize = 0
+        while j2 < 16 {
+            dot2 = dot2 + (w.d[(r * 16) + j2] * key.d[j2])
+            j2 = j2 + 1
+        }
+        let e2: f64 = value.d[r] - dot2
+        let mut c: usize = 0
+        while c < 16 {
+            let idx: usize = (r * 16) + c
+            w.d[idx] = (retain * w.d[idx]) + ((eta * e2 * key.d[c]) / denom)
+            c = c + 1
+        }
+        r = r + 1
+    }
+    err_norm
+}
+
+// Delta write using a bank row as the key/value source (sleep replay).
+fn delta_write_bank(w: &mut Mat16, bank: &TraceBank, row: usize, eta: f64, decay: f64) {
+    let base: usize = row * 16
+    let mut k_norm: f64 = 0.0
+    let mut i: usize = 0
+    while i < 16 {
+        k_norm = k_norm + (bank.keys[base + i] * bank.keys[base + i])
+        i = i + 1
+    }
+    let denom: f64 = 1.0 + k_norm
+    let retain: f64 = 1.0 - decay
+    let mut r: usize = 0
+    while r < 16 {
+        let mut dot: f64 = 0.0
+        let mut j: usize = 0
+        while j < 16 {
+            dot = dot + (w.d[(r * 16) + j] * bank.keys[base + j])
+            j = j + 1
+        }
+        let e: f64 = bank.vals[base + r] - dot
+        let mut c: usize = 0
+        while c < 16 {
+            let idx: usize = (r * 16) + c
+            w.d[idx] = (retain * w.d[idx]) + ((eta * e * bank.keys[base + c]) / denom)
+            c = c + 1
+        }
+        r = r + 1
+    }
+}
+
+fn seed_upward(dst: &mut Mat16, src: &Mat16, scale: f64) {
+    let mut i: usize = 0
+    while i < 256 {
+        dst.d[i] = dst.d[i] + (scale * src.d[i])
+        i = i + 1
+    }
+}
+
+fn consolidate_tier(w: &mut Mat16, bank: &TraceBank, tokens: i64, count: i64, chunk: i64, eta: f64, decay: f64) -> i64 {
+    let due: bool = (chunk > 0) && ((tokens % chunk) < count) && (count > 0)
+    if due == false {
+        return 0
+    }
+    let n: usize = count as usize
+    let mut r: usize = 0
+    while r < n {
+        delta_write_bank(w, bank, r, eta, decay)
+        r = r + 1
+    }
+    1
+}
+
+fn mat_recall(w: &Mat16, key: &V16, out: &mut V16, weight: f64) {
+    let mut i: usize = 0
+    while i < 16 {
+        let mut dot: f64 = 0.0
+        let mut j: usize = 0
+        while j < 16 {
+            dot = dot + (w.d[(i * 16) + j] * key.d[j])
+            j = j + 1
+        }
+        out.d[i] = out.d[i] + (dot * weight)
+        i = i + 1
+    }
+}
+
+impl SophiaContinuumMemory {
+    pub fn new() -> SophiaContinuumMemory {
+        SophiaContinuumMemory {
+            fast: Mat16.identity(),
+            fast_eta: 0.25,
+            fast_decay: 0.05,
+            last_key: V16.zeros(),
+            has_last: false,
+            bank: TraceBank.new(),
+            t0: Mat16.zeros(), eta0: 0.20, decay0: 0.02, chunk0: 16, cons0: 0,
+            t1: Mat16.zeros(), eta1: 0.10, decay1: 0.01, chunk1: 256, cons1: 0,
+            t2: Mat16.zeros(), eta2: 0.05, decay2: 0.005, chunk2: 4096, cons2: 0,
+            t3: Mat16.zeros(), eta3: 0.02, decay3: 0.002, chunk3: 65536, cons3: 0,
+            global_tokens: 0,
+            consolidation_cycles: 0,
+            dreams: 0,
+            is_sleeping: false
+        }
+    }
+
+    // AWAKE: fast O(D^2) delta-gradient step; never touches the tiers.
+    pub fn awake_observe(self: &mut SophiaContinuumMemory, key: &V16, value: &V16) -> f64 {
+        let mut corr: f64 = 0.0
+        if self.has_last == true {
+            let mut d: f64 = 0.0
+            let mut na: f64 = 0.0
+            let mut nb: f64 = 0.0
+            let mut i: usize = 0
+            while i < 16 {
+                d = d + (key.d[i] * self.last_key.d[i])
+                na = na + (key.d[i] * key.d[i])
+                nb = nb + (self.last_key.d[i] * self.last_key.d[i])
+                i = i + 1
+            }
+            if (na > 0.0) && (nb > 0.0) {
+                corr = d / (na + nb)
+            }
+        }
+        let mut alpha: f64 = self.fast_decay * (1.0 + corr)
+        if alpha > 0.95 {
+            alpha = 0.95
+        }
+        if alpha < 0.0 {
+            alpha = 0.0
+        }
+
+        let surprise: f64 = delta_write(&mut self.fast, key, value, self.fast_eta, alpha)
+
+        let mut i2: usize = 0
+        while i2 < 16 {
+            self.last_key.d[i2] = key.d[i2]
+            i2 = i2 + 1
+        }
+        self.has_last = true
+
+        let slot: usize = self.bank.head as usize
+        let base: usize = slot * 16
+        let mut i3: usize = 0
+        while i3 < 16 {
+            self.bank.keys[base + i3] = key.d[i3]
+            self.bank.vals[base + i3] = value.d[i3]
+            i3 = i3 + 1
+        }
+        self.bank.head = (self.bank.head + 1) % 64
+        if self.bank.count < 64 {
+            self.bank.count = self.bank.count + 1
+        }
+
+        self.global_tokens = self.global_tokens + 1
+        surprise
+    }
+
+    pub fn awake_recall(self: &SophiaContinuumMemory, key: &V16, out: &mut V16) {
+        let mut i: usize = 0
+        while i < 16 {
+            out.d[i] = 0.0
+            i = i + 1
+        }
+        mat_recall(&self.fast, key, out, 1.0)
+    }
+
+    // Read across the fast path + every continuum tier (weighted).
+    pub fn deep_recall(self: &SophiaContinuumMemory, key: &V16, out: &mut V16) {
+        let mut i: usize = 0
+        while i < 16 {
+            out.d[i] = 0.0
+            i = i + 1
+        }
+        mat_recall(&self.fast, key, out, 0.50)
+        mat_recall(&self.t0, key, out, 0.25)
+        mat_recall(&self.t1, key, out, 0.125)
+        mat_recall(&self.t2, key, out, 0.0625)
+        mat_recall(&self.t3, key, out, 0.03125)
+    }
+
+    pub fn begin_sleep(self: &mut SophiaContinuumMemory) {
+        self.is_sleeping = true
+    }
+
+    pub fn end_sleep(self: &mut SophiaContinuumMemory) {
+        self.is_sleeping = false
+    }
+
+    // SLEEP: replay the fragile bank into the tiers whose clock is due, then
+    // seed slower tiers from faster ones (knowledge seeding / distillation).
+    pub fn consolidate(self: &mut SophiaContinuumMemory) -> i64 {
+        let tokens: i64 = self.global_tokens
+        let count: i64 = self.bank.count
+        let mut applied: i64 = 0
+        applied = applied + consolidate_tier(&mut self.t0, &self.bank, tokens, count, self.chunk0, self.eta0, self.decay0)
+        applied = applied + consolidate_tier(&mut self.t1, &self.bank, tokens, count, self.chunk1, self.eta1, self.decay1)
+        applied = applied + consolidate_tier(&mut self.t2, &self.bank, tokens, count, self.chunk2, self.eta2, self.decay2)
+        applied = applied + consolidate_tier(&mut self.t3, &self.bank, tokens, count, self.chunk3, self.eta3, self.decay3)
+        if applied > 0 {
+            self.cons0 = self.cons0 + 1
+            self.cons1 = self.cons1 + 1
+            self.cons2 = self.cons2 + 1
+            self.cons3 = self.cons3 + 1
+        }
+        seed_upward(&mut self.t1, &self.t0, 0.05)
+        seed_upward(&mut self.t2, &self.t1, 0.02)
+        self.consolidation_cycles = self.consolidation_cycles + 1
+        applied
+    }
+
+    // SLEEP: dreaming -- synthesise a rehearsal sample by mixing two traces.
+    pub fn dream(self: &mut SophiaContinuumMemory) -> i64 {
+        if self.bank.count < 2 {
+            return 0
+        }
+        let a: usize = (self.dreams % self.bank.count) as usize
+        let b: usize = ((self.dreams + 1) % self.bank.count) as usize
+        let ba: usize = a * 16
+        let bb: usize = b * 16
+        let mut mk: V16 = V16.zeros()
+        let mut mv: V16 = V16.zeros()
+        let mut i: usize = 0
+        while i < 16 {
+            mk.d[i] = 0.5 * (self.bank.keys[ba + i] + self.bank.keys[bb + i])
+            mv.d[i] = 0.5 * (self.bank.vals[ba + i] + self.bank.vals[bb + i])
+            i = i + 1
+        }
+        let _s: f64 = delta_write(&mut self.t3, &mk, &mv, self.eta3, self.decay3)
+        self.dreams = self.dreams + 1
+        1
+    }
+
+    // SLEEP: synaptic pruning -- reset the fragile awake store.
+    pub fn prune_fast_memory(self: &mut SophiaContinuumMemory) {
+        self.fast = Mat16.identity()
+        self.has_last = false
+        self.bank.count = 0
+        self.bank.head = 0
+    }
+
+    pub fn run_sleep_session(self: &mut SophiaContinuumMemory, cycles: i64) -> i64 {
+        self.begin_sleep()
+        let mut total: i64 = 0
+        let mut c: i64 = 0
+        while c < cycles {
+            total = total + self.consolidate()
+            total = total + self.dream()
+            c = c + 1
+        }
+        self.prune_fast_memory()
+        self.end_sleep()
+        total
+    }
+
+    pub fn consolidated_tiers(self: &SophiaContinuumMemory) -> i64 {
+        self.cons0 + self.cons1 + self.cons2 + self.cons3
+    }
+}

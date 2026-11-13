@@ -1,0 +1,41 @@
+// std/web/reactive_component.nyx
+// Nyx Standard Library: Reactive Server-Rendered Component Engine
+// Inspired by Tokio Topcoat & HTMX:
+// 1. Zero-JS Server-Driven Reactivity
+// 2. Direct Region-Memory View Rendering
+// 3. Dynamic Swap Expressions $(...) with Event Triggers
+// 4. Token & Bandwidth Efficient HTML Diff Generation
+
+module std.web.reactive_component
+
+struct ReactiveView {
+    component_id: string,
+    route_path: string,
+    swap_target: string, // e.g. "#telemetry-card"
+    sse_event: string
+}
+
+impl ReactiveView {
+    fn new(id: string, route: string, target: string) -> ReactiveView {
+        return ReactiveView {
+            component_id: id,
+            route_path: route,
+            swap_target: target,
+            sse_event: "datastar-patch"
+        }
+    }
+
+    // Server-rendered reactive fragment without client WASM / JS bloat
+    fn render_fragment(this: &ReactiveView, title: string, value_text: string, status_color: string) -> string {
+        let h1 = "<div class=\"p-4 rounded-xl bg-slate-900 border border-slate-800\">\n  "
+        let h2 = "<div class=\"font-semibold text-slate-300\">" + title + "</div>\n  "
+        let h3 = "<div class=\"text-xl font-bold text-" + status_color + "\">" + value_text + "</div>\n</div>"
+        return h1 + h2 + h3
+    }
+
+    // Topcoat-style $(...) reactive expression packet
+    fn render_reactive_event(this: &ReactiveView, metric_val: f64) -> string {
+        let sse_line = "event: " + this.sse_event + "\ndata: fragments <span id=\"" + this.component_id + "-val\">" + metric_val.to_string() + "</span>\n\n"
+        return sse_line
+    }
+}

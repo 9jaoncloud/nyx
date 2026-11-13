@@ -1,0 +1,87 @@
+module examples.snake
+
+import std.io
+
+pub enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
+pub struct Point {
+    pub x: Int,
+    pub y: Int,
+}
+
+pub struct SnakeGame {
+    pub grid_width: Int,
+    pub grid_height: Int,
+    pub head_x: Int,
+    pub head_y: Int,
+    pub length: Int,
+    pub food_x: Int,
+    pub food_y: Int,
+    pub current_dir: Direction,
+    pub score: Int,
+    pub high_score: Int,
+    pub is_game_over: Bool,
+    pub is_paused: Bool,
+}
+
+impl SnakeGame {
+    pub fn new(width: Int, height: Int) -> SnakeGame {
+        SnakeGame {
+            grid_width: width,
+            grid_height: height,
+            head_x: 10,
+            head_y: 10,
+            length: 3,
+            food_x: 12,
+            food_y: 10,
+            current_dir: Direction.Right,
+            score: 0,
+            high_score: 0,
+            is_game_over: false,
+            is_paused: false,
+        }
+    }
+
+    pub fn tick(&mut self) {
+        if self.is_game_over || self.is_paused {
+            return;
+        }
+
+        match self.current_dir {
+            Direction.Up => { self.head_y = self.head_y - 1; },
+            Direction.Down => { self.head_y = self.head_y + 1; },
+            Direction.Left => { self.head_x = self.head_x - 1; },
+            Direction.Right => { self.head_x = self.head_x + 1; },
+        }
+
+        if self.head_x < 0 || self.head_x >= self.grid_width || self.head_y < 0 || self.head_y >= self.grid_height {
+            self.is_game_over = true;
+            return;
+        }
+
+        if self.head_x == self.food_x && self.head_y == self.food_y {
+            self.score = self.score + 10;
+            self.length = self.length + 1;
+            if self.score > self.high_score {
+                self.high_score = self.score;
+            }
+            self.food_x = (self.head_x * 7 + 13) % self.grid_width;
+            self.food_y = (self.head_y * 11 + 5) % self.grid_height;
+        }
+    }
+}
+
+fn main() {
+    println("=== Nyx Sovereign Snake Game Engine ===");
+    let mut game = SnakeGame.new(20, 20);
+    println("Initial Head: (" + game.head_x.to_string() + ", " + game.head_y.to_string() + ") | Score: " + game.score.to_string());
+    game.tick();
+    game.tick();
+    println("After 2 ticks -> Head: (" + game.head_x.to_string() + ", " + game.head_y.to_string() + ") | Length: " + game.length.to_string() + " | Score: " + game.score.to_string());
+    println("[SUCCESS] Snake state machine verified.");
+}

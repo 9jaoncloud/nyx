@@ -1,0 +1,104 @@
+module std.os.nyxos
+
+import std.crypto
+import std.fs
+import std.json
+
+// =========================================================================
+// NYXOS: DECLARATIVE, IMMUTABLE, CONTENT-ADDRESSED OPERATING SYSTEM ENGINE
+// Reproducible Derivations, Atomic Generations, & Transactional Rollbacks
+// =========================================================================
+
+pub struct StoreDerivation {
+    pub package_name: String,
+    pub version: String,
+    pub src_hash: String,
+    pub build_inputs: Vec<String>,
+    pub build_script: String,
+    pub output_hash: String
+}
+
+impl StoreDerivation {
+    pub fn compute_store_path(self: &StoreDerivation) -> String {
+        let input_repr = self.package_name + ":" + self.version + ":" + self.src_hash + ":" + self.build_script;
+        let derivation_hash = sha256_hex(input_repr);
+        let store_id = derivation_hash.substring(0, 32);
+        "/nyx/store/" + store_id + "-" + self.package_name + "-" + self.version
+    }
+}
+
+pub struct SystemServiceConfig {
+    pub name: String,
+    pub executable_path: String,
+    pub auto_restart: bool,
+    pub memory_limit_mb: u32,
+    pub sandboxed: bool
+}
+
+pub struct NyxOSSystemConfiguration {
+    pub hostname: String,
+    pub boot_kernel_version: String,
+    pub timezone: String,
+    pub packages: Vec<String>,
+    pub services: Vec<SystemServiceConfig>,
+    pub generation_number: u32,
+    pub timestamp_epoch: i64
+}
+
+impl NyxOSSystemConfiguration {
+    pub fn new_default(host: String) -> NyxOSSystemConfiguration {
+        NyxOSSystemConfiguration {
+            hostname: host,
+            boot_kernel_version: "6.12.18-nyx-sovereign",
+            timezone: "UTC",
+            packages: Vec.new(),
+            services: Vec.new(),
+            generation_number: 1,
+            timestamp_epoch: 1789900000
+        }
+    }
+
+    pub fn compute_generation_hash(self: &NyxOSSystemConfiguration) -> String {
+        let mut descriptor = self.hostname + ":" + self.boot_kernel_version + ":gen=" + (self.generation_number as String);
+        for p in self.packages.iter() {
+            descriptor = descriptor + ":" + *p;
+        }
+        sha256_hex(descriptor)
+    }
+}
+
+pub struct NyxOSGenerationManager {
+    pub active_generation: u32,
+    pub generations_history: Vec<NyxOSSystemConfiguration>,
+    pub store_root: String
+}
+
+impl NyxOSGenerationManager {
+    pub fn init() -> NyxOSGenerationManager {
+        NyxOSGenerationManager {
+            active_generation: 1,
+            generations_history: Vec.new(),
+            store_root: "/nyx/store"
+        }
+    }
+
+    pub fn build_and_switch_generation(self: &mut NyxOSGenerationManager, mut new_config: NyxOSSystemConfiguration) -> String {
+        let next_gen = self.active_generation + 1;
+        new_config.generation_number = next_gen;
+        let gen_hash = new_config.compute_generation_hash();
+        
+        self.generations_history.push(new_config);
+        self.active_generation = next_gen;
+        
+        // Atomically switch symlink /run/current-system -> /nyx/store/<gen_hash>-system
+        "/run/current-system -> " + self.store_root + "/" + gen_hash.substring(0, 32) + "-system-generation-" + (next_gen as String)
+    }
+
+    pub fn rollback_generation(self: &mut NyxOSGenerationManager) -> Result<String, String> {
+        if self.active_generation <= 1 {
+            return Result.Err("No previous generations available to rollback".to_string());
+        }
+        self.active_generation = self.active_generation - 1;
+        Result.Ok("Successfully rolled back to Generation " + (self.active_generation as String))
+    }
+}

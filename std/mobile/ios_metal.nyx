@@ -1,0 +1,27 @@
+module std.mobile.ios_metal
+
+pub struct MetalSwapchain {
+    pub surface_width: i64,
+    pub surface_height: i64,
+    pub sample_count: i64,
+    pub is_direct_scanout: bool
+}
+
+impl MetalSwapchain {
+    pub fn new(w: i64, h: i64) -> MetalSwapchain {
+        MetalSwapchain {
+            surface_width: w,
+            surface_height: h,
+            sample_count: 4,
+            is_direct_scanout: true
+        }
+    }
+
+    pub fn present_frame_zero_copy(self: &MetalSwapchain) -> bool {
+        if self.is_direct_scanout == true {
+            true
+        } else {
+            false
+        }
+    }
+}

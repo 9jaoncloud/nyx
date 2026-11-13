@@ -1,0 +1,229 @@
+module web
+
+import std.string
+import std.vec
+import std.option
+
+extern "C" {
+    fn nyx_wasm_dom_query(selector: *const u8) -> *mut void
+    fn nyx_wasm_canvas_get_context2d(canvas_id: *const u8) -> *mut void
+    fn nyx_wasm_fetch_get(url: *const u8) -> *mut void
+    fn nyx_wasm_storage_set(key: *const u8, val: *const u8)
+    fn nyx_wasm_storage_get(key: *const u8) -> *const u8
+}
+
+pub struct WebCanvas {
+    pub id: String,
+    pub width: i32,
+    pub height: i32,
+}
+
+impl WebCanvas {
+    pub fn new(id: String, width: i32, height: i32) -> WebCanvas {
+        WebCanvas { id, width, height }
+    }
+}
+
+pub struct WebGpuPipeline {
+    pub shader_code: String,
+    pub bind_group_layout_id: i32,
+}
+
+pub struct WebReport {
+    pub wasm_binary_size_bytes: i64,
+    pub simd128_enabled: Bool,
+    pub canvas_fps: f64,
+}
+
+/* ── Declarative Request Validation Engine ───────────────────────────────── */
+
+pub struct ValidationError {
+    pub field: String,
+    pub message: String,
+}
+
+pub struct ValidationResult {
+    pub is_valid: Bool,
+    pub errors: Vec<ValidationError>,
+}
+
+impl ValidationResult {
+    pub fn passes(&self) -> Bool {
+        self.is_valid
+    }
+
+    pub fn fails(&self) -> Bool {
+        !self.is_valid
+    }
+
+    pub fn first_error(&self, field: String) -> Option<String> {
+        let mut i: usize = 0;
+        while i < self.errors.len() {
+            if self.errors[i].field == field {
+                return Option.Some(self.errors[i].message.clone());
+            }
+            i = i + 1;
+        }
+        Option.None
+    }
+
+    pub fn to_json(&self) -> String {
+        let mut json = "{\"status\":422,\"errors\":{".to_string();
+        let mut i: usize = 0;
+        while i < self.errors.len() {
+            if i > 0 { json = json + ","; }
+            json = json + "\"" + self.errors[i].field + "\":[\"" + self.errors[i].message + "\"]";
+            i = i + 1;
+        }
+        json = json + "}}";
+        json
+    }
+}
+
+pub struct Validator {}
+
+impl Validator {
+    pub fn validate_field(field: String, val: String, rule: String) -> Option<String> {
+        if rule == "required" {
+            if val.len() == 0 {
+                return Option.Some("The " + field + " field is required.");
+            }
+        } else if rule == "email" {
+            if val.find("@") < 0 || val.find(".") < 0 {
+                return Option.Some("The " + field + " must be a valid email address.");
+            }
+        } else if rule == "numeric" {
+            let parsed = val.parse_int();
+            match parsed {
+                Option.Some(_) => {}
+                Option.None => return Option.Some("The " + field + " must be a number."),
+            }
+        } else if rule.starts_with("min:") {
+            let min_len_str = rule.slice(4, rule.len());
+            match min_len_str.parse_int() {
+                Option.Some(min_val) => {
+                    if (val.len() as i64) < min_val {
+                        return Option.Some("The " + field + " must be at least " + min_len_str + " characters.");
+                    }
+                }
+                Option.None => {}
+            }
+        } else if rule.starts_with("max:") {
+            let max_len_str = rule.slice(4, rule.len());
+            match max_len_str.parse_int() {
+                Option.Some(max_val) => {
+                    if (val.len() as i64) > max_val {
+                        return Option.Some("The " + field + " cannot exceed " + max_len_str + " characters.");
+                    }
+                }
+                Option.None => {}
+            }
+        }
+        Option.None
+    }
+
+    pub fn make(data: Vec<(String, String)>, rules: Vec<(String, String)>) -> ValidationResult {
+        let mut errors: Vec<ValidationError> = Vec.new();
+
+        let mut r: usize = 0;
+        while r < rules.len() {
+            let field_name = &rules[r].0;
+            let rule_chain = &rules[r].1;
+
+            // Find value
+            let mut field_val = "".to_string();
+            let mut d: usize = 0;
+            while d < data.len() {
+                if &data[d].0 == field_name {
+                    field_val = data[d].1.clone();
+                    break;
+                }
+                d = d + 1;
+            }
+
+            // Split rules by pipe '|'
+            let single_rules = rule_chain.split("|");
+            let mut s: usize = 0;
+            while s < single_rules.len() {
+                let err_opt = Validator.validate_field(field_name.clone(), field_val.clone(), single_rules[s].clone());
+                match err_opt {
+                    Option.Some(msg) => {
+                        errors.push(ValidationError { field: field_name.clone(), message: msg });
+                        break;
+                    }
+                    Option.None => {}
+                }
+                s = s + 1;
+            }
+            r = r + 1;
+        }
+
+        let is_valid = errors.len() == 0;
+        ValidationResult { is_valid, errors }
+    }
+}
+
+/* ── Native Server-Driven Reactive Component Responses ───────────────────── */
+
+pub enum HtmxSwap {
+    InnerHTML,
+    OuterHTML,
+    BeforeBegin,
+    AfterBegin,
+    BeforeEnd,
+    AfterEnd,
+    Delete,
+    None,
+}
+
+impl HtmxSwap {
+    pub fn to_header_val(&self) -> String {
+        match self {
+            HtmxSwap.InnerHTML => "innerHTML".to_string(),
+            HtmxSwap.OuterHTML => "outerHTML".to_string(),
+            HtmxSwap.BeforeBegin => "beforebegin".to_string(),
+            HtmxSwap.AfterBegin => "afterbegin".to_string(),
+            HtmxSwap.BeforeEnd => "beforeend".to_string(),
+            HtmxSwap.AfterEnd => "afterend".to_string(),
+            HtmxSwap.Delete => "delete".to_string(),
+            HtmxSwap.None => "none".to_string(),
+        }
+    }
+}
+
+pub struct HtmxResponse {
+    pub html_content: String,
+    pub target_selector: String,
+    pub swap_style: HtmxSwap,
+    pub trigger_event: String,
+}
+
+impl HtmxResponse {
+    pub fn new(html: String) -> HtmxResponse {
+        HtmxResponse {
+            html_content: html,
+            target_selector: "".to_string(),
+            swap_style: HtmxSwap.InnerHTML,
+            trigger_event: "".to_string(),
+        }
+    }
+
+    pub fn target(mut self, selector: String) -> HtmxResponse {
+        self.target_selector = selector;
+        self
+    }
+
+    pub fn swap(mut self, style: HtmxSwap) -> HtmxResponse {
+        self.swap_style = style;
+        self
+    }
+
+    pub fn trigger(mut self, event_name: String) -> HtmxResponse {
+        self.trigger_event = event_name;
+        self
+    }
+
+    pub fn render_html(&self) -> String {
+        self.html_content.clone()
+    }
+}

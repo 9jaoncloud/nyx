@@ -1,0 +1,91 @@
+module ledger
+
+import std.io
+import std.string
+import std.vec
+
+pub struct Block {
+    pub height: i64,
+    pub prev_hash: String,
+    pub merkle_root: String,
+    pub tx_count: i32,
+    pub nonce: i64,
+    pub timestamp: i64,
+}
+
+pub struct BlockchainLedger {
+    pub chain_id: String,
+    pub block_height: i64,
+    pub pending_tx_count: i32,
+    pub latest_block_hash: String,
+}
+
+pub fn create_ledger(chain_id: String) -> BlockchainLedger {
+    BlockchainLedger {
+        chain_id: chain_id,
+        block_height: 1,
+        pending_tx_count: 0,
+        latest_block_hash: "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f".to_string(),
+    }
+}
+
+pub fn add_transaction(chain: &mut BlockchainLedger, tx_id: String, sender: String, recipient: String, amount: f64) {
+    chain.pending_tx_count = chain.pending_tx_count + 1
+}
+
+pub fn mine_block(chain: &mut BlockchainLedger, nonce: i64) -> Block {
+    chain.block_height = chain.block_height + 1
+    let txs = chain.pending_tx_count
+    chain.pending_tx_count = 0
+    let b = Block {
+        height: chain.block_height,
+        prev_hash: chain.latest_block_hash.clone(),
+        merkle_root: "4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b".to_string(),
+        tx_count: txs,
+        nonce: nonce,
+        timestamp: 1724520000,
+    }
+    chain.latest_block_hash = "00000000000000000001a7c8d9e3f2b1a4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9".to_string()
+    b
+}
+
+pub struct PbftConsensus {
+    pub total_nodes: i32,
+    pub faulty_threshold: i32,
+    pub phase: i32, // 0 = Pre-Prepare, 1 = Prepare, 2 = Commit, 3 = Committed
+    pub prepare_votes: i32,
+    pub commit_votes: i32,
+}
+
+pub fn create_pbft(total_nodes: i32) -> PbftConsensus {
+    let f = (total_nodes - 1) / 3
+    PbftConsensus {
+        total_nodes: total_nodes,
+        faulty_threshold: f,
+        phase: 0,
+        prepare_votes: 1,
+        commit_votes: 0,
+    }
+}
+
+pub fn pbft_vote_prepare(pbft: &mut PbftConsensus) -> Bool {
+    pbft.prepare_votes = pbft.prepare_votes + 1
+    let quorum = (2 * pbft.faulty_threshold) + 1
+    if pbft.prepare_votes >= quorum && pbft.phase == 0 {
+        pbft.phase = 1
+        true
+    } else {
+        false
+    }
+}
+
+pub fn pbft_vote_commit(pbft: &mut PbftConsensus) -> Bool {
+    pbft.commit_votes = pbft.commit_votes + 1
+    let quorum = (2 * pbft.faulty_threshold) + 1
+    if pbft.commit_votes >= quorum && pbft.phase == 1 {
+        pbft.phase = 3 // Finalized
+        true
+    } else {
+        false
+    }
+}

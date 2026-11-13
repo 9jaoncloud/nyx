@@ -1,0 +1,179 @@
+// ============================================================================
+// Module: std.ui.material_ui
+// Purpose: Zero-GC Material Design 3 Component Framework & Vector Rasterizer
+// Specification: Material 3 (Material You) Design Tokens & Dynamic Theming
+// ============================================================================
+
+module material_ui
+
+import prelude.*
+
+// ----------------------------------------------------------------------------
+// 1. Material Design 3 Color Schemes & Elevation Tokens
+// ----------------------------------------------------------------------------
+
+pub struct ColorRGBA {
+    pub r: f32,
+    pub g: f32,
+    pub b: f32,
+    pub a: f32,
+}
+
+pub struct MaterialTheme {
+    pub primary: ColorRGBA,
+    pub on_primary: ColorRGBA,
+    pub primary_container: ColorRGBA,
+    pub on_primary_container: ColorRGBA,
+    
+    pub secondary: ColorRGBA,
+    pub on_secondary: ColorRGBA,
+    pub secondary_container: ColorRGBA,
+    pub on_secondary_container: ColorRGBA,
+    
+    pub surface: ColorRGBA,
+    pub on_surface: ColorRGBA,
+    pub surface_variant: ColorRGBA,
+    pub on_surface_variant: ColorRGBA,
+    
+    pub background: ColorRGBA,
+    pub on_background: ColorRGBA,
+    pub outline: ColorRGBA,
+    pub outline_variant: ColorRGBA,
+    
+    pub error: ColorRGBA,
+    pub on_error: ColorRGBA,
+    
+    pub is_dark_mode: bool,
+}
+
+pub enum MaterialElevation {
+    Level0, // Flat
+    Level1, // +1dp (Cards, TopAppBar)
+    Level2, // +3dp (Hovered Card, Floating Buttons)
+    Level3, // +6dp (Modals, Dialogs)
+    Level4, // +8dp (Nav Rail)
+    Level5, // +12dp (Popovers, Tooltips)
+}
+
+pub enum MaterialCornerRadius {
+    None,
+    ExtraSmall,
+    Small,
+    Medium,
+    Large,
+    ExtraLarge,
+    Full,
+}
+
+// ----------------------------------------------------------------------------
+// 2. Component Structures (Zero-Allocation Layout Nodes)
+// ----------------------------------------------------------------------------
+
+pub enum ComponentType {
+    ButtonFilled,
+    ButtonTonal,
+    ButtonOutlined,
+    ButtonText,
+    CardElevated,
+    CardOutlined,
+    TextField,
+    Switch,
+    Slider,
+    FloatingActionButton,
+    NavigationRail,
+    AppBar,
+}
+
+pub struct MaterialComponent {
+    pub comp_type: ComponentType,
+    pub x: f32,
+    pub y: f32,
+    pub width: f32,
+    pub height: f32,
+    pub elevation: MaterialElevation,
+    pub corner_radius: MaterialCornerRadius,
+    pub is_hovered: bool,
+    pub is_pressed: bool,
+    pub is_focused: bool,
+    pub is_disabled: bool,
+    
+    // Ripple & Animation State
+    pub ripple_x: f32,
+    pub ripple_y: f32,
+    pub ripple_progress: f32, // 0.0 -> 1.0
+    
+    // Content Buffer (Zero-Copy)
+    pub label: String,
+    pub state_value: f32, // For Slider/Switch
+}
+
+// ----------------------------------------------------------------------------
+// 3. Theme Initializers (Default Dark & Light Material 3)
+// ----------------------------------------------------------------------------
+
+pub fn material_create_dark_theme() -> MaterialTheme {
+    MaterialTheme {
+        is_dark_mode: true,
+        primary: ColorRGBA { r: 0.82, g: 0.77, b: 1.00, a: 1.0 },
+        on_primary: ColorRGBA { r: 0.22, g: 0.15, b: 0.42, a: 1.0 },
+        primary_container: ColorRGBA { r: 0.31, g: 0.24, b: 0.53, a: 1.0 },
+        on_primary_container: ColorRGBA { r: 0.91, g: 0.87, b: 1.00, a: 1.0 },
+        
+        secondary: ColorRGBA { r: 0.80, g: 0.78, b: 0.88, a: 1.0 },
+        on_secondary: ColorRGBA { r: 0.20, g: 0.18, b: 0.27, a: 1.0 },
+        secondary_container: ColorRGBA { r: 0.29, g: 0.27, b: 0.37, a: 1.0 },
+        on_secondary_container: ColorRGBA { r: 0.90, g: 0.88, b: 0.97, a: 1.0 },
+        
+        surface: ColorRGBA { r: 0.07, g: 0.09, b: 0.15, a: 1.0 },
+        on_surface: ColorRGBA { r: 0.91, g: 0.90, b: 0.94, a: 1.0 },
+        surface_variant: ColorRGBA { r: 0.11, g: 0.15, b: 0.24, a: 1.0 },
+        on_surface_variant: ColorRGBA { r: 0.79, g: 0.77, b: 0.84, a: 1.0 },
+        
+        background: ColorRGBA { r: 0.04, g: 0.06, b: 0.10, a: 1.0 },
+        on_background: ColorRGBA { r: 0.91, g: 0.90, b: 0.94, a: 1.0 },
+        outline: ColorRGBA { r: 0.58, g: 0.56, b: 0.63, a: 1.0 },
+        outline_variant: ColorRGBA { r: 0.27, g: 0.26, b: 0.31, a: 1.0 },
+        
+        error: ColorRGBA { r: 0.95, g: 0.55, b: 0.53, a: 1.0 },
+        on_error: ColorRGBA { r: 0.38, g: 0.00, b: 0.02, a: 1.0 },
+    }
+}
+
+// ----------------------------------------------------------------------------
+// 4. Rasterizer for Material 3 Primitives
+// ----------------------------------------------------------------------------
+
+pub fn render_material_card(
+    card: &MaterialComponent, 
+    theme: &MaterialTheme, 
+    framebuffer: &mut Vec<u32>, 
+    fb_width: usize, 
+    fb_height: usize
+) {
+    let x0 = card.x as usize
+    let y0 = card.y as usize
+    let x1 = (card.x + card.width) as usize
+    let y1 = (card.y + card.height) as usize
+    
+    let bg = if card.is_hovered {
+        &theme.primary_container
+    } else {
+        &theme.surface_variant
+    }
+    
+    let pixel_color: u32 = ((bg.a * 255.0) as u32 << 24) |
+                           ((bg.r * 255.0) as u32 << 16) |
+                           ((bg.g * 255.0) as u32 << 8)  |
+                           ((bg.b * 255.0) as u32)
+    
+    for y in y0..y1 {
+        if y >= fb_height { break }
+        for x in x0..x1 {
+            if x >= fb_width { break }
+            let idx = y * fb_width + x
+            if idx < framebuffer.len() {
+                framebuffer[idx] = pixel_color
+            }
+        }
+    }
+}

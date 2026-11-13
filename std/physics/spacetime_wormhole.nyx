@@ -1,0 +1,139 @@
+// ============================================================================
+// Module: std.physics.spacetime_wormhole
+// Package: @nyx/physics
+// Description: General Relativistic Morris-Thorne Traversable Spacetime Wormhole
+//              4D Metric Tensor, 4th-Order Runge-Kutta (RK4) Geodesic Integrator,
+//              Casimir Negative Energy Density, Human Tidal Survival Bounds &
+//              Relativistic Timespace Jump (Delta-T) Calculator.
+// Reference:   Morris, Thorne & Yurtsever, Phys. Rev. Lett. 61, 1446 (1988)
+// ============================================================================
+
+module std.physics.spacetime_wormhole
+
+import std.math
+
+pub const C_LIGHT_MPS: f64 = 299792458.0
+pub const G_NEWTON: f64 = 6.67430e-11
+pub const EARTH_G_MPS2: f64 = 9.80665
+
+pub struct WormholeMetricConfig {
+    pub throat_radius_b0_m: f64,     // Minimum throat radius b0 (meters)
+    pub redshift_phi0: f64,          // Gravitational redshift potential Phi0
+    pub external_distance_km: f64,   // External planetary/interstellar distance D
+    pub mouth_b_beta_v_c: f64,       // Relativistic velocity v/c used to time-shift Mouth B
+    pub time_shift_duration_yr: f64, // Duration of relativistic desynchronization
+}
+
+pub struct GeodesicStep {
+    pub proper_tau_s: f64,
+    pub coord_t_s: f64,
+    pub proper_l_m: f64,             // Proper radial coordinate l in (-L, +L)
+    pub circumferential_r_m: f64,    // r(l) = sqrt(b0^2 + l^2)
+    pub azimuth_phi_rad: f64,
+    pub embedding_z_m: f64,          // z(l) = b0 * asinh(l / b0)
+    pub exotic_rho_jm3: f64,         // Negative energy density at l
+    pub radial_tidal_g: f64,         // Tidal acceleration on 1.8m traveler in Earth g
+}
+
+impl WormholeMetricConfig {
+    pub fn new(b0_m: f64, ext_km: f64, beta_vc: f64, shift_yr: f64) -> WormholeMetricConfig {
+        return WormholeMetricConfig {
+            throat_radius_b0_m: b0_m,
+            redshift_phi0: 0.0,
+            external_distance_km: ext_km,
+            mouth_b_beta_v_c: beta_vc,
+            time_shift_duration_yr: shift_yr,
+        }
+    }
+
+    // Circumferential radius r(l) = sqrt(b0^2 + l^2)
+    pub fn radius_at_l(self: &WormholeMetricConfig, l_m: f64) -> f64 {
+        let b0 = self.throat_radius_b0_m
+        return math.sqrt((b0 * b0) + (l_m * l_m))
+    }
+
+    // Flamm Embedding Diagram vertical coordinate z(l) = b0 * asinh(l / b0)
+    pub fn embedding_z_at_l(self: &WormholeMetricConfig, l_m: f64) -> f64 {
+        let b0 = self.throat_radius_b0_m
+        return b0 * math.asinh(l_m / b0)
+    }
+
+    // Einstein Field Equation Exotic Matter (Casimir Negative Energy Density)
+    // rho(l) * c^2 = - (c^4 / (8 * pi * G)) * b0^2 / (b0^2 + l^2)^2  [Joules / m^3]
+    pub fn exotic_energy_density_jm3(self: &WormholeMetricConfig, l_m: f64) -> f64 {
+        let b0 = self.throat_radius_b0_m
+        let r2 = (b0 * b0) + (l_m * l_m)
+        let c2 = C_LIGHT_MPS * C_LIGHT_MPS
+        let c4 = c2 * c2
+        let prefactor = c4 / (8.0 * 3.141592653589793 * G_NEWTON)
+        return -prefactor * (b0 * b0) / (r2 * r2)
+    }
+
+    // Transverse Tidal Acceleration experienced by a 1.8m human crossing at velocity v_ms
+    // |Delta a| = (v^2 * b0^2 / (b0^2 + l^2)^2) * height_m
+    pub fn human_tidal_g(self: &WormholeMetricConfig, l_m: f64, transit_v_mps: f64) -> f64 {
+        let b0 = self.throat_radius_b0_m
+        let r2 = (b0 * b0) + (l_m * l_m)
+        let accel_mps2 = (transit_v_mps * transit_v_mps) * (b0 * b0) * 1.8 / (r2 * r2)
+        return accel_mps2 / EARTH_G_MPS2
+    }
+
+    // Relativistic Timespace Jump Delta-T (in seconds) between Mouth A and Mouth B
+    // Delta-T = T_duration * (1 - sqrt(1 - beta^2))
+    pub fn timespace_shift_seconds(self: &WormholeMetricConfig) -> f64 {
+        let beta = math.clamp(self.mouth_b_beta_v_c, 0.0, 0.9999)
+        let inv_gamma = math.sqrt(1.0 - (beta * beta))
+        let sec_per_yr = 31557600.0
+        return self.time_shift_duration_yr * sec_per_yr * (1.0 - inv_gamma)
+    }
+
+    //Integrates one 4th-Order Runge-Kutta (RK4) Geodesic Step for a traveler or photon
+    // crossing from Spot A (l < 0) through the Throat (l = 0) to Spot B (l > 0)
+    pub fn integrate_rk4_geodesic(
+        self: &WormholeMetricConfig,
+        l_curr: f64,
+        dl_dtau: f64,
+        phi_curr: f64,
+        impact_b: f64,
+        dtau: f64
+    ) -> GeodesicStep {
+        let b0 = self.throat_radius_b0_m
+
+        // Geodesic radial equation in Ellis-Bronnikov-Morris-Thorne metric (Phi'=0):
+        // d^2 l / dtau^2 = l * L_z^2 / (b0^2 + l^2)^2
+        let r2_1 = (b0 * b0) + (l_curr * l_curr)
+        let acc1 = l_curr * (impact_b * impact_b) / (r2_1 * r2_1)
+        let dphi1 = impact_b / r2_1
+
+        let l_mid1 = l_curr + 0.5 * dtau * dl_dtau
+        let v_mid1 = dl_dtau + 0.5 * dtau * acc1
+        let r2_2 = (b0 * b0) + (l_mid1 * l_mid1)
+        let acc2 = l_mid1 * (impact_b * impact_b) / (r2_2 * r2_2)
+        let dphi2 = impact_b / r2_2
+
+        let l_mid2 = l_curr + 0.5 * dtau * v_mid1
+        let v_mid2 = dl_dtau + 0.5 * dtau * acc2
+        let r2_3 = (b0 * b0) + (l_mid2 * l_mid2)
+        let acc3 = l_mid2 * (impact_b * impact_b) / (r2_3 * r2_3)
+        let dphi3 = impact_b / r2_3
+
+        let l_end = l_curr + dtau * v_mid2
+        let r2_4 = (b0 * b0) + (l_end * l_end)
+        let dphi4 = impact_b / r2_4
+
+        let l_next = l_curr + (dtau / 6.0) * (dl_dtau + 2.0 * v_mid1 + 2.0 * v_mid2 + (dl_dtau + dtau * acc3))
+        let phi_next = phi_curr + (dtau / 6.0) * (dphi1 + 2.0 * dphi2 + 2.0 * dphi3 + dphi4)
+
+        return GeodesicStep {
+            proper_tau_s: dtau,
+            coord_t_s: dtau,
+            proper_l_m: l_next,
+            circumferential_r_m: self.radius_at_l(l_next),
+            azimuth_phi_rad: phi_next,
+            embedding_z_m: self.embedding_z_at_l(l_next),
+            exotic_rho_jm3: self.exotic_energy_density_jm3(l_next),
+            radial_tidal_g: self.human_tidal_g(l_next, dl_dtau),
+        }
+    }
+}
+

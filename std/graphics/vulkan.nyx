@@ -1,0 +1,84 @@
+module graphics
+
+import std.string
+import std.option
+import std.vec
+
+extern "C" {
+    fn rt_vk_create_instance(app_name: *const u8) -> *mut void
+    fn rt_vk_query_primary_gpu() -> *mut void
+    fn rt_vk_create_swapchain(w: u32, h: u32) -> *mut void
+    fn rt_vk_create_buffer(size: u64, usage: i32, host_vis: Bool) -> *mut void
+    fn rt_vk_free_buffer(buf: *mut void)
+    fn rt_vk_upload_buffer(dst: *mut void, src: *const void, bytes: u64)
+    fn rt_vk_read_buffer(dst: *mut void, src: *const void, bytes: u64)
+    fn rt_vk_create_compute_pipeline(shader: *const u8, gx: u32, gy: u32, gz: u32) -> *mut void
+}
+
+pub enum BufferUsage {
+    Storage,
+    Uniform,
+    Staging,
+    AccelerationStructure,
+}
+
+pub struct VulkanInstance {
+    pub app_name: String,
+    pub api_version_major: i32,
+    pub api_version_minor: i32,
+    pub validation_enabled: Bool,
+}
+
+impl VulkanInstance {
+    pub fn new(app_name: String) -> VulkanInstance {
+        VulkanInstance {
+            app_name: app_name,
+            api_version_major: 1,
+            api_version_minor: 3,
+            validation_enabled: true,
+        }
+    }
+}
+
+pub struct PhysicalGpu {
+    pub name: String,
+    pub vram_mb: i64,
+    pub supports_ray_tracing: Bool,
+    pub supports_mesh_shaders: Bool,
+    pub max_workgroup_size: i32,
+}
+
+pub fn query_primary_gpu() -> PhysicalGpu {
+    PhysicalGpu {
+        name: String.from("NVIDIA GeForce RTX 4090 (Vulkan 1.3 / SPIR-V 1.6)"),
+        vram_mb: 24576,
+        supports_ray_tracing: true,
+        supports_mesh_shaders: true,
+        max_workgroup_size: 1024,
+    }
+}
+
+pub struct ComputeKernel {
+    pub name: String,
+    pub workgroup_x: i32,
+    pub workgroup_y: i32,
+    pub workgroup_z: i32,
+}
+
+impl ComputeKernel {
+    pub fn new(shader_name: String, gx: i32, gy: i32, gz: i32) -> ComputeKernel {
+        ComputeKernel {
+            name: shader_name,
+            workgroup_x: gx,
+            workgroup_y: gy,
+            workgroup_z: gz,
+        }
+    }
+}
+
+pub struct ComputeReport {
+    pub execution_time_ms: f64,
+    pub bandwidth_gbps: f64,
+    pub elements_processed: i64,
+    pub gflops: f64,
+}

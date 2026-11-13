@@ -1,0 +1,60 @@
+// @nyx/igbo - Official Asụsụ Igbo Localization & Transpiler Module
+// Standard Package: std.i18n.igbo
+// Author: Nyx Architecture Team (9jaonCloud Engineering)
+// Enables native Asụsụ Igbo keywords (with both diacritic & plain ASCII aliases) with zero compiler core modifications.
+
+import std.core.arena;
+import std.core.strict;
+
+pub struct IgboKeywordPair {
+    pub english: string,
+    pub igbo: string,
+    pub igbo_ascii: string,
+    pub category: string,
+    pub description_igbo: string,
+}
+
+// Complete standardized dictionary mapping English Nyx to Asụsụ Igbo
+pub fn get_igbo_keyword_table() -> [IgboKeywordPair; 25] {
+    return [
+        IgboKeywordPair { english: "fn", igbo: "ọrụ", igbo_ascii: "oru", category: "declaration", description_igbo: "Kọwaa ọrụ ọhụrụ ma ọ bụ task" },
+        IgboKeywordPair { english: "let", igbo: "ka", igbo_ascii: "ka", category: "binding", description_igbo: "Chekwaa ọnụọgụ ma ọ bụ okwu" },
+        IgboKeywordPair { english: "mut", igbo: "mgbanwe", igbo_ascii: "mgbanwe", category: "modifier", description_igbo: "Nye ikike ịgbanwe ọnụọgụ" },
+        IgboKeywordPair { english: "if", igbo: "ọbụrụ", igbo_ascii: "oburu", category: "control", description_igbo: "Lelee ọnọdụ tupu ị rụọ ọrụ" },
+        IgboKeywordPair { english: "else", igbo: "ọzọ", igbo_ascii: "ozo", category: "control", description_igbo: "Mee nke ọzọ ma ọ bụrụ na nke mbụ ezughị" },
+        IgboKeywordPair { english: "while", igbo: "mgbe", igbo_ascii: "mgbe", category: "control", description_igbo: "Megharia ọrụ mgbe ọnọdụ ahụ dị" },
+        IgboKeywordPair { english: "for", igbo: "maka", igbo_ascii: "maka", category: "control", description_igbo: "Nchịkọta ma ọ bụ lupu" },
+        IgboKeywordPair { english: "return", igbo: "nyeghachi", igbo_ascii: "nyeghachi", category: "control", description_igbo: "Weghachi azịza site na ọrụ" },
+        IgboKeywordPair { english: "struct", igbo: "nhazi", igbo_ascii: "nhazi", category: "type", description_igbo: "Hazie usoro data ma ọ bụ ihe" },
+        IgboKeywordPair { english: "impl", igbo: "mejuputa", igbo_ascii: "mejuputa", category: "type", description_igbo: "Tinye ọrụ n'ime nhazi" },
+        IgboKeywordPair { english: "match", igbo: "dakọọ", igbo_ascii: "dakoo", category: "pattern", description_igbo: "Lelee nhata ma ọ bụ ndakọrịta" },
+        IgboKeywordPair { english: "import", igbo: "bubata", igbo_ascii: "bubata", category: "module", description_igbo: "Bubata ọba akwụkwọ ma ọ bụ modulu" },
+        IgboKeywordPair { english: "pub", igbo: "ihuọha", igbo_ascii: "ihuoha", category: "visibility", description_igbo: "Mepere onye ọ bụla ịhụ" },
+        IgboKeywordPair { english: "true", igbo: "eziokwu", igbo_ascii: "eziokwu", category: "literal", description_igbo: "Eziokwu (1)" },
+        IgboKeywordPair { english: "false", igbo: "ụgha", igbo_ascii: "ugha", category: "literal", description_igbo: "Ụgha (0)" },
+        IgboKeywordPair { english: "null", igbo: "efu", igbo_ascii: "efu", category: "literal", description_igbo: "Ihe na-enweghị ihe ọ bụla" },
+        IgboKeywordPair { english: "async", igbo: "n'otu_oge", igbo_ascii: "n_otu_oge", category: "concurrency", description_igbo: "Ọrụ na-arụ n'otu oge na-echereghị" },
+        IgboKeywordPair { english: "await", igbo: "chere", igbo_ascii: "chere", category: "concurrency", description_igbo: "Chere nsonaazụ ọrụ" },
+        IgboKeywordPair { english: "self", igbo: "onwe_ya", igbo_ascii: "onwe_ya", category: "identifier", description_igbo: "Na-ezo aka n'otu nhazi ahụ" },
+        IgboKeywordPair { english: "region", igbo: "mpaghara", igbo_ascii: "mpaghara", category: "memory", description_igbo: "Mpaghara ebe nchekwa Zero-GC" },
+        IgboKeywordPair { english: "enum", igbo: "ụdị", igbo_ascii: "udi", category: "type", description_igbo: "Usoro aha ahọpụtara" },
+        IgboKeywordPair { english: "trait", igbo: "omume", igbo_ascii: "omume", category: "type", description_igbo: "Nkwekọrịta omume ọrụ (trait/interface)" },
+        IgboKeywordPair { english: "strict", igbo: "ike", igbo_ascii: "ike", category: "attribute", description_igbo: "Nchekwa kachasị elu" },
+        IgboKeywordPair { english: "gen", igbo: "ọgbọ", igbo_ascii: "ogbo", category: "memory", description_igbo: "Ntụaka ọgbọ nchekwa (generational pointer)" },
+        IgboKeywordPair { english: "conclude", igbo: "mezuo_ike", igbo_ascii: "mezuo_ike", category: "raii", description_igbo: "Mmecha iwu dị mkpa na-enweghị nkwụsị (Higher-RAII)" },
+    ];
+}
+
+// Convert Asụsụ Igbo Source Code to Canonical English Nyx
+pub fn transpile_igbo_to_english(region r: Arena, igbo_code: string) -> string {
+    let mut result = igbo_code;
+    let table = get_igbo_keyword_table();
+
+    for i in 0..table.len() {
+        let pair = table[i];
+        result = result.replace_word(pair.igbo, pair.english);
+        result = result.replace_word(pair.igbo_ascii, pair.english);
+    }
+
+    return result;
+}

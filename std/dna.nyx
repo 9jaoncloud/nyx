@@ -1,0 +1,17 @@
+// ============================================================================
+// Module: std.dna
+// Package: @nyx/dna
+// Description: Unified Package Entry for Nyx Synthetic DNA Storage SDK
+// ============================================================================
+
+module std.dna;
+
+pub import std.bio.dna_storage;
+
+pub fn get_version() -> String {
+    return "1.0.0";
+}
+
+pub fn get_description() -> String {
+    return "Nyx Synthetic DNA Digital Data Storage & Molecular Fountain Codec SDK";
+}

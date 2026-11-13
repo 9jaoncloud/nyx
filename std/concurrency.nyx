@@ -1,0 +1,68 @@
+module concurrency
+
+import prelude.*
+
+pub struct Nursery {
+    pub id: u64,
+    pub active_tasks: i32,
+    pub cancelled: Bool,
+}
+
+pub struct IsolateRegion {
+    pub region_id: u64,
+    pub bytes_allocated: usize,
+    pub capacity: usize,
+}
+
+pub struct IsolateChannel<T> {
+    pub channel_id: u64,
+    pub closed: Bool,
+}
+
+extern "C" {
+    fn nyx_nursery_open(region_ptr: *mut u8) -> *mut u8
+    fn nyx_nursery_spawn(nursery: *mut u8, task_fn: *mut u8, arg: *mut u8)
+    fn nyx_nursery_await_all(nursery: *mut u8) -> Bool
+    fn nyx_nursery_cancel(nursery: *mut u8)
+    fn nyx_nursery_close(nursery: *mut u8)
+
+    fn nyx_isolate_region_new(capacity: usize) -> *mut u8
+    fn nyx_isolate_region_alloc(region: *mut u8, size: usize) -> *mut u8
+    fn nyx_isolate_channel_new() -> *mut u8
+    fn nyx_isolate_channel_send(ch: *mut u8, region: *mut u8) -> Bool
+    fn nyx_isolate_channel_recv(ch: *mut u8) -> *mut u8
+    fn nyx_isolate_region_free(region: *mut u8)
+    fn nyx_isolate_channel_free(ch: *mut u8)
+}
+
+// Opens a structured nursery bound to the caller's lexical region
+pub fn open_nursery() -> *mut u8 {
+    nyx_nursery_open(0 as *mut u8)
+}
+
+// Spawns an async task bound deterministically to a nursery
+pub fn spawn_task(nursery: *mut u8, task_fn: *mut u8, arg: *mut u8) {
+    nyx_nursery_spawn(nursery, task_fn, arg)
+}
+
+// Awaits all child tasks in the nursery to complete (deterministic lifetime join)
+pub fn await_nursery(nursery: *mut u8) -> Bool {
+    let result = nyx_nursery_await_all(nursery)
+    nyx_nursery_close(nursery)
+    result
+}
+
+// Creates an isolated thread-local region for zero-copy lock-free transfer
+pub fn create_isolate(capacity: usize) -> *mut u8 {
+    nyx_isolate_region_new(capacity)
+}
+
+// Sends full single ownership of an entire isolate region to another thread (O(1) pointer swap)
+pub fn send_isolate(ch: *mut u8, region: *mut u8) -> Bool {
+    nyx_isolate_channel_send(ch, region)
+}
+
+// Receives full single ownership of an isolate region in the destination thread
+pub fn recv_isolate(ch: *mut u8) -> *mut u8 {
+    nyx_isolate_channel_recv(ch)
+}

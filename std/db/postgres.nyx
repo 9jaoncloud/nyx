@@ -1,0 +1,38 @@
+// Nyx Standard Library — @nyx/db/postgres
+// Production-Grade PostgreSQL Client Binding via libpq C-ABI
+
+module std.db.postgres
+
+extern "C" {
+    fn nyx_pg_connect(conn_str: *const u8) -> *mut u8
+    fn nyx_pg_disconnect(conn: *mut u8)
+    fn nyx_pg_query(conn: *mut u8, sql: *const u8) -> *mut u8
+    fn nyx_pg_get_value(res: *mut u8, row: i32, col: i32) -> *const u8
+    fn nyx_pg_clear_result(res: *mut u8)
+}
+
+pub struct PgConnection {
+    handle: *mut u8,
+    pub is_connected: bool,
+}
+
+impl PgConnection {
+    pub fn connect(conn_str: String) -> Option<PgConnection> {
+        let ptr = nyx_pg_connect(conn_str.as_ptr());
+        if ptr == null {
+            return Option.None;
+        }
+        Option.Some(PgConnection {
+            handle: ptr,
+            is_connected: true,
+        })
+    }
+
+    pub fn close(self: &mut PgConnection) {
+        if self.handle != null {
+            nyx_pg_disconnect(self.handle);
+            self.handle = null;
+            self.is_connected = false;
+        }
+    }
+}

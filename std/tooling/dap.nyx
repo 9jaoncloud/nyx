@@ -1,0 +1,73 @@
+module dap
+
+import std.io
+import std.string
+import std.vec
+
+pub struct Breakpoint {
+    pub id: i32,
+    pub source_file: String,
+    pub line: i32,
+    pub verified: Bool,
+}
+
+pub struct StackFrame {
+    pub frame_id: i32,
+    pub function_name: String,
+    pub source_file: String,
+    pub line: i32,
+    pub column: i32,
+}
+
+pub struct Variable {
+    pub name: String,
+    pub value: String,
+    pub type_name: String,
+}
+
+pub struct DapSession {
+    pub session_id: String,
+    pub state: i32, // 1 = Initialized, 2 = Running, 3 = Paused, 4 = Stepping, 5 = Terminated
+    pub active_thread_id: i32,
+    pub current_line: i32,
+    pub current_function: String,
+    pub stop_reason: String,
+    pub breakpoint_count: i32,
+}
+
+pub fn create_session(session_id: String) -> DapSession {
+    DapSession {
+        session_id: session_id,
+        state: 1,
+        active_thread_id: 1,
+        current_line: 1,
+        current_function: "main".to_string(),
+        stop_reason: "entry".to_string(),
+        breakpoint_count: 0,
+    }
+}
+
+pub fn set_breakpoint(sess: &mut DapSession, file: String, line: i32) -> Breakpoint {
+    sess.breakpoint_count = sess.breakpoint_count + 1
+    Breakpoint {
+        id: sess.breakpoint_count,
+        source_file: file,
+        line: line,
+        verified: true,
+    }
+}
+
+pub fn step_next(sess: &mut DapSession, next_line: i32, next_fn: String) {
+    sess.state = 4 // Stepping
+    sess.current_line = next_line
+    sess.current_function = next_fn
+    sess.stop_reason = "step".to_string()
+}
+
+pub fn create_variable(name: String, value: String, type_name: String) -> Variable {
+    Variable {
+        name: name,
+        value: value,
+        type_name: type_name,
+    }
+}

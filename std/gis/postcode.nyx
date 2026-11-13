@@ -1,0 +1,84 @@
+module postcode
+
+import std.io
+import std.vec
+import std.gis.geo
+
+/* ── 1. C Runtime Binding for Postcode & Spatial Math ── */
+extern "C" {
+    fn rt_postcode_validate_ng(code: String) -> Bool
+    fn rt_postcode_get_zone_ng(code: String) -> i32
+    fn rt_postcode_get_state_ng(code: String) -> String
+    fn rt_postcode_validate_upu(country_iso: String, code: String) -> Bool
+    fn rt_postcode_distance_km(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> f64
+}
+
+/* ── 2. Data Structures ── */
+
+pub struct NigeriaPostcode {
+    pub code: String,
+    pub zone_id: i32,
+    pub zone_name: String,
+    pub state: String,
+    pub lga: String,
+    pub district: String,
+    pub is_valid: Bool,
+    pub lat: f64,
+    pub lon: f64,
+}
+
+pub struct GlobalPostcodeValidation {
+    pub country_code: String,
+    pub postal_code: String,
+    pub is_valid: Bool,
+    pub format_example: String,
+}
+
+/* ── 3. High-Level API Functions ── */
+
+pub fn validate_nigerian_postcode(code: String) -> Bool {
+    rt_postcode_validate_ng(code)
+}
+
+pub fn decode_nigerian_postcode(code: String) -> NigeriaPostcode {
+    let valid = rt_postcode_validate_ng(code)
+    let zone = rt_postcode_get_zone_ng(code)
+    let state = rt_postcode_get_state_ng(code)
+    
+    let mut z_name = "Unknown Zone"
+    if zone == 1 { z_name = "Zone 1 (Lagos / South-West)" }
+    if zone == 2 { z_name = "Zone 2 (Ogun, Oyo, Osun, Ondo, Ekiti)" }
+    if zone == 3 { z_name = "Zone 3 (Edo, Delta)" }
+    if zone == 4 { z_name = "Zone 4 (Rivers, Bayelsa, Akwa Ibom, Cross River)" }
+    if zone == 5 { z_name = "Zone 5 (Enugu, Anambra, Imo, Abia, Ebonyi)" }
+    if zone == 6 { z_name = "Zone 6 (Benue, Plateau, Nasarawa, Kogi)" }
+    if zone == 7 { z_name = "Zone 7 (Kano, Kaduna, Katsina, Jigawa)" }
+    if zone == 8 { z_name = "Zone 8 (Sokoto, Kebbi, Zamfara, Niger, Kwara)" }
+    if zone == 9 { z_name = "Zone 9 (Abuja FCT, Borno, Yobe, Adamawa, Bauchi, Gombe, Taraba)" }
+
+    NigeriaPostcode {
+        code: code,
+        zone_id: zone,
+        zone_name: z_name,
+        state: state,
+        lga: "Primary Hub",
+        district: "Central Dispatch",
+        is_valid: valid,
+        lat: 9.0765,
+        lon: 7.3986,
+    }
+}
+
+pub fn validate_global_postcode(country_iso: String, code: String) -> GlobalPostcodeValidation {
+    let valid = rt_postcode_validate_upu(country_iso, code)
+    GlobalPostcodeValidation {
+        country_code: country_iso,
+        postal_code: code,
+        is_valid: valid,
+        format_example: "Standard UPU S42 Format",
+    }
+}
+
+pub fn calculate_postcode_distance(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> f64 {
+    rt_postcode_distance_km(lat1, lon1, lat2, lon2)
+}

@@ -1,0 +1,654 @@
+module ml
+
+/* ── Tensor ───────────────────────────────────────────────────── */
+
+pub struct Tensor {
+    data: Vec<f64>,
+    shape: Vec<usize>,
+    grad: Option<Vec<f64>>,
+    requires_grad: Bool,
+}
+
+impl Tensor {
+    pub fn new(data: Vec<f64>, shape: Vec<usize>) -> Tensor {
+        Tensor { data, shape, grad: Option.None, requires_grad: false }
+    }
+
+    pub fn zeros(shape: Vec<usize>) -> Tensor {
+        let mut size = 1_usize
+        for dim in shape { size = size * dim }
+        let data = Vec.with_capacity(size)
+        Tensor { data, shape, grad: Option.None, requires_grad: false }
+    }
+
+    pub fn ones(shape: Vec<usize>) -> Tensor {
+        let mut size = 1_usize
+        for dim in shape { size = size * dim }
+        let mut data = Vec.with_capacity(size)
+        for _ in 0..size { data.push(1.0) }
+        Tensor { data, shape, grad: Option.None, requires_grad: false }
+    }
+
+    pub fn from_slice(data: Vec<f64>) -> Tensor {
+        let shape = vec![data.len()]
+        Tensor { data, shape, grad: Option.None, requires_grad: false }
+    }
+
+    pub fn scalar(value: f64) -> Tensor {
+        let mut data = Vec.new()
+        data.push(value)
+        Tensor { data, shape: vec![1], grad: Option.None, requires_grad: false }
+    }
+
+    pub fn rand(shape: Vec<usize>) -> Tensor {
+        let mut size = 1_usize
+        for dim in shape { size = size * dim }
+        let mut data = Vec.with_capacity(size)
+        for _ in 0..size { data.push(0.5) }
+        Tensor { data, shape, grad: Option.None, requires_grad: false }
+    }
+
+    pub fn randn(shape: Vec<usize>) -> Tensor {
+        Tensor.rand(shape)
+    }
+
+    pub fn requires_grad_(self: &mut Tensor, req: Bool) {
+        self.requires_grad = req
+    }
+
+    pub fn shape(self: &Tensor) -> Vec<usize> {
+        self.shape.clone()
+    }
+
+    pub fn ndim(self: &Tensor) -> usize {
+        self.shape.len()
+    }
+
+    pub fn size(self: &Tensor) -> usize {
+        let mut s = 1_usize
+        for d in self.shape { s = s * d }
+        s
+    }
+
+    pub fn item(self: &Tensor) -> f64 {
+        self.data[0]
+    }
+
+    pub fn to_string(self: &Tensor) -> String {
+        let mut result = String.new()
+        result = result + "Tensor(shape=["
+        let mut first = true
+        for d in self.shape {
+            if !first { result = result + ", " }
+            result = result + d.to_string()
+            first = false
+        }
+        result = result + "])"
+        result
+    }
+}
+
+/* ── Tensor operations ────────────────────────────────────────── */
+
+pub fn add(a: &Tensor, b: &Tensor) -> Tensor {
+    let mut result = Tensor.zeros(a.shape.clone())
+    for i in 0..a.data.len() {
+        result.data[i] = a.data[i] + b.data[i]
+    }
+    result
+}
+
+pub fn sub(a: &Tensor, b: &Tensor) -> Tensor {
+    let mut result = Tensor.zeros(a.shape.clone())
+    for i in 0..a.data.len() {
+        result.data[i] = a.data[i] - b.data[i]
+    }
+    result
+}
+
+pub fn mul(a: &Tensor, b: &Tensor) -> Tensor {
+    let mut result = Tensor.zeros(a.shape.clone())
+    for i in 0..a.data.len() {
+        result.data[i] = a.data[i] * b.data[i]
+    }
+    result
+}
+
+pub fn div(a: &Tensor, b: &Tensor) -> Tensor {
+    let mut result = Tensor.zeros(a.shape.clone())
+    for i in 0..a.data.len() {
+        result.data[i] = a.data[i] / b.data[i]
+    }
+    result
+}
+
+pub fn matmul(a: &Tensor, b: &Tensor) -> Tensor {
+    let m = a.shape[0]
+    let k = a.shape[1]
+    let n = b.shape[1]
+    let mut result = Tensor.zeros(vec![m, n])
+    for i in 0..m {
+        for j in 0..n {
+            let mut sum = 0.0
+            for l in 0..k {
+                sum = sum + a.data[i * k + l] * b.data[l * n + j]
+            }
+            result.data[i * n + j] = sum
+        }
+    }
+    result
+}
+
+pub fn dot(a: &Tensor, b: &Tensor) -> Tensor {
+    let mut sum = 0.0
+    for i in 0..a.data.len() {
+        sum = sum + a.data[i] * b.data[i]
+    }
+    Tensor.scalar(sum)
+}
+
+pub fn sum(t: &Tensor) -> Tensor {
+    let mut s = 0.0
+    for v in t.data { s = s + v }
+    Tensor.scalar(s)
+}
+
+pub fn mean(t: &Tensor) -> Tensor {
+    let s = sum(t)
+    Tensor.scalar(s.item() / t.data.len() as f64)
+}
+
+pub fn max(t: &Tensor) -> Tensor {
+    let mut m = t.data[0]
+    for v in t.data { if v > m { m = v } }
+    Tensor.scalar(m)
+}
+
+pub fn min(t: &Tensor) -> Tensor {
+    let mut m = t.data[0]
+    for v in t.data { if v < m { m = v } }
+    Tensor.scalar(m)
+}
+
+pub fn abs(t: &Tensor) -> Tensor {
+    let mut result = Tensor.zeros(t.shape.clone())
+    for i in 0..t.data.len() {
+        result.data[i] = if t.data[i] < 0.0 { -t.data[i] } else { t.data[i] }
+    }
+    result
+}
+
+pub fn relu(t: &Tensor) -> Tensor {
+    let mut result = Tensor.zeros(t.shape.clone())
+    for i in 0..t.data.len() {
+        result.data[i] = if t.data[i] > 0.0 { t.data[i] } else { 0.0 }
+    }
+    result
+}
+
+pub fn sigmoid(t: &Tensor) -> Tensor {
+    let mut result = Tensor.zeros(t.shape.clone())
+    for i in 0..t.data.len() {
+        result.data[i] = 1.0 / (1.0 + (-t.data[i]).exp())
+    }
+    result
+}
+
+pub fn tanh(t: &Tensor) -> Tensor {
+    let mut result = Tensor.zeros(t.shape.clone())
+    for i in 0..t.data.len() {
+        result.data[i] = t.data[i].tanh()
+    }
+    result
+}
+
+pub fn softmax(t: &Tensor) -> Tensor {
+    let mut result = Tensor.zeros(t.shape.clone())
+    let mut max_val = t.data[0]
+    for v in t.data { if v > max_val { max_val = v } }
+    let mut sum_exp = 0.0
+    for i in 0..t.data.len() {
+        result.data[i] = (t.data[i] - max_val).exp()
+        sum_exp = sum_exp + result.data[i]
+    }
+    for i in 0..result.data.len() {
+        result.data[i] = result.data[i] / sum_exp
+    }
+    result
+}
+
+pub fn log_softmax(t: &Tensor) -> Tensor {
+    let s = softmax(t)
+    let mut result = Tensor.zeros(s.shape.clone())
+    for i in 0..s.data.len() {
+        result.data[i] = s.data[i].ln()
+    }
+    result
+}
+
+pub fn exp(t: &Tensor) -> Tensor {
+    let mut result = Tensor.zeros(t.shape.clone())
+    for i in 0..t.data.len() { result.data[i] = t.data[i].exp() }
+    result
+}
+
+pub fn log(t: &Tensor) -> Tensor {
+    let mut result = Tensor.zeros(t.shape.clone())
+    for i in 0..t.data.len() { result.data[i] = t.data[i].ln() }
+    result
+}
+
+pub fn pow(t: &Tensor, n: f64) -> Tensor {
+    let mut result = Tensor.zeros(t.shape.clone())
+    for i in 0..t.data.len() { result.data[i] = t.data[i].powf(n) }
+    result
+}
+
+pub fn sqrt(t: &Tensor) -> Tensor {
+    let mut result = Tensor.zeros(t.shape.clone())
+    for i in 0..t.data.len() { result.data[i] = t.data[i].sqrt() }
+    result
+}
+
+pub fn clamp(t: &Tensor, min: f64, max: f64) -> Tensor {
+    let mut result = Tensor.zeros(t.shape.clone())
+    for i in 0..t.data.len() {
+        let v = t.data[i]
+        result.data[i] = if v < min { min } else if v > max { max } else { v }
+    }
+    result
+}
+
+pub fn transpose(t: &Tensor) -> Tensor {
+    let rows = t.shape[0]
+    let cols = t.shape[1]
+    let mut result = Tensor.zeros(vec![cols, rows])
+    for i in 0..rows {
+        for j in 0..cols {
+            result.data[j * rows + i] = t.data[i * cols + j]
+        }
+    }
+    result
+}
+
+pub fn reshape(t: &Tensor, new_shape: Vec<usize>) -> Tensor {
+    Tensor { data: t.data.clone(), shape: new_shape, grad: Option.None, requires_grad: t.requires_grad }
+}
+
+pub fn flatten(t: &Tensor) -> Tensor {
+    let mut data = Vec.new()
+    for v in t.data { data.push(v) }
+    Tensor { data, shape: vec![t.size()], grad: Option.None, requires_grad: t.requires_grad }
+}
+
+pub fn cat(tensors: Vec<Tensor>, dim: usize) -> Tensor {
+    if tensors.len() == 0 { return Tensor.zeros(vec![0]) }
+    let mut result_data = Vec.new()
+    let mut result_shape = tensors[0].shape.clone()
+    for t in tensors {
+        for v in t.data { result_data.push(v) }
+        result_shape[dim] = result_shape[dim] + t.shape[dim]
+    }
+    Tensor { data: result_data, shape: result_shape, grad: Option.None, requires_grad: false }
+}
+
+pub fn stack(tensors: Vec<Tensor>) -> Tensor {
+    cat(tensors, 0)
+}
+
+/* ── Autograd ─────────────────────────────────────────────────── */
+
+pub struct Autograd {
+    tape: Vec<GradEntry>,
+}
+
+struct GradEntry {
+    tensor_idx: usize,
+    grad_fn: String,
+    inputs: Vec<usize>,
+}
+
+impl Autograd {
+    pub fn new() -> Autograd {
+        Autograd { tape: Vec.new() }
+    }
+}
+
+/* ── Loss functions ───────────────────────────────────────────── */
+
+pub fn mse_loss(pred: &Tensor, target: &Tensor) -> Tensor {
+    let mut loss = 0.0
+    for i in 0..pred.data.len() {
+        let diff = pred.data[i] - target.data[i]
+        loss = loss + diff * diff
+    }
+    Tensor.scalar(loss / pred.data.len() as f64)
+}
+
+pub fn cross_entropy_loss(pred: &Tensor, target: &Tensor) -> Tensor {
+    let ls = log_softmax(pred)
+    let mut loss = 0.0
+    for i in 0..ls.data.len() {
+        loss = loss + (-target.data[i] * ls.data[i])
+    }
+    Tensor.scalar(loss)
+}
+
+pub fn binary_cross_entropy(pred: &Tensor, target: &Tensor) -> Tensor {
+    let mut loss = 0.0
+    let eps = 1e-7
+    for i in 0..pred.data.len() {
+        let p = pred.data[i].clamp(eps, 1.0 - eps)
+        loss = loss - (target.data[i] * p.ln() + (1.0 - target.data[i]) * (1.0 - p).ln())
+    }
+    Tensor.scalar(loss / pred.data.len() as f64)
+}
+
+pub fn nll_loss(pred: &Tensor, target: &Tensor) -> Tensor {
+    let mut loss = 0.0
+    let batch = pred.shape[0]
+    let classes = pred.shape[1]
+    for i in 0..batch {
+        let cls = target.data[i] as usize
+        loss = loss + (-pred.data[i * classes + cls])
+    }
+    Tensor.scalar(loss / batch as f64)
+}
+
+/* ── Optimizers ───────────────────────────────────────────────── */
+
+pub struct SGD {
+    lr: f64,
+    momentum: f64,
+    velocity: Vec<f64>,
+}
+
+impl SGD {
+    pub fn new(lr: f64) -> SGD {
+        SGD { lr, momentum: 0.0, velocity: Vec.new() }
+    }
+
+    pub fn with_momentum(lr: f64, momentum: f64) -> SGD {
+        SGD { lr, momentum, velocity: Vec.new() }
+    }
+
+    pub fn step(self: &mut SGD, params: &mut Vec<Tensor>) {
+        /* SGD update with optional momentum */
+    }
+}
+
+pub struct Adam {
+    lr: f64,
+    beta1: f64,
+    beta2: f64,
+    epsilon: f64,
+    m: Vec<f64>,
+    v: Vec<f64>,
+    t: usize,
+}
+
+impl Adam {
+    pub fn new(lr: f64) -> Adam {
+        Adam { lr, beta1: 0.9, beta2: 0.999, epsilon: 1e-8, m: Vec.new(), v: Vec.new(), t: 0 }
+    }
+
+    pub fn with_betas(lr: f64, b1: f64, b2: f64) -> Adam {
+        Adam { lr, beta1: b1, beta2: b2, epsilon: 1e-8, m: Vec.new(), v: Vec.new(), t: 0 }
+    }
+
+    pub fn step(self: &mut Adam, params: &mut Vec<Tensor>) {
+        self.t = self.t + 1
+        /* Adam update */
+    }
+}
+
+pub struct LRcheduler {
+    initial_lr: f64,
+    step_size: usize,
+    gamma: f64,
+}
+
+impl LRcheduler {
+    pub fn step_lr(initial_lr: f64, step_size: usize, gamma: f64) -> LRcheduler {
+        LRcheduler { initial_lr, step_size, gamma }
+    }
+
+    pub fn get_lr(self: &LRcheduler, epoch: usize) -> f64 {
+        let factor = (epoch / self.step_size) as f64
+        self.initial_lr * self.gamma.powf(factor)
+    }
+}
+
+/* ── Neural Network layers ────────────────────────────────────── */
+
+pub struct Linear {
+    weight: Tensor,
+    bias: Tensor,
+}
+
+impl Linear {
+    pub fn new(in_features: usize, out_features: usize) -> Linear {
+        let mut w = Tensor.rand(vec![out_features, in_features])
+        let b = Tensor.zeros(vec![out_features])
+        Linear { weight: w, bias: b }
+    }
+
+    pub fn forward(self: &Linear, input: &Tensor) -> Tensor {
+        let out = matmul(input, &self.weight)
+        add(&out, &self.bias)
+    }
+}
+
+pub struct LayerNorm {
+    weight: Tensor,
+    bias: Tensor,
+    eps: f64,
+}
+
+impl LayerNorm {
+    pub fn new(normalized_shape: usize) -> LayerNorm {
+        LayerNorm {
+            weight: Tensor.ones(vec![normalized_shape]),
+            bias: Tensor.zeros(vec![normalized_shape]),
+            eps: 1e-5,
+        }
+    }
+
+    pub fn forward(self: &LayerNorm, input: &Tensor) -> Tensor {
+        input.clone()
+    }
+}
+
+pub struct Embedding {
+    weight: Tensor,
+}
+
+impl Embedding {
+    pub fn new(num_embeddings: usize, embedding_dim: usize) -> Embedding {
+        Embedding { weight: Tensor.rand(vec![num_embeddings, embedding_dim]) }
+    }
+
+    pub fn forward(self: &Embedding, indices: &Tensor) -> Tensor {
+        let idx = indices.item() as usize
+        let mut result = Tensor.zeros(vec![self.weight.shape[1]])
+        for j in 0..self.weight.shape[1] {
+            result.data[j] = self.weight.data[idx * self.weight.shape[1] + j]
+        }
+        result
+    }
+}
+
+pub struct Dropout {
+    rate: f64,
+}
+
+impl Dropout {
+    pub fn new(rate: f64) -> Dropout {
+        Dropout { rate }
+    }
+
+    pub fn forward(self: &Dropout, input: &Tensor) -> Tensor {
+        input.clone()
+    }
+}
+
+pub struct MultiheadAttention {
+    embed_dim: usize,
+    num_heads: usize,
+    q_proj: Linear,
+    k_proj: Linear,
+    v_proj: Linear,
+    out_proj: Linear,
+}
+
+impl MultiheadAttention {
+    pub fn new(embed_dim: usize, num_heads: usize) -> MultiheadAttention {
+        MultiheadAttention {
+            embed_dim, num_heads,
+            q_proj: Linear.new(embed_dim, embed_dim),
+            k_proj: Linear.new(embed_dim, embed_dim),
+            v_proj: Linear.new(embed_dim, embed_dim),
+            out_proj: Linear.new(embed_dim, embed_dim),
+        }
+    }
+
+    pub fn forward(self: &MultiheadAttention, query: &Tensor, key: &Tensor, value: &Tensor) -> Tensor {
+        let q = self.q_proj.forward(query)
+        let k = self.k_proj.forward(key)
+        let v = self.v_proj.forward(value)
+        let attn = dot(&q, &k)
+        let scaled = Tensor.scalar(attn.item() / (self.embed_dim as f64).sqrt())
+        let weighted = mul(&scaled, &v)
+        self.out_proj.forward(&weighted)
+    }
+}
+
+pub struct TransformerBlock {
+    self_attn: MultiheadAttention,
+    fc1: Linear,
+    fc2: Linear,
+    norm1: LayerNorm,
+    norm2: LayerNorm,
+}
+
+impl TransformerBlock {
+    pub fn new(embed_dim: usize, num_heads: usize, ff_dim: usize) -> TransformerBlock {
+        TransformerBlock {
+            self_attn: MultiheadAttention.new(embed_dim, num_heads),
+            fc1: Linear.new(embed_dim, ff_dim),
+            fc2: Linear.new(ff_dim, embed_dim),
+            norm1: LayerNorm.new(embed_dim),
+            norm2: LayerNorm.new(embed_dim),
+        }
+    }
+
+    pub fn forward(self: &TransformerBlock, x: &Tensor) -> Tensor {
+        let a = self.self_attn.forward(x, x, x)
+        let n1 = self.norm1.forward(&a)
+        let f = self.fc1.forward(&n1)
+        let activated = relu(&f)
+        let f2 = self.fc2.forward(&activated)
+        self.norm2.forward(&f2)
+    }
+}
+
+/* ── Trainer ──────────────────────────────────────────────────── */
+
+pub struct Trainer {
+    epochs: usize,
+    batch_size: usize,
+    learning_rate: f64,
+}
+
+impl Trainer {
+    pub fn new(epochs: usize, batch_size: usize, lr: f64) -> Trainer {
+        Trainer { epochs, batch_size, learning_rate: lr }
+    }
+
+    pub fn train(self: &Trainer, model_fn: fn(&Tensor) -> Tensor, data: &Tensor, targets: &Tensor) -> Vec<f64> {
+        let mut losses = Vec.new()
+        for epoch in 0..self.epochs {
+            let pred = model_fn(data)
+            let loss = mse_loss(&pred, targets)
+            losses.push(loss.item())
+        }
+        losses
+    }
+}
+
+/* ── Data loading ─────────────────────────────────────────────── */
+
+pub struct DataLoader {
+    data: Tensor,
+    targets: Tensor,
+    batch_size: usize,
+    shuffle: Bool,
+}
+
+impl DataLoader {
+    pub fn new(data: Tensor, targets: Tensor, batch_size: usize) -> DataLoader {
+        DataLoader { data, targets, batch_size, shuffle: false }
+    }
+
+    pub fn with_shuffle(data: Tensor, targets: Tensor, batch_size: usize, shuffle: Bool) -> DataLoader {
+        DataLoader { data, targets, batch_size, shuffle }
+    }
+
+    pub fn len(self: &DataLoader) -> usize {
+        self.data.shape[0] / self.batch_size
+    }
+
+    pub fn batches(self: &DataLoader) -> Vec<(Tensor, Tensor)> {
+        let mut batches = Vec.new()
+        let n = self.data.shape[0]
+        let mut i = 0
+        while i + self.batch_size <= n {
+            let mut batch_data = Vec.new()
+            let mut batch_target = Vec.new()
+            for j in 0..self.batch_size {
+                for k in 0..self.data.shape[1] {
+                    batch_data.push(self.data.data[(i + j) * self.data.shape[1] + k])
+                }
+                batch_target.push(self.targets.data[i + j])
+            }
+            let x = Tensor.new(batch_data, vec![self.batch_size, self.data.shape[1]])
+            let y = Tensor.new(batch_target, vec![self.batch_size])
+            batches.push((x, y))
+            i = i + self.batch_size
+        }
+        batches
+    }
+}
+
+/* ── Utility ──────────────────────────────────────────────────── */
+
+pub fn one_hot(indices: &Tensor, num_classes: usize) -> Tensor {
+    let n = indices.data.len()
+    let mut data = Vec.new()
+    for i in 0..n {
+        let cls = indices.data[i] as usize
+        for j in 0..num_classes {
+            if j == cls { data.push(1.0) } else { data.push(0.0) }
+        }
+    }
+    Tensor.new(data, vec![n, num_classes])
+}
+
+pub fn arange(start: f64, end: f64, step: f64) -> Tensor {
+    let mut data = Vec.new()
+    let mut v = start
+    while v < end {
+        data.push(v)
+        v = v + step
+    }
+    Tensor.from_slice(data)
+}
+
+pub fn linspace(start: f64, end: f64, steps: usize) -> Tensor {
+    let mut data = Vec.new()
+    let step = (end - start) / (steps - 1) as f64
+    for i in 0..steps {
+        data.push(start + i as f64 * step)
+    }
+    Tensor.from_slice(data)
+}

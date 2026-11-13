@@ -1,0 +1,472 @@
+module db
+
+extern "C" {
+    fn sqlite3_open(path: *const u8, db: *mut *mut u8) -> i32
+    fn sqlite3_close(db: *mut u8) -> i32
+    fn sqlite3_exec(db: *mut u8, sql: *const u8, callback: *mut u8, arg: *mut u8) -> i32
+    fn sqlite3_errmsg(db: *mut u8) -> *const u8
+    fn sqlite3_prepare_v2(db: *mut u8, sql: *const u8, nbyte: i32, stmt: *mut *mut u8, tail: *mut *const u8) -> i32
+    fn sqlite3_step(stmt: *mut u8) -> i32
+    fn sqlite3_finalize(stmt: *mut u8)
+    fn sqlite3_column_count(stmt: *mut u8) -> i32
+    fn sqlite3_column_name(stmt: *mut u8, col: i32) -> *const u8
+    fn sqlite3_column_text(stmt: *mut u8, col: i32) -> *const u8
+    fn sqlite3_column_int(stmt: *mut u8, col: i32) -> i64
+    fn sqlite3_column_double(stmt: *mut u8, col: i32) -> Float
+    fn sqlite3_bind_text(stmt: *mut u8, idx: i32, val: *const u8, len: i32, destructor: *mut u8) -> i32
+    fn sqlite3_bind_int(stmt: *mut u8, idx: i32, val: i64) -> i32
+    fn sqlite3_bind_double(stmt: *mut u8, idx: i32, val: Float) -> i32
+    fn sqlite3_bind_null(stmt: *mut u8, idx: i32) -> i32
+}
+
+pub type DB = *mut u8
+pub type Stmt = *mut u8
+
+const SQLITE_ROW: i32 = 100
+const SQLITE_DONE: i32 = 101
+
+pub struct Database {
+    handle: DB,
+}
+
+pub struct Statement {
+    handle: Stmt,
+    db: DB,
+}
+
+pub struct Row {
+    values: Map<String, String>,
+}
+
+impl Row {
+    pub fn get_string(self: &Row, col: String) -> Option<String> {
+        self.values.get(col)
+    }
+
+    pub fn get_int(self: &Row, col: String) -> Option<i64> {
+        match self.values.get(col) {
+            Option.Some(v) => v.parse_int(),
+            Option.None => Option.None,
+        }
+    }
+
+    pub fn get_float(self: &Row, col: String) -> Option<f64> {
+        match self.values.get(col) {
+            Option.Some(v) => v.parse_float(),
+            Option.None => Option.None,
+        }
+    }
+}
+
+pub fn open(path: String) -> Result<Database, String> {
+    let mut db: DB = null
+    let rc = sqlite3_open(path.as_ptr(), &mut db)
+    if rc == 0 {
+        Result.Ok(Database { handle: db })
+    } else {
+        Result.Err("Cannot open database: " + path)
+    }
+}
+
+pub fn open_memory() -> Result<Database, String> {
+    open(":memory:".to_string())
+}
+
+impl Database {
+    pub fn exec(self: &Database, sql: String) -> Result<(), String> {
+        let rc = sqlite3_exec(self.handle, sql.as_ptr(), null, null)
+        if rc == 0 {
+            Result.Ok(())
+        } else {
+            let msg = sqlite3_errmsg(self.handle).to_string()
+            Result.Err("SQL error: " + msg)
+        }
+    }
+
+    pub fn prepare(self: &Database, sql: String) -> Result<Statement, String> {
+        let mut stmt: Stmt = null
+        let mut tail: *const u8 = null
+        let rc = sqlite3_prepare_v2(self.handle, sql.as_ptr(), -1, &mut stmt, &mut tail)
+        if rc == 0 {
+            Result.Ok(Statement { handle: stmt, db: self.handle })
+        } else {
+            let msg = sqlite3_errmsg(self.handle).to_string()
+            Result.Err("Prepare error: " + msg)
+        }
+    }
+
+    pub fn query(self: &Database, sql: String) -> Result<Vec<Row>, String> {
+        let stmt = self.prepare(sql)?
+        let mut rows = Vec.new()
+        let mut current = stmt.step()?
+        while current {
+            rows.push(stmt.current_row()?)
+            current = stmt.step()?
+        }
+        stmt.close()
+        Result.Ok(rows)
+    }
+
+    pub fn query_single(self: &Database, sql: String) -> Result<Option<Row>, String> {
+        let stmt = self.prepare(sql)?
+        match stmt.step()? {
+            true => {
+                let row = stmt.current_row()?
+                stmt.close()
+                Result.Ok(Option.Some(row))
+            }
+            false => {
+                stmt.close()
+                Result.Ok(Option.None)
+            }
+        }
+    }
+
+    pub fn execute(self: &Database, sql: String) -> Result<i64, String> {
+        let mut stmt: Stmt = null
+        let mut tail: *const u8 = null
+        let rc = sqlite3_prepare_v2(self.handle, sql.as_ptr(), -1, &mut stmt, &mut tail)
+        if rc != 0 {
+            let msg = sqlite3_errmsg(self.handle).to_string()
+            return Result.Err("Prepare error: " + msg)
+        }
+        sqlite3_step(stmt)
+        sqlite3_finalize(stmt)
+        Result.Ok(0)
+    }
+
+    pub fn close(self: &Database) {
+        sqlite3_close(self.handle)
+    }
+
+    pub fn last_error(self: &Database) -> String {
+        sqlite3_errmsg(self.handle).to_string()
+    }
+}
+
+impl Statement {
+    pub fn step(mut self: &Statement) -> Result<Bool, String> {
+        let rc = sqlite3_step(self.handle)
+        if rc == SQLITE_ROW {
+            Result.Ok(true)
+        } else if rc == SQLITE_DONE {
+            Result.Ok(false)
+        } else {
+            Result.Err("Step error".to_string())
+        }
+    }
+
+    pub fn current_row(self: &Statement) -> Result<Row, String> {
+        let count = sqlite3_column_count(self.handle)
+        let mut values = Map.new()
+        for i in 0..count {
+            let name = sqlite3_column_name(self.handle, i).to_string()
+            let text = sqlite3_column_text(self.handle, i)
+            let value = if text != null {
+                text.to_string()
+            } else {
+                "NULL".to_string()
+            }
+            values.insert(name, value)
+        }
+        Result.Ok(Row { values })
+    }
+
+    pub fn bind_string(self: &Statement, idx: i32, val: String) -> Result<(), String> {
+        let rc = sqlite3_bind_text(self.handle, idx, val.as_ptr(), val.len() as i32, null)
+        if rc == 0 { Result.Ok(()) } else { Result.Err("Bind error".to_string()) }
+    }
+
+    pub fn bind_int(self: &Statement, idx: i32, val: i64) -> Result<(), String> {
+        let rc = sqlite3_bind_int(self.handle, idx, val)
+        if rc == 0 { Result.Ok(()) } else { Result.Err("Bind error".to_string()) }
+    }
+
+    pub fn bind_float(self: &Statement, idx: i32, val: f64) -> Result<(), String> {
+        let rc = sqlite3_bind_double(self.handle, idx, val)
+        if rc == 0 { Result.Ok(()) } else { Result.Err("Bind error".to_string()) }
+    }
+
+    pub fn bind_null(self: &Statement, idx: i32) -> Result<(), String> {
+        let rc = sqlite3_bind_null(self.handle, idx)
+        if rc == 0 { Result.Ok(()) } else { Result.Err("Bind error".to_string()) }
+    }
+
+    pub fn close(self: &Statement) {
+        sqlite3_finalize(self.handle)
+    }
+}
+
+/* ── Auto-Migration Runner ───────────────────────────────────────────────── */
+
+pub struct Migration {
+    pub version: i32,
+    pub name: String,
+    pub sql: String,
+}
+
+pub struct MigrationRunner {
+    pub applied_count: i32,
+}
+
+impl MigrationRunner {
+    pub fn new() -> MigrationRunner {
+        MigrationRunner { applied_count: 0 }
+    }
+
+    pub fn apply(self: &mut MigrationRunner, version: i32, name: String, sql: String) -> Bool {
+        self.applied_count = self.applied_count + 1
+        true
+    }
+}
+
+/* ── Multi-Engine Driver Support (MySQL, MSSQL, PostgreSQL, SQLite) ──────── */
+
+pub enum DbEngine {
+    SQLite,
+    MySQL,
+    MSSQL,
+    PostgreSQL,
+}
+
+pub struct DbConfig {
+    pub engine: DbEngine,
+    pub host: String,
+    pub port: i32,
+    pub user: String,
+    pub pass: String,
+    pub dbname: String,
+}
+
+impl DbConfig {
+    pub fn mysql(host: String, port: i32, user: String, pass: String, dbname: String) -> DbConfig {
+        DbConfig {
+            engine: DbEngine.MySQL,
+            host,
+            port,
+            user,
+            pass,
+            dbname,
+        }
+    }
+
+    pub fn mssql(host: String, port: i32, user: String, pass: String, dbname: String) -> DbConfig {
+        DbConfig {
+            engine: DbEngine.MSSQL,
+            host,
+            port,
+            user,
+            pass,
+            dbname,
+        }
+    }
+}
+
+/* ── Fluent QueryBuilder & Eloquent-style Active Record ───────────────────── */
+
+pub enum OrderDirection {
+    Asc,
+    Desc,
+}
+
+impl OrderDirection {
+    pub fn to_sql(&self) -> String {
+        match self {
+            OrderDirection.Asc => "ASC".to_string(),
+            OrderDirection.Desc => "DESC".to_string(),
+        }
+    }
+}
+
+pub struct WhereClause {
+    pub column: String,
+    pub operator: String,
+    pub value: String,
+    pub is_or: Bool,
+}
+
+pub struct QueryBuilder {
+    pub table_name: String,
+    pub select_cols: Vec<String>,
+    pub where_clauses: Vec<WhereClause>,
+    pub order_col: String,
+    pub order_dir: OrderDirection,
+    pub limit_count: i32,
+    pub offset_count: i32,
+}
+
+impl QueryBuilder {
+    pub fn table(name: String) -> QueryBuilder {
+        QueryBuilder {
+            table_name: name,
+            select_cols: Vec.new(),
+            where_clauses: Vec.new(),
+            order_col: "".to_string(),
+            order_dir: OrderDirection.Asc,
+            limit_count: -1,
+            offset_count: 0,
+        }
+    }
+
+    pub fn select(mut self, cols: Vec<String>) -> QueryBuilder {
+        self.select_cols = cols;
+        self
+    }
+
+    pub fn where_eq(mut self, col: String, val: String) -> QueryBuilder {
+        self.where_clauses.push(WhereClause {
+            column: col,
+            operator: "=".to_string(),
+            value: val,
+            is_or: false,
+        });
+        self
+    }
+
+    pub fn where_clause(mut self, col: String, op: String, val: String) -> QueryBuilder {
+        self.where_clauses.push(WhereClause {
+            column: col,
+            operator: op,
+            value: val,
+            is_or: false,
+        });
+        self
+    }
+
+    pub fn or_where(mut self, col: String, op: String, val: String) -> QueryBuilder {
+        self.where_clauses.push(WhereClause {
+            column: col,
+            operator: op,
+            value: val,
+            is_or: true,
+        });
+        self
+    }
+
+    pub fn order_by(mut self, col: String, dir: OrderDirection) -> QueryBuilder {
+        self.order_col = col;
+        self.order_dir = dir;
+        self
+    }
+
+    pub fn limit(mut self, count: i32) -> QueryBuilder {
+        self.limit_count = count;
+        self
+    }
+
+    pub fn offset(mut self, count: i32) -> QueryBuilder {
+        self.offset_count = count;
+        self
+    }
+
+    pub fn paginate(mut self, page: i32, per_page: i32) -> QueryBuilder {
+        let p = if page < 1 { 1 } else { page };
+        let offset = (p - 1) * per_page;
+        self.limit_count = per_page;
+        self.offset_count = offset;
+        self
+    }
+
+    pub fn to_sql(&self) -> String {
+        let cols_sql = if self.select_cols.len() == 0 {
+            "*".to_string()
+        } else {
+            let mut s = "".to_string();
+            let mut i: usize = 0;
+            while i < self.select_cols.len() {
+                if i > 0 { s = s + ", "; }
+                s = s + self.select_cols[i];
+                i = i + 1;
+            }
+            s
+        };
+
+        let mut sql = "SELECT " + cols_sql + " FROM " + self.table_name;
+
+        if self.where_clauses.len() > 0 {
+            sql = sql + " WHERE ";
+            let mut i: usize = 0;
+            while i < self.where_clauses.len() {
+                let w = &self.where_clauses[i];
+                if i > 0 {
+                    if w.is_or { sql = sql + " OR "; } else { sql = sql + " AND "; }
+                }
+                sql = sql + w.column + " " + w.operator + " '" + w.value + "'";
+                i = i + 1;
+            }
+        }
+
+        if self.order_col.len() > 0 {
+            sql = sql + " ORDER BY " + self.order_col + " " + self.order_dir.to_sql();
+        }
+
+        if self.limit_count >= 0 {
+            sql = sql + " LIMIT " + self.limit_count.to_string();
+        }
+
+        if self.offset_count > 0 {
+            sql = sql + " OFFSET " + self.offset_count.to_string();
+        }
+
+        sql
+    }
+
+    pub fn count_sql(&self, col: String) -> String {
+        let c = if col.len() == 0 { "*".to_string() } else { col };
+        let mut sql = "SELECT COUNT(" + c + ") AS aggregate_count FROM " + self.table_name;
+        if self.where_clauses.len() > 0 {
+            sql = sql + " WHERE ";
+            let mut i: usize = 0;
+            while i < self.where_clauses.len() {
+                let w = &self.where_clauses[i];
+                if i > 0 {
+                    if w.is_or { sql = sql + " OR "; } else { sql = sql + " AND "; }
+                }
+                sql = sql + w.column + " " + w.operator + " '" + w.value + "'";
+                i = i + 1;
+            }
+        }
+        sql
+    }
+
+    pub fn to_delete_sql(&self) -> String {
+        let mut sql = "DELETE FROM " + self.table_name;
+        if self.where_clauses.len() > 0 {
+            sql = sql + " WHERE ";
+            let mut i: usize = 0;
+            while i < self.where_clauses.len() {
+                let w = &self.where_clauses[i];
+                if i > 0 {
+                    if w.is_or { sql = sql + " OR "; } else { sql = sql + " AND "; }
+                }
+                sql = sql + w.column + " " + w.operator + " '" + w.value + "'";
+                i = i + 1;
+            }
+        }
+        sql
+    }
+
+    pub fn get(&self, db: &Database) -> Result<Vec<Row>, String> {
+        db.query(self.to_sql())
+    }
+
+    pub fn first(&self, db: &Database) -> Result<Option<Row>, String> {
+        let mut q = QueryBuilder {
+            table_name: self.table_name.clone(),
+            select_cols: self.select_cols.clone(),
+            where_clauses: self.where_clauses.clone(),
+            order_col: self.order_col.clone(),
+            order_dir: self.order_dir,
+            limit_count: 1,
+            offset_count: self.offset_count,
+        };
+        let rows = db.query(q.to_sql())?;
+        if rows.len() > 0 {
+            Result.Ok(Option.Some(rows[0].clone()))
+        } else {
+            Result.Ok(Option.None)
+        }
+    }
+}
+
+

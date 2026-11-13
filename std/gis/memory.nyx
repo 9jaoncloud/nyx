@@ -1,0 +1,71 @@
+module memory
+
+import std.io
+import std.vec
+import std.map
+import std.gis.geo
+
+pub struct SpatialMemoryEntity {
+    pub memory_id: String,
+    pub agent_id: String,
+    pub location: geo.Point,
+    pub category: String,
+    pub content: String,
+    pub timestamp: i64,
+}
+
+impl SpatialMemoryEntity {
+    pub fn new(id: String, agent_id: String, lat: f64, lon: f64, category: String, text: String, time_ms: i64) -> SpatialMemoryEntity {
+        SpatialMemoryEntity {
+            memory_id: id,
+            agent_id: agent_id,
+            location: geo.Point.new(lat, lon),
+            category: category,
+            content: text,
+            timestamp: time_ms,
+        }
+    }
+}
+
+pub struct SpatialAgentMemoryStore {
+    pub store_name: String,
+    pub memories: Vec<SpatialMemoryEntity>,
+}
+
+impl SpatialAgentMemoryStore {
+    pub fn new(name: String) -> SpatialAgentMemoryStore {
+        SpatialAgentMemoryStore {
+            store_name: name,
+            memories: Vec.new(),
+        }
+    }
+
+    pub fn insert_memory(self: &mut SpatialAgentMemoryStore, mem: SpatialMemoryEntity) {
+        self.memories.push(mem)
+    }
+
+    // Spatial Memory Query: Find memories within radius_km of agent location
+    pub fn recall_nearby_memories(self: &SpatialAgentMemoryStore, agent_pos: &geo.Point, radius_km: f64) -> Vec<SpatialMemoryEntity> {
+        let mut results = Vec.new()
+        for i in 0..self.memories.len() {
+            let m = self.memories.get(i)
+            let dist = agent_pos.distance_to_km(&m.location)
+            if dist <= radius_km {
+                results.push(m.clone())
+            }
+        }
+        results
+    }
+
+    // Query spatial memories by category & agent_id
+    pub fn recall_by_agent_and_category(self: &SpatialAgentMemoryStore, agent_id: String, category: String) -> Vec<SpatialMemoryEntity> {
+        let mut results = Vec.new()
+        for i in 0..self.memories.len() {
+            let m = self.memories.get(i)
+            if m.agent_id == agent_id && m.category == category {
+                results.push(m.clone())
+            }
+        }
+        results
+    }
+}

@@ -1,0 +1,43 @@
+/**
+ * @file std/avionics/watchdog.nyx
+ * @brief Sub-Microsecond Hardware Cycle Watchdogs & Fail-Safe Regions for Flying Cars & Avionics
+ * @author Simeon Bala (9jaoncloud@gmail.com)
+ * @copyright (c) 2026 9jaonCloud Engineering. All Rights Reserved.
+ */
+
+module avionics.watchdog
+
+pub enum FailSafeAction {
+    RegionRewind,
+    HoldActuators,
+    BallisticDescent,
+}
+
+pub struct HardwareWatchdog {
+    pub max_cycles: u64,
+    pub start_cycles: u64,
+    pub action: FailSafeAction,
+    pub is_armed: Bool,
+}
+
+impl HardwareWatchdog {
+    pub fn arm(max_cycles: u64, action: FailSafeAction) -> HardwareWatchdog {
+        HardwareWatchdog {
+            max_cycles: max_cycles,
+            start_cycles: 0,
+            action: action,
+            is_armed: true,
+        }
+    }
+
+    pub fn check_budget(self: &HardwareWatchdog, current_cycles: u64) -> Bool {
+        if !self.is_armed {
+            return true;
+        }
+        (current_cycles - self.start_cycles) <= self.max_cycles
+    }
+
+    pub fn disarm(self: &mut HardwareWatchdog) {
+        self.is_armed = false;
+    }
+}

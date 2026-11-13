@@ -1,0 +1,61 @@
+// @nyx/yoruba - Official Yorùbá Language Localization & Transpiler Module
+// Standard Package: std.i18n.yoruba
+// Author: Nyx Architecture Team (9jaonCloud Engineering)
+// Enables native Yorùbá keywords (with both tone-marked & plain ASCII aliases) with zero compiler core modifications.
+
+import std.core.arena;
+import std.core.strict;
+
+pub struct YorubaKeywordPair {
+    pub english: string,
+    pub yoruba: string,
+    pub yoruba_ascii: string,
+    pub category: string,
+    pub description_yoruba: string,
+}
+
+// Complete standardized dictionary mapping English Nyx to Yorùbá
+pub fn get_yoruba_keyword_table() -> [YorubaKeywordPair; 25] {
+    return [
+        YorubaKeywordPair { english: "fn", yoruba: "iṣẹ", yoruba_ascii: "ise", category: "declaration", description_yoruba: "Pese iṣẹ tabi task tuntun" },
+        YorubaKeywordPair { english: "let", yoruba: "jẹki", yoruba_ascii: "jeki", category: "binding", description_yoruba: "Fi orukọ ati iye pamọ (variable)" },
+        YorubaKeywordPair { english: "mut", yoruba: "ayipada", yoruba_ascii: "ayipada", category: "modifier", description_yoruba: "Gba laaye lati yi iye pada" },
+        YorubaKeywordPair { english: "if", yoruba: "ti", yoruba_ascii: "ti", category: "control", description_yoruba: "Ṣayẹwo ipo ṣaaju ki o to ṣiṣẹ" },
+        YorubaKeywordPair { english: "else", yoruba: "bibẹkọ", yoruba_ascii: "bibeko", category: "control", description_yoruba: "Igbese miaran ti ipo akọkọ ko ba pe" },
+        YorubaKeywordPair { english: "while", yoruba: "nigbati", yoruba_ascii: "nigbati", category: "control", description_yoruba: "Tun ṣe iṣẹ nigba ti ipo ba wa" },
+        YorubaKeywordPair { english: "for", yoruba: "fun", yoruba_ascii: "fun", category: "control", description_yoruba: "Kika ọna tabi lupu" },
+        YorubaKeywordPair { english: "return", yoruba: "pada", yoruba_ascii: "pada", category: "control", description_yoruba: "Da idahun pada lati inu iṣẹ" },
+        YorubaKeywordPair { english: "struct", yoruba: "eto", yoruba_ascii: "eto", category: "type", description_yoruba: "Ṣeto akojọpọ data tabi eto" },
+        YorubaKeywordPair { english: "impl", yoruba: "ṣe", yoruba_ascii: "se", category: "type", description_yoruba: "Fi awọn iṣẹ sinu eto" },
+        YorubaKeywordPair { english: "match", yoruba: "bamu", yoruba_ascii: "bamu", category: "pattern", description_yoruba: "Ṣayẹwo ibamu aṣayan" },
+        YorubaKeywordPair { english: "import", yoruba: "wọle", yoruba_ascii: "wole", category: "module", description_yoruba: "Mu dọki tabi ile-iṣẹ wa" },
+        YorubaKeywordPair { english: "pub", yoruba: "gbangba", yoruba_ascii: "gbangba", category: "visibility", description_yoruba: "Ṣiṣi fun gbogbo eniyan lati ri" },
+        YorubaKeywordPair { english: "true", yoruba: "otitọ", yoruba_ascii: "otito", category: "literal", description_yoruba: "Otitọ (1)" },
+        YorubaKeywordPair { english: "false", yoruba: "irọ", yoruba_ascii: "iro", category: "literal", description_yoruba: "Irọ tabi eke (0)" },
+        YorubaKeywordPair { english: "null", yoruba: "ofo", yoruba_ascii: "ofo", category: "literal", description_yoruba: "Ofo tabi aisi nkankan" },
+        YorubaKeywordPair { english: "async", yoruba: "lapapọ", yoruba_ascii: "lapapo", category: "concurrency", description_yoruba: "Iṣẹ ti ko duro de ẹlomiran" },
+        YorubaKeywordPair { english: "await", yoruba: "duro", yoruba_ascii: "duro", category: "concurrency", description_yoruba: "Duro fun abajade iṣẹ" },
+        YorubaKeywordPair { english: "self", yoruba: "ara_rẹ", yoruba_ascii: "ara_re", category: "identifier", description_yoruba: "Ntọka si eto ti o wa ninu rẹ" },
+        YorubaKeywordPair { english: "region", yoruba: "agbegbe", yoruba_ascii: "agbegbe", category: "memory", description_yoruba: "Agbegbe iṣiro Zero-GC to yara" },
+        YorubaKeywordPair { english: "enum", yoruba: "orisi", yoruba_ascii: "orisi", category: "type", description_yoruba: "Akojọpọ awọn orukọ ti a yan" },
+        YorubaKeywordPair { english: "trait", yoruba: "iwa", yoruba_ascii: "iwa", category: "type", description_yoruba: "Ihuwasi tabi adehun iṣẹ (interface)" },
+        YorubaKeywordPair { english: "strict", yoruba: "muna", yoruba_ascii: "muna", category: "attribute", description_yoruba: "Idaabobo to muna doko" },
+        YorubaKeywordPair { english: "gen", yoruba: "iran", yoruba_ascii: "iran", category: "memory", description_yoruba: "Itọkasi iran (generational reference)" },
+        YorubaKeywordPair { english: "conclude", yoruba: "pari_dandan", yoruba_ascii: "pari_dandan", category: "raii", description_yoruba: "Ipari aṣẹ ti ko gbọdọ ju silẹ laisi pipe (Higher-RAII)" },
+    ];
+}
+
+// Convert Yorùbá Source Code to Canonical English Nyx
+pub fn transpile_yoruba_to_english(region r: Arena, yoruba_code: string) -> string {
+    let mut result = yoruba_code;
+    let table = get_yoruba_keyword_table();
+
+    for i in 0..table.len() {
+        let pair = table[i];
+        // Support both unicode tone-marked and plain ASCII keywords
+        result = result.replace_word(pair.yoruba, pair.english);
+        result = result.replace_word(pair.yoruba_ascii, pair.english);
+    }
+
+    return result;
+}

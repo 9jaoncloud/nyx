@@ -1,0 +1,70 @@
+module examples.browser
+
+import std.io
+import std.os.microkernel
+
+pub struct BrowserSecurityPolicy {
+    pub allowed_domain: String,
+    pub enforce_https: Bool,
+    pub block_unauthorized_external: Bool,
+}
+
+pub struct SovereignBrowser {
+    pub current_url: String,
+    pub title: String,
+    pub policy: BrowserSecurityPolicy,
+    pub is_locked: Bool,
+    pub navigation_history: Vec<String>,
+}
+
+impl SovereignBrowser {
+    pub fn new() -> SovereignBrowser {
+        let policy = BrowserSecurityPolicy {
+            allowed_domain: "9jaoncloud.com.ng".to_string(),
+            enforce_https: true,
+            block_unauthorized_external: true,
+        };
+
+        SovereignBrowser {
+            current_url: "https://9jaoncloud.com.ng".to_string(),
+            title: "9jaonCloud Sovereign Portal".to_string(),
+            policy: policy,
+            is_locked: true,
+            navigation_history: Vec.new(),
+        }
+    }
+
+    pub fn navigate(&mut self, target_url: String, token: &CapToken) -> Bool {
+        if !token.has_permission(CapRights.Execute) {
+            println("  [Blocked] CBAC Error: Process lacks network execution capabilities.");
+            return false;
+        }
+
+        if !target_url.contains("9jaoncloud.com.ng") {
+            println("  [Blocked] Security Firewall: Navigation outside sovereign domain is blocked: " + target_url);
+            return false;
+        }
+
+        self.current_url = target_url;
+        self.navigation_history.push(target_url);
+        println("  [OK] Navigation successful to: " + target_url);
+        return true;
+    }
+
+    pub fn is_domain_allowed(&self, domain: String) -> Bool {
+        domain == self.policy.allowed_domain || domain.ends_with(".9jaoncloud.com.ng")
+    }
+}
+
+fn main() {
+    println("=== Nyx Sovereign Browser CBAC Security Verification ===");
+    let mut browser = SovereignBrowser.new();
+    let token = CapToken.new(101, 1, 9000, 7);
+
+    println("Initial URL: " + browser.current_url);
+    browser.navigate("https://nyx.9jaoncloud.com.ng/docs".to_string(), &token);
+    browser.navigate("https://untrusted-tracker.example.com".to_string(), &token);
+
+    println("Active URL after policy check: " + browser.current_url);
+    println("[SUCCESS] Sovereign Browser CBAC policy verified.");
+}

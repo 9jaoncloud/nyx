@@ -1,0 +1,550 @@
+module std.finance.kinetic_echo_wave;
+
+// ============================================================================
+// NYX STANDARD LIBRARY: SOVEREIGN KINETIC-ECHO & PHASE-LOCKED WAVE ENGINE
+// Module: std/finance/kinetic_echo_wave.nyx
+//
+// Mathematical Synthesis of:
+//   1. Phase-Space Wave Bifurcation Gate (Super-Critical Travelling Impulse
+//      vs. Sub-Critical Damped Standing-Wave Cavity via Normalized Drift
+//      & Kaufman Efficiency Ratio).
+//   2. Sovereign Kinetic-Echo Wave (SKEW):
+//      - Mode A (Kinetic-Absorption): 24-bar structural impulse (>= 2.4 ATR)
+//        pulling back into the 38.2% to 78.6% Fibonacci Golden Zone with an
+//        institutional absorption wick (>= 0.28 ATR) + causal Savitzky-Golay
+//        quadratic acceleration ignition.
+//      - Mode B (Liquidity-Echo Truncation - LETW): Wave A sweeps a prior
+//        structural extreme, Wave B bounces, and Wave C ("The Echo")
+//        truncates inside the EMA-21 value zone without breaking Wave A,
+//        confirming institutional order-book exhaustion.
+//   3. Phase-Locked Bifurcated Wave (SPBW):
+//      - Harmonizes Super-Critical Travelling Waves (SKEW + LETW) with
+//        Sub-Critical Standing-Wave 5-Point 3-Drive Wolfe Cavities when
+//        drift collapses (< 0.45 ATR).
+//   4. Causal Savitzky-Golay Polynomial Kinematics:
+//      - Zero-lag local quadratic filter estimating instantaneous velocity
+//        a_1(t) and causal acceleration delta_v = a_1(t) - a_1(t-1).
+//   5. Dynamic Wave Ratchet:
+//      - Intrabar-safe Breakeven lock (+0.20R after +1.15R excursion) and
+//        2-bar structural swing ratchet after +1.75R toward a 3.0R-3.2R target.
+// ============================================================================
+
+struct KineticWaveSignal {
+    direction: int,           // 1 = BUY, -1 = SELL, 0 = FLAT
+    archetype_code: int,      // 1 = SKEW_ABSORPTION, 2 = LETW_TRUNCATION, 3 = SPBW_WOLFE_CAVITY
+    phase_regime: int,        // 1 = SUPER_CRITICAL_TRAVELLING, 2 = SUB_CRITICAL_CAVITY, 0 = NEUTRAL
+    confidence: f64,          // [0.0, 1.0] composite wave quality score
+    entry_price: f64,
+    stop_loss: f64,
+    take_profit: f64,
+    risk_reward: f64,
+    sg_velocity: f64,         // Normalized Savitzky-Golay velocity (a1 / ATR)
+    sg_acceleration: f64,     // Normalized Savitzky-Golay acceleration (da1 / ATR)
+    efficiency_ratio: f64,    // 20-bar Kaufman Efficiency Ratio [0.0, 1.0]
+    fib_retracement: f64      // Pullback retracement depth within the active wave
+}
+
+struct KineticEchoWaveConfig {
+    min_impulse_atr: f64,     // Default: 2.40 ATR for 24-bar impulse
+    min_er_travelling: f64,   // Default: 0.16 Kaufman ER for travelling wave
+    min_drift_atr: f64,       // Default: 0.45 ATR 8-bar EMA50 drift for bifurcation
+    min_wick_atr: f64,        // Default: 0.28 ATR institutional absorption wick
+    fib_zone_low: f64,        // Default: 0.35 (35.0% retracement)
+    fib_zone_high: f64,       // Default: 0.786 (78.6% retracement)
+    target_rr_skew: f64,      // Default: 3.20R for Kinetic-Absorption
+    target_rr_letw: f64,      // Default: 2.80R for Liquidity-Echo Truncation
+    target_rr_wolfe: f64,     // Default: 2.50R for Sub-Critical Wolfe Cavity
+    allow_subcritical_wolfe: bool
+}
+
+fn default_kinetic_wave_config(allow_wolfe: bool) -> KineticEchoWaveConfig {
+    return KineticEchoWaveConfig {
+        min_impulse_atr: 2.40,
+        min_er_travelling: 0.16,
+        min_drift_atr: 0.45,
+        min_wick_atr: 0.28,
+        fib_zone_low: 0.35,
+        fib_zone_high: 0.786,
+        target_rr_skew: 3.20,
+        target_rr_letw: 2.80,
+        target_rr_wolfe: 2.50,
+        allow_subcritical_wolfe: allow_wolfe
+    };
+}
+
+fn abs_f64(val: f64) -> f64 {
+    if val < 0.0 {
+        return -val;
+    }
+    return val;
+}
+
+fn max_f64(a: f64, b: f64) -> f64 {
+    if a > b {
+        return a;
+    }
+    return b;
+}
+
+fn min_f64(a: f64, b: f64) -> f64 {
+    if a < b {
+        return a;
+    }
+    return b;
+}
+
+fn clamp_f64(val: f64, lo: f64, hi: f64) -> f64 {
+    if val < lo {
+        return lo;
+    }
+    if val > hi {
+        return hi;
+    }
+    return val;
+}
+
+// ============================================================================
+// CAUSAL SAVITZKY-GOLAY POLYNOMIAL KINEMATICS (5-Bar Causal Window)
+// Fits a local linear/quadratic trend slope over the last 5 closed bars
+// y(u) where u in {-2, -1, 0, +1, +2} and computes instantaneous velocity
+// a_1(t) and causal acceleration delta_v = a_1(t) - a_1(t-1).
+// ============================================================================
+fn compute_causal_sg_velocity(
+    c_m4: f64,
+    c_m3: f64,
+    c_m2: f64,
+    c_m1: f64,
+    c_0: f64
+) -> f64 {
+    // Exact least-squares first derivative over 5 equispaced points:
+    // a_1 = (-2*c_m4 - 1*c_m3 + 0*c_m2 + 1*c_m1 + 2*c_0) / 10.0
+    let num = (-2.0 * c_m4) - c_m3 + c_m1 + (2.0 * c_0);
+    return num / 10.0;
+}
+
+fn compute_causal_sg_acceleration(
+    c_m5: f64,
+    c_m4: f64,
+    c_m3: f64,
+    c_m2: f64,
+    c_m1: f64,
+    c_0: f64
+) -> f64 {
+    let v_now = compute_causal_sg_velocity(c_m4, c_m3, c_m2, c_m1, c_0);
+    let v_prev = compute_causal_sg_velocity(c_m5, c_m4, c_m3, c_m2, c_m1);
+    return v_now - v_prev;
+}
+
+// ============================================================================
+// PHASE-SPACE WAVE BIFURCATION GATE
+// Determines whether the market wave field is in:
+//   1 = SUPER_CRITICAL_TRAVELLING (Impulse-Echo Travelling Wave)
+//   2 = SUB_CRITICAL_CAVITY (Damped Standing-Wave Mean-Reverting Channel)
+//   0 = NEUTRAL / CHOP
+// ============================================================================
+fn classify_wave_phase_regime(
+    h1_ema10: f64,
+    h1_ema30: f64,
+    m5_ema50_now: f64,
+    m5_ema50_lag8: f64,
+    atr: f64,
+    er20: f64,
+    cfg: KineticEchoWaveConfig
+) -> int {
+    let safe_atr = max_f64(atr, 0.00001);
+    let ema50_drift = abs_f64(m5_ema50_now - m5_ema50_lag8) / safe_atr;
+    let mut h1_aligned = false;
+    if h1_ema10 > h1_ema30 {
+        if m5_ema50_now >= m5_ema50_lag8 {
+            h1_aligned = true;
+        }
+    }
+    if h1_ema10 < h1_ema30 {
+        if m5_ema50_now <= m5_ema50_lag8 {
+            h1_aligned = true;
+        }
+    }
+
+    if h1_aligned == true {
+        if ema50_drift >= cfg.min_drift_atr {
+            if er20 >= cfg.min_er_travelling {
+                return 1; // SUPER_CRITICAL_TRAVELLING
+            }
+        }
+    }
+
+    if ema50_drift < cfg.min_drift_atr {
+        return 2; // SUB_CRITICAL_CAVITY
+    }
+
+    return 0;
+}
+
+// ============================================================================
+// CORE EVALUATION: SOVEREIGN KINETIC-ECHO & PHASE-LOCKED WAVE ENGINE
+// Evaluates both Super-Critical Travelling Modes (SKEW Absorption + LETW
+// Truncation) and Sub-Critical Standing-Wave Wolfe 3-Drive Cavity.
+// ============================================================================
+fn evaluate_kinetic_echo_wave(
+    cfg: KineticEchoWaveConfig,
+    h1_ema10: f64,
+    h1_ema30: f64,
+    m5_ema8: f64,
+    m5_ema21: f64,
+    m5_ema50_now: f64,
+    m5_ema50_lag8: f64,
+    atr: f64,
+    rsi14: f64,
+    er20: f64,
+    // Current bar (t) and previous bar (t-1) OHLC
+    open_0: f64,
+    high_0: f64,
+    low_0: f64,
+    close_0: f64,
+    open_1: f64,
+    high_1: f64,
+    low_1: f64,
+    close_1: f64,
+    // Earlier closes for Causal Savitzky-Golay kinematics
+    close_2: f64,
+    close_3: f64,
+    close_4: f64,
+    close_5: f64,
+    // 24-bar structural window highs/lows and 3-bar pullback extremes
+    win24_high: f64,
+    win24_low: f64,
+    pb3_low: f64,
+    pb3_high: f64,
+    // Liquidity-Echo Truncation (Wave A vs Prior Structural Extreme vs Wave C Echo)
+    wave_a_low: f64,
+    prior_struct_low: f64,
+    wave_a_high: f64,
+    prior_struct_high: f64,
+    // Sub-Critical 5-Point Wolfe 3-Drive Cavity Pivots (W1..W5)
+    wolfe_bull_3drive: bool,
+    wolfe_bear_3drive: bool
+) -> KineticWaveSignal {
+    let safe_atr = max_f64(atr, 0.00001);
+    let sg_vel = compute_causal_sg_velocity(close_4, close_3, close_2, close_1, close_0) / safe_atr;
+    let sg_acc = compute_causal_sg_acceleration(close_5, close_4, close_3, close_2, close_1, close_0) / safe_atr;
+    let regime = classify_wave_phase_regime(
+        h1_ema10, h1_ema30, m5_ema50_now, m5_ema50_lag8, safe_atr, er20, cfg
+    );
+
+    let h1_bull = h1_ema10 > h1_ema30;
+    let h1_bear = h1_ema10 < h1_ema30;
+    let imp_span = win24_high - win24_low;
+
+    // ------------------------------------------------------------------------
+    // BRANCH 1: SUPER-CRITICAL TRAVELLING WAVE REGIME
+    // ------------------------------------------------------------------------
+    if regime == 1 {
+        // --- 1A. SOVEREIGN KINETIC-ABSORPTION WAVE (SKEW) ---
+        if imp_span >= (cfg.min_impulse_atr * safe_atr) {
+            if h1_bull == true {
+                if m5_ema21 > m5_ema50_now {
+                    let retr = (win24_high - pb3_low) / imp_span;
+                    let lw0 = min_f64(open_0, close_0) - low_0;
+                    let lw1 = min_f64(open_1, close_1) - low_1;
+                    let max_lw = max_f64(lw0, lw1);
+
+                    if retr >= cfg.fib_zone_low {
+                        if retr <= cfg.fib_zone_high {
+                            if max_lw >= (cfg.min_wick_atr * safe_atr) {
+                                if sg_acc > 0.0 {
+                                    if close_0 > open_0 {
+                                        if close_0 > high_1 {
+                                            if close_0 > m5_ema8 {
+                                                if rsi14 >= 40.0 {
+                                                    if rsi14 <= 68.0 {
+                                                        let sl = pb3_low - (0.30 * safe_atr);
+                                                        let risk = max_f64(close_0 - sl, 0.55 * safe_atr);
+                                                        let final_sl = close_0 - risk;
+                                                        let tp = close_0 + (cfg.target_rr_skew * risk);
+                                                        let conf = clamp_f64(0.74 + (0.15 * er20) + (0.08 * (max_lw / safe_atr)), 0.65, 0.98);
+                                                        return KineticWaveSignal {
+                                                            direction: 1,
+                                                            archetype_code: 1,
+                                                            phase_regime: 1,
+                                                            confidence: conf,
+                                                            entry_price: close_0,
+                                                            stop_loss: final_sl,
+                                                            take_profit: tp,
+                                                            risk_reward: cfg.target_rr_skew,
+                                                            sg_velocity: sg_vel,
+                                                            sg_acceleration: sg_acc,
+                                                            efficiency_ratio: er20,
+                                                            fib_retracement: retr
+                                                        };
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if h1_bear == true {
+                if m5_ema21 < m5_ema50_now {
+                    let retr_s = (pb3_high - win24_low) / imp_span;
+                    let uw0 = high_0 - max_f64(open_0, close_0);
+                    let uw1 = high_1 - max_f64(open_1, close_1);
+                    let max_uw = max_f64(uw0, uw1);
+
+                    if retr_s >= cfg.fib_zone_low {
+                        if retr_s <= cfg.fib_zone_high {
+                            if max_uw >= (cfg.min_wick_atr * safe_atr) {
+                                if sg_acc < 0.0 {
+                                    if close_0 < open_0 {
+                                        if close_0 < low_1 {
+                                            if close_0 < m5_ema8 {
+                                                if rsi14 >= 32.0 {
+                                                    if rsi14 <= 60.0 {
+                                                        let sl_s = pb3_high + (0.30 * safe_atr);
+                                                        let risk_s = max_f64(sl_s - close_0, 0.55 * safe_atr);
+                                                        let final_sl_s = close_0 + risk_s;
+                                                        let tp_s = close_0 - (cfg.target_rr_skew * risk_s);
+                                                        let conf_s = clamp_f64(0.74 + (0.15 * er20) + (0.08 * (max_uw / safe_atr)), 0.65, 0.98);
+                                                        return KineticWaveSignal {
+                                                            direction: -1,
+                                                            archetype_code: 1,
+                                                            phase_regime: 1,
+                                                            confidence: conf_s,
+                                                            entry_price: close_0,
+                                                            stop_loss: final_sl_s,
+                                                            take_profit: tp_s,
+                                                            risk_reward: cfg.target_rr_skew,
+                                                            sg_velocity: sg_vel,
+                                                            sg_acceleration: sg_acc,
+                                                            efficiency_ratio: er20,
+                                                            fib_retracement: retr_s
+                                                        };
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // --- 1B. LIQUIDITY-ECHO TRUNCATION WAVE (LETW) ---
+        if h1_bull == true {
+            if wave_a_low <= (prior_struct_low + (0.15 * safe_atr)) {
+                if pb3_low > wave_a_low {
+                    if pb3_low <= (m5_ema21 + (0.35 * safe_atr)) {
+                        if sg_acc > 0.0 {
+                            if close_0 > open_0 {
+                                if close_0 > high_1 {
+                                    if close_0 > m5_ema8 {
+                                        let sl_l = pb3_low - (0.28 * safe_atr);
+                                        let risk_l = max_f64(close_0 - sl_l, 0.55 * safe_atr);
+                                        let final_sl_l = close_0 - risk_l;
+                                        let tp_l = close_0 + (cfg.target_rr_letw * risk_l);
+                                        let conf_l = clamp_f64(0.71 + (0.14 * er20), 0.62, 0.94);
+                                        return KineticWaveSignal {
+                                            direction: 1,
+                                            archetype_code: 2,
+                                            phase_regime: 1,
+                                            confidence: conf_l,
+                                            entry_price: close_0,
+                                            stop_loss: final_sl_l,
+                                            take_profit: tp_l,
+                                            risk_reward: cfg.target_rr_letw,
+                                            sg_velocity: sg_vel,
+                                            sg_acceleration: sg_acc,
+                                            efficiency_ratio: er20,
+                                            fib_retracement: 0.50
+                                        };
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if h1_bear == true {
+            if wave_a_high >= (prior_struct_high - (0.15 * safe_atr)) {
+                if pb3_high < wave_a_high {
+                    if pb3_high >= (m5_ema21 - (0.35 * safe_atr)) {
+                        if sg_acc < 0.0 {
+                            if close_0 < open_0 {
+                                if close_0 < low_1 {
+                                    if close_0 < m5_ema8 {
+                                        let sl_ls = pb3_high + (0.28 * safe_atr);
+                                        let risk_ls = max_f64(sl_ls - close_0, 0.55 * safe_atr);
+                                        let final_sl_ls = close_0 + risk_ls;
+                                        let tp_ls = close_0 - (cfg.target_rr_letw * risk_ls);
+                                        let conf_ls = clamp_f64(0.71 + (0.14 * er20), 0.62, 0.94);
+                                        return KineticWaveSignal {
+                                            direction: -1,
+                                            archetype_code: 2,
+                                            phase_regime: 1,
+                                            confidence: conf_ls,
+                                            entry_price: close_0,
+                                            stop_loss: final_sl_ls,
+                                            take_profit: tp_ls,
+                                            risk_reward: cfg.target_rr_letw,
+                                            sg_velocity: sg_vel,
+                                            sg_acceleration: sg_acc,
+                                            efficiency_ratio: er20,
+                                            fib_retracement: 0.50
+                                        };
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // BRANCH 2: SUB-CRITICAL DAMPED STANDING-WAVE CAVITY (WOLFE 3-DRIVE)
+    // Only active when Phase-Space Bifurcation detects a Sub-Critical cavity
+    // (< 0.45 ATR drift) AND config enables Phase-Locked Bifurcated mode.
+    // ------------------------------------------------------------------------
+    if cfg.allow_subcritical_wolfe == true {
+        if regime == 2 {
+            if wolfe_bull_3drive == true {
+                if rsi14 < 38.0 {
+                    if close_0 > open_0 {
+                        if close_0 > high_1 {
+                            if sg_acc > 0.0 {
+                                let sl_w = pb3_low - (0.35 * safe_atr);
+                                let risk_w = max_f64(close_0 - sl_w, 0.60 * safe_atr);
+                                let final_sl_w = close_0 - risk_w;
+                                let tp_w = close_0 + (cfg.target_rr_wolfe * risk_w);
+                                return KineticWaveSignal {
+                                    direction: 1,
+                                    archetype_code: 3,
+                                    phase_regime: 2,
+                                    confidence: 0.72,
+                                    entry_price: close_0,
+                                    stop_loss: final_sl_w,
+                                    take_profit: tp_w,
+                                    risk_reward: cfg.target_rr_wolfe,
+                                    sg_velocity: sg_vel,
+                                    sg_acceleration: sg_acc,
+                                    efficiency_ratio: er20,
+                                    fib_retracement: 0.786
+                                };
+                            }
+                        }
+                    }
+                }
+            }
+
+            if wolfe_bear_3drive == true {
+                if rsi14 > 62.0 {
+                    if close_0 < open_0 {
+                        if close_0 < low_1 {
+                            if sg_acc < 0.0 {
+                                let sl_ws = pb3_high + (0.35 * safe_atr);
+                                let risk_ws = max_f64(sl_ws - close_0, 0.60 * safe_atr);
+                                let final_sl_ws = close_0 + risk_ws;
+                                let tp_ws = close_0 - (cfg.target_rr_wolfe * risk_ws);
+                                return KineticWaveSignal {
+                                    direction: -1,
+                                    archetype_code: 3,
+                                    phase_regime: 2,
+                                    confidence: 0.72,
+                                    entry_price: close_0,
+                                    stop_loss: final_sl_ws,
+                                    take_profit: tp_ws,
+                                    risk_reward: cfg.target_rr_wolfe,
+                                    sg_velocity: sg_vel,
+                                    sg_acceleration: sg_acc,
+                                    efficiency_ratio: er20,
+                                    fib_retracement: 0.786
+                                };
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return KineticWaveSignal {
+        direction: 0,
+        archetype_code: 0,
+        phase_regime: regime,
+        confidence: 0.0,
+        entry_price: close_0,
+        stop_loss: close_0,
+        take_profit: close_0,
+        risk_reward: 0.0,
+        sg_velocity: sg_vel,
+        sg_acceleration: sg_acc,
+        efficiency_ratio: er20,
+        fib_retracement: 0.0
+    };
+}
+
+// ============================================================================
+// DYNAMIC WAVE RATCHET (POST-BAR STOP-LOSS EVOLUTION)
+// Locks +0.20R Breakeven after +1.15R peak excursion, and trails behind
+// structural 2-bar swing pivots after +1.75R excursion.
+// ============================================================================
+fn ratchet_wave_stop_loss(
+    direction: int,
+    entry_price: f64,
+    current_sl: f64,
+    initial_risk: f64,
+    bar_high: f64,
+    bar_low: f64,
+    swing2_low: f64,
+    swing2_high: f64,
+    atr: f64
+) -> f64 {
+    let mut next_sl = current_sl;
+    if initial_risk <= 0.0 {
+        return next_sl;
+    }
+
+    if direction == 1 {
+        let excursion = bar_high - entry_price;
+        if excursion >= (1.15 * initial_risk) {
+            let be_sl = entry_price + (0.20 * initial_risk);
+            if be_sl > next_sl {
+                next_sl = be_sl;
+            }
+        }
+        if excursion >= (1.75 * initial_risk) {
+            let trail_sl = swing2_low - (0.18 * atr);
+            if trail_sl > next_sl {
+                next_sl = trail_sl;
+            }
+        }
+    }
+
+    if direction == -1 {
+        let excursion_s = entry_price - bar_low;
+        if excursion_s >= (1.15 * initial_risk) {
+            let be_sl_s = entry_price - (0.20 * initial_risk);
+            if be_sl_s < next_sl {
+                next_sl = be_sl_s;
+            }
+        }
+        if excursion_s >= (1.75 * initial_risk) {
+            let trail_sl_s = swing2_high + (0.18 * atr);
+            if trail_sl_s < next_sl {
+                next_sl = trail_sl_s;
+            }
+        }
+    }
+
+    return next_sl;
+}

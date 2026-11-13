@@ -1,0 +1,17 @@
+// ============================================================================
+// Module: std.fhe
+// Package: @nyx/fhe
+// Description: Unified Package Entry for Nyx Fully Homomorphic Encryption SDK
+// ============================================================================
+
+module std.fhe;
+
+pub import std.crypto.fhe_ckks;
+
+pub fn get_version() -> String {
+    return "1.0.0";
+}
+
+pub fn get_description() -> String {
+    return "Nyx Zero-GC Fully Homomorphic Encryption (CKKS / RNS) Vector Acceleration SDK";
+}

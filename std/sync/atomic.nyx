@@ -1,0 +1,151 @@
+module atomic
+
+// =============================================================================
+// std::sync::atomic — atomic integer primitives for lock-free Nyx code
+//
+// WHY THIS MODULE EXISTS
+//   Provides standard atomic primitives (`AtomicUsize`, `Ordering`) for lock-free
+//   concurrency. Operations are backed by C11 <stdatomic.h> via extern "C".
+//
+// HONEST SCOPE
+//   * Backed by C11 atomics (atomic_size_t), so operations genuinely have the
+//     requested memory ordering semantics.
+//   * `new()` allocates; there is no destructor hook in Nyx, so `drop()` frees
+//     the backing cell. Callers that never drop leak the cell — same as any
+//     manual-memory language. This is documented rather than hidden.
+// =============================================================================
+
+extern "C" {
+    fn nyx_atomic_usize_create(initial: usize) -> *mut u8
+    fn nyx_atomic_usize_destroy(cell: *mut u8)
+    fn nyx_atomic_usize_load(cell: *mut u8) -> usize
+    fn nyx_atomic_usize_store(cell: *mut u8, value: usize)
+    fn nyx_atomic_usize_fetch_add(cell: *mut u8, value: usize) -> usize
+    fn nyx_atomic_usize_fetch_sub(cell: *mut u8, value: usize) -> usize
+    fn nyx_atomic_usize_compare_exchange(cell: *mut u8, expected: usize, desired: usize) -> Bool
+
+    // Order-aware variants. The `order` argument is honoured by the runtime.
+    fn nyx_atomic_usize_load_explicit(cell: *mut u8, order: i32) -> usize
+    fn nyx_atomic_usize_store_explicit(cell: *mut u8, value: usize, order: i32)
+    fn nyx_atomic_usize_fetch_add_explicit(cell: *mut u8, value: usize, order: i32) -> usize
+    fn nyx_atomic_usize_fetch_sub_explicit(cell: *mut u8, value: usize, order: i32) -> usize
+    fn nyx_atomic_usize_compare_exchange_explicit(cell: *mut u8, expected: usize, desired: usize, success_order: i32, failure_order: i32) -> Bool
+}
+
+// -----------------------------------------------------------------------------
+// Ordering
+//
+// The generated tools reference `Ordering::Relaxed`. Nyx has no enum syntax in
+// this dialect, so Ordering is modelled as a namespace struct with constant
+// fields. The values match C11 memory_order_* macros so they can be forwarded
+// to the runtime if the runtime is extended to accept an explicit order.
+// -----------------------------------------------------------------------------
+
+pub struct Ordering {
+    pub relaxed: i32,
+    pub consume: i32,
+    pub acquire: i32,
+    pub release: i32,
+    pub acq_rel: i32,
+    pub seq_cst: i32
+}
+
+impl Ordering {
+    pub fn default() -> Ordering {
+        Ordering {
+            relaxed: 0,
+            consume: 1,
+            acquire: 2,
+            release: 3,
+            acq_rel: 4,
+            seq_cst: 5
+        }
+    }
+
+    pub fn relaxed() -> i32 {
+        0
+    }
+
+    pub fn acquire() -> i32 {
+        2
+    }
+
+    pub fn release() -> i32 {
+        3
+    }
+
+    pub fn seq_cst() -> i32 {
+        5
+    }
+}
+
+// -----------------------------------------------------------------------------
+// AtomicUsize
+// -----------------------------------------------------------------------------
+
+pub struct AtomicUsize {
+    pub cell: *mut u8,
+    pub value: usize
+}
+
+impl AtomicUsize {
+    pub fn new(initial: usize) -> AtomicUsize {
+        AtomicUsize {
+            cell: nyx_atomic_usize_create(initial),
+            value: initial
+        }
+    }
+
+    // Each op takes an explicit `order` and forwards it to the runtime, so the
+    // ordering requested by the caller is the ordering actually performed.
+    pub fn load(&self, order: i32) -> usize {
+        nyx_atomic_usize_load_explicit(self.cell, order)
+    }
+
+    pub fn store(&self, value: usize, order: i32) {
+        nyx_atomic_usize_store_explicit(self.cell, value, order)
+    }
+
+    // Returns the previous value, matching C11 atomic_fetch_add semantics.
+    pub fn fetch_add(&self, value: usize, order: i32) -> usize {
+        nyx_atomic_usize_fetch_add_explicit(self.cell, value, order)
+    }
+
+    pub fn fetch_sub(&self, value: usize, order: i32) -> usize {
+        nyx_atomic_usize_fetch_sub_explicit(self.cell, value, order)
+    }
+
+    // Returns true when the exchange succeeded.
+    pub fn compare_exchange(&self, expected: usize, desired: usize) -> Bool {
+        nyx_atomic_usize_compare_exchange(self.cell, expected, desired)
+    }
+
+    pub fn drop(&self) {
+        nyx_atomic_usize_destroy(self.cell)
+    }
+
+    // ---- Order-aware operations ------------------------------------------
+    // These forward `order` to the runtime, which passes it to the C11
+    // *_explicit atomics. Passing e.g. Ordering::relaxed() now genuinely
+    // lowers to memory_order_relaxed.
+
+    pub fn load_with(&self, order: i32) -> usize {
+        nyx_atomic_usize_load_explicit(self.cell, order)
+    }
+
+    pub fn store_with(&self, value: usize, order: i32) {
+        nyx_atomic_usize_store_explicit(self.cell, value, order)
+    }
+
+    pub fn fetch_add_with(&self, value: usize, order: i32) -> usize {
+        nyx_atomic_usize_fetch_add_explicit(self.cell, value, order)
+    }
+
+    pub fn fetch_sub_with(&self, value: usize, order: i32) -> usize {
+        nyx_atomic_usize_fetch_sub_explicit(self.cell, value, order)
+    }
+
+    pub fn compare_exchange_with(&self, expected: usize, desired: usize, success_order: i32, failure_order: i32) -> Bool {
+        nyx_atomic_usize_compare_exchange_explicit(self.cell, expected, desired, success_order, failure_order)
+    }
+}

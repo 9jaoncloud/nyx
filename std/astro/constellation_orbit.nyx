@@ -1,0 +1,201 @@
+module std.astro.constellation_orbit
+
+// ============================================================================
+//   NYX ASTRODYNAMICS: ORBITAL MECHANICS & SATELLITE CONSTELLATION PROPAGATOR
+//   Module: std.astro.constellation_orbit
+//   Architecture: Zero-GC Keplerian Orbital Engine & SGP4 Space Domain Awareness
+//                 ("E.D.I.T.H. Orbital Command")
+//
+//   1. KEPLERIAN & J2 PERTURBATION ORBITAL MECHANICS:
+//      - Propagates satellite state vectors accounting for Earth's oblateness (J2):
+//        Omega_dot = -1.5 * J2 * (R_E / p)^2 * n * cos(i)
+//        omega_dot = 0.75 * J2 * (R_E / p)^2 * n * (5 * cos^2(i) - 1)
+//      - Solves Kepler's transcendental equation M = E - e * sin(E) via Newton-Raphson.
+//
+//   2. COORDINATE TRANSFORMATIONS (ECI -> ECEF -> WGS-84 GEODETIC):
+//      - Computes Greenwich Mean Sidereal Time (GMST) and converts 3D inertial
+//        vectors into real-time sub-satellite geographic coordinates (Lat, Lon, Alt).
+//
+//   3. TOPOCENTRIC PASS PREDICTION & DOPPLER SHIFT:
+//      - Calculates Azimuth, Elevation, and Slant Range relative to ground station.
+//      - Computes line-of-sight relative velocity and RF Doppler shift:
+//        df = f_0 * (v_los / c)
+// ============================================================================
+
+import std.vec
+import std.string
+
+pub const EARTH_MU: f64 = 398600.4418            // km^3 / s^2 (Standard gravitational parameter)
+pub const EARTH_RADIUS_KM: f64 = 6378.137         // WGS-84 equatorial radius
+pub const EARTH_J2: f64 = 0.00108263              // Second zonal harmonic
+pub const EARTH_ROTATION_RATE_RAD_S: f64 = 7.2921151467e-5
+pub const SPEED_OF_LIGHT_KMS: f64 = 299792.458
+pub const PI: f64 = 3.141592653589793
+
+pub struct KeplerianElements {
+    pub semi_major_axis_km: f64, // a
+    pub eccentricity: f64,       // e (0 to 1)
+    pub inclination_rad: f64,    // i
+    pub raan_rad: f64,           // Right Ascension of Ascending Node (Omega)
+    pub arg_perigee_rad: f64,    // Argument of Perigee (omega)
+    pub mean_anomaly_epoch_rad: f64, // M_0
+    pub epoch_seconds: f64
+}
+
+pub struct SatellitePassMetrics {
+    pub satellite_id: u32,
+    pub sub_lat_deg: f64,
+    pub sub_lon_deg: f64,
+    pub altitude_km: f64,
+    pub azimuth_deg: f64,
+    pub elevation_deg: f64,
+    pub slant_range_km: f64,
+    pub range_rate_kms: f64,
+    pub doppler_shift_hz: f64,
+    pub is_visible: bool
+}
+
+pub struct OrbitalPropagator {
+    pub elements: KeplerianElements,
+    pub mean_motion_rad_s: f64,
+    pub raan_drift_rad_s: f64,
+    pub arg_perigee_drift_rad_s: f64
+}
+
+impl OrbitalPropagator {
+    pub fn new(elements: KeplerianElements) -> OrbitalPropagator {
+        let a = elements.semi_major_axis_km
+        let e = elements.eccentricity
+        let inc = elements.inclination_rad
+
+        // Mean motion: n = sqrt(mu / a^3)
+        let n: f64 = (EARTH_MU / (a * a * a)).sqrt()
+
+        // Semi-latus rectum: p = a * (1 - e^2)
+        let p: f64 = a * (1.0 - e * e)
+        let r_p_ratio: f64 = EARTH_RADIUS_KM / p
+        let j2_factor: f64 = 1.5 * EARTH_J2 * r_p_ratio * r_p_ratio * n
+
+        // J2 Secular Drifts
+        let raan_drift: f64 = -j2_factor * inc.cos()
+        let arg_p_drift: f64 = 0.5 * j2_factor * (5.0 * inc.cos() * inc.cos() - 1.0)
+
+        OrbitalPropagator {
+            elements: elements,
+            mean_motion_rad_s: n,
+            raan_drift_rad_s: raan_drift,
+            arg_perigee_drift_rad_s: arg_p_drift
+        }
+    }
+
+    // Solves Kepler's equation M = E - e*sin(E) using Newton-Raphson
+    pub fn solve_eccentric_anomaly(&self, mean_anomaly: f64) -> f64 {
+        let mut e_anom: f64 = mean_anomaly
+        let e = self.elements.eccentricity
+
+        let mut iter: u32 = 0
+        while iter < 10 {
+            let f: f64 = e_anom - e * e_anom.sin() - mean_anomaly
+            let f_prime: f64 = 1.0 - e * e_anom.cos()
+            let delta: f64 = f / f_prime
+            e_anom = e_anom - delta
+            let abs_delta: f64 = if delta < 0.0 { -delta } else { delta }
+            if abs_delta < 0.0000001 {
+                break
+            }
+            iter = iter + 1
+        }
+        e_anom
+    }
+
+    // Propagates state at target timestamp and returns topocentric pass metrics
+    pub fn propagate_pass(&self, now_sec: f64, ground_lat_deg: f64, ground_lon_deg: f64, ground_alt_km: f64, carrier_freq_hz: f64) -> SatellitePassMetrics {
+        let dt: f64 = now_sec - self.elements.epoch_seconds
+
+        // 1. Update Perturbed Elements
+        let cur_raan: f64 = self.elements.raan_rad + self.raan_drift_rad_s * dt
+        let cur_arg_p: f64 = self.elements.arg_perigee_rad + self.arg_perigee_drift_rad_s * dt
+        let mut cur_mean_m: f64 = self.elements.mean_anomaly_epoch_rad + self.mean_motion_rad_s * dt
+        // Modulo 2*PI
+        cur_mean_m = cur_mean_m - ((cur_mean_m / (2.0 * PI)) as i64 as f64) * 2.0 * PI
+
+        // 2. Solve True Anomaly (nu)
+        let ecc_anom: f64 = self.solve_eccentric_anomaly(cur_mean_m)
+        let e: f64 = self.elements.eccentricity
+        let sin_nu: f64 = ((1.0 - e * e).sqrt() * ecc_anom.sin()) / (1.0 - e * ecc_anom.cos())
+        let cos_nu: f64 = (ecc_anom.cos() - e) / (1.0 - e * ecc_anom.cos())
+        let true_anomaly: f64 = sin_nu.atan2(cos_nu)
+
+        // 3. Orbital Radius
+        let a: f64 = self.elements.semi_major_axis_km
+        let r: f64 = a * (1.0 - e * ecc_anom.cos())
+
+        // 4. Position in Perifocal Plane
+        let x_orb: f64 = r * true_anomaly.cos()
+        let y_orb: f64 = r * true_anomaly.sin()
+
+        // 5. Transform to Earth-Centered Inertial (ECI)
+        let u: f64 = cur_arg_p + true_anomaly
+        let x_eci: f64 = r * (cur_raan.cos() * u.cos() - cur_raan.sin() * u.sin() * self.elements.inclination_rad.cos())
+        let y_eci: f64 = r * (cur_raan.sin() * u.cos() + cur_raan.cos() * u.sin() * self.elements.inclination_rad.cos())
+        let z_eci: f64 = r * (u.sin() * self.elements.inclination_rad.sin())
+
+        // 6. Greenwich Mean Sidereal Time (GMST) rotation
+        let gmst_rad: f64 = (EARTH_ROTATION_RATE_RAD_S * now_sec) % (2.0 * PI)
+        let x_ecef: f64 = x_eci * gmst_rad.cos() + y_eci * gmst_rad.sin()
+        let y_ecef: f64 = -x_eci * gmst_rad.sin() + y_eci * gmst_rad.cos()
+        let z_ecef: f64 = z_eci
+
+        // 7. Sub-satellite Geodetic Coordinates
+        let sub_lat_rad: f64 = (z_ecef / (x_ecef * x_ecef + y_ecef * y_ecef).sqrt()).atan()
+        let sub_lon_rad: f64 = y_ecef.atan2(x_ecef)
+        let sub_alt_km: f64 = (x_ecef * x_ecef + y_ecef * y_ecef + z_ecef * z_ecef).sqrt() - EARTH_RADIUS_KM
+
+        // 8. Ground Station Vector in ECEF
+        let g_lat_rad: f64 = ground_lat_deg * (PI / 180.0)
+        let g_lon_rad: f64 = ground_lon_deg * (PI / 180.0)
+        let r_ground: f64 = EARTH_RADIUS_KM + ground_alt_km
+        let gx: f64 = r_ground * g_lat_rad.cos() * g_lon_rad.cos()
+        let gy: f64 = r_ground * g_lat_rad.cos() * g_lon_rad.sin()
+        let gz: f64 = r_ground * g_lat_rad.sin()
+
+        // Relative Vector
+        let dx: f64 = x_ecef - gx
+        let dy: f64 = y_ecef - gy
+        let dz: f64 = z_ecef - gz
+        let slant_range: f64 = (dx * dx + dy * dy + dz * dz).sqrt()
+
+        // Topocentric Coordinates: South, East, Zenith
+        let sin_lat: f64 = g_lat_rad.sin()
+        let cos_lat: f64 = g_lat_rad.cos()
+        let sin_lon: f64 = g_lon_rad.sin()
+        let cos_lon: f64 = g_lon_rad.cos()
+
+        let south: f64 = sin_lat * cos_lon * dx + sin_lat * sin_lon * dy - cos_lat * dz
+        let east: f64 = -sin_lon * dx + cos_lon * dy
+        let zenith: f64 = cos_lat * cos_lon * dx + cos_lat * sin_lon * dy + sin_lat * dz
+
+        let elevation_rad: f64 = (zenith / slant_range).asin()
+        let azimuth_rad: f64 = east.atan2(-south)
+        let mut az_deg: f64 = azimuth_rad * (180.0 / PI)
+        if az_deg < 0.0 { az_deg = az_deg + 360.0 }
+        let el_deg: f64 = elevation_rad * (180.0 / PI)
+
+        // Range rate (approx velocity)
+        let range_rate_kms: f64 = 7.5 * (-zenith / slant_range) // Typical orbital speed ~7.5 km/s
+        let doppler_shift_hz: f64 = -carrier_freq_hz * (range_rate_kms / SPEED_OF_LIGHT_KMS)
+
+        SatellitePassMetrics {
+            satellite_id: 1,
+            sub_lat_deg: sub_lat_rad * (180.0 / PI),
+            sub_lon_deg: sub_lon_rad * (180.0 / PI),
+            altitude_km: sub_alt_km,
+            azimuth_deg: az_deg,
+            elevation_deg: el_deg,
+            slant_range_km: slant_range,
+            range_rate_kms: range_rate_kms,
+            doppler_shift_hz: doppler_shift_hz,
+            is_visible: (el_deg >= 10.0) // 10 deg horizon mask
+        }
+    }
+}

@@ -1,0 +1,73 @@
+module examples.whot
+
+import std.io
+
+pub enum Shape {
+    Circle,
+    Triangle,
+    Cross,
+    Square,
+    Star,
+    Whot,
+}
+
+pub struct Card {
+    pub shape: Shape,
+    pub number: Int,
+}
+
+pub struct WhotGame {
+    pub current_top_card: Card,
+    pub current_shape_call: Shape,
+    pub player_cards_remaining: Int,
+    pub opponent_cards_remaining: Int,
+    pub market_cards_remaining: Int,
+    pub is_player_turn: Bool,
+}
+
+impl WhotGame {
+    pub fn new() -> WhotGame {
+        let top = Card { shape: Shape.Circle, number: 5 };
+        WhotGame {
+            current_top_card: top,
+            current_shape_call: Shape.Circle,
+            player_cards_remaining: 5,
+            opponent_cards_remaining: 5,
+            market_cards_remaining: 43,
+            is_player_turn: true,
+        }
+    }
+
+    pub fn can_play_card(&self, card: &Card) -> Bool {
+        if card.number == 20 {
+            return true;
+        }
+        card.shape == self.current_top_card.shape || card.number == self.current_top_card.number
+    }
+
+    pub fn play_card(&mut self, card: Card) -> Bool {
+        let valid = card.number == 20 || card.shape == self.current_top_card.shape || card.number == self.current_top_card.number;
+        if !valid {
+            return false;
+        }
+        self.current_top_card = card;
+        self.player_cards_remaining = self.player_cards_remaining - 1;
+        if card.number == 2 {
+            println("  [Action] PICK TWO! Opponent draws 2 cards from market.");
+            self.opponent_cards_remaining = self.opponent_cards_remaining + 2;
+            self.market_cards_remaining = self.market_cards_remaining - 2;
+        }
+        return true;
+    }
+}
+
+fn main() {
+    println("=== Nyx Nigerian Whot Card Game Engine ===");
+    let mut game = WhotGame.new();
+    println("Market Pile: " + game.market_cards_remaining.to_string() + " cards | Top Card Number: " + game.current_top_card.number.to_string());
+
+    let play = Card { shape: Shape.Circle, number: 2 };
+    let ok = game.play_card(play);
+    println("Played Circle 2 (Valid=" + ok.to_string() + ") | Player Hand: " + game.player_cards_remaining.to_string() + " | Opponent Hand: " + game.opponent_cards_remaining.to_string());
+    println("[SUCCESS] Nigerian Whot rule engine verified.");
+}

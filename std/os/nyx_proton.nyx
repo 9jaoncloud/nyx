@@ -1,0 +1,28 @@
+module nyx_proton
+
+import std.io
+import std.os.microkernel
+
+pub enum PeSubsystem { WindowsGui, WindowsCui, PosixCui, Native }
+pub struct Pe64Header { pub signature: Int, pub machine_type: Int, pub number_of_sections: Int, pub entry_point_rva: Int, pub image_base: Int, pub subsystem: PeSubsystem }
+pub struct DxVulkanPipeline { pub dx_version: Int, pub is_vkd3d_enabled: Bool, pub active_pipelines: Int }
+pub struct NyxProtonBridge { pub active_win32_instances: Int, pub dx_pipeline: DxVulkanPipeline }
+
+impl NyxProtonBridge {
+    pub fn new() -> NyxProtonBridge {
+        NyxProtonBridge { active_win32_instances: 0, dx_pipeline: DxVulkanPipeline { dx_version: 12, is_vkd3d_enabled: true, active_pipelines: 0 } }
+    }
+
+    pub fn load_pe32_executable(self: &mut Self, pe_path: String, token: &microkernel.CapToken) -> Result<Pe64Header, String> {
+        if !token.has_permission(microkernel.CapRights.Execute) {
+            return Result.Err("denied".to_string())
+        }
+        self.active_win32_instances = self.active_win32_instances + 1
+        Result.Ok(Pe64Header { signature: 0x00004550, machine_type: 0x8664, number_of_sections: 6, entry_point_rva: 0x1000, image_base: 0x140000000, subsystem: PeSubsystem.WindowsGui })
+    }
+
+    pub fn translate_directx_command(self: &mut Self, draw_calls: Int) -> Int {
+        self.dx_pipeline.active_pipelines = self.dx_pipeline.active_pipelines + 1
+        draw_calls
+    }
+}

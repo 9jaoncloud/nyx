@@ -1,0 +1,28 @@
+module tensor_scheduler
+
+import std.io
+import std.os.microkernel
+
+pub enum NpuBackend { AppleNeuralEngine, SnapdragonNPU, IntelNPU, VulkanComputeShader }
+pub struct NpuDevice { pub backend: NpuBackend, pub tops_capacity: Float, pub is_available: Bool, pub active_tensors: Int }
+pub struct SlmInferenceEngine { pub model_name: String, pub context_tokens_max: Int, pub temperature: Float }
+pub struct KernelTensorScheduler { pub primary_device: NpuDevice, pub slm_engine: SlmInferenceEngine, pub total_tokens_processed: Int }
+
+impl KernelTensorScheduler {
+    pub fn new() -> KernelTensorScheduler {
+        KernelTensorScheduler {
+            primary_device: NpuDevice { backend: NpuBackend.VulkanComputeShader, tops_capacity: 45.0, is_available: true, active_tensors: 0 },
+            slm_engine: SlmInferenceEngine { model_name: "Nyx-Slm".to_string(), context_tokens_max: 32768, temperature: 0.7 },
+            total_tokens_processed: 0,
+        }
+    }
+
+    pub fn schedule_tensor_pass(self: &mut Self, token: &microkernel.CapToken, tensor_elements: Int) -> Result<Int, String> {
+        if !token.has_permission(microkernel.CapRights.Execute) {
+            return Result.Err("denied".to_string())
+        }
+        self.primary_device.active_tensors = self.primary_device.active_tensors + 1
+        self.total_tokens_processed = self.total_tokens_processed + tensor_elements
+        Result.Ok(tensor_elements)
+    }
+}

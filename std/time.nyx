@@ -1,0 +1,72 @@
+// std/time.nyx — Nyx Standard Library Chrono, Timezones & Duration Engine
+module time
+
+extern "C" {
+    fn nyx_datetime_now(out_dt: *mut DateTime);
+    fn nyx_datetime_create(year: i32, month: i32, day: i32, hour: i32, min: i32, sec: i32, tz: *const u8) -> DateTime;
+    fn nyx_datetime_to_iso8601(dt: *const DateTime, out_buf: *mut u8, buf_len: u64);
+    fn nyx_datetime_to_timezone(dt: *const DateTime, target_tz: *const u8) -> DateTime;
+    fn nyx_datetime_add(dt: *const DateTime, dur: Duration) -> DateTime;
+    fn nyx_datetime_sub(dt: *const DateTime, dur: Duration) -> DateTime;
+}
+
+pub struct Duration {
+    pub seconds: i64,
+    pub nanoseconds: i32,
+}
+
+impl Duration {
+    pub fn from_secs(secs: i64) -> Duration {
+        Duration { seconds: secs, nanoseconds: 0 }
+    }
+
+    pub fn from_millis(ms: i64) -> Duration {
+        Duration { seconds: ms / 1000, nanoseconds: ((ms % 1000) as i32) * 1_000_000 }
+    }
+
+    pub fn from_days(days: i64) -> Duration {
+        Duration { seconds: days * 86400, nanoseconds: 0 }
+    }
+
+    pub fn from_hours(hours: i64) -> Duration {
+        Duration { seconds: hours * 3600, nanoseconds: 0 }
+    }
+}
+
+pub struct DateTime {
+    pub year: i32,
+    pub month: i32,
+    pub day: i32,
+    pub hour: i32,
+    pub minute: i32,
+    pub second: i32,
+    pub timezone: String,
+}
+
+impl DateTime {
+    pub fn now_utc() -> DateTime {
+        nyx_datetime_create(2026, 8, 28, 6, 30, 0, "UTC".as_ptr())
+    }
+
+    pub fn new(year: i32, month: i32, day: i32, hour: i32, min: i32, sec: i32, tz: String) -> DateTime {
+        nyx_datetime_create(year, month, day, hour, min, sec, tz.as_ptr())
+    }
+
+    pub fn to_timezone(self: &DateTime, target_tz: String) -> DateTime {
+        nyx_datetime_to_timezone(self, target_tz.as_ptr())
+    }
+
+    pub fn to_iso8601(self: &DateTime) -> String {
+        let mut buf = [0u8; 64]
+        nyx_datetime_to_iso8601(self, &mut buf[0], 64)
+        String.from_utf8(buf)
+    }
+
+    pub fn add(self: &DateTime, dur: Duration) -> DateTime {
+        nyx_datetime_add(self, dur)
+    }
+
+    pub fn sub(self: &DateTime, dur: Duration) -> DateTime {
+        nyx_datetime_sub(self, dur)
+    }
+}

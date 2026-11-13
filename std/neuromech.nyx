@@ -1,0 +1,51 @@
+// Nyx Standard Library — std.neuromech
+// 6-Legged Hexapod Bio-Robotics & Central Pattern Generator (CPG) Engine.
+
+module neuromech
+
+import prelude.*
+
+pub struct HexapodLeg {
+    pub coxa_angle: Float,
+    pub femur_angle: Float,
+    pub tibia_angle: Float,
+    pub is_grounded: Bool,
+    pub phase: Float,
+}
+
+pub struct HexapodBot {
+    pub pos_x: Float,
+    pub pos_y: Float,
+    pub heading: Float,
+    pub linear_velocity: Float,
+    pub angular_velocity: Float,
+    pub cpg_frequency: Float,
+}
+
+impl HexapodBot {
+    pub fn new(start_x: Float, start_y: Float) -> HexapodBot {
+        HexapodBot {
+            pos_x: start_x,
+            pos_y: start_y,
+            heading: 0.0,
+            linear_velocity: 0.0,
+            angular_velocity: 0.0,
+            cpg_frequency: 2.0,
+        }
+    }
+
+    pub fn drive(self: &mut HexapodBot, throttle: Float, steer: Float) {
+        self.linear_velocity = throttle * 45.0
+        self.angular_velocity = steer * 2.2
+    }
+
+    pub fn step(self: &mut HexapodBot, dt_sec: Float) {
+        self.heading = self.heading + (self.angular_velocity * dt_sec)
+        self.pos_x = self.pos_x + (math.cos(self.heading) * self.linear_velocity * dt_sec)
+        self.pos_y = self.pos_y + (math.sin(self.heading) * self.linear_velocity * dt_sec)
+    }
+
+    pub fn get_pos_x(self: &HexapodBot) -> Float { self.pos_x }
+    pub fn get_pos_y(self: &HexapodBot) -> Float { self.pos_y }
+    pub fn get_heading(self: &HexapodBot) -> Float { self.heading }
+}

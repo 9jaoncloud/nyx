@@ -1,0 +1,43 @@
+/**
+ * @file std/bci/neural.nyx
+ * @brief Linear Capability-Driven Neural Stream Pipelines for Brain-Computer Interfaces
+ * @author Simeon Bala (9jaoncloud@gmail.com)
+ * @copyright (c) 2026 9jaonCloud Engineering. All Rights Reserved.
+ */
+
+module bci.neural
+
+pub struct NeuralSpike {
+    pub channel_id: u16,
+    pub unit_id: u16,
+    pub voltage_uv: f32,
+    pub timestamp_us: u32,
+}
+
+pub struct CapNeuralStream {
+    pub token_id: u64,
+    pub is_consumed: Bool,
+    pub spike_count: u32,
+}
+
+impl CapNeuralStream {
+    pub fn new_token(token_id: u64, spike_count: u32) -> CapNeuralStream {
+        CapNeuralStream {
+            token_id: token_id,
+            is_consumed: false,
+            spike_count: spike_count,
+        }
+    }
+
+    pub fn can_read(self: &CapNeuralStream) -> Bool {
+        !self.is_consumed
+    }
+
+    pub fn conclude(self: &mut CapNeuralStream) -> Bool {
+        if self.is_consumed {
+            return false;
+        }
+        self.is_consumed = true;
+        true
+    }
+}
